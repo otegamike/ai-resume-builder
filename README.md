@@ -1,4 +1,6 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Resumy AI
+
+Resumy AI is a Next.js App Router resume builder with a landing page, dashboard shell, client-side editor, and a scaffolded MongoDB/Mongoose data layer ready to be wired into real CRUD flows.
 
 ## Getting Started
 
@@ -14,23 +16,27 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view Resumy AI.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Main app routes live in `src/app`, shared UI lives in `src/components/ui`, and server-side data utilities live in `src/lib` and `src/models`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Current key files:
+
+- `src/app/page.tsx`: landing page
+- `src/app/dashboard`: dashboard layout and page
+- `src/app/editor/[id]/page.tsx`: interactive resume editor
+- `src/app/settings/page.tsx`: settings screen
+- `src/lib/db.ts`: MongoDB connection helper
+- `src/models/Resume.ts`: Mongoose schema/model
+
+## Project Walkthrough
+
+See [PROJECT_WALKTHROUGH.md](./PROJECT_WALKTHROUGH.md) for the full project structure, current frontend/backend boundaries, and the Next.js-specific concepts a MERN developer should know.
 
 ## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+To learn more about the stack used here:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Next.js Documentation](https://nextjs.org/docs)
+- [App Router Documentation](https://nextjs.org/docs/app)
+- [Mongoose Documentation](https://mongoosejs.com/docs/)
