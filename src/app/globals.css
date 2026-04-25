@@ -1,34 +1,49 @@
-@import "tailwindcss";
+@import "../styles/variables.css";
 
-:root {
-  --background: #fdfdfd;
-  --foreground: #111a14;
-  --primary-1: #84B179;
-  --primary-2: #A2CB8B;
-  --primary-3: #C7EABB;
-  --primary-4: #E8F5BD;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  color: var(--ring);
+  /* outline: 1px solid grey; */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary-1: var(--primary-1);
-  --color-primary-2: var(--primary-2);
-  --color-primary-3: var(--primary-3);
-  --color-primary-4: var(--primary-4);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0e0b;
-    --foreground: #f3f6f3;
-  }
+html {
+  height: 100%;
 }
 
 body {
-  background: var(--background);
+  background: var(--background-color);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  line-height: 1.625;
+  min-height: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+input, textarea, select {
+  font-family: inherit;
+  color: var(--ring)
+}
+
+.hideScrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hideScrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+main {
+  width: min(1440px, 95%);
+  margin: 0 auto;
 }

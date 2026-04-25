@@ -1,16 +1,29 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { ClerkProvider, Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs';
+import { Geist, Geist_Mono, Plus_Jakarta_Sans, Lora } from "next/font/google";
+import { ClerkProvider } from '@clerk/nextjs';
 import "./globals.css";
+import "../styles/variables.css";
+import styles from "./layout.module.css";
+import Header from "@/components/header/header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-jakarta-variable', 
+});
+
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const lora = Lora({
+  subsets: ['latin'],
+  variable: '--font-lora-variable', 
 });
 
 export const metadata: Metadata = {
@@ -23,22 +36,13 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+ 
   return (
     <ClerkProvider>
-      <html
-        lang="en"
-        className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-      >
-        <body className="min-h-full flex flex-col">
-          <header className="flex items-center justify-end gap-4 p-4 border-b">
-            <Show when="signed-out">
-              <SignInButton />
-              <SignUpButton />
-            </Show>
-            <Show when="signed-in">
-              <UserButton />
-            </Show>
-          </header>
+      <html lang="en" className={`${geistSans.variable} ${lora.variable} ${jakarta.variable} ${geistMono.variable} ${styles.html}`}>
+        <body className={styles.body}>
+    
+          <Header />
           {children}
         </body>
       </html>

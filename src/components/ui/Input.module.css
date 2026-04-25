@@ -1,0 +1,48 @@
+.input {
+  display: flex;
+  width: 100%;
+  height: 2.5rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-input);
+  background-color: transparent;
+  padding: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--foreground);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input::placeholder {
+  color: var(--foreground-muted);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary-1);
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.noBorder {
+  border: none;
+}
+
+.noShadow {
+  box-shadow: none;
+}
+
+.noPadding {
+  padding: 0;
+}
+
+.noBackground {
+  background-color: transparent;
+}
+
+.titleInput {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+}

@@ -1,0 +1,103 @@
+.container {
+  display: flex;
+  height: 100vh;
+  background-color: var(--gray-50);
+}
+
+.sidebar {
+  width: 16rem;
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  border-right: 1px solid var(--gray-200);
+}
+
+.sidebarLogo {
+  height: 5rem;
+  display: flex;
+  align-items: center; 
+  padding: 0 var(--space-6);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.logoLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--primary-1);
+}
+
+.logoText {
+  font-weight: var(--font-bold);
+  font-size: var(--text-xl);
+  letter-spacing: -0.025em;
+  color: var(--primary-2);
+}
+
+.sidebarNav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-6) var(--space-4);
+  gap: var(--space-2);
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-weight: var(--font-medium);
+  color: var(--gray-700);
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.navLink:hover {
+  background-color: var(--gray-100);
+  color: var(--gray-700);
+}
+
+.navLinkActive {
+  background-color: var(--primary-4);
+  color: var(--primary-1);
+}
+
+.navIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.sidebarFooter {
+  padding: var(--space-4);
+  border-top: 1px solid var(--gray-200);
+}
+
+.signOutButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  width: 100%;
+  border-radius: var(--radius-md);
+  font-weight: var(--font-medium);
+  color: var(--red-600);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.signOutButton:hover {
+  background-color: #fef2f2;
+}
+
+.signOutIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.mainContent {
+  flex: 1;
+  overflow: auto;
+}

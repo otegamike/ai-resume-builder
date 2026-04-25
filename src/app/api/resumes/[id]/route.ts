@@ -15,6 +15,11 @@ export async function GET(
     }
 
     await dbConnect();
+
+    if (id === 'new') {
+      return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
+    }
+
     const resume = await Resume.findOne({ _id: id, userId });
 
     if (!resume) {

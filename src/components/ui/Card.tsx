@@ -1,9 +1,10 @@
 import React from "react";
+import styles from "./Card.module.css";
 
 export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={`rounded-lg border bg-card text-card-foreground shadow-sm ${className}`}
+      className={`${styles.card} ${className || ""}`}
       {...props}
     />
   )
@@ -12,7 +13,7 @@ export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElemen
 export function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={`flex flex-col space-y-1.5 p-6 ${className}`}
+      className={`${styles.cardHeader} ${className || ""}`}
       {...props}
     />
   )
@@ -21,7 +22,7 @@ export function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDiv
 export function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h3
-      className={`text-2xl font-semibold leading-none tracking-tight ${className}`}
+      className={`${styles.cardTitle} ${className || ""}`}
       {...props}
     />
   )
@@ -29,6 +30,6 @@ export function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHead
 
 export function CardContent({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={`p-6 pt-0 ${className}`} {...props} />
+    <div className={`${styles.cardContent} ${className || ""}`} {...props} />
   )
 }

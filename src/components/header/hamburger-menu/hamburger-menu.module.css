@@ -1,0 +1,101 @@
+.menu__container {
+    padding: 0;
+
+    &.active {
+        background-color: var(--panel-color-dark);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        & > .hamburger-menu > .bar {
+            background-color: var(--text-primary);
+        }
+    }
+}
+
+.hamburger-menu {
+    position: relative ;
+    width: 20px;
+    aspect-ratio: 4/3;
+}
+
+.hamburger-menu .bar {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 3px; /* Thickness of the bars */
+  background-color: var(--text-primary);
+  border-radius: 2px;
+  position: absolute; /* Allows precise positioning for animation */
+  left: 0;
+  transition: transform 0.3s ease-in-out, 
+              opacity 0.3s ease-in-out,
+              top 0.3s ease-in-out, 
+              clip-path 0.3s ease-in-out,
+              background-color 0.3s ease-in-out; /* Add clip-path to transition */
+}
+
+.hamburger-menu .bar {
+  top: 50%; /* Center bar */
+  opacity: 1;
+  transform: translateY(-50%);
+  -webkit-clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%); /* Initial full visibility */
+          clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+}
+
+.bar:first-child {
+    top: 10%; 
+   
+}
+
+.bar:last-child {
+    top: 90%;
+}
+
+.cross {
+    opacity: 0;
+}
+
+.cross:nth-child(2) {
+    opacity: 0;
+}
+
+.cross:first-child {
+    opacity: 1;
+    top: 50%; 
+    transform: rotate(45deg);
+}
+
+.cross:last-child {
+    opacity: 1;
+    top: 50%; 
+    transform: rotate(-45deg);
+}
+
+.menu {
+
+    position : fixed;
+    left: 100vw;
+    top: 60px;
+
+    padding-top: 30px;
+    display: flex ;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+    width: 100vw;
+    height: 100vh;
+    background-color: white;
+    opacity: 0;
+    z-index: 180;
+    transition: left 0.5s ease-in-out, opacity 0.5s ease-in-out;
+
+
+}
+
+.expand { 
+    left: 0vw; 
+    opacity: 0.95;
+}

@@ -1,0 +1,727 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: var(--gray-50);
+  overflow: hidden;
+}
+
+.navbar {
+  height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-6);
+  background-color: white;
+  border-bottom: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  z-index: var(--z-10);
+  flex-shrink: 0;
+}
+
+.navbarLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.backLink {
+  color: var(--gray-500);
+  transition: color 0.2s;
+}
+
+.backLink:hover {
+  color: var(--primary-1);
+}
+
+.backIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.navbarDivider {
+  height: 1rem;
+  width: 1px;
+  background-color: var(--gray-300);
+}
+
+.titleInput {
+  border: none;
+  box-shadow: none;
+  background-color: transparent;
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  width: 16rem;
+  padding: 0;
+}
+
+.navbarCenter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.templateButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+}
+
+.templateDropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: var(--space-1);
+  width: 12rem;
+  background-color: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: var(--z-50);
+  padding: var(--space-2);
+}
+
+.templateOption {
+  width: 100%;
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--gray-700);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.templateOption:hover {
+  background-color: var(--gray-100);
+}
+
+.templateOptionActive {
+  background-color: var(--primary-4);
+  color: var(--primary-1);
+  font-weight: var(--font-medium);
+}
+
+.navbarRight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.autoSaveStatus {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--gray-500);
+}
+
+.autoSaveIcon {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.saved {
+  color: var(--red-600);
+}
+
+.saveButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.saveIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.exportButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.exportIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.mainWorkspace {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.editorSection {
+  width: 31.25rem;
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  border-right: 1px solid var(--gray-200);
+  flex-shrink: 0;
+}
+
+.formNav {
+  display: flex;
+  overflow-x: auto;
+  padding: var(--space-2);
+  gap: var(--space-1);
+  background-color: rgba(107, 114, 128, 0.05);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.formNavButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  border-radius: var(--radius-md);
+  color: var(--gray-600);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+
+.formNavButton:hover {
+  background-color: var(--gray-100);
+}
+
+.formNavButtonActive {
+  background-color: white;
+  color: var(--primary-1);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gray-200);
+}
+
+.formNavIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.formContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-6);
+}
+
+.formSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.formSectionTitle {
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--gray-900);
+}
+
+.formSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.aiButtons {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.aiButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+}
+
+.aiButtonIcon {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.formGrid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.formGroupFull {
+  grid-column: span 2;
+}
+
+.formLabel {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--gray-700);
+}
+
+.formLabelSmall {
+  font-size: var(--text-xs);
+  color: var(--gray-500);
+}
+
+.sectionCard {
+  padding: var(--space-4);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  background-color: rgba(107, 114, 128, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  font-weight: var(--font-medium);
+  color: var(--gray-700);
+}
+
+.deleteButton {
+  color: var(--red-500);
+}
+
+.deleteButton:hover {
+  color: var(--red-700);
+}
+
+.deleteIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.addButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.addIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.textarea {
+  width: 100%;
+  height: 12rem;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--foreground);
+  resize: vertical;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--primary-1);
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.skillsContainer {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.skillsInput {
+  flex: 1;
+}
+
+.skillsAddButton {
+  background-color: var(--primary-1);
+  color: white;
+}
+
+.skillsAddButton:hover {
+  background-color: var(--primary-2);
+}
+
+.skillsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.skillTag {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  background-color: var(--primary-4);
+  color: var(--primary-1);
+  border-radius: var(--radius-full);
+  font-weight: var(--font-medium);
+  font-size: var(--text-sm);
+}
+
+.skillRemoveButton {
+  transition: color 0.2s;
+}
+
+.skillRemoveIcon {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.previewSection {
+  flex: 1;
+  overflow-y: auto;
+  background-color: var(--gray-100);
+  padding: var(--space-8);
+  display: flex;
+  justify-content: center;
+  border-left: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-inner);
+}
+
+.resumePreview {
+  width: 53.125rem;
+  min-height: 76.0625rem;
+  background-color: white;
+  box-shadow: var(--shadow-xl);
+  padding: 3rem;
+  margin-bottom: 2rem;
+  align-self: flex-start;
+}
+
+.resumePreviewModern {
+  font-family: var(--font-sans);
+}
+
+.resumePreviewClassic {
+  font-family: serif;
+}
+
+.resumePreviewMinimal {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+}
+
+.resumePreviewCreative {
+  font-family: var(--font-mono);
+}
+
+.resumeContent {
+  border: 1px solid var(--gray-100);
+  color: var(--gray-900);
+}
+
+.resumeHeader {
+  padding-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--gray-800);
+}
+
+.resumeName {
+  font-size: 2.25rem;
+  font-weight: var(--font-bold);
+  color: var(--gray-900);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.resumeJobTitle {
+  font-size: 1.25rem;
+  color: var(--gray-600);
+  margin-bottom: 1rem;
+}
+
+.resumeContact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: var(--text-sm);
+  color: var(--gray-600);
+}
+
+.resumeSection {
+  margin-bottom: 1.5rem;
+}
+
+.resumeSectionTitle {
+  font-size: 1.125rem;
+  font-weight: var(--font-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gray-900);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--gray-300);
+}
+
+.resumeSectionTitleBorder {
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--gray-800);
+  margin-bottom: 1rem;
+}
+
+.resumeExperience {
+  margin-bottom: 1.25rem;
+}
+
+.experienceHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.25rem;
+}
+
+.experienceRole {
+  font-weight: var(--font-bold);
+  font-size: var(--text-base);
+  color: var(--gray-900);
+}
+
+.experienceDates {
+  font-size: var(--text-sm);
+  color: var(--gray-600);
+}
+
+.experienceCompany {
+  font-weight: var(--font-medium);
+  font-size: var(--text-sm);
+  color: var(--gray-700);
+  margin-bottom: 0.5rem;
+}
+
+.experienceDescription {
+  color: var(--gray-800);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  white-space: pre-wrap;
+}
+
+.experienceItem {
+  margin-bottom: 1rem;
+}
+
+.educationItem {
+  margin-bottom: 1rem;
+}
+
+.educationSchool {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.25rem;
+}
+
+.educationName {
+  font-weight: var(--font-bold);
+  font-size: var(--text-base);
+  color: var(--gray-900);
+}
+
+.educationDates {
+  font-size: var(--text-sm);
+  color: var(--gray-600);
+}
+
+.educationDegree {
+  font-size: var(--text-sm);
+  color: var(--gray-800);
+}
+
+.skillsListResume {
+  font-size: var(--text-sm);
+  color: var(--gray-800);
+  line-height: var(--leading-relaxed);
+}
+
+.classic .resumeHeader {
+  text-align: center;
+  border-bottom: 4px solid var(--gray-800);
+  padding-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.classic .resumeName {
+  font-family: serif;
+}
+
+.classic .resumeJobTitle {
+  margin-bottom: 0.75rem;
+}
+
+.classic .resumeContact {
+  justify-content: center;
+}
+
+.classic .resumeSectionTitle {
+  font-family: serif;
+  border-bottom: 1px solid var(--gray-400);
+  padding-bottom: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.classic .experienceRole {
+  font-family: serif;
+  font-weight: var(--font-bold);
+}
+
+.classic .experienceCompany {
+  font-style: italic;
+}
+
+.minimal .resumeHeader {
+  margin-bottom: 2rem;
+}
+
+.minimal .resumeName {
+  font-weight: var(--font-normal);
+  font-size: 1.875rem;
+}
+
+.minimal .resumeJobTitle {
+  font-size: var(--text-base);
+  margin-bottom: 0.75rem;
+}
+
+.minimal .resumeContact {
+  gap: 0.75rem;
+  font-size: var(--text-xs);
+}
+
+.minimal .resumeSectionTitle {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  border-bottom: none;
+}
+
+.minimal .experienceRole {
+  font-weight: var(--font-medium);
+  font-size: var(--text-sm);
+}
+
+.minimal .experienceItem {
+  margin-bottom: 1rem;
+  padding-left: 0.75rem;
+  border-left: 2px solid var(--gray-300);
+}
+
+.creative .resumeHeader {
+  background-color: #111827;
+  color: white;
+  padding: 2rem;
+  margin: -3rem -3rem 2rem -3rem;
+}
+
+.creative .resumeName {
+  color: white;
+}
+
+.creative .resumeJobTitle {
+  color: #d1d5db;
+  font-family: var(--font-mono);
+}
+
+.creative .resumeContact {
+  color: #9ca3af;
+  font-family: var(--font-mono);
+}
+
+.creative .resumeSection {
+  padding: 1rem;
+  background-color: var(--gray-50);
+  border-radius: var(--radius-lg);
+  margin-bottom: 1.5rem;
+}
+
+.creative .experienceItem {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+  border-left: 2px solid var(--primary-1);
+}
+
+.creative .experienceDot {
+  position: absolute;
+  left: -0.5625rem;
+  top: 0.25rem;
+  width: 1rem;
+  height: 1rem;
+  border-radius: var(--radius-full);
+  background-color: var(--primary-1);
+}
+
+.creative .skillTag {
+  background-color: #111827;
+  color: white;
+  font-family: var(--font-mono);
+}
+
+@media print {
+  .resumePreview {
+    box-shadow: none;
+    width: 100%;
+  }
+}
+
+.loadingContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.loadingContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.loadingIcon {
+  width: 2rem;
+  height: 2rem;
+  color: var(--primary-1);
+  animation: spin 1s linear infinite;
+}
+
+.loadingText {
+  color: var(--gray-500);
+}
+
+.errorContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.errorContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.errorText {
+  color: var(--red-500);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
