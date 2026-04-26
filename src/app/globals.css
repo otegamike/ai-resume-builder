@@ -1,6 +1,7 @@
 @import "../styles/variables.css";
 
 * {
+  font-family: var(--font-jakarta);
   box-sizing: border-box;
   margin: 0;
   padding: 0;

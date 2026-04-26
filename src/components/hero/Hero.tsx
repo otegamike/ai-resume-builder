@@ -15,9 +15,6 @@ export default function Hero() {
                         <Button variant="outline">View Templates</Button>
                     </div>
 
-                    <div className={styles.trusted_by}>
-                        <p>TRUSTED BY PROFESSIONALS AT</p>
-                    </div>
                 </div>
 
                 <div className={styles.hero__image_container}>
@@ -30,6 +27,12 @@ export default function Hero() {
                     priority
                 />
                 </div>
+
+                
+            </div>
+
+            <div className={styles.trusted_by}>
+                    <p>TRUSTED BY PROFESSIONALS</p>
             </div>
         </section>
     )

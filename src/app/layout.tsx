@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Plus_Jakarta_Sans, Lora } from "next/font/google";
+import { Geist, Geist_Mono, Plus_Jakarta_Sans, Lora, Limelight} from "next/font/google";
 import { ClerkProvider } from '@clerk/nextjs';
 import "./globals.css";
 import "../styles/variables.css";
@@ -14,6 +14,12 @@ const geistSans = Geist({
 const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
   variable: '--font-jakarta-variable', 
+});
+
+const logoFont = Limelight({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--logo-font-variable', 
 });
 
 const geistMono = Geist_Mono({
@@ -39,7 +45,15 @@ export default function RootLayout({
  
   return (
     <ClerkProvider>
-      <html lang="en" className={`${geistSans.variable} ${lora.variable} ${jakarta.variable} ${geistMono.variable} ${styles.html}`}>
+      <html lang="en" 
+        className={`
+          ${geistSans.variable} 
+          ${lora.variable} 
+          ${jakarta.variable} 
+          ${logoFont.variable}
+          ${geistMono.variable} 
+          ${styles.html}`}
+      >
         <body className={styles.body}>
     
           <Header />

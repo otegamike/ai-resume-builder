@@ -182,8 +182,10 @@
   display: flex;
   justify-content: center;
   padding: var(--space-24) 0;
-  background-color: var(--gray-50);
+  background-color: var(--neutral-50);
+  border-radius: 1.5rem;
   border-top: 1px solid var(--border-default);
+  margin-bottom: var(--space-8);
 }
 
 .featuresContainer {
@@ -294,11 +296,11 @@
   justify-content: center;
   padding: var(--space-10) 0;
   border-top: 1px solid var(--border-default);
-  background-color: white;
+  background-color:  var(--neutral-800);
   text-align: center;
 }
 
 .footerText {
   font-size: var(--text-sm);
-  color: var(--gray-500);
+  color: var(--neutral-200);
 }

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { Plus, FileText, Clock, Trash2, Loader2 } from "lucide-react";
+import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import styles from "./page.module.css";
 
@@ -89,12 +89,6 @@ export default function DashboardPage() {
           <h1 className={styles.title}>My Resumes</h1>
           <p className={styles.subtitle}>Manage and edit your created resumes.</p>
         </div>
-        <Link href="/editor/new">
-          <Button className={styles.createButton}>
-            <Plus className={styles.createButtonIcon} />
-            Create New
-          </Button>
-        </Link>
       </div>
 
       <div className={styles.grid}>
@@ -122,7 +116,6 @@ export default function DashboardPage() {
               <div>
                 <h3 className={styles.resumeTitle}>{resume.title}</h3>
                 <div className={styles.resumeMeta}>
-                  <Clock className={styles.resumeMetaIcon} />
                   {new Date(resume.updatedAt).toLocaleDateString()}
                 </div>
               </div>
@@ -130,7 +123,7 @@ export default function DashboardPage() {
               <div className={styles.actions}>
                 <Link href={`/editor/${resume._id}`}>
                   <Button variant="ghost" size="sm" className={styles.actionButton}>
-                    <FileText className={styles.actionButtonSvg} />
+                    <Edit className={styles.actionButtonSvg} />
                   </Button>
                 </Link>
                 <Button 

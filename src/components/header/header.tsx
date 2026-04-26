@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ClerkProvider, Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs';
+import { ClerkProvider, Show, SignInButton, UserButton } from '@clerk/nextjs';
 import { usePathname } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import styles from "./header.module.css";
@@ -9,12 +9,15 @@ import NavBar from "./NavBar";
 import HamburgerMenu from "./hamburger-menu/hamburgerMenu";
 import { MenuPanelProps } from "./hamburger-menu/hamburgerMenu";
 import { Button } from "../ui/Button";
+import Logo from "../svgs/logo";
 
 import { useState } from "react";
 
 export default function Header() {
   const pathname = usePathname();
   const showNavbar = pathname === "/";
+  const showDashboardLink = pathname !== "/dashboard";
+
   const [ isMenuOpen, setIsMenuOpen ] = useState<boolean>(false);
 
   const toggleMenu = (menuState?: boolean) => {
@@ -31,9 +34,9 @@ export default function Header() {
         <header className={styles.header}>
             <div className={styles.header__content}>
                 <Link className={styles.logo} href="/">
-                <Sparkles className={styles.logoIcon} />
+                <Logo size={20} color='var(--primary-1)' />
                 <span className={styles.logoText}>
-                    Resumy AI
+                    Agentic Cv
                 </span>
                 </Link>
                 <nav className={styles.nav}>
@@ -52,9 +55,11 @@ export default function Header() {
                 </Show>
 
                 <Show when="signed-in">
-                    <Link href="/dashboard">
-                        <Button size="sm">Dashboard</Button>
-                    </Link>
+                    {showDashboardLink && (
+                        <Link href="/dashboard">
+                            <Button size="sm">Dashboard</Button>
+                        </Link>
+                    )}
                 </Show>
 
                 <Show when="signed-in">

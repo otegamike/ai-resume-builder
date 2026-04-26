@@ -1,5 +1,6 @@
 .hero {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     min-height: 100vh;
@@ -59,13 +60,14 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
-    margin-top: var(--space-6);
+    margin-top: var(--space-4);
     width: 100%;
 
     button {
         width: 100%;
         text-wrap: nowrap;
         font-size: var(--font-md);
+        padding: var(--space-6);
     }
 
 }
@@ -81,13 +83,30 @@
     img {
         width: 100%;
         height: auto;
-        transform: translateY(-4rem);
+        transform: translateY(-3rem);
     }
+}
+
+.trusted_by {
+    display: flex;
+    font-size: small;
+    margin-bottom: var(--space-6);
+
+    p {
+        color: var(--text-muted)
+    }
+
 }
 
 @container hero (max-width: 768px) {
     .hero__container {
         grid-template-columns: 1fr;
+    }
+
+    .hero__image_container {
+        img {
+            transform: translateY(0);
+        }
     }
 }
 
