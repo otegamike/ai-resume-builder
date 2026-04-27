@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:wght@400;600;700&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Jost', sans-serif;
+    background: #d4c4c0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 28px;
+  }
+
+  .cv {
+    width: 760px;
+    background: #fdf6f4;
+    box-shadow: 0 12px 52px rgba(0,0,0,0.18);
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: 1050px;
+  }
+
+  /* ══════════ LEFT ══════════ */
+  .left {
+    background: #f5e8e4;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* Photo */
+  .photo-frame {
+    margin: 30px 24px 28px 24px;
+    border: 3px solid #c09080;
+    overflow: hidden;
+    background: #ddd;
+    aspect-ratio: 3/3.2;
+  }
+
+  .photo-frame img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+  }
+
+  /* Left section blocks */
+  .l-block { padding: 0 24px 26px 24px; }
+
+  .l-section-bar {
+    background: #fff;
+    padding: 8px 14px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+
+  .l-section-bar span {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #2a1a14;
+  }
+
+  /* About */
+  .about-text {
+    font-size: 0.75rem;
+    color: #4a3830;
+    line-height: 1.75;
+    font-weight: 300;
+  }
+
+  /* Contact */
+  .contact-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.75rem;
+    color: #4a3830;
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+
+  .contact-item svg {
+    width: 16px; height: 16px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    stroke: #b07060;
+    fill: none;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Skills / Languages */
+  .bullet-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .bullet-list li {
+    font-size: 0.76rem;
+    color: #4a3830;
+    margin-bottom: 8px;
+    padding-left: 16px;
+    position: relative;
+    font-weight: 300;
+  }
+
+  .bullet-list li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: #b07060;
+  }
+
+  /* ══════════ RIGHT ══════════ */
+  .right {
+    background: #fdf6f4;
+    padding: 30px 36px 36px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  /* Name hero */
+  .name-block { margin-bottom: 4px; }
+
+  .name-script {
+    font-family: 'Great Vibes', cursive;
+    font-size: 3.6rem;
+    color: #1a0f0a;
+    line-height: 1;
+    display: block;
+  }
+
+  .name-last {
+    font-family: 'Jost', sans-serif;
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: #1a0f0a;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    display: block;
+    line-height: 1.05;
+    margin-top: -4px;
+  }
+
+  .divider-line {
+    border: none;
+    border-top: 1.5px solid #c09080;
+    margin: 10px 0 14px 0;
+  }
+
+  .job-title {
+    font-size: 0.68rem;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: #2a1a14;
+    font-weight: 500;
+  }
+
+  /* Right section heading */
+  .r-section-bar {
+    background: #f0dcd6;
+    padding: 7px 12px;
+    margin-bottom: 18px;
+  }
+
+  .r-section-bar span {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #2a1a14;
+  }
+
+  /* Experience */
+  .exp-entry { margin-bottom: 20px; }
+
+  .exp-role {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #1a0f0a;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+  }
+
+  .exp-company {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #3a2820;
+    margin-bottom: 2px;
+  }
+
+  .exp-years {
+    font-size: 0.72rem;
+    color: #7a6860;
+    margin-bottom: 6px;
+  }
+
+  .exp-desc {
+    font-size: 0.74rem;
+    color: #4a3830;
+    line-height: 1.72;
+    font-weight: 300;
+  }
+
+  /* Education */
+  .edu-entry { margin-bottom: 18px; }
+
+  .edu-degree {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #1a0f0a;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+
+  .edu-school {
+    font-size: 0.76rem;
+    color: #4a3830;
+    margin-bottom: 2px;
+  }
+
+  .edu-years {
+    font-size: 0.72rem;
+    color: #7a6860;
+  }
+</style>
+</head>
+<body>
+<div class="cv">
+
+  <!-- ── LEFT ── -->
+  <div class="left">
+
+    <!-- Photo -->
+    <div class="photo-frame">
+      <img src="placeholder" alt="Olivia Wilson"/>
+    </div>
+
+    <!-- About Me -->
+    <div class="l-block">
+      <div class="l-section-bar"><span>About Me</span></div>
+      <p class="about-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi.</p>
+    </div>
+
+    <!-- Contact -->
+    <div class="l-block">
+      <div class="l-section-bar"><span>Contact</span></div>
+      <div class="contact-item">
+        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 11.39 19a19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.9-8.39A2 2 0 0 1 3.48 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.66 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6 6l.77-.77a2 2 0 0 1 2.11-.45c.91.3 1.85.53 2.81.66A2 2 0 0 1 22 16.92z"/></svg>
+        +123-456-7890
+      </div>
+      <div class="contact-item">
+        <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+        hello@reallygreatsite.com
+      </div>
+      <div class="contact-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        www.reallygreatsite.com
+      </div>
+      <div class="contact-item">
+        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span>123 Anywhere St.<br/>Any City, ST 12345</span>
+      </div>
+    </div>
+
+    <!-- Skills -->
+    <div class="l-block">
+      <div class="l-section-bar"><span>Skills</span></div>
+      <ul class="bullet-list">
+        <li>Editing Software</li>
+        <li>Architectural Software</li>
+        <li>Photo Editing</li>
+        <li>Video Editing</li>
+      </ul>
+    </div>
+
+    <!-- Languages -->
+    <div class="l-block">
+      <div class="l-section-bar"><span>Languages</span></div>
+      <ul class="bullet-list">
+        <li>Spanish</li>
+        <li>English</li>
+        <li>Italian</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- ── RIGHT ── -->
+  <div class="right">
+
+    <!-- Name & Title -->
+    <div class="name-block">
+      <span class="name-script">Olivia</span>
+      <span class="name-last">Wilson</span>
+      <hr class="divider-line"/>
+      <div class="job-title">Designer &nbsp;&amp;&nbsp; Architect</div>
+    </div>
+
+    <!-- Work Experience -->
+    <div>
+      <div class="r-section-bar"><span>Work Experience</span></div>
+
+      <div class="exp-entry">
+        <div class="exp-role">Designer and Team Leader</div>
+        <div class="exp-company">Wardiere Inc.</div>
+        <div class="exp-years">2020 – 2025</div>
+        <p class="exp-desc">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi.</p>
+      </div>
+
+      <div class="exp-entry">
+        <div class="exp-role">Architect</div>
+        <div class="exp-company">Larana Company</div>
+        <div class="exp-years">2015 – 2020</div>
+        <p class="exp-desc">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi.</p>
+      </div>
+
+      <div class="exp-entry">
+        <div class="exp-role">Designer (Internship)</div>
+        <div class="exp-company">Studio Shodwe</div>
+        <div class="exp-years">2012 – 2014</div>
+        <p class="exp-desc">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi.</p>
+      </div>
+    </div>
+
+    <!-- Education -->
+    <div>
+      <div class="r-section-bar"><span>Education</span></div>
+
+      <div class="edu-entry">
+        <div class="edu-degree">Bachelor of Design</div>
+        <div class="edu-school">Borcelle University</div>
+        <div class="edu-years">2008 – 2012</div>
+      </div>
+
+      <div class="edu-entry">
+        <div class="edu-degree">Bachelor of Architecture</div>
+        <div class="edu-school">Borcelle University</div>
+        <div class="edu-years">2005 – 2009</div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</body>
+</html>

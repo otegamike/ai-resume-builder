@@ -1,7 +1,4 @@
-import Link from "next/link";
-import Image from "next/image";
-import { Button } from "@/components/ui/Button";
-import { ArrowRight, Sparkles, FileText, CheckCircle2 } from "lucide-react";
+import { Sparkles, FileText, CheckCircle2 } from "lucide-react";
 import styles from "./page.module.css";
 import Hero from "@/components/hero/Hero";
 

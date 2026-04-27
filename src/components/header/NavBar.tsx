@@ -1,5 +1,4 @@
 import styles from "./header.module.css";
-import { SignInButton, Show } from "@clerk/nextjs";
 import Link from "next/link";
 
 export default function NavBar() {

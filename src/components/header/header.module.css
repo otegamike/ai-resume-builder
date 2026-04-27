@@ -14,7 +14,7 @@
 }
 
 .header__content {
-  width: min(1440px, 95%);
+  width: min(1440px, 98%);
   display: flex;
   align-items: center;
   justify-content: center;

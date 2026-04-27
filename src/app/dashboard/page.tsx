@@ -82,6 +82,7 @@ export default function DashboardPage() {
       </div>
     );
   }
+  
   return (
     <div className={styles.container}>
       <div className={styles.header}>

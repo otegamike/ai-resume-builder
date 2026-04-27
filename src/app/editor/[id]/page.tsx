@@ -1,14 +1,15 @@
-"use client";
+﻿"use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
-import { ArrowLeft, Download, Save, Layout, FileText, Briefcase, GraduationCap, Code, Plus, Trash2, Loader2, Sparkles, Check, Palette } from "lucide-react";
+import { ArrowLeft, Download, Image as ImageIcon, Save, Layout, FileText, Briefcase, GraduationCap, Code, Plus, Trash2, Loader2, Sparkles, Check, Palette } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import html2pdf from 'html2pdf.js';
-import { templates, type TemplateId } from '@/lib/templates';
+import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
+import { TEMPLATE_PAGE, type TemplateDefinition, type TemplateId } from "@/lib/templateCatalog";
 import styles from "./page.module.css";
 
 interface Experience {
@@ -81,7 +82,8 @@ export default function ResumeEditor() {
   const { isLoaded, userId } = useAuth();
   const [resume, setResume] = useState(initialResume);
   const [title, setTitle] = useState("");
-  const [template, setTemplate] = useState<TemplateId>('modern');
+  const [template, setTemplate] = useState<TemplateId>("template1");
+  const [templateDefinitions, setTemplateDefinitions] = useState<TemplateDefinition[]>([]);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("personal");
   const [newSkill, setNewSkill] = useState("");
@@ -91,6 +93,18 @@ export default function ResumeEditor() {
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiGeneratingFor, setAiGeneratingFor] = useState<string | null>(null);
+  const previewIframeRef = useRef<HTMLIFrameElement | null>(null);
+  const exportIframeRef = useRef<HTMLIFrameElement | null>(null);
+
+  const selectedTemplate = useMemo(
+    () => templateDefinitions.find((entry) => entry.id === template),
+    [templateDefinitions, template]
+  );
+
+  const renderedTemplate = useMemo(() => {
+    if (!selectedTemplate?.html) return "";
+    return buildTemplateSrcDoc(selectedTemplate.html, resume);
+  }, [resume, selectedTemplate]);
 
   const callAI = async (type: string, data: Record<string, unknown>): Promise<string | string[]> => {
     const response = await fetch('/api/ai/generate', {
@@ -178,6 +192,24 @@ export default function ResumeEditor() {
   };
 
   useEffect(() => {
+    const loadTemplates = async () => {
+      try {
+        const response = await fetch("/api/templates");
+        if (!response.ok) {
+          throw new Error("Failed to load templates");
+        }
+
+        const data: TemplateDefinition[] = await response.json();
+        setTemplateDefinitions(data);
+      } catch {
+        setError("Failed to load templates");
+      }
+    };
+
+    loadTemplates();
+  }, []);
+
+  useEffect(() => {
     if (!isLoaded) return;
     if (!userId) {
       window.location.href = "/";
@@ -191,7 +223,7 @@ export default function ResumeEditor() {
           const data = await response.json();
           setResume(data.content);
           setTitle(data.title);
-          setTemplate((data.template as TemplateId) || 'modern');
+          setTemplate(normalizeTemplateId(data.template || "template1"));
         } else if (response.status === 404) {
           setTitle("Untitled Resume");
         } else {
@@ -403,21 +435,42 @@ export default function ResumeEditor() {
     }
   };
 
-  const exportPDF = () => {
-    const element = document.querySelector('.resume-preview') as HTMLElement | null;
-    if (element) {
-      const opt = {
-        margin: 1,
-        filename: `${title || 'resume'}.pdf`,
-        image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
-      };
-      html2pdf().set(opt).from(element).save();
-    }
+  const getExportElement = () => {
+    const iframeDocument = exportIframeRef.current?.contentDocument;
+    return iframeDocument?.querySelector(".page") as HTMLElement | null;
   };
 
-  if (!isLoaded || loading) {
+  const exportPDF = () => {
+    const element = getExportElement();
+    if (!element) return;
+
+    const opt = {
+      margin: 0,
+      filename: `${title || "resume"}.pdf`,
+      image: { type: "jpeg" as const, quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: "px" as const, format: [TEMPLATE_PAGE.widthPx, TEMPLATE_PAGE.heightPx] as [number, number], orientation: "portrait" as const }
+    };
+    html2pdf().set(opt).from(element).save();
+  };
+
+  const exportImage = () => {
+    const element = getExportElement();
+    if (!element) return;
+
+    const worker = html2pdf().set({
+      html2canvas: { scale: 2, useCORS: true }
+    }).from(element).toCanvas();
+
+    worker.get("canvas").then((canvas: HTMLCanvasElement) => {
+      const link = document.createElement("a");
+      link.download = `${title || "resume"}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    });
+  };
+
+  if (!isLoaded || loading || templateDefinitions.length === 0) {
     return (
       <div className={styles.loadingContainer}>
         <div className={styles.loadingContent}>
@@ -463,11 +516,11 @@ export default function ResumeEditor() {
               className={styles.templateButton}
             >
               <Palette className={styles.aiButtonIcon} />
-              {templates.find(t => t.id === template)?.name || 'Modern'}
+              {selectedTemplate?.name || "Template"}
             </Button>
             {showTemplatePicker && (
               <div className={styles.templateDropdown}>
-                {templates.map((t) => (
+                {templateDefinitions.map((t) => (
                   <button
                     key={t.id}
                     onClick={() => changeTemplate(t.id)}
@@ -508,6 +561,10 @@ export default function ResumeEditor() {
           <Button className={styles.exportButton} onClick={exportPDF}>
             <Download className={styles.exportIcon} />
             Export PDF
+          </Button>
+          <Button variant="outline" className={styles.exportButton} onClick={exportImage}>
+            <ImageIcon className={styles.exportIcon} />
+            Export Image
           </Button>
         </div>
       </header>
@@ -731,258 +788,22 @@ export default function ResumeEditor() {
         </section>
 
         <section className={styles.previewSection}>
-          <div className={`resume-preview ${styles.resumePreview} ${template === 'modern' ? styles.resumePreviewModern : template === 'classic' ? styles.resumePreviewClassic : template === 'minimal' ? styles.resumePreviewMinimal : styles.resumePreviewCreative} ${styles.resumeContent}`}>
-            {template === 'modern' && (
-              <>
-                <header className={styles.resumeHeader}>
-                  <h1 className={styles.resumeName}>{resume.personalInfo.name || "Your Name"}</h1>
-                  <p className={styles.resumeJobTitle}>{resume.personalInfo.jobTitle || "Your Title"}</p>
-                  <div className={styles.resumeContact}>
-                    {resume.personalInfo.email && <span>{resume.personalInfo.email}</span>}
-                    {resume.personalInfo.phone && <span> • {resume.personalInfo.phone}</span>}
-                    {resume.personalInfo.location && <span> • {resume.personalInfo.location}</span>}
-                    {resume.personalInfo.website && <span> • {resume.personalInfo.website}</span>}
-                  </div>
-                </header>
-
-                {resume.summary && (
-                  <section className={styles.resumeSection}>
-                    <h2 className={`${styles.resumeSectionTitle} ${styles.resumeSectionTitleBorder}`}>Professional Summary</h2>
-                    <p className={styles.experienceDescription}>{resume.summary}</p>
-                  </section>
-                )}
-
-                {resume.experience.length > 0 && (
-                  <section className={styles.resumeSection}>
-                    <h2 className={`${styles.resumeSectionTitle} ${styles.resumeSectionTitleBorder}`}>Experience</h2>
-                    {resume.experience.map(exp => (
-                      <div key={exp.id} className={styles.experienceItem}>
-                        <div className={styles.experienceHeader}>
-                          <h3 className={styles.experienceRole}>{exp.role || "Job Role"}</h3>
-                          <span className={styles.experienceDates}>{exp.startDate} – {exp.endDate}</span>
-                        </div>
-                        <div className={styles.experienceCompany}>{exp.company || "Company Name"}</div>
-                        <p className={styles.experienceDescription}>{exp.description}</p>
-                      </div>
-                    ))}
-                  </section>
-                )}
-
-                {resume.education.length > 0 && (
-                  <section className={styles.resumeSection}>
-                    <h2 className={`${styles.resumeSectionTitle} ${styles.resumeSectionTitleBorder}`}>Education</h2>
-                    {resume.education.map(edu => (
-                      <div key={edu.id} className={styles.educationItem}>
-                        <div className={styles.educationSchool}>
-                          <h3 className={styles.educationName}>{edu.school || "Institution Name"}</h3>
-                          <span className={styles.educationDates}>{edu.startDate} – {edu.endDate}</span>
-                        </div>
-                        <div className={styles.educationDegree}>{edu.degree}</div>
-                      </div>
-                    ))}
-                  </section>
-                )}
-
-                {resume.skills.length > 0 && (
-                  <section className={styles.resumeSection}>
-                    <h2 className={`${styles.resumeSectionTitle} ${styles.resumeSectionTitleBorder}`}>Skills</h2>
-                    <div className={styles.skillsListResume}>
-                      {resume.skills.join(" • ")}
-                    </div>
-                  </section>
-                )}
-              </>
-            )}
-
-            {template === 'classic' && (
-              <div className={styles.classic}>
-                <header className={styles.resumeHeader}>
-                  <h1 className={styles.resumeName}>{resume.personalInfo.name || "Your Name"}</h1>
-                  <p className={styles.resumeJobTitle}>{resume.personalInfo.jobTitle || "Your Title"}</p>
-                  <div className={styles.resumeContact}>
-                    {resume.personalInfo.email && <span>{resume.personalInfo.email}</span>}
-                    {resume.personalInfo.phone && <span> {resume.personalInfo.phone}</span>}
-                    {resume.personalInfo.location && <span> {resume.personalInfo.location}</span>}
-                    {resume.personalInfo.website && <span> {resume.personalInfo.website}</span>}
-                  </div>
-                </header>
-
-                {resume.summary && (
-                  <section className={styles.resumeSection}>
-                    <h2 className={styles.resumeSectionTitle}>PROFESSIONAL SUMMARY</h2>
-                    <p className={styles.experienceDescription}>{resume.summary}</p>
-                  </section>
-                )}
-
-                {resume.experience.length > 0 && (
-                  <section className={styles.resumeSection}>
-                    <h2 className={styles.resumeSectionTitle}>WORK EXPERIENCE</h2>
-                    {resume.experience.map(exp => (
-                      <div key={exp.id} className={styles.experienceItem}>
-                        <div className={styles.experienceHeader}>
-                          <h3 className={styles.experienceRole}>{exp.role || "Job Role"}</h3>
-                          <span className={styles.experienceDates}>{exp.startDate} – {exp.endDate}</span>
-                        </div>
-                        <div className={styles.experienceCompany}>{exp.company || "Company Name"}</div>
-                        <p className={styles.experienceDescription}>{exp.description}</p>
-                      </div>
-                    ))}
-                  </section>
-                )}
-
-                {resume.education.length > 0 && (
-                  <section className={styles.resumeSection}>
-                    <h2 className={styles.resumeSectionTitle}>EDUCATION</h2>
-                    {resume.education.map(edu => (
-                      <div key={edu.id} className={styles.educationItem}>
-                        <div className={styles.educationSchool}>
-                          <h3 className={styles.educationName}>{edu.school || "Institution Name"}</h3>
-                          <span className={styles.educationDates}>{edu.startDate} – {edu.endDate}</span>
-                        </div>
-                        <div className={styles.educationDegree}>{edu.degree}</div>
-                      </div>
-                    ))}
-                  </section>
-                )}
-
-                {resume.skills.length > 0 && (
-                  <section className={styles.resumeSection}>
-                    <h2 className={styles.resumeSectionTitle}>SKILLS</h2>
-                    <div className={styles.skillsListResume}>
-                      {resume.skills.join(", ")}
-                    </div>
-                  </section>
-                )}
-              </div>
-            )}
-
-            {template === 'minimal' && (
-              <div className={styles.minimal}>
-                <header className={styles.resumeHeader}>
-                  <h1 className={styles.resumeName}>{resume.personalInfo.name || "Your Name"}</h1>
-                  <p className={styles.resumeJobTitle}>{resume.personalInfo.jobTitle || "Your Title"}</p>
-                  <div className={styles.resumeContact}>
-                    {resume.personalInfo.email && <span>{resume.personalInfo.email}</span>}
-                    {resume.personalInfo.phone && <span> {resume.personalInfo.phone}</span>}
-                    {resume.personalInfo.location && <span> {resume.personalInfo.location}</span>}
-                    {resume.personalInfo.website && <span> {resume.personalInfo.website}</span>}
-                  </div>
-                </header>
-
-                {resume.summary && (
-                  <section className={styles.resumeSection}>
-                    <p className={styles.experienceDescription}>{resume.summary}</p>
-                  </section>
-                )}
-
-                {resume.experience.length > 0 && (
-                  <section className={styles.resumeSection}>
-                    <h2 className={styles.resumeSectionTitle}>Experience</h2>
-                    {resume.experience.map(exp => (
-                      <div key={exp.id} className={styles.experienceItem}>
-                        <div className={styles.experienceHeader}>
-                          <h3 className={styles.experienceRole}>{exp.role || "Job Role"}</h3>
-                          <span className={styles.experienceDates}>{exp.startDate} – {exp.endDate}</span>
-                        </div>
-                        <div className={styles.experienceCompany}>{exp.company || "Company Name"}</div>
-                        <p className={styles.experienceDescription}>{exp.description}</p>
-                      </div>
-                    ))}
-                  </section>
-                )}
-
-                {resume.education.length > 0 && (
-                  <section className={styles.resumeSection}>
-                    <h2 className={styles.resumeSectionTitle}>Education</h2>
-                    {resume.education.map(edu => (
-                      <div key={edu.id} className={styles.educationItem}>
-                        <div className={styles.educationSchool}>
-                          <h3 className={styles.educationName}>{edu.school || "Institution Name"}</h3>
-                          <span className={styles.educationDates}>{edu.startDate} – {edu.endDate}</span>
-                        </div>
-                        <div className={styles.educationDegree}>{edu.degree}</div>
-                      </div>
-                    ))}
-                  </section>
-                )}
-
-                {resume.skills.length > 0 && (
-                  <section className={styles.resumeSection}>
-                    <h2 className={styles.resumeSectionTitle}>Skills</h2>
-                    <div className={styles.skillsListResume}>
-                      {resume.skills.join(" / ")}
-                    </div>
-                  </section>
-                )}
-              </div>
-            )}
-
-            {template === 'creative' && (
-              <div className={styles.creative}>
-                <header className={styles.resumeHeader}>
-                  <h1 className={styles.resumeName}>{resume.personalInfo.name || "Your Name"}</h1>
-                  <p className={styles.resumeJobTitle}>{resume.personalInfo.jobTitle || "Your Title"}</p>
-                  <div className={styles.resumeContact}>
-                    {resume.personalInfo.email && <span>{resume.personalInfo.email}</span>}
-                    {resume.personalInfo.phone && <span> {resume.personalInfo.phone}</span>}
-                    {resume.personalInfo.location && <span> {resume.personalInfo.location}</span>}
-                    {resume.personalInfo.website && <span> {resume.personalInfo.website}</span>}
-                  </div>
-                </header>
-
-                {resume.summary && (
-                  <section className={styles.resumeSection}>
-                    <h2 className={styles.resumeSectionTitle}>About Me</h2>
-                    <p className={styles.experienceDescription}>{resume.summary}</p>
-                  </section>
-                )}
-
-                {resume.experience.length > 0 && (
-                  <section className={styles.resumeSection}>
-                    <h2 className={styles.resumeSectionTitle}>Experience</h2>
-                    {resume.experience.map(exp => (
-                      <div key={exp.id} className={styles.experienceItem}>
-                        <div className={styles.experienceDot} />
-                        <div className={styles.experienceHeader}>
-                          <h3 className={styles.experienceRole}>{exp.role || "Job Role"}</h3>
-                          <span className={styles.experienceDates}>{exp.startDate} – {exp.endDate}</span>
-                        </div>
-                        <div className={styles.experienceCompany}>{exp.company || "Company Name"}</div>
-                        <p className={styles.experienceDescription}>{exp.description}</p>
-                      </div>
-                    ))}
-                  </section>
-                )}
-
-                {resume.education.length > 0 && (
-                  <section className={styles.resumeSection}>
-                    <h2 className={styles.resumeSectionTitle}>Education</h2>
-                    {resume.education.map(edu => (
-                      <div key={edu.id} className={styles.experienceItem} style={{ borderLeftColor: 'var(--primary-2)' }}>
-                        <div className={styles.experienceDot} style={{ backgroundColor: 'var(--primary-2)' }} />
-                        <div className={styles.experienceHeader}>
-                          <h3 className={styles.experienceRole}>{edu.school || "Institution Name"}</h3>
-                          <span className={styles.experienceDates}>{edu.startDate} – {edu.endDate}</span>
-                        </div>
-                        <div className={styles.experienceCompany}>{edu.degree}</div>
-                      </div>
-                    ))}
-                  </section>
-                )}
-
-                {resume.skills.length > 0 && (
-                  <section className={styles.resumeSection}>
-                    <h2 className={styles.resumeSectionTitle}>Skills</h2>
-                    <div className={styles.skillsListResume}>
-                      {resume.skills.map(skill => (
-                        <span key={skill} className={styles.skillTag}>{skill}</span>
-                      ))}
-                    </div>
-                  </section>
-                )}
-              </div>
-            )}
+          <div className={styles.previewCanvas}>
+            <iframe
+              ref={previewIframeRef}
+              title="Resume preview"
+              className={styles.previewFrame}
+              srcDoc={renderedTemplate}
+              sandbox="allow-same-origin"
+            />
           </div>
+          <iframe
+            ref={exportIframeRef}
+            title="Resume export"
+            className={styles.exportFrame}
+            srcDoc={renderedTemplate}
+            sandbox="allow-same-origin"
+          />
         </section>
       </main>
     </div>

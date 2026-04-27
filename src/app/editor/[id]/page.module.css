@@ -62,6 +62,10 @@
   gap: var(--space-2);
 }
 
+.relative {
+  position: relative;
+}
+
 .templateButton {
   display: flex;
   align-items: center;
@@ -386,8 +390,37 @@
   padding: var(--space-8);
   display: flex;
   justify-content: center;
+  align-items: flex-start;
   border-left: 1px solid var(--gray-200);
   box-shadow: var(--shadow-inner);
+}
+
+.previewCanvas {
+  width: min(100%, 54rem);
+  aspect-ratio: 794 / 1123;
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.previewFrame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+.exportFrame {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  width: 794px;
+  height: 1123px;
+  border: 0;
+  pointer-events: none;
+  opacity: 0;
 }
 
 .resumePreview {

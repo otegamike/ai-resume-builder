@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { ClerkProvider, Show, SignInButton, UserButton } from '@clerk/nextjs';
 import { usePathname } from "next/navigation";
-import { Sparkles } from "lucide-react";
 import styles from "./header.module.css";
 import NavBar from "./NavBar";
 import HamburgerMenu from "./hamburger-menu/hamburgerMenu";
@@ -36,7 +35,7 @@ export default function Header() {
                 <Link className={styles.logo} href="/">
                 <Logo size={20} color='var(--primary-1)' />
                 <span className={styles.logoText}>
-                    Agentic Cv
+                    Agentic CV
                 </span>
                 </Link>
                 <nav className={styles.nav}>
