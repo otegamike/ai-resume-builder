@@ -54,6 +54,16 @@
   background-color: var(--primary-4);
 }
 
+.light_outline {
+  background-color: transparent;
+  border: 1px solid var(--neutral-100);
+  color: var(--neutral-100);
+}
+
+.light_outline:hover {
+  background-color: var(--neutral-700);
+}
+
 .ghost {
   background-color: transparent;
   color: var(--gray-700);

@@ -2,7 +2,7 @@
   /* Colors */
   --background: #fdfdfd;
   --foreground: #111a14;
-  --primary-1: #84B179;
+  --primary-1: var(--primary-600);
   --primary-2: #A2CB8B;
   --primary-3: #C7EABB;
   --primary-4: #E8F5BD;
@@ -106,6 +106,7 @@
   /* Semantic Variables */
   --bg-main: var(--neutral-50);
   --surface: #ffffff;
+  --text-highlight: var(--primary-700);
   --text-primary: var(--neutral-900);
   --text-secondary: var(--neutral-600);
   --text-muted: var(--neutral-400);
@@ -160,7 +161,7 @@
   /* Container */
   --container-max-width: 72rem;
   --container-padding: 1.5rem;
-  --background-color: var(--neutral-100);
+  --background-color: var(--neutral-200);
 }
 
 @media (prefers-color-scheme: dark) {

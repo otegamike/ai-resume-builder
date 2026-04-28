@@ -182,7 +182,7 @@
   display: flex;
   justify-content: center;
   padding: var(--space-24) 0;
-  background-color: var(--neutral-50);
+  background-color: var(--neutral-100);
   border-radius: 1.5rem;
   border-top: 1px solid var(--border-default);
   margin-bottom: var(--space-8);
@@ -256,9 +256,9 @@
   text-align: center;
   padding: var(--space-8);
   border-radius: var(--radius-2xl);
-  background-color: white;
+  background-color: var(--neutral-50);
   border: 1px solid var(--gray-100);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-lg);
   transition: box-shadow 0.2s;
 }
 
@@ -282,7 +282,7 @@
 .featureTitle {
   font-size: var(--text-xl);
   font-weight: var(--font-bold);
-  color: var(--primary-1);
+  color: var(--text-highlight);
   margin-bottom: var(--space-2);
 }
 

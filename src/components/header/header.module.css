@@ -40,7 +40,7 @@
   font-weight: var(--font-bold);
   font-size: var(--text-xl);
   letter-spacing: -0.025em;
-  color: var(--primary-500);
+  color: var(--primary-600);
 }
 
 .nav {

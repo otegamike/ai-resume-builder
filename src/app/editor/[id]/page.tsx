@@ -3,13 +3,14 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
-import { ArrowLeft, Download, Image as ImageIcon, Save, Layout, FileText, Briefcase, GraduationCap, Code, Plus, Trash2, Loader2, Sparkles, Check, Palette } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Download, Image as ImageIcon, Save, Layout, FileText, Briefcase, GraduationCap, Code, Plus, Trash2, Loader2, Sparkles, Check, Palette } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import html2pdf from 'html2pdf.js';
 import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
 import { TEMPLATE_PAGE, type TemplateDefinition, type TemplateId } from "@/lib/templateCatalog";
+import TemplateSelector from "./TemplateSelector";
 import styles from "./page.module.css";
 
 interface Experience {
@@ -59,6 +60,7 @@ const initialResume: ResumeContent = {
   skills: []
 };
 
+
 type Tab = "personal" | "summary" | "experience" | "education" | "skills";
 
 function debounce(func: (...args: [string, ResumeContent]) => void, wait: number) {
@@ -95,6 +97,8 @@ export default function ResumeEditor() {
   const [aiGeneratingFor, setAiGeneratingFor] = useState<string | null>(null);
   const previewIframeRef = useRef<HTMLIFrameElement | null>(null);
   const exportIframeRef = useRef<HTMLIFrameElement | null>(null);
+
+  const [showExportOption, setShowExportOption] = useState<boolean>(false);
 
   const selectedTemplate = useMemo(
     () => templateDefinitions.find((entry) => entry.id === template),
@@ -494,10 +498,10 @@ export default function ResumeEditor() {
 
   return (
     <div className={styles.container}>
-      <header className={styles.navbar}>
+      <div className={styles.title_bar}>
         <div className={styles.navbarLeft}>
           <Link href="/dashboard" className={styles.backLink}>
-            <ArrowLeft className={styles.backIcon} />
+            <ArrowLeft color='var(--neutral-100)' className={styles.backIcon} />
           </Link>
           <div className={styles.navbarDivider} />
           <Input 
@@ -506,32 +510,18 @@ export default function ResumeEditor() {
             className={`${styles.input} ${styles.titleInput}`}
             placeholder="Resume Title"
           />
+
+          <TemplateSelector 
+            templateDefinitions={templateDefinitions} 
+            template={template} 
+            selectedTemplate={selectedTemplate} 
+            changeTemplate={changeTemplate} 
+          />
         </div>
+        
         <div className={styles.navbarCenter}>
-          <div className={styles.relative}>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setShowTemplatePicker(!showTemplatePicker)}
-              className={styles.templateButton}
-            >
-              <Palette className={styles.aiButtonIcon} />
-              {selectedTemplate?.name || "Template"}
-            </Button>
-            {showTemplatePicker && (
-              <div className={styles.templateDropdown}>
-                {templateDefinitions.map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => changeTemplate(t.id)}
-                    className={`${styles.templateOption} ${template === t.id ? styles.templateOptionActive : ''}`}
-                  >
-                    {t.name}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          
+          
         </div>
         <div className={styles.navbarRight}>
           {autoSaveStatus === "saving" && (
@@ -550,24 +540,49 @@ export default function ResumeEditor() {
             </span>
           )}
           <Button 
-            variant="outline" 
+            variant="light_outline" 
             className={styles.saveButton}
             onClick={() => saveResume(true)}
             disabled={saving}
           >
-            <Save className={styles.saveIcon} />
+            <Save color='var(--neutral-100)' className={styles.saveIcon} />
             {saving ? 'Saving...' : 'Save Draft'}
           </Button>
-          <Button className={styles.exportButton} onClick={exportPDF}>
-            <Download className={styles.exportIcon} />
-            Export PDF
-          </Button>
-          <Button variant="outline" className={styles.exportButton} onClick={exportImage}>
-            <ImageIcon className={styles.exportIcon} />
-            Export Image
-          </Button>
+
+          <div className={styles.relative}>
+            <Button className={styles.exportButton} onClick={() => {setShowExportOption(!showExportOption)}}>
+              <Download color='var(--neutral-100)' className={styles.exportIcon} />
+              Export
+              {showExportOption ? 
+                <ChevronUp color='var(--neutral-100)' className={styles.aiButtonIcon} /> 
+                : <ChevronDown color='var(--neutral-100)' className={styles.aiButtonIcon} />
+              }
+            </Button>
+
+              {
+                showExportOption && 
+                <div className={styles.dropdown}>
+                  <button
+                    onClick={() => exportPDF()}
+                    className={`${styles.dropdown_option} ${styles.export_option}`}
+                  >
+                    <Download className={styles.exportIcon} />
+                    Export PDF
+                  </button>
+                  <button
+                    onClick={() => exportImage()}
+                    className={`${styles.dropdown_option} ${styles.export_option}`}
+                  >
+                    <ImageIcon className={styles.exportIcon} />
+                    Export Image
+                  </button>
+                </div>
+              }
+            
+          </div>
+          
         </div>
-      </header>
+      </div>
 
       <main className={styles.mainWorkspace}>
         <section className={styles.editorSection}>
@@ -794,7 +809,7 @@ export default function ResumeEditor() {
               title="Resume preview"
               className={styles.previewFrame}
               srcDoc={renderedTemplate}
-              sandbox="allow-same-origin"
+              sandbox="allow-scripts allow-same-origin"
             />
           </div>
           <iframe

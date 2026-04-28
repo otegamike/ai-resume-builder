@@ -6,13 +6,13 @@
   overflow: hidden;
 }
 
-.navbar {
-  height: 4rem;
+.title_bar {
+  
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--space-6);
-  background-color: white;
+  padding: 0.5rem var(--space-6);
+  background-color: var(--neutral-600);
   border-bottom: 1px solid var(--gray-200);
   box-shadow: var(--shadow-sm);
   position: relative;
@@ -27,7 +27,9 @@
 }
 
 .backLink {
-  color: var(--gray-500);
+  display: flex;
+  align-items: center;
+  color: var(--text-primary);
   transition: color 0.2s;
 }
 
@@ -53,8 +55,14 @@
   font-size: var(--text-lg);
   font-weight: var(--font-semibold);
   width: 16rem;
-  padding: 0;
+  padding: 0 1rem;
+  color: var(--neutral-200);
+
 }
+
+.titleInput:focus {
+    border-color: var(--neutral-200);
+  }
 
 .navbarCenter {
   display: flex;
@@ -69,11 +77,11 @@
 .templateButton {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-2);
   font-size: var(--text-xs);
 }
 
-.templateDropdown {
+.dropdown {
   position: absolute;
   top: 100%;
   right: 0;
@@ -87,7 +95,7 @@
   padding: var(--space-2);
 }
 
-.templateOption {
+.dropdown_option {
   width: 100%;
   text-align: left;
   padding: var(--space-2) var(--space-3);
@@ -100,7 +108,13 @@
   transition: background-color 0.2s;
 }
 
-.templateOption:hover {
+.export_option{
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.dropdown_option:hover {
   background-color: var(--gray-100);
 }
 
@@ -121,7 +135,7 @@
   align-items: center;
   gap: var(--space-1);
   font-size: var(--text-xs);
-  color: var(--gray-500);
+  color: var(--gnetrual-100);
 }
 
 .autoSaveIcon {
@@ -162,7 +176,7 @@
 }
 
 .editorSection {
-  width: 31.25rem;
+  width: 15rem;
   display: flex;
   flex-direction: column;
   background-color: white;

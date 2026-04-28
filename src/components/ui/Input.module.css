@@ -7,7 +7,7 @@
   background-color: transparent;
   padding: var(--space-3);
   font-size: var(--text-sm);
-  color: var(--foreground);
+  color: var(--neutral-600);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
@@ -20,6 +20,10 @@
   border-color: var(--primary-1);
   box-shadow: 0 0 0 2px var(--ring);
 }
+
+.titleInput:focus {
+    border-color: var(--neutral-200);
+  }
 
 .input:disabled {
   cursor: not-allowed;
