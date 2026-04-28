@@ -1,106 +1,393 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" style="overflow: hidden;">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:wght@400;600;700&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
-  :root {
-    --bg: #fbf4f6;
-    --surface: #fffdfd;
-    --surface-2: #f6e5eb;
-    --text: #2d1a20;
-    --muted: #6e4a56;
-    --accent: #9a5b70;
-    --accent-2: #c4859b;
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ── OUTER SHELL ── */
+  body {
+    margin: 0;
+    background: transparent;
+    font-family: 'Jost', sans-serif;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { margin: 0; font-family: Arial, sans-serif; background: transparent; }
-  .page { width: 100%; min-height: 100%; background: var(--surface); color: var(--text); display: grid; grid-template-columns: 238px 1fr; }
-  .sidebar { background: var(--surface-2); padding: 24px 20px; }
-  .photo { width: 132px; height: 132px; border-radius: 50%; border: 4px solid var(--surface); background: #c8d7d1; overflow: hidden; margin: 0 auto 20px; }
-  .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .block { margin-bottom: 22px; }
-  .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); font-weight: 700; margin-bottom: 10px; border-bottom: 1px solid #b7ccc5; padding-bottom: 6px; }
-  .item { font-size: 12px; line-height: 1.5; color: var(--muted); margin-bottom: 7px; }
-  .dot-list li { font-size: 12px; color: var(--muted); margin-bottom: 5px; margin-left: 16px; }
-  .main { padding: 30px; background: var(--surface); }
-  .name { font-size: 38px; line-height: 1; font-weight: 800; letter-spacing: 0.5px; color: var(--text); }
-  .job { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-top: 6px; margin-bottom: 18px; }
-  .section { margin-bottom: 22px; }
-  .title { font-size: 13px; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); font-weight: 700; margin-bottom: 10px; }
-  .summary { font-size: 13px; line-height: 1.65; color: var(--muted); }
-  .entry { margin-bottom: 14px; }
-  .entry-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 3px; }
-  .entry-title { font-size: 14px; font-weight: 700; color: var(--text); }
-  .entry-meta { font-size: 11px; color: var(--muted); }
-  .entry-sub { font-size: 12px; color: var(--accent); margin-bottom: 4px; }
-  .entry-desc { font-size: 12px; line-height: 1.6; color: var(--muted); }
+
+  /*
+   * Three-layer A4 scaling:
+   *   .cv-viewport  — fills the iframe body
+   *   .cv-scaler    — always 760px wide internally, scaled via JS
+   *   .cv           — fixed 760 × 1076px (A4 ratio)
+   */
+  .cv-viewport {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .cv-scaler {
+    transform-origin: top center;
+    will-change: transform;
+  }
+
+  /* ── CV DOCUMENT ── */
+  .cv {
+    width: 760px;
+    height: 1076px;
+    background: #fdf6f4;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 260px 1fr;
+  }
+
+  /* ══════════ LEFT ══════════ */
+  .left {
+    background: #f5e8e4;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .photo-frame {
+    margin: 30px 24px 28px 24px;
+    border: 3px solid #c09080;
+    overflow: hidden;
+    background: #ddd;
+    aspect-ratio: 3/3.2;
+  }
+
+  .photo-frame img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+  }
+
+  .l-block { padding: 0 24px 26px 24px; }
+
+  .l-section-bar {
+    background: #fff;
+    padding: 8px 14px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+
+  .l-section-bar span {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #2a1a14;
+  }
+
+  .about-text {
+    font-size: 0.75rem;
+    color: #4a3830;
+    line-height: 1.75;
+    font-weight: 300;
+  }
+
+  .contact-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.75rem;
+    color: #4a3830;
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+
+  .contact-item svg {
+    width: 16px; height: 16px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    stroke: #b07060;
+    fill: none;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .bullet-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .bullet-list li {
+    font-size: 0.76rem;
+    color: #4a3830;
+    margin-bottom: 8px;
+    padding-left: 16px;
+    position: relative;
+    font-weight: 300;
+  }
+
+  .bullet-list li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: #b07060;
+  }
+
+  /* ══════════ RIGHT ══════════ */
+  .right {
+    background: #fdf6f4;
+    padding: 30px 36px 36px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .name-block { margin-bottom: 4px; }
+
+  .name-script {
+    font-family: 'Great Vibes', cursive;
+    font-size: 3.6rem;
+    color: #1a0f0a;
+    line-height: 1;
+    display: block;
+  }
+
+  .name-last {
+    font-family: 'Jost', sans-serif;
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: #1a0f0a;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    display: block;
+    line-height: 1.05;
+    margin-top: -4px;
+  }
+
+  .divider-line {
+    border: none;
+    border-top: 1.5px solid #c09080;
+    margin: 10px 0 14px 0;
+  }
+
+  .job-title {
+    font-size: 0.68rem;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: #2a1a14;
+    font-weight: 500;
+  }
+
+  .r-section-bar {
+    background: #f0dcd6;
+    padding: 7px 12px;
+    margin-bottom: 18px;
+  }
+
+  .r-section-bar span {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #2a1a14;
+  }
+
+  .exp-entry { margin-bottom: 20px; }
+
+  .exp-role {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #1a0f0a;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+  }
+
+  .exp-company {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #3a2820;
+    margin-bottom: 2px;
+  }
+
+  .exp-years {
+    font-size: 0.72rem;
+    color: #7a6860;
+    margin-bottom: 6px;
+  }
+
+  .exp-desc {
+    font-size: 0.74rem;
+    color: #4a3830;
+    line-height: 1.72;
+    font-weight: 300;
+  }
+
+  .edu-entry { margin-bottom: 18px; }
+
+  .edu-degree {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #1a0f0a;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+
+  .edu-school {
+    font-size: 0.76rem;
+    color: #4a3830;
+    margin-bottom: 2px;
+  }
+
+  .edu-years {
+    font-size: 0.72rem;
+    color: #7a6860;
+  }
 </style>
 </head>
 <body>
-  <article class="page">
-    <aside class="sidebar">
-      <div class="photo">{{?personalInfo.photo}}<img src="{{personalInfo.photo}}" alt="Profile photo" />{{/personalInfo.photo}}</div>
 
-      <section class="block">
-        <h2 class="label">Contact</h2>
-        {{?personalInfo.email}}<p class="item">{{personalInfo.email}}</p>{{/personalInfo.email}}
-        {{?personalInfo.phone}}<p class="item">{{personalInfo.phone}}</p>{{/personalInfo.phone}}
-        {{?personalInfo.location}}<p class="item">{{personalInfo.location}}</p>{{/personalInfo.location}}
-        {{?personalInfo.website}}<p class="item">{{personalInfo.website}}</p>{{/personalInfo.website}}
-      </section>
+<div class="cv-viewport">
+  <div class="cv-scaler">
+    <div class="cv">
 
-      <section class="block">
-        <h2 class="label">Skills</h2>
-        <ul class="dot-list">
-          {{#skills}}<li>{{.}}</li>{{/skills}}
-        </ul>
-      </section>
-    </aside>
+  <!-- ── LEFT ── -->
+  <div class="left">
 
-    <main class="main">
-      <header>
-        <h1 class="name">{{personalInfo.name}}</h1>
-        <p class="job">{{personalInfo.jobTitle}}</p>
-      </header>
+    <!-- Photo -->
+    <div class="photo-frame">
+      {{?personalInfo.photo}}<img src="{{personalInfo.photo}}" alt="Profile photo" />{{/personalInfo.photo}}
+    </div>
 
-      {{?summary}}
-      <section class="section">
-        <h2 class="title">Profile</h2>
-        <p class="summary">{{summary}}</p>
-      </section>
-      {{/summary}}
+    <!-- About Me -->
+    {{?summary}}
+    <div class="l-block">
+      <div class="l-section-bar"><span>About Me</span></div>
+      <p class="about-text">{{summary}}</p>
+    </div>
+    {{/summary}}
 
-      <section class="section">
-        <h2 class="title">Experience</h2>
-        {{#experience}}
-        <article class="entry">
-          <div class="entry-head">
-            <h3 class="entry-title">{{role}}</h3>
-            <span class="entry-meta">{{startDate}} - {{endDate}}</span>
-          </div>
-          <p class="entry-sub">{{company}}</p>
-          <p class="entry-desc">{{description}}</p>
-        </article>
-        {{/experience}}
-      </section>
+    <!-- Contact -->
+    <div class="l-block">
+      <div class="l-section-bar"><span>Contact</span></div>
+      {{?personalInfo.phone}}
+      <div class="contact-item">
+        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 11.39 19a19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.9-8.39A2 2 0 0 1 3.48 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.66 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6 6l.77-.77a2 2 0 0 1 2.11-.45c.91.3 1.85.53 2.81.66A2 2 0 0 1 22 16.92z"/></svg>
+        {{personalInfo.phone}}
+      </div>
+      {{/personalInfo.phone}}
+      {{?personalInfo.email}}
+      <div class="contact-item">
+        <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+        {{personalInfo.email}}
+      </div>
+      {{/personalInfo.email}}
+      {{?personalInfo.website}}
+      <div class="contact-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        {{personalInfo.website}}
+      </div>
+      {{/personalInfo.website}}
+      {{?personalInfo.location}}
+      <div class="contact-item">
+        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span>{{personalInfo.location}}</span>
+      </div>
+      {{/personalInfo.location}}
+    </div>
 
-      <section class="section">
-        <h2 class="title">Education</h2>
-        {{#education}}
-        <article class="entry">
-          <div class="entry-head">
-            <h3 class="entry-title">{{degree}}</h3>
-            <span class="entry-meta">{{startDate}} - {{endDate}}</span>
-          </div>
-          <p class="entry-sub">{{school}}</p>
-        </article>
-        {{/education}}
-      </section>
-    </main>
-  </article>
+    <!-- Skills -->
+    {{?skills}}
+    <div class="l-block">
+      <div class="l-section-bar"><span>Skills</span></div>
+      <ul class="bullet-list">
+        {{#skills}}<li>{{.}}</li>{{/skills}}
+      </ul>
+    </div>
+    {{/skills}}
+
+    <!-- Languages -->
+    {{?languages}}
+    <div class="l-block">
+      <div class="l-section-bar"><span>Languages</span></div>
+      <ul class="bullet-list">
+        {{#languages}}<li>{{.}}</li>{{/languages}}
+      </ul>
+    </div>
+    {{/languages}}
+
+  </div>
+
+  <!-- ── RIGHT ── -->
+  <div class="right">
+
+    <!-- Name & Title -->
+    {{?personalInfo.name}}
+    <div class="name-block">
+      <span class="name-script">{{personalInfo.name}}</span>
+      <span class="name-last">{{personalInfo.jobTitle}}</span>
+      <hr class="divider-line"/>
+      <div class="job-title">{{personalInfo.jobTitle}}</div>
+    </div>
+    {{/personalInfo.name}}
+
+    <!-- Work Experience -->
+    {{?experience}}
+    <div>
+      <div class="r-section-bar"><span>Work Experience</span></div>
+      {{#experience}}
+      <div class="exp-entry">
+        <div class="exp-role">{{role}}</div>
+        {{?company}}<div class="exp-company">{{company}}</div>{{/company}}
+        <div class="exp-years">{{startDate}} – {{endDate}}</div>
+        <p class="exp-desc">{{description}}</p>
+      </div>
+      {{/experience}}
+    </div>
+    {{/experience}}
+
+    <!-- Education -->
+    {{?education}}
+    <div>
+      <div class="r-section-bar"><span>Education</span></div>
+      {{#education}}
+      <div class="edu-entry">
+        <div class="edu-degree">{{degree}}</div>
+        <div class="edu-school">{{school}}</div>
+        <div class="edu-years">{{startDate}} – {{endDate}}</div>
+      </div>
+      {{/education}}
+    </div>
+    {{/education}}
+
+  </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const CV_WIDTH  = 760;
+  const CV_HEIGHT = 1076;
+
+  const scaler = document.querySelector('.cv-scaler');
+
+  function scaleCv() {
+    const available = document.documentElement.clientWidth;
+    const scale = available / CV_WIDTH;
+
+    scaler.style.transform = `scale(${scale})`;
+
+    const scaledHeight = CV_HEIGHT * scale;
+    scaler.style.marginBottom = (scaledHeight - CV_HEIGHT) + 'px';
+  }
+
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(scaleCv, 60);
+  });
+
+  document.fonts.ready.then(scaleCv);
+</script>
+
 </body>
 </html>
-
-
-

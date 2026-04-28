@@ -1,106 +1,475 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" style="overflow: hidden;">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <style>
-  :root {
-    --bg: #eef3f8;
-    --surface: #ffffff;
-    --surface-2: #dce6f2;
-    --text: #172538;
-    --muted: #43586f;
-    --accent: #244b72;
-    --accent-2: #4f7aa6;
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ── OUTER SHELL ── */
+  body {
+    margin: 0;
+    background: transparent;
+    font-family: 'Montserrat', sans-serif;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { margin: 0; font-family: Arial, sans-serif; background: transparent; }
-  .page { width: 100%; min-height: 100%; background: var(--surface); color: var(--text); display: grid; grid-template-columns: 245px 1fr; }
-  .sidebar { background: var(--surface-2); padding: 24px 20px; }
-  .photo { width: 132px; height: 132px; border-radius: 50%; border: 4px solid var(--surface); background: #c8d7d1; overflow: hidden; margin: 0 auto 20px; }
-  .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .block { margin-bottom: 22px; }
-  .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); font-weight: 700; margin-bottom: 10px; border-bottom: 1px solid #b7ccc5; padding-bottom: 6px; }
-  .item { font-size: 12px; line-height: 1.5; color: var(--muted); margin-bottom: 7px; }
-  .dot-list li { font-size: 12px; color: var(--muted); margin-bottom: 5px; margin-left: 16px; }
-  .main { padding: 30px; background: var(--surface); }
-  .name { font-size: 38px; line-height: 1; font-weight: 800; letter-spacing: 0.5px; color: var(--text); }
-  .job { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-top: 6px; margin-bottom: 18px; }
-  .section { margin-bottom: 22px; }
-  .title { font-size: 13px; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); font-weight: 700; margin-bottom: 10px; }
-  .summary { font-size: 13px; line-height: 1.65; color: var(--muted); }
-  .entry { margin-bottom: 14px; }
-  .entry-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 3px; }
-  .entry-title { font-size: 14px; font-weight: 700; color: var(--text); }
-  .entry-meta { font-size: 11px; color: var(--muted); }
-  .entry-sub { font-size: 12px; color: var(--accent); margin-bottom: 4px; }
-  .entry-desc { font-size: 12px; line-height: 1.6; color: var(--muted); }
+
+  /*
+   * Three-layer A4 scaling:
+   *   .cv-viewport  — fills the iframe body
+   *   .cv-scaler    — always 780px wide internally, scaled via JS
+   *   .cv           — fixed 780 × 1103px (A4 ratio 1:√2)
+   */
+  .cv-viewport {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .cv-scaler {
+    transform-origin: top center;
+    will-change: transform;
+  }
+
+  /* ── CV DOCUMENT ── */
+  .cv {
+    width: 780px;
+    height: 1103px;
+    background: #d8dce4;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    position: relative;
+  }
+
+  /* ═══════════ GEOMETRIC SHAPES ═══════════ */
+  .shape-top-navy {
+    position: absolute;
+    top: 0; left: 0;
+    width: 0; height: 0;
+    border-style: solid;
+    border-width: 220px 160px 0 0;
+    border-color: #1a2540 transparent transparent transparent;
+    z-index: 1;
+  }
+
+  .shape-top-teal {
+    position: absolute;
+    top: -10px;
+    right: -30px;
+    width: 180px;
+    height: 260px;
+    background: #7ec8cc;
+    transform: rotate(-30deg);
+    transform-origin: top right;
+    z-index: 1;
+    opacity: 0.85;
+  }
+
+  .shape-top-teal2 {
+    position: absolute;
+    top: -10px;
+    right: 80px;
+    width: 60px;
+    height: 220px;
+    background: #5ab8be;
+    transform: rotate(-30deg);
+    transform-origin: top right;
+    z-index: 1;
+    opacity: 0.7;
+  }
+
+  .shape-mid-navy {
+    position: absolute;
+    top: 180px;
+    left: 0;
+    width: 260px;
+    height: 720px;
+    background: #1a2540;
+    z-index: 1;
+    clip-path: polygon(0 40px, 100% 0, 90% 90%, 0 100%);
+  }
+
+  .shape-bot-teal {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 200px;
+    height: 120px;
+    background: #7ec8cc;
+    z-index: 2;
+    clip-path: polygon(0 60px, 100% 0, 100% 100%, 0 100%);
+    opacity: 0.85;
+  }
+
+  .shape-bot-teal2 {
+    position: absolute;
+    bottom: -20px;
+    right: -20px;
+    width: 120px;
+    height: 180px;
+    background: #7ec8cc;
+    transform: rotate(-30deg);
+    z-index: 1;
+    opacity: 0.7;
+  }
+
+  /* ═══════════ LEFT COLUMN ═══════════ */
+  .left {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    padding-top: 200px;
+  }
+
+  .photo-wrapper {
+    position: absolute;
+    top: 30px;
+    left: 30px;
+    width: 155px;
+    height: 155px;
+    border-radius: 50%;
+    border: 5px solid #fff;
+    overflow: hidden;
+    background: #ccc;
+    z-index: 5;
+  }
+
+  .photo-wrapper img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+  }
+
+  .left-body {
+    padding: 20px 28px 120px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .l-section-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 12px;
+  }
+
+  .bullet-list { list-style: none; }
+
+  .bullet-list li {
+    font-size: 0.76rem;
+    color: #c8d4e0;
+    margin-bottom: 7px;
+    padding-left: 16px;
+    position: relative;
+    font-weight: 400;
+  }
+
+  .bullet-list li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: #7ec8cc;
+  }
+
+  .lang-item {
+    font-size: 0.78rem;
+    color: #c8d4e0;
+    margin-bottom: 8px;
+    font-weight: 400;
+  }
+
+  /* ═══════════ RIGHT COLUMN ═══════════ */
+  .right {
+    position: relative;
+    z-index: 3;
+    padding: 36px 36px 40px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .name {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1a2540;
+    letter-spacing: 1px;
+    line-height: 1.05;
+    text-transform: uppercase;
+  }
+
+  .job-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a2540;
+    margin-top: 2px;
+  }
+
+  .r-section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1a2540;
+    margin-bottom: 12px;
+  }
+
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 20px;
+  }
+
+  .contact-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #1a2540;
+    margin-bottom: 2px;
+  }
+
+  .contact-val {
+    font-size: 0.73rem;
+    color: #3a4a60;
+    font-weight: 400;
+  }
+
+  .about-text {
+    font-size: 0.75rem;
+    color: #3a4a60;
+    line-height: 1.75;
+    text-align: justify;
+    font-weight: 400;
+  }
+
+  .exp-entry { margin-bottom: 16px; }
+
+  .exp-header {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #1a2540;
+    margin-bottom: 2px;
+  }
+
+  .exp-role {
+    font-size: 0.74rem;
+    color: #4a5a70;
+    font-style: italic;
+    margin-bottom: 6px;
+  }
+
+  .exp-desc {
+    font-size: 0.73rem;
+    color: #3a4a60;
+    line-height: 1.7;
+    text-align: justify;
+    font-weight: 400;
+  }
+
+  .edu-entry {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 0 16px;
+    margin-bottom: 18px;
+    align-items: start;
+  }
+
+  .edu-year {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #1a2540;
+    margin-bottom: 2px;
+  }
+
+  .edu-uni {
+    font-size: 0.72rem;
+    color: #4a5a70;
+    font-style: italic;
+    margin-bottom: 4px;
+  }
+
+  .edu-degree {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #1a2540;
+  }
+
+  .edu-desc {
+    font-size: 0.73rem;
+    color: #3a4a60;
+    line-height: 1.7;
+    font-weight: 400;
+  }
+
+  hr.divider {
+    border: none;
+    border-top: 1px solid #b0b8c8;
+  }
 </style>
 </head>
 <body>
-  <article class="page">
-    <aside class="sidebar">
-      <div class="photo">{{?personalInfo.photo}}<img src="{{personalInfo.photo}}" alt="Profile photo" />{{/personalInfo.photo}}</div>
 
-      <section class="block">
-        <h2 class="label">Contact</h2>
-        {{?personalInfo.email}}<p class="item">{{personalInfo.email}}</p>{{/personalInfo.email}}
-        {{?personalInfo.phone}}<p class="item">{{personalInfo.phone}}</p>{{/personalInfo.phone}}
-        {{?personalInfo.location}}<p class="item">{{personalInfo.location}}</p>{{/personalInfo.location}}
-        {{?personalInfo.website}}<p class="item">{{personalInfo.website}}</p>{{/personalInfo.website}}
-      </section>
+<div class="cv-viewport">
+  <div class="cv-scaler">
+    <div class="cv">
 
-      <section class="block">
-        <h2 class="label">Skills</h2>
-        <ul class="dot-list">
+  <!-- GEOMETRIC SHAPES -->
+  <div class="shape-top-navy"></div>
+  <div class="shape-top-teal"></div>
+  <div class="shape-top-teal2"></div>
+  <div class="shape-mid-navy"></div>
+  <div class="shape-bot-teal"></div>
+  <div class="shape-bot-teal2"></div>
+
+  <!-- ── LEFT ── -->
+  <div class="left">
+
+    <div class="photo-wrapper">
+      {{?personalInfo.photo}}<img src="{{personalInfo.photo}}" alt="Profile photo" />{{/personalInfo.photo}}
+    </div>
+
+    <div class="left-body">
+
+      <!-- Expertise (Skills) -->
+      {{?skills}}
+      <div>
+        <div class="l-section-title">Expertise</div>
+        <ul class="bullet-list">
           {{#skills}}<li>{{.}}</li>{{/skills}}
         </ul>
-      </section>
-    </aside>
+      </div>
+      {{/skills}}
 
-    <main class="main">
-      <header>
-        <h1 class="name">{{personalInfo.name}}</h1>
-        <p class="job">{{personalInfo.jobTitle}}</p>
-      </header>
+      <!-- Language -->
+      {{?languages}}
+      <div>
+        <div class="l-section-title">Language</div>
+        <ul class="bullet-list">
+          {{#languages}}<li class="lang-item">{{.}}</li>{{/languages}}
+        </ul>
+      </div>
+      {{/languages}}
 
-      {{?summary}}
-      <section class="section">
-        <h2 class="title">Profile</h2>
-        <p class="summary">{{summary}}</p>
-      </section>
-      {{/summary}}
+    </div>
+  </div>
 
-      <section class="section">
-        <h2 class="title">Experience</h2>
-        {{#experience}}
-        <article class="entry">
-          <div class="entry-head">
-            <h3 class="entry-title">{{role}}</h3>
-            <span class="entry-meta">{{startDate}} - {{endDate}}</span>
-          </div>
-          <p class="entry-sub">{{company}}</p>
-          <p class="entry-desc">{{description}}</p>
-        </article>
-        {{/experience}}
-      </section>
+  <!-- ── RIGHT ── -->
+  <div class="right">
 
-      <section class="section">
-        <h2 class="title">Education</h2>
-        {{#education}}
-        <article class="entry">
-          <div class="entry-head">
-            <h3 class="entry-title">{{degree}}</h3>
-            <span class="entry-meta">{{startDate}} - {{endDate}}</span>
-          </div>
-          <p class="entry-sub">{{school}}</p>
-        </article>
-        {{/education}}
-      </section>
-    </main>
-  </article>
+    <!-- Name & Title -->
+    <div>
+      <div class="name">{{personalInfo.name}}</div>
+      <div class="job-title">{{personalInfo.jobTitle}}</div>
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- Contact -->
+    <div>
+      <div class="r-section-title">Contact</div>
+      <div class="contact-grid">
+        {{?personalInfo.phone}}
+        <div>
+          <div class="contact-label">Phone</div>
+          <div class="contact-val">{{personalInfo.phone}}</div>
+        </div>
+        {{/personalInfo.phone}}
+        {{?personalInfo.location}}
+        <div>
+          <div class="contact-label">Address</div>
+          <div class="contact-val">{{personalInfo.location}}</div>
+        </div>
+        {{/personalInfo.location}}
+        {{?personalInfo.email}}
+        <div>
+          <div class="contact-label">Email</div>
+          <div class="contact-val">{{personalInfo.email}}</div>
+        </div>
+        {{/personalInfo.email}}
+        {{?personalInfo.website}}
+        <div>
+          <div class="contact-label">Web</div>
+          <div class="contact-val">{{personalInfo.website}}</div>
+        </div>
+        {{/personalInfo.website}}
+      </div>
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- About Me -->
+    {{?summary}}
+    <div>
+      <div class="r-section-title">About Me</div>
+      <p class="about-text">{{summary}}</p>
+    </div>
+    {{/summary}}
+
+    <hr class="divider"/>
+
+    <!-- Experience -->
+    {{?experience}}
+    <div>
+      <div class="r-section-title">Experience</div>
+      {{#experience}}
+      <div class="exp-entry">
+        <div class="exp-header">{{company}} {{startDate}} - {{endDate}}</div>
+        <div class="exp-role">{{role}}</div>
+        <p class="exp-desc">{{description}}</p>
+      </div>
+      {{/experience}}
+    </div>
+    {{/experience}}
+
+    <hr class="divider"/>
+
+    <!-- Education -->
+    {{?education}}
+    <div>
+      <div class="r-section-title">Education</div>
+      {{#education}}
+      <div class="edu-entry">
+        <div class="edu-left">
+          <div class="edu-year">{{endDate}}</div>
+          <div class="edu-uni">{{school}}</div>
+          <div class="edu-degree">{{degree}}</div>
+        </div>
+        {{?detail}}<p class="edu-desc">{{detail}}</p>{{/detail}}
+      </div>
+      {{/education}}
+    </div>
+    {{/education}}
+
+  </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const CV_WIDTH  = 780;
+  const CV_HEIGHT = 1103;
+
+  const scaler = document.querySelector('.cv-scaler');
+
+  function scaleCv() {
+    const available = document.documentElement.clientWidth;
+    const scale = available / CV_WIDTH;
+
+    scaler.style.transform = `scale(${scale})`;
+
+    const scaledHeight = CV_HEIGHT * scale;
+    scaler.style.marginBottom = (scaledHeight - CV_HEIGHT) + 'px';
+  }
+
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(scaleCv, 60);
+  });
+
+  document.fonts.ready.then(scaleCv);
+</script>
+
 </body>
 </html>
-
-
-

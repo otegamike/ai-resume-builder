@@ -1,284 +1,319 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="overflow: hidden;">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Raleway:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
-  /* ── RESET ── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* ── OUTER SHELL (responsive viewport) ── */
+  /* ── OUTER SHELL ── */
   body {
     margin: 0;
-    background: #e8eeec;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    min-height: 100vh;
-    padding: 24px;
-    font-family: 'Raleway', sans-serif;
+    background: transparent;
+    font-family: 'Inter', sans-serif;
   }
 
   /*
-   * .cv-viewport  — shrinks/grows with the browser window
-   * .cv-scaler    — always 760×1075px internally; scaled via JS
-   * .cv           — the actual document, fixed A4 dimensions
-   *
-   * A4 ratio: 760 × 1075 ≈ 1:1.414
+   * Three-layer A4 scaling:
+   *   .cv-viewport  — fills the iframe body
+   *   .cv-scaler    — always 780px wide internally, scaled via JS
+   *   .cv           — fixed 780 × 1103px (A4 ratio 1:√2)
    */
   .cv-viewport {
     width: 100%;
-    max-width: 900px;
+    min-height: 100vh;
     display: flex;
     justify-content: center;
+    align-items: flex-start;
   }
 
   .cv-scaler {
     transform-origin: top center;
-    /* transform set by JS */
     will-change: transform;
   }
 
-  /* ── CV DOCUMENT (fixed A4 size) ── */
+  /* ── CV DOCUMENT ── */
   .cv {
-    width: 760px;
-    height: 1075px;
+    width: 780px;
+    height: 1103px;
     background: #fff;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.15);
     overflow: hidden;
-    position: relative;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+  }
+
+  /* ══════════════════ LEFT COLUMN ══════════════════ */
+  .left {
+    background: #e8e0d6;
     display: flex;
     flex-direction: column;
   }
 
-  /* ── HEADER ── */
-  .header {
-    background: #2e6b5e;
-    position: relative;
-    padding: 36px 40px 0 40px;
-    overflow: hidden;
-    min-height: 210px;
-    flex-shrink: 0;
-  }
-
-  .header::before {
-    content: '';
-    position: absolute;
-    bottom: -30px;
-    right: 120px;
-    width: 340px;
-    height: 260px;
-    background: #3d8272;
-    border-radius: 50% 50% 0 0 / 60% 60% 0 0;
-    transform: rotate(-10deg);
-    z-index: 0;
-  }
-
-  .header-content {
-    position: relative;
-    z-index: 1;
-  }
-
-  .name {
-    font-family: 'Playfair Display', serif;
-    font-size: 2rem;
-    color: #fff;
-    letter-spacing: 1px;
-    line-height: 1.1;
-  }
-
-  .job-title {
-    font-size: 0.72rem;
-    color: #a8d5c9;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    margin-top: 4px;
-    font-weight: 400;
-  }
-
-  .about-label {
-    font-size: 0.7rem;
-    color: #a8d5c9;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    margin-top: 26px;
-    margin-bottom: 8px;
-    font-weight: 600;
-  }
-
-  .about-text {
-    font-size: 0.74rem;
-    color: #d5eae6;
-    line-height: 1.65;
-    max-width: 370px;
-    font-weight: 300;
+  /* Top beige hero with photo */
+  .left-hero {
+    background: #d9cfc4;
+    padding: 36px 0 30px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
   .photo-wrapper {
-    position: absolute;
-    top: 30px;
-    right: 40px;
-    width: 120px;
-    height: 120px;
+    width: 160px;
+    height: 160px;
     border-radius: 50%;
-    border: 4px solid #fff;
+    border: 5px solid #fff;
     overflow: hidden;
-    z-index: 2;
-    background: #ccc;
+    background: #bbb;
   }
 
   .photo-wrapper img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
   }
 
-  /* ── BODY ── */
-  .body {
-    display: grid;
-    grid-template-columns: 220px 1fr;
-    background: #f0f5f3;
-    flex: 1;
-    min-height: 0;
-  }
-
-  /* ── LEFT COLUMN ── */
-  .left {
-    padding: 36px 24px;
-    background: #e2eeea;
+  .left-body {
+    padding: 32px 28px;
     display: flex;
     flex-direction: column;
-    gap: 28px;
-    overflow: hidden;
+    gap: 30px;
   }
 
-  .section-label {
-    font-size: 0.68rem;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    color: #2e6b5e;
+  /* Section headings left */
+  .l-section-title {
+    font-family: 'Merriweather', serif;
+    font-size: 1.05rem;
     font-weight: 700;
-    margin-bottom: 14px;
-    border-bottom: 1px solid #b5d4cc;
-    padding-bottom: 6px;
+    color: #1a1a1a;
+    margin-bottom: 16px;
   }
 
+  /* Contact */
   .contact-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 0.74rem;
-    color: #3a4a47;
-    margin-bottom: 10px;
-    font-weight: 400;
+    gap: 11px;
+    font-size: 0.76rem;
+    color: #2a2520;
+    margin-bottom: 11px;
   }
 
-  .contact-item .icon {
-    width: 18px;
-    height: 18px;
+  .contact-item svg {
+    width: 16px; height: 16px;
     flex-shrink: 0;
+    stroke: #2a2520;
     fill: none;
-    stroke: #2e6b5e;
     stroke-width: 1.8;
     stroke-linecap: round;
     stroke-linejoin: round;
   }
 
-  .bullet-list {
-    list-style: none;
-    padding: 0;
-  }
-
-  .bullet-list li {
-    font-size: 0.76rem;
-    color: #3a4a47;
-    margin-bottom: 7px;
-    padding-left: 14px;
-    position: relative;
-    font-weight: 400;
-  }
-
-  .bullet-list li::before {
-    content: '•';
-    position: absolute;
-    left: 0;
-    color: #2e6b5e;
-    font-size: 1rem;
-    line-height: 1;
-  }
-
-  /* ── RIGHT COLUMN ── */
-  .right {
-    padding: 36px 32px;
-    background: #f7faf9;
-    display: flex;
-    flex-direction: column;
-    gap: 28px;
-    overflow: hidden;
-  }
-
-  .right .section-label {
-    color: #2e6b5e;
-  }
-
   /* Education */
-  .edu-entry {
-    margin-bottom: 16px;
+  .edu-entry { margin-bottom: 18px; }
+
+  .edu-years {
+    font-size: 0.72rem;
+    color: #5a5550;
+    margin-bottom: 3px;
   }
 
   .edu-degree {
     font-size: 0.82rem;
     font-weight: 700;
-    color: #1a3330;
+    color: #1a1a1a;
   }
 
-  .edu-meta {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.74rem;
-    color: #5a7570;
-    margin-top: 3px;
-    font-weight: 400;
-  }
-
-  /* Experience */
-  .exp-entry {
-    margin-bottom: 18px;
-  }
-
-  .exp-company {
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: #1a3330;
-  }
-
-  .exp-meta {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.74rem;
-    color: #5a7570;
+  .edu-detail {
+    font-size: 0.73rem;
+    color: #4a4540;
+    line-height: 1.6;
     margin-top: 2px;
-    margin-bottom: 8px;
   }
 
-  .exp-desc {
-    font-size: 0.72rem;
-    color: #3a4a47;
-    line-height: 1.65;
+  /* Skills - list style */
+  .skill-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .skill-list li {
+    font-size: 0.74rem;
+    color: #2a2520;
+    margin-bottom: 8px;
     padding-left: 14px;
     position: relative;
-    font-weight: 300;
   }
 
-  .exp-desc::before {
+  .skill-list li::before {
     content: '•';
     position: absolute;
     left: 0;
-    color: #2e6b5e;
-    font-size: 1rem;
-    line-height: 1;
+    color: #5a4e44;
+  }
+
+  /* ══════════════════ RIGHT COLUMN ══════════════════ */
+  .right {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Dark header */
+  .right-hero {
+    background: #3a3530;
+    padding: 36px 36px 30px 36px;
+    min-height: 220px;
+  }
+
+  .name {
+    font-family: 'Merriweather', serif;
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    line-height: 1.1;
+  }
+
+  .job-title {
+    font-size: 0.9rem;
+    color: #c8bfb4;
+    font-weight: 400;
+    margin-top: 6px;
+    margin-bottom: 20px;
+  }
+
+  .bio {
+    font-size: 0.76rem;
+    color: #b8b0a6;
+    line-height: 1.75;
+    text-align: justify;
+    font-weight: 300;
+  }
+
+  /* Right body */
+  .right-body {
+    padding: 32px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  .r-section-title {
+    font-family: 'Merriweather', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 18px;
+  }
+
+  /* Experience */
+  .exp-entry { margin-bottom: 22px; }
+
+  .exp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 3px;
+  }
+
+  .exp-role {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  .exp-dates {
+    font-size: 0.73rem;
+    color: #5a5550;
+    white-space: nowrap;
+  }
+
+  .exp-company {
+    font-size: 0.75rem;
+    color: #6a6560;
+    margin-bottom: 7px;
+  }
+
+  .exp-desc {
+    font-size: 0.74rem;
+    color: #3a3530;
+    line-height: 1.7;
+    text-align: justify;
+    font-weight: 300;
+  }
+
+  /* Language */
+  .lang-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .lang-item {
+    padding: 8px;
+    background: #f5f0ea;
+    border-radius: 4px;
+  }
+
+  .lang-name {
+    font-size: 0.8rem;
+    color: #1a1a1a;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+
+  .lang-bar-track {
+    height: 6px;
+    background: #d8d0c8;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .lang-bar-fill {
+    height: 100%;
+    background: #5a4e44;
+    border-radius: 3px;
+  }
+
+  /* Reference */
+  .ref-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .ref-name {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 2px;
+  }
+
+  .ref-company {
+    font-size: 0.74rem;
+    color: #5a5550;
+    margin-bottom: 8px;
+  }
+
+  .ref-detail {
+    font-size: 0.73rem;
+    color: #3a3530;
+    display: flex;
+    gap: 6px;
+    margin-bottom: 3px;
+  }
+
+  .ref-detail .lbl {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  hr.divider {
+    border: none;
+    border-top: 1px solid #ddd;
+    margin: 0;
   }
 </style>
 </head>
@@ -288,152 +323,163 @@
   <div class="cv-scaler">
     <div class="cv">
 
-      <!-- HEADER -->
-      <div class="header">
-        {{?personalInfo.photo}}
-        <div class="photo-wrapper">
-          <img src="{{personalInfo.photo}}" alt="Profile Photo" />
+  <!-- ── LEFT ── -->
+  <div class="left">
+    <div class="left-hero">
+      <div class="photo-wrapper">
+        {{?personalInfo.photo}}<img src="{{personalInfo.photo}}" alt="Profile photo" />{{/personalInfo.photo}}
+      </div>
+    </div>
+
+    <div class="left-body">
+
+      <!-- Contact -->
+      {{?personalInfo.phone}}
+      <div>
+        <div class="l-section-title">Contact</div>
+        <div class="contact-item">
+          <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+          {{personalInfo.phone}}
         </div>
-        {{/personalInfo.photo}}
-        <div class="header-content">
-          <div class="name">{{personalInfo.name}}</div>
-          <div class="job-title">{{personalInfo.jobTitle}}</div>
-          {{?summary}}
-          <div class="about-label">About Me</div>
-          <p class="about-text">{{summary}}</p>
-          {{/summary}}
+      {{/personalInfo.phone}}
+      {{?personalInfo.email}}
+        <div class="contact-item">
+          <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+          {{personalInfo.email}}
         </div>
+      {{/personalInfo.email}}
+      {{?personalInfo.website}}
+        <div class="contact-item">
+          <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          {{personalInfo.website}}
+        </div>
+      {{/personalInfo.website}}
+      {{?personalInfo.location}}
+        <div class="contact-item">
+          <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          {{personalInfo.location}}
+        </div>
+      {{/personalInfo.location}}
       </div>
 
-      <!-- BODY -->
-      <div class="body">
+      <!-- Education -->
+      {{?education}}
+      <div>
+        <div class="l-section-title">Education</div>
+        {{#education}}
+        <div class="edu-entry">
+          <div class="edu-years">{{startDate}}–{{endDate}}</div>
+          <div class="edu-degree">{{degree}}</div>
+          <div class="edu-detail">{{school}}{{?detail}}<br/>{{detail}}{{/detail}}</div>
+        </div>
+        {{/education}}
+      </div>
+      {{/education}}
 
-        <!-- LEFT -->
-        <div class="left">
+      <!-- Skills - list format, ignoring level -->
+      {{?skills}}
+      <div>
+        <div class="l-section-title">Skills</div>
+        <ul class="skill-list">
+          {{#skills}}<li>{{.}}</li>{{/skills}}
+        </ul>
+      </div>
+      {{/skills}}
 
-          <!-- Contact -->
-          <div>
-            <div class="section-label">Contact</div>
-            {{?personalInfo.email}}
-            <div class="contact-item">
-              <svg class="icon" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
-              {{personalInfo.email}}
-            </div>
-            {{/personalInfo.email}}
-            {{?personalInfo.phone}}
-            <div class="contact-item">
-              <svg class="icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 11.39 19a19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.9-8.39A2 2 0 0 1 3.48 2h3a2 2 0 0 1 2 1.72 12.08 12.08 0 0 0 .66 2.67 2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6 6l.77-.77a2 2 0 0 1 2.11-.45 12.08 12.08 0 0 0 2.67.66A2 2 0 0 1 22 16.92z"/></svg>
-              {{personalInfo.phone}}
-            </div>
-            {{/personalInfo.phone}}
-            {{?personalInfo.location}}
-            <div class="contact-item">
-              <svg class="icon" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              {{personalInfo.location}}
-            </div>
-            {{/personalInfo.location}}
-            {{?personalInfo.website}}
-            <div class="contact-item">
-              <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-              {{personalInfo.website}}
-            </div>
-            {{/personalInfo.website}}
+    </div>
+  </div>
+
+  <!-- ── RIGHT ── -->
+  <div class="right">
+    <div class="right-hero">
+      <div class="name">{{personalInfo.name}}</div>
+      <div class="job-title">{{personalInfo.jobTitle}}</div>
+      {{?summary}}<p class="bio">{{summary}}</p>{{/summary}}
+    </div>
+
+    <div class="right-body">
+
+      <!-- Experience -->
+      {{?experience}}
+      <div>
+        <div class="r-section-title">Experience</div>
+        {{#experience}}
+        <div class="exp-entry">
+          <div class="exp-header">
+            <div class="exp-role">{{role}}</div>
+            <div class="exp-dates">{{startDate}} - {{endDate}}</div>
           </div>
+          {{?company}}<div class="exp-company">{{company}}</div>{{/company}}
+          <p class="exp-desc">{{description}}</p>
+        </div>
+        {{/experience}}
+      </div>
+      {{/experience}}
 
-          <!-- Skills -->
-          {{?skills}}
-          <div>
-            <div class="section-label">Skills</div>
-            <ul class="bullet-list">
-              {{#skills}}<li>{{.}}</li>{{/skills}}
-            </ul>
-          </div>
-          {{/skills}}
+      <hr class="divider"/>
 
-          <!-- Languages -->
-          {{?languages}}
-          <div>
-            <div class="section-label">Languages</div>
-            <ul class="bullet-list">
-              {{#languages}}<li>{{.}}</li>{{/languages}}
-            </ul>
+      <!-- Language -->
+      {{?languages}}
+      <div>
+        <div class="r-section-title">Language</div>
+        <div class="lang-grid">
+          {{#languages}}
+          <div class="lang-item">
+            <div class="lang-name">{{.}}</div>
           </div>
           {{/languages}}
-
-        </div>
-
-        <!-- RIGHT -->
-        <div class="right">
-
-          <!-- Education -->
-          {{?education}}
-          <div>
-            <div class="section-label">Education</div>
-            {{#education}}
-            <div class="edu-entry">
-              <div class="edu-degree">{{degree}}</div>
-              <div class="edu-meta">
-                <span>{{school}}</span>
-                <span>{{startDate}}–{{endDate}}</span>
-              </div>
-            </div>
-            {{/education}}
-          </div>
-          {{/education}}
-
-          <!-- Experience -->
-          {{?experience}}
-          <div>
-            <div class="section-label">Experience</div>
-            {{#experience}}
-            <div class="exp-entry">
-              <div class="exp-company">{{company}}</div>
-              <div class="exp-meta">
-                <span>{{role}}</span>
-                <span>{{startDate}} – {{endDate}}</span>
-              </div>
-              <p class="exp-desc">{{description}}</p>
-            </div>
-            {{/experience}}
-          </div>
-          {{/experience}}
-
         </div>
       </div>
+      {{/languages}}
 
-    </div><!-- /.cv -->
-  </div><!-- /.cv-scaler -->
-</div><!-- /.cv-viewport -->
+      <hr class="divider"/>
+
+      <!-- Reference -->
+      {{?references}}
+      <div>
+        <div class="r-section-title">Reference</div>
+        <div class="ref-grid">
+          {{#references}}
+          <div>
+            <div class="ref-name">{{name}}</div>
+            <div class="ref-company">{{company}}</div>
+            {{?phone}}<div class="ref-detail"><span class="lbl">Phone:</span> {{phone}}</div>{{/phone}}
+            {{?email}}<div class="ref-detail"><span class="lbl">Email :</span> {{email}}</div>{{/email}}
+          </div>
+          {{/references}}
+        </div>
+      </div>
+      {{/references}}
+
+    </div>
+  </div>
+
+    </div>
+  </div>
+</div>
 
 <script>
-  const CV_WIDTH  = 760;   // fixed design width
-  const CV_HEIGHT = 1075;  // fixed design height (≈ A4 ratio 1:1.414)
+  const CV_WIDTH  = 780;
+  const CV_HEIGHT = 1103;
 
-  const viewport = document.querySelector('.cv-viewport');
-  const scaler   = document.querySelector('.cv-scaler');
+  const scaler = document.querySelector('.cv-scaler');
 
   function scaleCv() {
-    // Available width = viewport width minus body padding (24px each side)
-    const available = Math.min(viewport.offsetWidth, 900);
+    const available = document.documentElement.clientWidth;
     const scale = available / CV_WIDTH;
 
     scaler.style.transform = `scale(${scale})`;
 
-    // transform: scale doesn't affect document flow,
-    // so we manually reserve the scaled height so the page scrolls correctly
     const scaledHeight = CV_HEIGHT * scale;
-    scaler.style.height = CV_HEIGHT + 'px';
     scaler.style.marginBottom = (scaledHeight - CV_HEIGHT) + 'px';
   }
 
-  // Debounced resize listener
   let resizeTimer;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(scaleCv, 60);
   });
 
-  // Wait for fonts before first scale so layout is accurate
   document.fonts.ready.then(scaleCv);
 </script>
 

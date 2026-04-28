@@ -1,106 +1,449 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" style="overflow: hidden;">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet"/>
 <style>
-  :root {
-    --bg: #f2f4f7;
-    --surface: #ffffff;
-    --surface-2: #e4e9ef;
-    --text: #1b2430;
-    --muted: #4b5a6e;
-    --accent: #2a4361;
-    --accent-2: #5e7a9b;
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ── OUTER SHELL ── */
+  body {
+    margin: 0;
+    background: transparent;
+    font-family: 'Lato', sans-serif;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { margin: 0; font-family: Arial, sans-serif; background: transparent; }
-  .page { width: 100%; min-height: 100%; background: var(--surface); color: var(--text); display: grid; grid-template-columns: 252px 1fr; }
-  .sidebar { background: var(--surface-2); padding: 24px 20px; }
-  .photo { width: 132px; height: 132px; border-radius: 50%; border: 4px solid var(--surface); background: #c8d7d1; overflow: hidden; margin: 0 auto 20px; }
-  .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .block { margin-bottom: 22px; }
-  .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); font-weight: 700; margin-bottom: 10px; border-bottom: 1px solid #b7ccc5; padding-bottom: 6px; }
-  .item { font-size: 12px; line-height: 1.5; color: var(--muted); margin-bottom: 7px; }
-  .dot-list li { font-size: 12px; color: var(--muted); margin-bottom: 5px; margin-left: 16px; }
-  .main { padding: 30px; background: var(--surface); }
-  .name { font-size: 38px; line-height: 1; font-weight: 800; letter-spacing: 0.5px; color: var(--text); }
-  .job { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-top: 6px; margin-bottom: 18px; }
-  .section { margin-bottom: 22px; }
-  .title { font-size: 13px; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); font-weight: 700; margin-bottom: 10px; }
-  .summary { font-size: 13px; line-height: 1.65; color: var(--muted); }
-  .entry { margin-bottom: 14px; }
-  .entry-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 3px; }
-  .entry-title { font-size: 14px; font-weight: 700; color: var(--text); }
-  .entry-meta { font-size: 11px; color: var(--muted); }
-  .entry-sub { font-size: 12px; color: var(--accent); margin-bottom: 4px; }
-  .entry-desc { font-size: 12px; line-height: 1.6; color: var(--muted); }
+
+  /*
+   * Three-layer A4 scaling:
+   *   .cv-viewport  — fills the iframe body
+   *   .cv-scaler    — always 780px wide internally, scaled via JS
+   *   .cv           — fixed 780 × 1103px (A4 ratio 1:√2)
+   */
+  .cv-viewport {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .cv-scaler {
+    transform-origin: top center;
+    will-change: transform;
+  }
+
+  /* ── CV DOCUMENT ── */
+  .cv {
+    width: 780px;
+    height: 1103px;
+    background: #fff;
+    overflow: hidden;
+    border-radius: 18px;
+    display: grid;
+    grid-template-columns: 272px 1fr;
+  }
+
+  /* ══════════ LEFT ══════════ */
+  .left {
+    background: #b0b8c4;
+    display: flex;
+    flex-direction: column;
+    border-radius: 0 0 0 18px;
+  }
+
+  .left-hero {
+    background: #2e3a4e;
+    padding: 30px 0 32px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 190px;
+  }
+
+  .photo-wrapper {
+    width: 152px;
+    height: 152px;
+    border-radius: 50%;
+    border: 5px solid #fff;
+    overflow: hidden;
+    background: #888;
+    margin-top: 0;
+  }
+
+  .photo-wrapper img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+  }
+
+  .left-body {
+    padding: 32px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    flex: 1;
+  }
+
+  .l-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1a2230;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding-bottom: 7px;
+    border-bottom: 1.5px solid #1a2230;
+    margin-bottom: 14px;
+  }
+
+  .contact-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.76rem;
+    color: #1a2230;
+    margin-bottom: 10px;
+    font-weight: 400;
+  }
+
+  .contact-item svg {
+    width: 15px; height: 15px;
+    flex-shrink: 0;
+    stroke: #1a2230;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .edu-entry { margin-bottom: 18px; }
+
+  .edu-degree {
+    font-size: 0.82rem;
+    color: #1a2230;
+    font-weight: 400;
+  }
+
+  .edu-school {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #1a2230;
+    margin-top: 3px;
+  }
+
+  .edu-years {
+    font-size: 0.73rem;
+    color: #38495e;
+    margin-top: 2px;
+  }
+
+  .bullet-list { list-style: none; }
+
+  .bullet-list li {
+    font-size: 0.78rem;
+    color: #1a2230;
+    margin-bottom: 8px;
+    padding-left: 16px;
+    position: relative;
+    font-weight: 400;
+  }
+
+  .bullet-list li::before {
+    content: '▪';
+    position: absolute;
+    left: 0;
+    color: #1a2230;
+    font-size: 0.7rem;
+    line-height: 1.5;
+  }
+
+  .lang-item {
+    font-size: 0.82rem;
+    color: #1a2230;
+    margin-bottom: 12px;
+    font-weight: 400;
+  }
+
+  /* ══════════ RIGHT ══════════ */
+  .right {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .right-hero {
+    background: #2e3a4e;
+    padding: 38px 36px 34px 32px;
+    min-height: 190px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-radius: 0 18px 0 0;
+  }
+
+  .name {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.05rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 1px;
+    line-height: 1.1;
+    text-transform: uppercase;
+  }
+
+  .job-title {
+    font-size: 0.78rem;
+    color: #a8b8cc;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 8px;
+    font-weight: 300;
+  }
+
+  .right-body {
+    padding: 32px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+    background: #fff;
+    flex: 1;
+  }
+
+  .r-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1a2230;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding-bottom: 7px;
+    border-bottom: 1.5px solid #1a2230;
+    margin-bottom: 16px;
+  }
+
+  .profile-text {
+    font-size: 0.77rem;
+    color: #3a4a5a;
+    line-height: 1.78;
+    text-align: justify;
+    font-weight: 400;
+  }
+
+  .exp-entry { margin-bottom: 18px; }
+
+  .exp-role {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #1a2230;
+    margin-bottom: 5px;
+  }
+
+  .exp-company {
+    font-size: 0.76rem;
+    color: #5a6878;
+    margin-bottom: 4px;
+  }
+
+  .exp-years {
+    font-size: 0.73rem;
+    color: #5a6878;
+    margin-bottom: 6px;
+  }
+
+  .exp-desc {
+    font-size: 0.74rem;
+    color: #3a4a5a;
+    line-height: 1.72;
+    text-align: justify;
+    font-weight: 400;
+  }
+
+  .ref-entry { margin-bottom: 18px; }
+
+  .ref-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1a2230;
+    margin-bottom: 2px;
+  }
+
+  .ref-company {
+    font-size: 0.74rem;
+    color: #5a6878;
+    margin-bottom: 7px;
+  }
+
+  .ref-detail {
+    font-size: 0.73rem;
+    color: #3a4a5a;
+    display: flex;
+    gap: 6px;
+    margin-bottom: 3px;
+  }
+
+  .ref-detail .lbl { font-weight: 700; min-width: 46px; }
 </style>
 </head>
 <body>
-  <article class="page">
-    <aside class="sidebar">
-      <div class="photo">{{?personalInfo.photo}}<img src="{{personalInfo.photo}}" alt="Profile photo" />{{/personalInfo.photo}}</div>
 
-      <section class="block">
-        <h2 class="label">Contact</h2>
-        {{?personalInfo.email}}<p class="item">{{personalInfo.email}}</p>{{/personalInfo.email}}
-        {{?personalInfo.phone}}<p class="item">{{personalInfo.phone}}</p>{{/personalInfo.phone}}
-        {{?personalInfo.location}}<p class="item">{{personalInfo.location}}</p>{{/personalInfo.location}}
-        {{?personalInfo.website}}<p class="item">{{personalInfo.website}}</p>{{/personalInfo.website}}
-      </section>
+<div class="cv-viewport">
+  <div class="cv-scaler">
+    <div class="cv">
 
-      <section class="block">
-        <h2 class="label">Skills</h2>
-        <ul class="dot-list">
+  <!-- ── LEFT ── -->
+  <div class="left">
+
+    <div class="left-hero">
+      <div class="photo-wrapper">
+        {{?personalInfo.photo}}<img src="{{personalInfo.photo}}" alt="Profile photo" />{{/personalInfo.photo}}
+      </div>
+    </div>
+
+    <div class="left-body">
+
+      <!-- Contact -->
+      <div>
+        <div class="l-title">Contact</div>
+        {{?personalInfo.email}}
+        <div class="contact-item">
+          <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+          {{personalInfo.email}}
+        </div>
+        {{/personalInfo.email}}
+        {{?personalInfo.phone}}
+        <div class="contact-item">
+          <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 11.39 19a19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.9-8.39A2 2 0 0 1 3.48 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.66 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6 6l.77-.77a2 2 0 0 1 2.11-.45c.91.3 1.85.53 2.81.66A2 2 0 0 1 22 16.92z"/></svg>
+          {{personalInfo.phone}}
+        </div>
+        {{/personalInfo.phone}}
+        {{?personalInfo.location}}
+        <div class="contact-item">
+          <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          {{personalInfo.location}}
+        </div>
+        {{/personalInfo.location}}
+        {{?personalInfo.website}}
+        <div class="contact-item">
+          <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          {{personalInfo.website}}
+        </div>
+        {{/personalInfo.website}}
+      </div>
+
+      <!-- Education -->
+      {{?education}}
+      <div>
+        <div class="l-title">Education</div>
+        {{#education}}
+        <div class="edu-entry">
+          <div class="edu-degree">{{degree}}</div>
+          <div class="edu-school">{{school}}</div>
+          <div class="edu-years">{{startDate}} - {{endDate}}</div>
+        </div>
+        {{/education}}
+      </div>
+      {{/education}}
+
+      <!-- Skills -->
+      {{?skills}}
+      <div>
+        <div class="l-title">Skills</div>
+        <ul class="bullet-list">
           {{#skills}}<li>{{.}}</li>{{/skills}}
         </ul>
-      </section>
-    </aside>
+      </div>
+      {{/skills}}
 
-    <main class="main">
-      <header>
-        <h1 class="name">{{personalInfo.name}}</h1>
-        <p class="job">{{personalInfo.jobTitle}}</p>
-      </header>
+      <!-- Language -->
+      {{?languages}}
+      <div>
+        <div class="l-title">Language</div>
+        {{#languages}}<div class="lang-item">{{.}}</div>{{/languages}}
+      </div>
+      {{/languages}}
 
+    </div>
+  </div>
+
+  <!-- ── RIGHT ── -->
+  <div class="right">
+
+    <!-- Dark header -->
+    <div class="right-hero">
+      <div class="name">{{personalInfo.name}}</div>
+      <div class="job-title">{{personalInfo.jobTitle}}</div>
+    </div>
+
+    <div class="right-body">
+
+      <!-- Profile -->
       {{?summary}}
-      <section class="section">
-        <h2 class="title">Profile</h2>
-        <p class="summary">{{summary}}</p>
-      </section>
+      <div>
+        <div class="r-title">Profile</div>
+        <p class="profile-text">{{summary}}</p>
+      </div>
       {{/summary}}
 
-      <section class="section">
-        <h2 class="title">Experience</h2>
+      <!-- Experience -->
+      {{?experience}}
+      <div>
+        <div class="r-title">Experience</div>
         {{#experience}}
-        <article class="entry">
-          <div class="entry-head">
-            <h3 class="entry-title">{{role}}</h3>
-            <span class="entry-meta">{{startDate}} - {{endDate}}</span>
-          </div>
-          <p class="entry-sub">{{company}}</p>
-          <p class="entry-desc">{{description}}</p>
-        </article>
+        <div class="exp-entry">
+          <div class="exp-role">{{role}}</div>
+          {{?company}}<div class="exp-company">{{company}}</div>{{/company}}
+          <div class="exp-years">{{startDate}} - {{endDate}}</div>
+          <p class="exp-desc">{{description}}</p>
+        </div>
         {{/experience}}
-      </section>
+      </div>
+      {{/experience}}
 
-      <section class="section">
-        <h2 class="title">Education</h2>
-        {{#education}}
-        <article class="entry">
-          <div class="entry-head">
-            <h3 class="entry-title">{{degree}}</h3>
-            <span class="entry-meta">{{startDate}} - {{endDate}}</span>
-          </div>
-          <p class="entry-sub">{{school}}</p>
-        </article>
-        {{/education}}
-      </section>
-    </main>
-  </article>
+      <!-- References -->
+      {{?references}}
+      <div>
+        <div class="r-title">References</div>
+        {{#references}}
+        <div class="ref-entry">
+          <div class="ref-name">{{name}}</div>
+          <div class="ref-company">{{company}}</div>
+          {{?phone}}<div class="ref-detail"><span class="lbl">Phone:</span> {{phone}}</div>{{/phone}}
+          {{?email}}<div class="ref-detail"><span class="lbl">Email :</span> {{email}}</div>{{/email}}
+        </div>
+        {{/references}}
+      </div>
+      {{/references}}
+
+    </div>
+  </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const CV_WIDTH  = 780;
+  const CV_HEIGHT = 1103;
+
+  const scaler = document.querySelector('.cv-scaler');
+
+  function scaleCv() {
+    const available = document.documentElement.clientWidth;
+    const scale = available / CV_WIDTH;
+
+    scaler.style.transform = `scale(${scale})`;
+
+    const scaledHeight = CV_HEIGHT * scale;
+    scaler.style.marginBottom = (scaledHeight - CV_HEIGHT) + 'px';
+  }
+
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(scaleCv, 60);
+  });
+
+  document.fonts.ready.then(scaleCv);
+</script>
+
 </body>
 </html>
-
-
-
