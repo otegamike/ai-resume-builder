@@ -1,106 +1,441 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Raleway:wght@300;400;600;700&display=swap" rel="stylesheet"/>
 <style>
-  :root {
-    --bg: #f3f1ec;
-    --surface: #ffffff;
-    --surface-2: #ece7dd;
-    --text: #1f2225;
-    --muted: #59616a;
-    --accent: #49566a;
-    --accent-2: #7b8ca3;
+  /* ── RESET ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ── OUTER SHELL (responsive viewport) ── */
+  body {
+    margin: 0;
+    background: #e8eeec;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 24px;
+    font-family: 'Raleway', sans-serif;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { margin: 0; font-family: Arial, sans-serif; background: transparent; }
-  .page { width: 100%; min-height: 100%; background: var(--surface); color: var(--text); display: grid; grid-template-columns: 240px 1fr; }
-  .sidebar { background: var(--surface-2); padding: 24px 20px; }
-  .photo { width: 132px; height: 132px; border-radius: 50%; border: 4px solid var(--surface); background: #c8d7d1; overflow: hidden; margin: 0 auto 20px; }
-  .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .block { margin-bottom: 22px; }
-  .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); font-weight: 700; margin-bottom: 10px; border-bottom: 1px solid #b7ccc5; padding-bottom: 6px; }
-  .item { font-size: 12px; line-height: 1.5; color: var(--muted); margin-bottom: 7px; }
-  .dot-list li { font-size: 12px; color: var(--muted); margin-bottom: 5px; margin-left: 16px; }
-  .main { padding: 30px; background: var(--surface); }
-  .name { font-size: 38px; line-height: 1; font-weight: 800; letter-spacing: 0.5px; color: var(--text); }
-  .job { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-top: 6px; margin-bottom: 18px; }
-  .section { margin-bottom: 22px; }
-  .title { font-size: 13px; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); font-weight: 700; margin-bottom: 10px; }
-  .summary { font-size: 13px; line-height: 1.65; color: var(--muted); }
-  .entry { margin-bottom: 14px; }
-  .entry-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 3px; }
-  .entry-title { font-size: 14px; font-weight: 700; color: var(--text); }
-  .entry-meta { font-size: 11px; color: var(--muted); }
-  .entry-sub { font-size: 12px; color: var(--accent); margin-bottom: 4px; }
-  .entry-desc { font-size: 12px; line-height: 1.6; color: var(--muted); }
+
+  /*
+   * .cv-viewport  — shrinks/grows with the browser window
+   * .cv-scaler    — always 760×1075px internally; scaled via JS
+   * .cv           — the actual document, fixed A4 dimensions
+   *
+   * A4 ratio: 760 × 1075 ≈ 1:1.414
+   */
+  .cv-viewport {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .cv-scaler {
+    transform-origin: top center;
+    /* transform set by JS */
+    will-change: transform;
+  }
+
+  /* ── CV DOCUMENT (fixed A4 size) ── */
+  .cv {
+    width: 760px;
+    height: 1075px;
+    background: #fff;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.15);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: #2e6b5e;
+    position: relative;
+    padding: 36px 40px 0 40px;
+    overflow: hidden;
+    min-height: 210px;
+    flex-shrink: 0;
+  }
+
+  .header::before {
+    content: '';
+    position: absolute;
+    bottom: -30px;
+    right: 120px;
+    width: 340px;
+    height: 260px;
+    background: #3d8272;
+    border-radius: 50% 50% 0 0 / 60% 60% 0 0;
+    transform: rotate(-10deg);
+    z-index: 0;
+  }
+
+  .header-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .name {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    color: #fff;
+    letter-spacing: 1px;
+    line-height: 1.1;
+  }
+
+  .job-title {
+    font-size: 0.72rem;
+    color: #a8d5c9;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-top: 4px;
+    font-weight: 400;
+  }
+
+  .about-label {
+    font-size: 0.7rem;
+    color: #a8d5c9;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-top: 26px;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .about-text {
+    font-size: 0.74rem;
+    color: #d5eae6;
+    line-height: 1.65;
+    max-width: 370px;
+    font-weight: 300;
+  }
+
+  .photo-wrapper {
+    position: absolute;
+    top: 30px;
+    right: 40px;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid #fff;
+    overflow: hidden;
+    z-index: 2;
+    background: #ccc;
+  }
+
+  .photo-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* ── BODY ── */
+  .body {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    background: #f0f5f3;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* ── LEFT COLUMN ── */
+  .left {
+    padding: 36px 24px;
+    background: #e2eeea;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    overflow: hidden;
+  }
+
+  .section-label {
+    font-size: 0.68rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #2e6b5e;
+    font-weight: 700;
+    margin-bottom: 14px;
+    border-bottom: 1px solid #b5d4cc;
+    padding-bottom: 6px;
+  }
+
+  .contact-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.74rem;
+    color: #3a4a47;
+    margin-bottom: 10px;
+    font-weight: 400;
+  }
+
+  .contact-item .icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    fill: none;
+    stroke: #2e6b5e;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .bullet-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .bullet-list li {
+    font-size: 0.76rem;
+    color: #3a4a47;
+    margin-bottom: 7px;
+    padding-left: 14px;
+    position: relative;
+    font-weight: 400;
+  }
+
+  .bullet-list li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: #2e6b5e;
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  /* ── RIGHT COLUMN ── */
+  .right {
+    padding: 36px 32px;
+    background: #f7faf9;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    overflow: hidden;
+  }
+
+  .right .section-label {
+    color: #2e6b5e;
+  }
+
+  /* Education */
+  .edu-entry {
+    margin-bottom: 16px;
+  }
+
+  .edu-degree {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #1a3330;
+  }
+
+  .edu-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.74rem;
+    color: #5a7570;
+    margin-top: 3px;
+    font-weight: 400;
+  }
+
+  /* Experience */
+  .exp-entry {
+    margin-bottom: 18px;
+  }
+
+  .exp-company {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #1a3330;
+  }
+
+  .exp-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.74rem;
+    color: #5a7570;
+    margin-top: 2px;
+    margin-bottom: 8px;
+  }
+
+  .exp-desc {
+    font-size: 0.72rem;
+    color: #3a4a47;
+    line-height: 1.65;
+    padding-left: 14px;
+    position: relative;
+    font-weight: 300;
+  }
+
+  .exp-desc::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: #2e6b5e;
+    font-size: 1rem;
+    line-height: 1;
+  }
 </style>
 </head>
 <body>
-  <article class="page">
-    <aside class="sidebar">
-      <div class="photo">{{?personalInfo.photo}}<img src="{{personalInfo.photo}}" alt="Profile photo" />{{/personalInfo.photo}}</div>
 
-      <section class="block">
-        <h2 class="label">Contact</h2>
-        {{?personalInfo.email}}<p class="item">{{personalInfo.email}}</p>{{/personalInfo.email}}
-        {{?personalInfo.phone}}<p class="item">{{personalInfo.phone}}</p>{{/personalInfo.phone}}
-        {{?personalInfo.location}}<p class="item">{{personalInfo.location}}</p>{{/personalInfo.location}}
-        {{?personalInfo.website}}<p class="item">{{personalInfo.website}}</p>{{/personalInfo.website}}
-      </section>
+<div class="cv-viewport">
+  <div class="cv-scaler">
+    <div class="cv">
 
-      <section class="block">
-        <h2 class="label">Skills</h2>
-        <ul class="dot-list">
-          {{#skills}}<li>{{.}}</li>{{/skills}}
-        </ul>
-      </section>
-    </aside>
+      <!-- HEADER -->
+      <div class="header">
+        {{?personalInfo.photo}}
+        <div class="photo-wrapper">
+          <img src="{{personalInfo.photo}}" alt="Profile Photo" />
+        </div>
+        {{/personalInfo.photo}}
+        <div class="header-content">
+          <div class="name">{{personalInfo.name}}</div>
+          <div class="job-title">{{personalInfo.jobTitle}}</div>
+          {{?summary}}
+          <div class="about-label">About Me</div>
+          <p class="about-text">{{summary}}</p>
+          {{/summary}}
+        </div>
+      </div>
 
-    <main class="main">
-      <header>
-        <h1 class="name">{{personalInfo.name}}</h1>
-        <p class="job">{{personalInfo.jobTitle}}</p>
-      </header>
+      <!-- BODY -->
+      <div class="body">
 
-      {{?summary}}
-      <section class="section">
-        <h2 class="title">Profile</h2>
-        <p class="summary">{{summary}}</p>
-      </section>
-      {{/summary}}
+        <!-- LEFT -->
+        <div class="left">
 
-      <section class="section">
-        <h2 class="title">Experience</h2>
-        {{#experience}}
-        <article class="entry">
-          <div class="entry-head">
-            <h3 class="entry-title">{{role}}</h3>
-            <span class="entry-meta">{{startDate}} - {{endDate}}</span>
+          <!-- Contact -->
+          <div>
+            <div class="section-label">Contact</div>
+            {{?personalInfo.email}}
+            <div class="contact-item">
+              <svg class="icon" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+              {{personalInfo.email}}
+            </div>
+            {{/personalInfo.email}}
+            {{?personalInfo.phone}}
+            <div class="contact-item">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 11.39 19a19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.9-8.39A2 2 0 0 1 3.48 2h3a2 2 0 0 1 2 1.72 12.08 12.08 0 0 0 .66 2.67 2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6 6l.77-.77a2 2 0 0 1 2.11-.45 12.08 12.08 0 0 0 2.67.66A2 2 0 0 1 22 16.92z"/></svg>
+              {{personalInfo.phone}}
+            </div>
+            {{/personalInfo.phone}}
+            {{?personalInfo.location}}
+            <div class="contact-item">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              {{personalInfo.location}}
+            </div>
+            {{/personalInfo.location}}
+            {{?personalInfo.website}}
+            <div class="contact-item">
+              <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              {{personalInfo.website}}
+            </div>
+            {{/personalInfo.website}}
           </div>
-          <p class="entry-sub">{{company}}</p>
-          <p class="entry-desc">{{description}}</p>
-        </article>
-        {{/experience}}
-      </section>
 
-      <section class="section">
-        <h2 class="title">Education</h2>
-        {{#education}}
-        <article class="entry">
-          <div class="entry-head">
-            <h3 class="entry-title">{{degree}}</h3>
-            <span class="entry-meta">{{startDate}} - {{endDate}}</span>
+          <!-- Skills -->
+          {{?skills}}
+          <div>
+            <div class="section-label">Skills</div>
+            <ul class="bullet-list">
+              {{#skills}}<li>{{.}}</li>{{/skills}}
+            </ul>
           </div>
-          <p class="entry-sub">{{school}}</p>
-        </article>
-        {{/education}}
-      </section>
-    </main>
-  </article>
+          {{/skills}}
+
+          <!-- Languages -->
+          {{?languages}}
+          <div>
+            <div class="section-label">Languages</div>
+            <ul class="bullet-list">
+              {{#languages}}<li>{{.}}</li>{{/languages}}
+            </ul>
+          </div>
+          {{/languages}}
+
+        </div>
+
+        <!-- RIGHT -->
+        <div class="right">
+
+          <!-- Education -->
+          {{?education}}
+          <div>
+            <div class="section-label">Education</div>
+            {{#education}}
+            <div class="edu-entry">
+              <div class="edu-degree">{{degree}}</div>
+              <div class="edu-meta">
+                <span>{{school}}</span>
+                <span>{{startDate}}–{{endDate}}</span>
+              </div>
+            </div>
+            {{/education}}
+          </div>
+          {{/education}}
+
+          <!-- Experience -->
+          {{?experience}}
+          <div>
+            <div class="section-label">Experience</div>
+            {{#experience}}
+            <div class="exp-entry">
+              <div class="exp-company">{{company}}</div>
+              <div class="exp-meta">
+                <span>{{role}}</span>
+                <span>{{startDate}} – {{endDate}}</span>
+              </div>
+              <p class="exp-desc">{{description}}</p>
+            </div>
+            {{/experience}}
+          </div>
+          {{/experience}}
+
+        </div>
+      </div>
+
+    </div><!-- /.cv -->
+  </div><!-- /.cv-scaler -->
+</div><!-- /.cv-viewport -->
+
+<script>
+  const CV_WIDTH  = 760;   // fixed design width
+  const CV_HEIGHT = 1075;  // fixed design height (≈ A4 ratio 1:1.414)
+
+  const viewport = document.querySelector('.cv-viewport');
+  const scaler   = document.querySelector('.cv-scaler');
+
+  function scaleCv() {
+    // Available width = viewport width minus body padding (24px each side)
+    const available = Math.min(viewport.offsetWidth, 900);
+    const scale = available / CV_WIDTH;
+
+    scaler.style.transform = `scale(${scale})`;
+
+    // transform: scale doesn't affect document flow,
+    // so we manually reserve the scaled height so the page scrolls correctly
+    const scaledHeight = CV_HEIGHT * scale;
+    scaler.style.height = CV_HEIGHT + 'px';
+    scaler.style.marginBottom = (scaledHeight - CV_HEIGHT) + 'px';
+  }
+
+  // Debounced resize listener
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(scaleCv, 60);
+  });
+
+  // Wait for fonts before first scale so layout is accurate
+  document.fonts.ready.then(scaleCv);
+</script>
+
 </body>
 </html>
-
-
-

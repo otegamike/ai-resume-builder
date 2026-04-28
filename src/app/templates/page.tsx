@@ -63,7 +63,7 @@ export default function TemplatesPage() {
                 className={styles.previewFrame}
                 title={`${template.name} preview`}
                 srcDoc={buildTemplateSrcDoc(template.html, previewData)}
-                sandbox="allow-same-origin"
+                sandbox="allow-scripts allow-same-origin"
                 loading="lazy"
               />
             </div>
