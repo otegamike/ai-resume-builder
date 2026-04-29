@@ -587,25 +587,27 @@ export default function ResumeEditor() {
       <main className={styles.mainWorkspace}>
         <section className={styles.editorSection}>
           <div className={styles.formNav}>
-            {[
-              { id: "personal", icon: FileText, label: "Details" },
-              { id: "summary", icon: Layout, label: "Summary" },
-              { id: "experience", icon: Briefcase, label: "Experience" },
-              { id: "education", icon: GraduationCap, label: "Education" },
-              { id: "skills", icon: Code, label: "Skills" },
-            ].map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as Tab)}
-                  className={`${styles.formNavButton} ${activeTab === tab.id ? styles.formNavButtonActive : ''}`}
-                >
-                  <Icon className={styles.formNavIcon} />
-                  {tab.label}
-                </button>
-              )
-            })}
+            <div className={`${styles.formNavContent} hideScrollbar`}>
+              {[
+                { id: "personal", icon: FileText, label: "Details" },
+                { id: "summary", icon: Layout, label: "Summary" },
+                { id: "experience", icon: Briefcase, label: "Experience" },
+                { id: "education", icon: GraduationCap, label: "Education" },
+                { id: "skills", icon: Code, label: "Skills" },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as Tab)}
+                    className={`${styles.formNavButton} ${activeTab === tab.id ? styles.formNavButtonActive : ''}`}
+                  >
+                    <Icon className={styles.formNavIcon} />
+                    {tab.label}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           <div className={styles.formContent}>
@@ -613,7 +615,7 @@ export default function ResumeEditor() {
               <div className={styles.formSection}>
                 <h2 className={styles.formSectionTitle}>Personal Details</h2>
                 <div className={styles.formGrid}>
-                  <div className={styles.formGroup}>
+                  <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
                     <label className={styles.formLabel}>Full Name</label>
                     <Input name="name" value={resume.personalInfo.name} onChange={handlePersonalInfoChange} />
                   </div>
@@ -687,38 +689,41 @@ export default function ResumeEditor() {
                     <Plus className={styles.addIcon} /> Add
                   </Button>
                 </div>
-                {resume.experience.map((exp, index) => (
-                  <div key={exp.id} className={styles.sectionCard}>
-                    <div className={styles.sectionHeader}>
-                      <span>Experience #{index + 1}</span>
-                      <button onClick={() => removeExperience(exp.id)} className={`${styles.deleteButton} ${styles.deleteButton}`}>
-                        <Trash2 className={styles.deleteIcon} />
-                      </button>
+
+                <div className={styles.sectionCardsContainer}>
+                  {resume.experience.map((exp, index) => (
+                    <div key={exp.id} className={styles.sectionCard}>
+                      <div className={styles.sectionHeader}>
+                        <span>Experience #{index + 1}</span>
+                        <button onClick={() => removeExperience(exp.id)} className={`${styles.deleteButton} ${styles.deleteButton}`}>
+                          <Trash2 className={styles.deleteIcon} />
+                        </button>
+                      </div>
+                      <div className={styles.formGrid}>
+                        <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
+                          <label className={styles.formLabelSmall}>Company Name</label>
+                          <Input value={exp.company} onChange={(e) => handleExperienceChange(exp.id, "company", e.target.value)} />
+                        </div>
+                        <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
+                          <label className={styles.formLabelSmall}>Job Role</label>
+                          <Input value={exp.role} onChange={(e) => handleExperienceChange(exp.id, "role", e.target.value)} />
+                        </div>
+                        <div className={styles.formGroup}>
+                          <label className={styles.formLabelSmall}>Start Date</label>
+                          <Input value={exp.startDate} onChange={(e) => handleExperienceChange(exp.id, "startDate", e.target.value)} placeholder="e.g. Jan 2020" />
+                        </div>
+                        <div className={styles.formGroup}>
+                          <label className={styles.formLabelSmall}>End Date</label>
+                          <Input value={exp.endDate} onChange={(e) => handleExperienceChange(exp.id, "endDate", e.target.value)} placeholder="e.g. Present" />
+                        </div>
+                        <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
+                          <label className={styles.formLabelSmall}>Description</label>
+                          <textarea className={styles.textarea} value={exp.description} onChange={(e) => handleExperienceChange(exp.id, "description", e.target.value)} />
+                        </div>
+                      </div>
                     </div>
-                    <div className={styles.formGrid}>
-                      <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                        <label className={styles.formLabelSmall}>Company Name</label>
-                        <Input value={exp.company} onChange={(e) => handleExperienceChange(exp.id, "company", e.target.value)} />
-                      </div>
-                      <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                        <label className={styles.formLabelSmall}>Job Role</label>
-                        <Input value={exp.role} onChange={(e) => handleExperienceChange(exp.id, "role", e.target.value)} />
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label className={styles.formLabelSmall}>Start Date</label>
-                        <Input value={exp.startDate} onChange={(e) => handleExperienceChange(exp.id, "startDate", e.target.value)} placeholder="e.g. Jan 2020" />
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label className={styles.formLabelSmall}>End Date</label>
-                        <Input value={exp.endDate} onChange={(e) => handleExperienceChange(exp.id, "endDate", e.target.value)} placeholder="e.g. Present" />
-                      </div>
-                      <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                        <label className={styles.formLabelSmall}>Description</label>
-                        <textarea className={styles.textarea} value={exp.description} onChange={(e) => handleExperienceChange(exp.id, "description", e.target.value)} />
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
 

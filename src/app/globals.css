@@ -48,3 +48,11 @@ main {
   width: min(1440px, 95%);
   margin: 0 auto;
 }
+
+.hideScrollbar {
+  scrollbar-width: none;
+}
+
+.hideScrollbar::-webkit-scrollbar {
+  display: none;
+}
