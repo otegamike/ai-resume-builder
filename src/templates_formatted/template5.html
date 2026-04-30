@@ -8,6 +8,8 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   /* ── OUTER SHELL ── */
+  html {font-size: 20px ;}
+
   body {
     margin: 0;
     background: transparent;
@@ -154,7 +156,7 @@
     font-size: 1.2rem;
     font-weight: 700;
     color: #fff;
-    margin-bottom: 12px;
+    margin-block: 12px;
   }
 
   .bullet-list { list-style: none; }
@@ -248,14 +250,14 @@
     font-size: 0.78rem;
     font-weight: 700;
     color: #1a2540;
-    margin-bottom: 2px;
+    margin-bottom: 0.15rem;
   }
 
   .exp-role {
     font-size: 0.74rem;
     color: #4a5a70;
     font-style: italic;
-    margin-bottom: 6px;
+    margin-bottom: 0.48rem;
   }
 
   .exp-desc {
@@ -272,6 +274,12 @@
     gap: 0 16px;
     margin-bottom: 18px;
     align-items: start;
+  }
+
+  .edu-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
   }
 
   .edu-year {

@@ -7,6 +7,9 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+  
+  html {font-size: 20px ;}
+
   /* ── OUTER SHELL ── */
   body {
     margin: 0;
@@ -94,7 +97,7 @@
     display: flex;
     align-items: center;
     gap: 11px;
-    font-size: 0.76rem;
+    font-size: 0.85rem;
     color: #2a2520;
     margin-bottom: 11px;
   }
@@ -110,7 +113,12 @@
   }
 
   /* Education */
-  .edu-entry { margin-bottom: 18px; }
+  .edu-entry { 
+    display: flex;
+    flex-direction: column;
+    gap: 0.13rem;
+    margin-bottom: 1.1rem; 
+  }
 
   .edu-years {
     font-size: 0.72rem;
@@ -139,7 +147,7 @@
   }
 
   .skill-list li {
-    font-size: 0.74rem;
+    font-size: 0.83rem;
     color: #2a2520;
     margin-bottom: 8px;
     padding-left: 14px;

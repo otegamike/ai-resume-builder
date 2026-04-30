@@ -7,6 +7,8 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+  html {font-size: 20px ;}
+
   /* ── OUTER SHELL ── */
   body {
     margin: 0;
@@ -45,7 +47,8 @@
   .header {
     background: #2e6b5e;
     position: relative;
-    padding: 36px 40px 0 40px;
+    padding: 1.5rem;
+    padding-bottom: 1rem;
     overflow: hidden;
     min-height: 210px;
   }
@@ -133,11 +136,10 @@
 
   /* ── LEFT COLUMN ── */
   .left {
-    padding: 2rem;
+    padding: 1.5rem 1.5rem;
     background: #e2eeea;
     display: flex;
     flex-direction: column;
-    gap: 36px;
   }
 
   .section-label {
@@ -197,7 +199,7 @@
 
   /* ── RIGHT COLUMN ── */
   .right {
-    padding: 2rem;
+    padding: 1.5rem;
     background: #f7faf9;
     display: flex;
     flex-direction: column;
@@ -224,7 +226,7 @@
     justify-content: space-between;
     font-size: 0.74rem;
     color: #5a7570;
-    margin-top: 3px;
+    margin-top: 0.15rem;
     font-weight: 400;
   }
 
@@ -244,8 +246,8 @@
     justify-content: space-between;
     font-size: 0.74rem;
     color: #5a7570;
-    margin-top: 2px;
-    margin-bottom: 8px;
+    margin-top: 0.15rem;
+    margin-bottom: 0.5rem;
   }
 
   .exp-desc {
@@ -293,7 +295,6 @@
 
     <!-- LEFT -->
     <div class="left">
-
       <!-- Contact -->
       <div>
         <div class="section-label">Contact</div>
@@ -342,7 +343,6 @@
         </ul>
       </div>
       {{/languages}}
-
     </div>
 
     <!-- RIGHT -->
