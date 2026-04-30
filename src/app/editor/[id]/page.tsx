@@ -12,7 +12,8 @@ import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer
 import { TEMPLATE_PAGE, type TemplateDefinition, type TemplateId } from "@/lib/templateCatalog";
 import TemplateSelector from "./TemplateSelector";
 import styles from "./page.module.css";
-
+import { calculateEditorHeight } from "@/utils/headerSize";
+ 
 interface Experience {
   id: string;
   company: string;
@@ -321,6 +322,10 @@ export default function ResumeEditor() {
     }
   };
 
+  const toggleTemplatePicker = () => {
+    setShowTemplatePicker(!showTemplatePicker);
+  };
+
   const changeTemplate = (newTemplate: TemplateId) => {
     setTemplate(newTemplate);
     setShowTemplatePicker(false);
@@ -497,7 +502,7 @@ export default function ResumeEditor() {
   }
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} style={{height: calculateEditorHeight()}}>
       <div className={styles.title_bar}>
         <div className={styles.navbarLeft}>
           <Link href="/dashboard" className={styles.backLink}>
@@ -516,6 +521,8 @@ export default function ResumeEditor() {
             template={template} 
             selectedTemplate={selectedTemplate} 
             changeTemplate={changeTemplate} 
+            showTemplatePicker={showTemplatePicker} 
+            toggleTemplatePicker={toggleTemplatePicker}
           />
         </div>
         
@@ -526,12 +533,14 @@ export default function ResumeEditor() {
         <div className={styles.navbarRight}>
           {autoSaveStatus === "saving" && (
             <span className={styles.autoSaveStatus}>
-              <Loader2 className={`${styles.autoSaveIcon} ${styles.loadingIcon}`} /> Saving...
+              <Loader2 className={`${styles.autoSaveIcon} ${styles.loadingIcon}`} color='var(--neutral-100)' size={12} /> 
+              <div className={styles.buttonText}>Saving...</div>
             </span>
           )}
           {autoSaveStatus === "saved" && (
             <span className={`${styles.autoSaveStatus} ${styles.saved}`}>
-              <Check className={styles.autoSaveIcon} /> Saved
+              <Check className={styles.autoSaveIcon} /> 
+              <div className={styles.buttonText}>Saved</div>
             </span>
           )}
           {autoSaveStatus === "error" && (
@@ -546,13 +555,13 @@ export default function ResumeEditor() {
             disabled={saving}
           >
             <Save color='var(--neutral-100)' className={styles.saveIcon} />
-            {saving ? 'Saving...' : 'Save Draft'}
+            <div className={styles.buttonText}>{saving ? 'Saving...' : 'Save Draft'}</div>
           </Button>
 
           <div className={styles.relative}>
             <Button className={styles.exportButton} onClick={() => {setShowExportOption(!showExportOption)}}>
               <Download color='var(--neutral-100)' className={styles.exportIcon} />
-              Export
+              <div className={styles.buttonText}>Export</div>
               {showExportOption ? 
                 <ChevronUp color='var(--neutral-100)' className={styles.aiButtonIcon} /> 
                 : <ChevronDown color='var(--neutral-100)' className={styles.aiButtonIcon} />
@@ -584,248 +593,250 @@ export default function ResumeEditor() {
         </div>
       </div>
 
-      <main className={styles.mainWorkspace}>
-        <section className={styles.editorSection}>
-          <div className={styles.formNav}>
-            <div className={`${styles.formNavContent} hideScrollbar`}>
-              {[
-                { id: "personal", icon: FileText, label: "Details" },
-                { id: "summary", icon: Layout, label: "Summary" },
-                { id: "experience", icon: Briefcase, label: "Experience" },
-                { id: "education", icon: GraduationCap, label: "Education" },
-                { id: "skills", icon: Code, label: "Skills" },
-              ].map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id as Tab)}
-                    className={`${styles.formNavButton} ${activeTab === tab.id ? styles.formNavButtonActive : ''}`}
-                  >
-                    <Icon className={styles.formNavIcon} />
-                    {tab.label}
-                  </button>
-                )
-              })}
+      <div className={styles.mainWorkspaceContainer}>
+        <main className={styles.mainWorkspace}>
+          <section className={styles.editorSection}>
+            <div className={styles.formNav}>
+              <div className={`${styles.formNavContent} hideScrollbar`}>
+                {[
+                  { id: "personal", icon: FileText, label: "Details" },
+                  { id: "summary", icon: Layout, label: "Summary" },
+                  { id: "experience", icon: Briefcase, label: "Experience" },
+                  { id: "education", icon: GraduationCap, label: "Education" },
+                  { id: "skills", icon: Code, label: "Skills" },
+                ].map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id as Tab)}
+                      className={`${styles.formNavButton} ${activeTab === tab.id ? styles.formNavButtonActive : ''}`}
+                    >
+                      <Icon className={styles.formNavIcon} />
+                      {tab.label}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
-          </div>
 
-          <div className={styles.formContent}>
-            {activeTab === "personal" && (
-              <div className={styles.formSection}>
-                <h2 className={styles.formSectionTitle}>Personal Details</h2>
-                <div className={styles.formGrid}>
-                  <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                    <label className={styles.formLabel}>Full Name</label>
-                    <Input name="name" value={resume.personalInfo.name} onChange={handlePersonalInfoChange} />
-                  </div>
-                  <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                    <label className={styles.formLabel}>Job Title</label>
-                    <Input name="jobTitle" value={resume.personalInfo.jobTitle} onChange={handlePersonalInfoChange} />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Email</label>
-                    <Input name="email" value={resume.personalInfo.email} onChange={handlePersonalInfoChange} />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Phone</label>
-                    <Input name="phone" value={resume.personalInfo.phone} onChange={handlePersonalInfoChange} />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Location</label>
-                    <Input name="location" value={resume.personalInfo.location} onChange={handlePersonalInfoChange} />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Website / Link</label>
-                    <Input name="website" value={resume.personalInfo.website} onChange={handlePersonalInfoChange} />
+            <div className={styles.formContent}>
+              {activeTab === "personal" && (
+                <div className={styles.formSection}>
+                  <h2 className={styles.formSectionTitle}>Personal Details</h2>
+                  <div className={styles.formGrid}>
+                    <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
+                      <label className={styles.formLabel}>Full Name</label>
+                      <Input name="name" value={resume.personalInfo.name} onChange={handlePersonalInfoChange} />
+                    </div>
+                    <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
+                      <label className={styles.formLabel}>Job Title</label>
+                      <Input name="jobTitle" value={resume.personalInfo.jobTitle} onChange={handlePersonalInfoChange} />
+                    </div>
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>Email</label>
+                      <Input name="email" value={resume.personalInfo.email} onChange={handlePersonalInfoChange} />
+                    </div>
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>Phone</label>
+                      <Input name="phone" value={resume.personalInfo.phone} onChange={handlePersonalInfoChange} />
+                    </div>
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>Location</label>
+                      <Input name="location" value={resume.personalInfo.location} onChange={handlePersonalInfoChange} />
+                    </div>
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>Website / Link</label>
+                      <Input name="website" value={resume.personalInfo.website} onChange={handlePersonalInfoChange} />
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {activeTab === "summary" && (
-              <div className={styles.formSection}>
-                <div className={styles.formSectionHeader}>
-                  <h2 className={styles.formSectionTitle}>Professional Summary</h2>
-                  <div className={styles.aiButtons}>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={generateAISummary}
-                      disabled={aiGenerating}
-                      className={styles.aiButton}
-                    >
-                      {aiGeneratingFor === "summary" ? <Loader2 className={`${styles.aiButtonIcon} ${styles.loadingIcon}`} /> : <Sparkles className={styles.aiButtonIcon} />}
-                      {aiGeneratingFor === "summary" ? "Generating..." : "Generate with AI"}
-                    </Button>
-                    {resume.summary && (
+              {activeTab === "summary" && (
+                <div className={styles.formSection}>
+                  <div className={styles.formSectionHeader}>
+                    <h2 className={styles.formSectionTitle}>Professional Summary</h2>
+                    <div className={styles.aiButtons}>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={improveSummary}
+                        onClick={generateAISummary}
                         disabled={aiGenerating}
                         className={styles.aiButton}
                       >
-                        {aiGeneratingFor === "improveSummary" ? <Loader2 className={`${styles.aiButtonIcon} ${styles.loadingIcon}`} /> : <Sparkles className={styles.aiButtonIcon} />}
-                        {aiGeneratingFor === "improveSummary" ? "Improving..." : "Improve"}
+                        {aiGeneratingFor === "summary" ? <Loader2 className={`${styles.aiButtonIcon} ${styles.loadingIcon}`} /> : <Sparkles className={styles.aiButtonIcon} />}
+                        {aiGeneratingFor === "summary" ? "Generating..." : "Generate with AI"}
                       </Button>
-                    )}
+                      {resume.summary && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={improveSummary}
+                          disabled={aiGenerating}
+                          className={styles.aiButton}
+                        >
+                          {aiGeneratingFor === "improveSummary" ? <Loader2 className={`${styles.aiButtonIcon} ${styles.loadingIcon}`} /> : <Sparkles className={styles.aiButtonIcon} />}
+                          {aiGeneratingFor === "improveSummary" ? "Improving..." : "Improve"}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  <textarea
+                    className={styles.textarea}
+                    value={resume.summary}
+                    onChange={handleSummaryChange}
+                    placeholder="Write a brief summary about your professional background, or click 'Generate with AI' to let AI write it for you..."
+                  />
+                </div>
+              )}
+
+              {activeTab === "experience" && (
+                <div className={styles.formSection}>
+                  <div className={styles.formSectionHeader}>
+                    <h2 className={styles.formSectionTitle}>Work Experience</h2>
+                    <Button variant="outline" size="sm" onClick={addExperience} className={styles.addButton}>
+                      <Plus className={styles.addIcon} /> Add
+                    </Button>
+                  </div>
+
+                  <div className={styles.sectionCardsContainer}>
+                    {resume.experience.map((exp, index) => (
+                      <div key={exp.id} className={styles.sectionCard}>
+                        <div className={styles.sectionHeader}>
+                          <span>Experience #{index + 1}</span>
+                          <button onClick={() => removeExperience(exp.id)} className={`${styles.deleteButton} ${styles.deleteButton}`}>
+                            <Trash2 className={styles.deleteIcon} />
+                          </button>
+                        </div>
+                        <div className={styles.formGrid}>
+                          <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
+                            <label className={styles.formLabelSmall}>Company Name</label>
+                            <Input value={exp.company} onChange={(e) => handleExperienceChange(exp.id, "company", e.target.value)} />
+                          </div>
+                          <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
+                            <label className={styles.formLabelSmall}>Job Role</label>
+                            <Input value={exp.role} onChange={(e) => handleExperienceChange(exp.id, "role", e.target.value)} />
+                          </div>
+                          <div className={styles.formGroup}>
+                            <label className={styles.formLabelSmall}>Start Date</label>
+                            <Input value={exp.startDate} onChange={(e) => handleExperienceChange(exp.id, "startDate", e.target.value)} placeholder="e.g. Jan 2020" />
+                          </div>
+                          <div className={styles.formGroup}>
+                            <label className={styles.formLabelSmall}>End Date</label>
+                            <Input value={exp.endDate} onChange={(e) => handleExperienceChange(exp.id, "endDate", e.target.value)} placeholder="e.g. Present" />
+                          </div>
+                          <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
+                            <label className={styles.formLabelSmall}>Description</label>
+                            <textarea className={styles.textarea} value={exp.description} onChange={(e) => handleExperienceChange(exp.id, "description", e.target.value)} />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <textarea
-                  className={styles.textarea}
-                  value={resume.summary}
-                  onChange={handleSummaryChange}
-                  placeholder="Write a brief summary about your professional background, or click 'Generate with AI' to let AI write it for you..."
-                />
-              </div>
-            )}
+              )}
 
-            {activeTab === "experience" && (
-              <div className={styles.formSection}>
-                <div className={styles.formSectionHeader}>
-                  <h2 className={styles.formSectionTitle}>Work Experience</h2>
-                  <Button variant="outline" size="sm" onClick={addExperience} className={styles.addButton}>
-                    <Plus className={styles.addIcon} /> Add
-                  </Button>
-                </div>
-
-                <div className={styles.sectionCardsContainer}>
-                  {resume.experience.map((exp, index) => (
-                    <div key={exp.id} className={styles.sectionCard}>
+              {activeTab === "education" && (
+                <div className={styles.formSection}>
+                  <div className={styles.formSectionHeader}>
+                    <h2 className={styles.formSectionTitle}>Education</h2>
+                    <Button variant="outline" size="sm" onClick={addEducation} className={styles.addButton}>
+                      <Plus className={styles.addIcon} /> Add
+                    </Button>
+                  </div>
+                  {resume.education.map((edu, index) => (
+                    <div key={edu.id} className={styles.sectionCard}>
                       <div className={styles.sectionHeader}>
-                        <span>Experience #{index + 1}</span>
-                        <button onClick={() => removeExperience(exp.id)} className={`${styles.deleteButton} ${styles.deleteButton}`}>
+                        <span>School/University #{index + 1}</span>
+                        <button onClick={() => removeEducation(edu.id)} className={styles.deleteButton}>
                           <Trash2 className={styles.deleteIcon} />
                         </button>
                       </div>
                       <div className={styles.formGrid}>
                         <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                          <label className={styles.formLabelSmall}>Company Name</label>
-                          <Input value={exp.company} onChange={(e) => handleExperienceChange(exp.id, "company", e.target.value)} />
+                          <label className={styles.formLabelSmall}>Institution Name</label>
+                          <Input value={edu.school} onChange={(e) => handleEducationChange(edu.id, "school", e.target.value)} />
                         </div>
                         <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                          <label className={styles.formLabelSmall}>Job Role</label>
-                          <Input value={exp.role} onChange={(e) => handleExperienceChange(exp.id, "role", e.target.value)} />
+                          <label className={styles.formLabelSmall}>Degree/Field of Study</label>
+                          <Input value={edu.degree} onChange={(e) => handleEducationChange(edu.id, "degree", e.target.value)} />
                         </div>
                         <div className={styles.formGroup}>
-                          <label className={styles.formLabelSmall}>Start Date</label>
-                          <Input value={exp.startDate} onChange={(e) => handleExperienceChange(exp.id, "startDate", e.target.value)} placeholder="e.g. Jan 2020" />
+                          <label className={styles.formLabelSmall}>Start Year</label>
+                          <Input value={edu.startDate} onChange={(e) => handleEducationChange(edu.id, "startDate", e.target.value)} />
                         </div>
                         <div className={styles.formGroup}>
-                          <label className={styles.formLabelSmall}>End Date</label>
-                          <Input value={exp.endDate} onChange={(e) => handleExperienceChange(exp.id, "endDate", e.target.value)} placeholder="e.g. Present" />
-                        </div>
-                        <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                          <label className={styles.formLabelSmall}>Description</label>
-                          <textarea className={styles.textarea} value={exp.description} onChange={(e) => handleExperienceChange(exp.id, "description", e.target.value)} />
+                          <label className={styles.formLabelSmall}>End Year</label>
+                          <Input value={edu.endDate} onChange={(e) => handleEducationChange(edu.id, "endDate", e.target.value)} />
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              )}
 
-            {activeTab === "education" && (
-              <div className={styles.formSection}>
-                <div className={styles.formSectionHeader}>
-                  <h2 className={styles.formSectionTitle}>Education</h2>
-                  <Button variant="outline" size="sm" onClick={addEducation} className={styles.addButton}>
-                    <Plus className={styles.addIcon} /> Add
-                  </Button>
-                </div>
-                {resume.education.map((edu, index) => (
-                  <div key={edu.id} className={styles.sectionCard}>
-                    <div className={styles.sectionHeader}>
-                      <span>School/University #{index + 1}</span>
-                      <button onClick={() => removeEducation(edu.id)} className={styles.deleteButton}>
-                        <Trash2 className={styles.deleteIcon} />
-                      </button>
-                    </div>
-                    <div className={styles.formGrid}>
-                      <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                        <label className={styles.formLabelSmall}>Institution Name</label>
-                        <Input value={edu.school} onChange={(e) => handleEducationChange(edu.id, "school", e.target.value)} />
-                      </div>
-                      <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                        <label className={styles.formLabelSmall}>Degree/Field of Study</label>
-                        <Input value={edu.degree} onChange={(e) => handleEducationChange(edu.id, "degree", e.target.value)} />
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label className={styles.formLabelSmall}>Start Year</label>
-                        <Input value={edu.startDate} onChange={(e) => handleEducationChange(edu.id, "startDate", e.target.value)} />
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label className={styles.formLabelSmall}>End Year</label>
-                        <Input value={edu.endDate} onChange={(e) => handleEducationChange(edu.id, "endDate", e.target.value)} />
-                      </div>
-                    </div>
+              {activeTab === "skills" && (
+                <div className={styles.formSection}>
+                  <div className={styles.formSectionHeader}>
+                    <h2 className={styles.formSectionTitle}>Technical Skills</h2>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={generateAISkills}
+                      disabled={aiGenerating || !resume.personalInfo.jobTitle}
+                      className={styles.aiButton}
+                      title={!resume.personalInfo.jobTitle ? "Enter a job title first" : "Generate skills based on your job title"}
+                    >
+                      {aiGeneratingFor === "skills" ? <Loader2 className={`${styles.aiButtonIcon} ${styles.loadingIcon}`} /> : <Sparkles className={styles.aiButtonIcon} />}
+                      {aiGeneratingFor === "skills" ? "Generating..." : "AI Suggestions"}
+                    </Button>
                   </div>
-                ))}
-              </div>
-            )}
+                  <div className={styles.skillsContainer}>
+                    <Input 
+                      value={newSkill} 
+                      onChange={(e) => setNewSkill(e.target.value)} 
+                      placeholder="e.g. React.js"
+                      className={styles.skillsInput}
+                      onKeyDown={(e) => e.key === "Enter" && addSkill()}
+                    />
+                    <Button onClick={addSkill} className={styles.skillsAddButton}>Add</Button>
+                  </div>
+                  <div className={styles.skillsList}>
+                    {resume.skills.map(skill => (
+                      <div key={skill} className={styles.skillTag}>
+                        {skill}
+                        <button onClick={() => removeSkill(skill)} className={`${styles.deleteButton} ${styles.skillRemoveButton}`}>
+                          <Trash2 className={styles.skillRemoveIcon} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
 
-            {activeTab === "skills" && (
-              <div className={styles.formSection}>
-                <div className={styles.formSectionHeader}>
-                  <h2 className={styles.formSectionTitle}>Technical Skills</h2>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={generateAISkills}
-                    disabled={aiGenerating || !resume.personalInfo.jobTitle}
-                    className={styles.aiButton}
-                    title={!resume.personalInfo.jobTitle ? "Enter a job title first" : "Generate skills based on your job title"}
-                  >
-                    {aiGeneratingFor === "skills" ? <Loader2 className={`${styles.aiButtonIcon} ${styles.loadingIcon}`} /> : <Sparkles className={styles.aiButtonIcon} />}
-                    {aiGeneratingFor === "skills" ? "Generating..." : "AI Suggestions"}
-                  </Button>
-                </div>
-                <div className={styles.skillsContainer}>
-                  <Input 
-                    value={newSkill} 
-                    onChange={(e) => setNewSkill(e.target.value)} 
-                    placeholder="e.g. React.js"
-                    className={styles.skillsInput}
-                    onKeyDown={(e) => e.key === "Enter" && addSkill()}
-                  />
-                  <Button onClick={addSkill} className={styles.skillsAddButton}>Add</Button>
-                </div>
-                <div className={styles.skillsList}>
-                  {resume.skills.map(skill => (
-                    <div key={skill} className={styles.skillTag}>
-                      {skill}
-                      <button onClick={() => removeSkill(skill)} className={`${styles.deleteButton} ${styles.skillRemoveButton}`}>
-                        <Trash2 className={styles.skillRemoveIcon} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </section>
-
-        <section className={styles.previewSection}>
-          <div className={styles.previewCanvas}>
+          <section className={styles.previewSection}>
+            <div className={styles.previewCanvas}>
+              <iframe
+                ref={previewIframeRef}
+                title="Resume preview"
+                className={styles.previewFrame}
+                srcDoc={renderedTemplate}
+                sandbox="allow-scripts allow-same-origin"
+              />
+            </div>
             <iframe
-              ref={previewIframeRef}
-              title="Resume preview"
-              className={styles.previewFrame}
+              ref={exportIframeRef}
+              title="Resume export"
+              className={styles.exportFrame}
               srcDoc={renderedTemplate}
-              sandbox="allow-scripts allow-same-origin"
+              sandbox="allow-same-origin"
             />
-          </div>
-          <iframe
-            ref={exportIframeRef}
-            title="Resume export"
-            className={styles.exportFrame}
-            srcDoc={renderedTemplate}
-            sandbox="allow-same-origin"
-          />
-        </section>
-      </main>
+          </section>
+        </main>
+      </div>
     </div>
   );
 }

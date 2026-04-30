@@ -2,12 +2,14 @@
 interface LogoProps {
     size?: number;
     color?: string;
+    rem?: boolean;
 }
 
-export default function Logo({ size = 20, color = "#000" }: LogoProps) {
+export default function Logo({ size = 20, color = "#000",rem = true }: LogoProps) {
  
-    const width = size;
-    const height = size * (200/163);
+    const remSize = size / 16;
+    const width = rem? `${remSize}rem`: `${size}px`;
+    const height = rem? `${remSize * (200/163)}rem`: `${size * (200/163)}px`;
 
     return (
         <svg

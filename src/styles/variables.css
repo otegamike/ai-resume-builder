@@ -163,6 +163,8 @@
   --container-max-width: 72rem;
   --container-padding: 1.5rem;
   --background-color: var(--neutral-200);
+
+  --rem:  clamp(12px, calc((3 / 70) * 100vw - (170 / 70) * 1px), 16px);
 }
 
 @media (prefers-color-scheme: dark) {
