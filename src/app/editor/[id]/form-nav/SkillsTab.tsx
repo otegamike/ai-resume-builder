@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Loader2, Sparkles, Trash2 } from "lucide-react";
+import { Loader2, Sparkles, CircleX } from "lucide-react";
 import styles from "../page.module.css";
 
 interface SkillsTabProps {
@@ -63,8 +63,8 @@ export default function SkillsTab({
         {skills.map((skill) => (
           <div key={skill} className={styles.skillTag}>
             {skill}
-            <button onClick={() => removeSkill(skill)} className={`${styles.deleteButton} ${styles.skillRemoveButton}`}>
-              <Trash2 className={styles.skillRemoveIcon} />
+            <button onClick={() => removeSkill(skill)} className={`${styles.skillRemoveButton}`}>
+              <CircleX className={styles.skillRemoveIcon} />
             </button>
           </div>
         ))}

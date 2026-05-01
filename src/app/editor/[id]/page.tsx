@@ -69,10 +69,10 @@ const initialResume: ResumeContent = {
 
 type Tab = "personal" | "summary" | "experience" | "education" | "skills";
 
-function debounce(func: (...args: [string, ResumeContent]) => void, wait: number) {
+function debounce(func: (...args: [string, ResumeContent, string]) => void, wait: number) {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   
-  const debounced = (...args: [string, ResumeContent]) => {
+  const debounced = (...args: [string, ResumeContent, string]) => {
     if (timeoutId) clearTimeout(timeoutId);
     timeoutId = setTimeout(() => func(...args), wait);
   };
@@ -161,7 +161,7 @@ export default function ResumeEditor() {
       setResume({ ...resume, summary: result });
       if (resumeId !== 'new') {
         setAutoSaveStatus("saving");
-        debouncedAutoSave(title, { ...resume, summary: result });
+        debouncedAutoSave(title, { ...resume, summary: result }, template);
       }
     } catch {
       setError("Failed to generate summary");
@@ -180,7 +180,7 @@ export default function ResumeEditor() {
       setResume({ ...resume, summary: result });
       if (resumeId !== 'new') {
         setAutoSaveStatus("saving");
-        debouncedAutoSave(title, { ...resume, summary: result });
+        debouncedAutoSave(title, { ...resume, summary: result }, template);
       }
     } catch {
       setError("Failed to improve summary");
@@ -203,7 +203,7 @@ export default function ResumeEditor() {
       setResume({ ...resume, skills: newSkills });
       if (resumeId !== 'new') {
         setAutoSaveStatus("saving");
-        debouncedAutoSave(title, { ...resume, skills: newSkills });
+        debouncedAutoSave(title, { ...resume, skills: newSkills }, template);
       }
     } catch {
       setError("Failed to generate skills");
@@ -263,7 +263,7 @@ export default function ResumeEditor() {
     }
   }, [isLoaded, userId, resumeId]);
 
-  const autoSave = useCallback(async (titleToSave: string, resumeToSave: typeof initialResume) => {
+  const autoSave = useCallback(async (titleToSave: string, resumeToSave: typeof initialResume, templateToSave: string) => {
     if (resumeId === 'new') return;
     
     setAutoSaveStatus("saving");
@@ -271,7 +271,7 @@ export default function ResumeEditor() {
       const response = await fetch(`/api/resumes/${resumeId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: titleToSave, content: resumeToSave }),
+        body: JSON.stringify({ title: titleToSave, content: resumeToSave, template: templateToSave }),
       });
 
       if (!response.ok) {
@@ -286,8 +286,8 @@ export default function ResumeEditor() {
   }, [resumeId]);
 
   const debouncedAutoSave = useCallback(
-    debounce((titleToSave: string, resumeToSave: typeof initialResume) => {
-      autoSave(titleToSave, resumeToSave);
+    debounce((titleToSave: string, resumeToSave: typeof initialResume, templateToSave: string) => {
+      autoSave(titleToSave, resumeToSave, templateToSave);
     }, 5000),
     [autoSave]
   );
@@ -302,7 +302,7 @@ export default function ResumeEditor() {
     setTitle(newTitle);
     if (resumeId !== 'new') {
       setAutoSaveStatus("saving");
-      debouncedAutoSave(newTitle, resume);
+      debouncedAutoSave(newTitle, resume, template);
     }
   };
 
@@ -348,8 +348,7 @@ export default function ResumeEditor() {
     setShowTemplatePicker(false);
     if (resumeId !== 'new') {
       setAutoSaveStatus("saving");
-      debouncedAutoSave(title, resume);
-      saveResume(false);
+      autoSave(title, resume, newTemplate);
     }
   };
 
@@ -361,7 +360,7 @@ export default function ResumeEditor() {
     setResume(newResume);
     if (resumeId !== 'new') {
       setAutoSaveStatus("saving");
-      debouncedAutoSave(title, newResume);
+      debouncedAutoSave(title, newResume, template);
     }
   };
 
@@ -370,7 +369,7 @@ export default function ResumeEditor() {
     setResume(newResume);
     if (resumeId !== 'new') {
       setAutoSaveStatus("saving");
-      debouncedAutoSave(title, newResume);
+      debouncedAutoSave(title, newResume, template);
     }
   };
 
@@ -382,7 +381,7 @@ export default function ResumeEditor() {
     setResume(newResume);
     if (resumeId !== 'new') {
       setAutoSaveStatus("saving");
-      debouncedAutoSave(title, newResume);
+      debouncedAutoSave(title, newResume, template);
     }
   };
 
@@ -394,7 +393,7 @@ export default function ResumeEditor() {
     setResume(newResume);
     if (resumeId !== 'new') {
       setAutoSaveStatus("saving");
-      debouncedAutoSave(title, newResume);
+      debouncedAutoSave(title, newResume, template);
     }
   };
 
@@ -403,7 +402,7 @@ export default function ResumeEditor() {
     setResume(newResume);
     if (resumeId !== 'new') {
       setAutoSaveStatus("saving");
-      debouncedAutoSave(title, newResume);
+      debouncedAutoSave(title, newResume, template);
     }
   };
 
@@ -415,7 +414,7 @@ export default function ResumeEditor() {
     setResume(newResume);
     if (resumeId !== 'new') {
       setAutoSaveStatus("saving");
-      debouncedAutoSave(title, newResume);
+      debouncedAutoSave(title, newResume, template);
     }
   };
 
@@ -427,7 +426,7 @@ export default function ResumeEditor() {
     setResume(newResume);
     if (resumeId !== 'new') {
       setAutoSaveStatus("saving");
-      debouncedAutoSave(title, newResume);
+      debouncedAutoSave(title, newResume, template);
     }
   };
 
@@ -436,7 +435,7 @@ export default function ResumeEditor() {
     setResume(newResume);
     if (resumeId !== 'new') {
       setAutoSaveStatus("saving");
-      debouncedAutoSave(title, newResume);
+      debouncedAutoSave(title, newResume, template);
     }
   };
 
@@ -447,7 +446,7 @@ export default function ResumeEditor() {
       setNewSkill("");
       if (resumeId !== 'new') {
         setAutoSaveStatus("saving");
-        debouncedAutoSave(title, newResume);
+        debouncedAutoSave(title, newResume, template);
       }
     }
   };
@@ -457,7 +456,7 @@ export default function ResumeEditor() {
     setResume(newResume);
     if (resumeId !== 'new') {
       setAutoSaveStatus("saving");
-      debouncedAutoSave(title, newResume);
+      debouncedAutoSave(title, newResume, template);
     }
   };
 

@@ -33,8 +33,8 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
-  title: "Resumy AI",
-  description: "Resumy AI helps you create polished, ATS-ready resumes with AI.",
+  title: "Agentic CV",
+  description: "Agentic CV helps you create polished, ATS-ready resumes with AI.",
 };
 
 export default function RootLayout({
