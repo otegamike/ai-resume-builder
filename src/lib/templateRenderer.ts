@@ -55,7 +55,7 @@ function renderInternal(template: string, context: RenderContext, root: Record<s
 }
 
 export function renderTemplate(templateHtml: string, data: TemplateData): string {
-  return renderInternal(templateHtml, data, data as unknown as Record<string, unknown>);
+  return renderInternal(templateHtml, data as unknown as Record<string, unknown>, data as unknown as Record<string, unknown>);
 }
 
 export function buildTemplateSrcDoc(templateHtml: string, data: TemplateData): string {

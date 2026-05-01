@@ -5,17 +5,37 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
+import { type TemplateDefinition } from "@/lib/templateCatalog";
 import styles from "./page.module.css";
+
+interface ResumeContent {
+  personalInfo: {
+    name: string;
+    jobTitle: string;
+    email: string;
+    phone: string;
+    location: string;
+    website: string;
+  };
+  summary: string;
+  experience: any[];
+  education: any[];
+  skills: string[];
+}
 
 interface Resume {
   _id: string;
   title: string;
   updatedAt: string;
+  template: string;
+  content: ResumeContent;
 }
 
 export default function DashboardPage() {
   const { isLoaded, userId } = useAuth();
   const [resumes, setResumes] = useState<Resume[]>([]);
+  const [templateDefinitions, setTemplateDefinitions] = useState<TemplateDefinition[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -38,12 +58,24 @@ export default function DashboardPage() {
         }
       } catch {
         setError("Failed to load resumes");
-      } finally {
-        setLoading(false);
       }
     };
 
-    fetchResumes();
+    const fetchTemplates = async () => {
+      try {
+        const response = await fetch('/api/templates');
+        if (response.ok) {
+          const data = await response.json();
+          setTemplateDefinitions(data);
+        }
+      } catch (err) {
+        console.error("Failed to load templates", err);
+      }
+    };
+
+    Promise.all([fetchResumes(), fetchTemplates()]).finally(() => {
+      setLoading(false);
+    });
   }, [isLoaded, userId]);
 
   const deleteResume = async (id: string) => {
@@ -102,18 +134,36 @@ export default function DashboardPage() {
           </div>
         </Link>
 
-        {resumes.map((resume) => (
-          <div key={resume._id} className={styles.resumeCard}>
-            <div className={styles.previewArea}>
-              <div className={styles.previewPlaceholder}>
-                <div className={`${styles.previewLine} ${styles.previewLineHalf}`} style={{ backgroundColor: 'var(--gray-200)', height: '0.5rem' }}></div>
-                <div className={`${styles.previewLine} ${styles.previewLineFull}`} style={{ backgroundColor: 'var(--gray-200)', height: '0.25rem' }}></div>
-                <div className={`${styles.previewLine} ${styles.previewLineFull}`} style={{ backgroundColor: 'var(--gray-200)', height: '0.25rem' }}></div>
-                <div className={`${styles.previewLine} ${styles.previewLineThreeQuarters}`} style={{ backgroundColor: 'var(--gray-200)', height: '0.25rem' }}></div>
+        {resumes.map((resume) => {
+          const templateId = normalizeTemplateId(resume.template);
+          const templateDef = templateDefinitions.find(t => t.id === templateId) || templateDefinitions[0];
+          const renderedTemplate = templateDef?.html && resume.content 
+            ? buildTemplateSrcDoc(templateDef.html, resume.content) 
+            : '';
+
+          return (
+            <div key={resume._id} className={styles.resumeCard}>
+              <div className={styles.previewArea}>
+                {renderedTemplate ? (
+                  <div className={styles.iframeWrapper}>
+                    <iframe
+                      srcDoc={renderedTemplate}
+                      className={styles.dashboardPreviewIframe}
+                      sandbox="allow-same-origin"
+                      tabIndex={-1}
+                    />
+                  </div>
+                ) : (
+                  <div className={styles.previewPlaceholder}>
+                    <div className={`${styles.previewLine} ${styles.previewLineHalf}`} style={{ backgroundColor: 'var(--gray-200)', height: '0.5rem' }}></div>
+                    <div className={`${styles.previewLine} ${styles.previewLineFull}`} style={{ backgroundColor: 'var(--gray-200)', height: '0.25rem' }}></div>
+                    <div className={`${styles.previewLine} ${styles.previewLineFull}`} style={{ backgroundColor: 'var(--gray-200)', height: '0.25rem' }}></div>
+                    <div className={`${styles.previewLine} ${styles.previewLineThreeQuarters}`} style={{ backgroundColor: 'var(--gray-200)', height: '0.25rem' }}></div>
+                  </div>
+                )}
               </div>
-            </div>
-            
-            <div className={styles.cardFooter}>
+              
+              <div className={styles.cardFooter}>
               <div>
                 <h3 className={styles.resumeTitle}>{resume.title}</h3>
                 <div className={styles.resumeMeta}>
@@ -138,7 +188,7 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-        ))}
+        )})}
       </div>
     </div>
   );

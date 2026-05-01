@@ -462,15 +462,15 @@
 }
 
 .exportFrame {
-  position: fixed;
+  position: absolute;
   left: -10000px;
   top: 0;
   width: 794px;
   height: 1123px;
   border: 0;
   pointer-events: none;
-  opacity: 0;
-  overflow: hidden;
+  visibility: visible;
+  z-index: -10;
 }
 
 .resumePreview {
