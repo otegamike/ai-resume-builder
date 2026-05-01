@@ -35,7 +35,6 @@ export default function ExperienceTab({
         </Button>
       </div>
 
-      <div className={styles.sectionCardsContainer}>
         {experience.map((exp, index) => (
           <div key={exp.id} className={styles.sectionCard}>
             <div className={styles.sectionHeader}>
@@ -50,16 +49,17 @@ export default function ExperienceTab({
             <div className={styles.formGrid}>
               <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
                 <label className={styles.formLabelSmall}>Company Name</label>
-                <Input value={exp.company} onChange={(e) => onChange(exp.id, "company", e.target.value)} />
+                <Input value={exp.company} className={styles.input} onChange={(e) => onChange(exp.id, "company", e.target.value)} />
               </div>
               <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                <label className={styles.formLabelSmall}>Job Role</label>
-                <Input value={exp.role} onChange={(e) => onChange(exp.id, "role", e.target.value)} />
+                <label className={`${styles.formLabelSmall} ${styles.input}`}>Job Role</label>
+                <Input value={exp.role} className={styles.input} onChange={(e) => onChange(exp.id, "role", e.target.value)} />
               </div>
               <div className={styles.formGroup}>
                 <label className={styles.formLabelSmall}>Start Date</label>
                 <Input
                   value={exp.startDate}
+                  className={styles.input}
                   onChange={(e) => onChange(exp.id, "startDate", e.target.value)}
                   placeholder="e.g. Jan 2020"
                 />
@@ -68,6 +68,7 @@ export default function ExperienceTab({
                 <label className={styles.formLabelSmall}>End Date</label>
                 <Input
                   value={exp.endDate}
+                  className={styles.input}
                   onChange={(e) => onChange(exp.id, "endDate", e.target.value)}
                   placeholder="e.g. Present"
                 />
@@ -83,7 +84,6 @@ export default function ExperienceTab({
             </div>
           </div>
         ))}
-      </div>
-    </div>
+     </div>
   );
 }

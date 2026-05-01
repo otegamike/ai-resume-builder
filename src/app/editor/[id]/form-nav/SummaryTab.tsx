@@ -23,7 +23,7 @@ export default function SummaryTab({
   return (
     <div className={styles.formSection}>
       <div className={styles.formSectionHeader}>
-        <h2 className={styles.formSectionTitle}>Professional Summary</h2>
+        <h2 className={styles.formSectionTitle}>About Me</h2>
         <div className={styles.aiButtons}>
           <Button
             variant="outline"

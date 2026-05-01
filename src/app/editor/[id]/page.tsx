@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
-import { ArrowLeft, ChevronDown, ChevronUp, Download, Image as ImageIcon, Save, Layout, FileText, Briefcase, GraduationCap, Code, Plus, Trash2, Loader2, Sparkles, Check, Palette } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronDown, ChevronUp, Download, Image as ImageIcon, Save, Layout, FileText, Briefcase, GraduationCap, Code, Plus, Trash2, Loader2, Sparkles, Check, Palette } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -18,61 +18,32 @@ import EducationTab from "./form-nav/EducationTab";
 import SkillsTab from "./form-nav/SkillsTab";
 import styles from "./page.module.css";
 import { calculateEditorHeight } from "@/utils/headerSize";
- 
-interface Experience {
-  id: string;
-  company: string;
-  role: string;
-  startDate: string;
-  endDate: string;
-  description: string;
-}
-
-interface Education {
-  id: string;
-  school: string;
-  degree: string;
-  startDate: string;
-  endDate: string;
-}
-
-interface ResumeContent {
-  personalInfo: {
-    name: string;
-    jobTitle: string;
-    email: string;
-    phone: string;
-    location: string;
-    website: string;
-  };
-  summary: string;
-  experience: Experience[];
-  education: Education[];
-  skills: string[];
-}
-
-const initialResume: ResumeContent = {
-  personalInfo: {
-    name: "",
-    jobTitle: "",
-    email: "",
-    phone: "",
-    location: "",
-    website: "",
-  },
-  summary: "",
-  experience: [],
-  education: [],
-  skills: []
-};
-
+import { scrollIntoView } from "@/utils/scrollIntoview"; 
+import { initialResume } from "@/constants/ResumeConstants";
+import type { ResumeContent } from "@/types/ResumeData";
+import { useSearchParams } from 'next/navigation';
 
 type Tab = "personal" | "summary" | "experience" | "education" | "skills";
 
-function debounce(func: (...args: [string, ResumeContent, string]) => void, wait: number) {
+interface TabItem {
+  id: Tab;
+  icon: any;
+  label: string;
+}
+
+const tabArray: TabItem[] = [
+  { id: "personal", icon: FileText, label: "Personal Details" },
+  { id: "experience", icon: Briefcase, label: "Work Experience" },
+  { id: "education", icon: GraduationCap, label: "Education" },
+  { id: "skills", icon: Code, label: "Skills" },
+  { id: "summary", icon: Layout, label: "Summary" },
+];
+
+
+function debounce(func: (...args: [string, ResumeContent]) => void, wait: number) {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   
-  const debounced = (...args: [string, ResumeContent, string]) => {
+  const debounced = (...args: [string, ResumeContent]) => {
     if (timeoutId) clearTimeout(timeoutId);
     timeoutId = setTimeout(() => func(...args), wait);
   };
@@ -86,6 +57,10 @@ function debounce(func: (...args: [string, ResumeContent, string]) => void, wait
 
 export default function ResumeEditor() {
   const params = useParams();
+  const searchParams = useSearchParams();
+  const templateParams = searchParams.get('template');
+  
+
   const resumeId = params.id as string;
   const { isLoaded, userId } = useAuth();
   const [resume, setResume] = useState(initialResume);
@@ -161,7 +136,7 @@ export default function ResumeEditor() {
       setResume({ ...resume, summary: result });
       if (resumeId !== 'new') {
         setAutoSaveStatus("saving");
-        debouncedAutoSave(title, { ...resume, summary: result }, template);
+        debouncedAutoSave(title, { ...resume, summary: result });
       }
     } catch {
       setError("Failed to generate summary");
@@ -180,7 +155,7 @@ export default function ResumeEditor() {
       setResume({ ...resume, summary: result });
       if (resumeId !== 'new') {
         setAutoSaveStatus("saving");
-        debouncedAutoSave(title, { ...resume, summary: result }, template);
+        debouncedAutoSave(title, { ...resume, summary: result });
       }
     } catch {
       setError("Failed to improve summary");
@@ -203,7 +178,7 @@ export default function ResumeEditor() {
       setResume({ ...resume, skills: newSkills });
       if (resumeId !== 'new') {
         setAutoSaveStatus("saving");
-        debouncedAutoSave(title, { ...resume, skills: newSkills }, template);
+        debouncedAutoSave(title, { ...resume, skills: newSkills });
       }
     } catch {
       setError("Failed to generate skills");
@@ -223,6 +198,14 @@ export default function ResumeEditor() {
 
         const data: TemplateDefinition[] = await response.json();
         setTemplateDefinitions(data);
+
+        if(templateParams){
+          const template = data.find((entry) => entry.id === templateParams);
+          if (template) {
+            setTemplate(template.id);
+          }
+        }
+
       } catch {
         setError("Failed to load templates");
       }
@@ -263,7 +246,7 @@ export default function ResumeEditor() {
     }
   }, [isLoaded, userId, resumeId]);
 
-  const autoSave = useCallback(async (titleToSave: string, resumeToSave: typeof initialResume, templateToSave: string) => {
+  const autoSave = useCallback(async (titleToSave: string, resumeToSave: typeof initialResume) => {
     if (resumeId === 'new') return;
     
     setAutoSaveStatus("saving");
@@ -271,7 +254,7 @@ export default function ResumeEditor() {
       const response = await fetch(`/api/resumes/${resumeId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: titleToSave, content: resumeToSave, template: templateToSave }),
+        body: JSON.stringify({ title: titleToSave, content: resumeToSave }),
       });
 
       if (!response.ok) {
@@ -286,8 +269,8 @@ export default function ResumeEditor() {
   }, [resumeId]);
 
   const debouncedAutoSave = useCallback(
-    debounce((titleToSave: string, resumeToSave: typeof initialResume, templateToSave: string) => {
-      autoSave(titleToSave, resumeToSave, templateToSave);
+    debounce((titleToSave: string, resumeToSave: typeof initialResume) => {
+      autoSave(titleToSave, resumeToSave);
     }, 5000),
     [autoSave]
   );
@@ -302,7 +285,7 @@ export default function ResumeEditor() {
     setTitle(newTitle);
     if (resumeId !== 'new') {
       setAutoSaveStatus("saving");
-      debouncedAutoSave(newTitle, resume, template);
+      debouncedAutoSave(newTitle, resume);
     }
   };
 
@@ -339,6 +322,47 @@ export default function ResumeEditor() {
     }
   };
 
+  // Tabswitching functions
+
+  const getTabIndex = (tab: Tab): number => {
+    return tabArray.findIndex(({id}) => id == tab);
+  }
+
+  const getTabId = (tabIndex: number): Tab => {
+    if (tabIndex >= tabArray.length || tabIndex < 0) {
+      console.error("Invalid tab index");
+      return tabArray[0].id;
+    }
+    return tabArray[tabIndex].id;
+  }
+
+  const scrollToTab = (tabId : Tab) => {
+    scrollIntoView('formNavBar', `tab-${tabId}`)
+  }
+
+  const changeTab = (newTab: Tab | "next" | "prev") => {
+    if (newTab == "next") {
+      const tabIndex = getTabIndex(activeTab);
+      if (tabIndex < tabArray.length - 1) {
+        const newTabId = getTabId(tabIndex + 1);
+        scrollToTab(newTabId);
+        setActiveTab(newTabId);
+      }
+    } else if (newTab == "prev") {
+      const tabIndex = getTabIndex(activeTab);
+      if (tabIndex > 0) {
+        const newTabId = getTabId(tabIndex - 1);
+        scrollToTab(newTabId);
+        setActiveTab(newTabId);
+      }
+    } else {
+      scrollToTab(newTab);
+      setActiveTab(newTab);
+    }
+  };
+
+  // Template functions
+
   const toggleTemplatePicker = () => {
     setShowTemplatePicker(!showTemplatePicker);
   };
@@ -348,7 +372,8 @@ export default function ResumeEditor() {
     setShowTemplatePicker(false);
     if (resumeId !== 'new') {
       setAutoSaveStatus("saving");
-      autoSave(title, resume, newTemplate);
+      debouncedAutoSave(title, resume);
+      saveResume(false);
     }
   };
 
@@ -360,7 +385,7 @@ export default function ResumeEditor() {
     setResume(newResume);
     if (resumeId !== 'new') {
       setAutoSaveStatus("saving");
-      debouncedAutoSave(title, newResume, template);
+      debouncedAutoSave(title, newResume);
     }
   };
 
@@ -369,7 +394,7 @@ export default function ResumeEditor() {
     setResume(newResume);
     if (resumeId !== 'new') {
       setAutoSaveStatus("saving");
-      debouncedAutoSave(title, newResume, template);
+      debouncedAutoSave(title, newResume);
     }
   };
 
@@ -381,7 +406,7 @@ export default function ResumeEditor() {
     setResume(newResume);
     if (resumeId !== 'new') {
       setAutoSaveStatus("saving");
-      debouncedAutoSave(title, newResume, template);
+      debouncedAutoSave(title, newResume);
     }
   };
 
@@ -393,7 +418,7 @@ export default function ResumeEditor() {
     setResume(newResume);
     if (resumeId !== 'new') {
       setAutoSaveStatus("saving");
-      debouncedAutoSave(title, newResume, template);
+      debouncedAutoSave(title, newResume);
     }
   };
 
@@ -402,7 +427,7 @@ export default function ResumeEditor() {
     setResume(newResume);
     if (resumeId !== 'new') {
       setAutoSaveStatus("saving");
-      debouncedAutoSave(title, newResume, template);
+      debouncedAutoSave(title, newResume);
     }
   };
 
@@ -414,7 +439,7 @@ export default function ResumeEditor() {
     setResume(newResume);
     if (resumeId !== 'new') {
       setAutoSaveStatus("saving");
-      debouncedAutoSave(title, newResume, template);
+      debouncedAutoSave(title, newResume);
     }
   };
 
@@ -426,7 +451,7 @@ export default function ResumeEditor() {
     setResume(newResume);
     if (resumeId !== 'new') {
       setAutoSaveStatus("saving");
-      debouncedAutoSave(title, newResume, template);
+      debouncedAutoSave(title, newResume);
     }
   };
 
@@ -435,7 +460,7 @@ export default function ResumeEditor() {
     setResume(newResume);
     if (resumeId !== 'new') {
       setAutoSaveStatus("saving");
-      debouncedAutoSave(title, newResume, template);
+      debouncedAutoSave(title, newResume);
     }
   };
 
@@ -446,7 +471,7 @@ export default function ResumeEditor() {
       setNewSkill("");
       if (resumeId !== 'new') {
         setAutoSaveStatus("saving");
-        debouncedAutoSave(title, newResume, template);
+        debouncedAutoSave(title, newResume);
       }
     }
   };
@@ -456,7 +481,7 @@ export default function ResumeEditor() {
     setResume(newResume);
     if (resumeId !== 'new') {
       setAutoSaveStatus("saving");
-      debouncedAutoSave(title, newResume, template);
+      debouncedAutoSave(title, newResume);
     }
   };
 
@@ -621,19 +646,14 @@ export default function ResumeEditor() {
         <main className={styles.mainWorkspace}>
           <section className={styles.editorSection}>
             <div className={styles.formNav}>
-              <div className={`${styles.formNavContent} hideScrollbar`}>
-                {[
-                  { id: "personal", icon: FileText, label: "Details" },
-                  { id: "summary", icon: Layout, label: "Summary" },
-                  { id: "experience", icon: Briefcase, label: "Experience" },
-                  { id: "education", icon: GraduationCap, label: "Education" },
-                  { id: "skills", icon: Code, label: "Skills" },
-                ].map((tab) => {
+              <div id='formNavBar' className={`${styles.formNavContent} hideScrollbar`}>
+                {tabArray.map((tab) => {
                   const Icon = tab.icon;
                   return (
                     <button
                       key={tab.id}
-                      onClick={() => setActiveTab(tab.id as Tab)}
+                      id={`tab-${tab.id}`}
+                      onClick={() => changeTab(tab.id)}
                       className={`${styles.formNavButton} ${activeTab === tab.id ? styles.formNavButtonActive : ''}`}
                     >
                       <Icon className={styles.formNavIcon} />
@@ -694,6 +714,17 @@ export default function ResumeEditor() {
                   aiGeneratingFor={aiGeneratingFor}
                 />
               )}
+
+              <div className={styles.tabNavigation}>
+                <Button variant="outline" className={styles.previousButton} disabled={activeTab === "personal"} onClick={() => changeTab("prev")}>
+                  <ArrowLeft className={styles.tabNavigationIcon} />
+                  Previous
+                </Button>
+                <Button className={styles.nextButton} disabled={activeTab === "skills"} onClick={() => changeTab("next")}>
+                  Next
+                  <ArrowRight className={styles.tabNavigationIcon} />
+                </Button>
+              </div>
             </div>
           </section>
 

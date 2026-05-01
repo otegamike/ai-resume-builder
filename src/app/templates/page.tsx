@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { buildTemplateSrcDoc, getTemplatePreviewData } from "@/lib/templateRenderer";
 import { TEMPLATE_PAGE, type TemplateDefinition } from "@/lib/templateCatalog";
@@ -47,10 +47,10 @@ export default function TemplatesPage() {
           <h1 className={styles.title}>Template Gallery</h1>
           <p className={styles.subtitle}>Browse the available resume layouts with live sample previews.</p>
         </div>
-        <Link href="/dashboard">
-          <Button variant="outline">
+        <Link href="/">
+          <Button variant="outline" style={{textWrap: "nowrap"}}>
             <ArrowLeft className={styles.icon} />
-            Back to Dashboard
+            Back to Homepage
           </Button>
         </Link>
       </div>
@@ -63,17 +63,26 @@ export default function TemplatesPage() {
                 className={styles.previewFrame}
                 title={`${template.name} preview`}
                 srcDoc={buildTemplateSrcDoc(template.html, previewData)}
-                sandbox="allow-scripts allow-same-origin"
+                sandbox="allow-scripts"
                 loading="lazy"
               />
             </div>
             <div className={styles.cardBody}>
               <h2 className={styles.cardTitle}>{template.name}</h2>
               <p className={styles.cardText}>{template.description}</p>
-              <p className={styles.cardMeta}>
-                {template.page.widthPx} x {template.page.heightPx} px
-              </p>
+              <div className={styles.cardFooter}>
+                <p className={styles.cardMeta}>
+                  {template.page.widthPx} x {template.page.heightPx} px
+                </p>
+                <Link href={`/editor/new?template=${template.id}`}>
+                  <Button variant="primary" size="sm" >
+                    Use Template
+                    <ArrowUpRight color="var(--neutral-100)" className={styles.icon} />
+                  </Button>
+                </Link>
+              </div>
             </div>
+            
           </article>
         ))}
       </section>

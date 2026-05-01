@@ -44,19 +44,19 @@ export default function EducationTab({
           <div className={styles.formGrid}>
             <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
               <label className={styles.formLabelSmall}>Institution Name</label>
-              <Input value={edu.school} onChange={(e) => onChange(edu.id, "school", e.target.value)} />
+              <Input className={styles.input} value={edu.school} onChange={(e) => onChange(edu.id, "school", e.target.value)} />
             </div>
             <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
               <label className={styles.formLabelSmall}>Degree/Field of Study</label>
-              <Input value={edu.degree} onChange={(e) => onChange(edu.id, "degree", e.target.value)} />
+              <Input className={styles.input} value={edu.degree} onChange={(e) => onChange(edu.id, "degree", e.target.value)} />
             </div>
             <div className={styles.formGroup}>
               <label className={styles.formLabelSmall}>Start Year</label>
-              <Input value={edu.startDate} onChange={(e) => onChange(edu.id, "startDate", e.target.value)} />
+              <Input className={styles.input} value={edu.startDate} onChange={(e) => onChange(edu.id, "startDate", e.target.value)} />
             </div>
             <div className={styles.formGroup}>
               <label className={styles.formLabelSmall}>End Year</label>
-              <Input value={edu.endDate} onChange={(e) => onChange(edu.id, "endDate", e.target.value)} />
+              <Input className={styles.input} value={edu.endDate} onChange={(e) => onChange(edu.id, "endDate", e.target.value)} />
             </div>
           </div>
         </div>

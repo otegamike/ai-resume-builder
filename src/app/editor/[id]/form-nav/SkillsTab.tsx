@@ -52,7 +52,7 @@ export default function SkillsTab({
           value={newSkill}
           onChange={(e) => setNewSkill(e.target.value)}
           placeholder="e.g. React.js"
-          className={styles.skillsInput}
+          className={`${styles.input} ${styles.skillsInput}`}
           onKeyDown={(e) => e.key === "Enter" && addSkill()}
         />
         <Button onClick={addSkill} className={styles.skillsAddButton}>

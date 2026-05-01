@@ -23,27 +23,27 @@ export default function PersonalDetailsTab({ personalInfo, onChange }: PersonalD
       <div className={styles.formGrid}>
         <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
           <label className={styles.formLabel}>Full Name</label>
-          <Input name="name" value={personalInfo.name} onChange={onChange} />
+          <Input className={styles.input} name="name" value={personalInfo.name} onChange={onChange} />
         </div>
         <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
           <label className={styles.formLabel}>Job Title</label>
-          <Input name="jobTitle" value={personalInfo.jobTitle} onChange={onChange} />
+          <Input className={styles.input} name="jobTitle" value={personalInfo.jobTitle} onChange={onChange} />
         </div>
         <div className={styles.formGroup}>
           <label className={styles.formLabel}>Email</label>
-          <Input name="email" value={personalInfo.email} onChange={onChange} />
+          <Input className={styles.input} name="email" value={personalInfo.email} onChange={onChange} />
         </div>
         <div className={styles.formGroup}>
           <label className={styles.formLabel}>Phone</label>
-          <Input name="phone" value={personalInfo.phone} onChange={onChange} />
+          <Input className={styles.input} name="phone" value={personalInfo.phone} onChange={onChange} />
         </div>
         <div className={styles.formGroup}>
           <label className={styles.formLabel}>Location</label>
-          <Input name="location" value={personalInfo.location} onChange={onChange} />
+          <Input className={styles.input} name="location" value={personalInfo.location} onChange={onChange} />
         </div>
         <div className={styles.formGroup}>
           <label className={styles.formLabel}>Website / Link</label>
-          <Input name="website" value={personalInfo.website} onChange={onChange} />
+          <Input className={styles.input} name="website" value={personalInfo.website} onChange={onChange} />
         </div>
       </div>
     </div>
