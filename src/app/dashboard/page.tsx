@@ -149,7 +149,7 @@ export default function DashboardPage() {
                     <iframe
                       srcDoc={renderedTemplate}
                       className={styles.dashboardPreviewIframe}
-                      sandbox="allow-same-origin"
+                      sandbox="allow-same-origin allow-scripts"
                       tabIndex={-1}
                     />
                   </div>
