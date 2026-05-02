@@ -12,6 +12,7 @@ export interface IResume extends Document {
       phone: string;
       location: string;
       website: string;
+      photo?: string;
     };
     summary: string;
     experience: Array<{
@@ -46,6 +47,7 @@ const ResumeSchema: Schema = new Schema(
         phone: { type: String, default: "" },
         location: { type: String, default: "" },
         website: { type: String, default: "" },
+        photo: { type: String, default: "" },
       },
       summary: { type: String, default: "" },
       experience: [

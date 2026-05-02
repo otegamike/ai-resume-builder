@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^7.2.1",
+    "cloudinary": "^2.10.0",
     "html2pdf.js": "^0.14.0",
     "lucide-react": "^1.8.0",
     "mongoose": "^9.4.1",

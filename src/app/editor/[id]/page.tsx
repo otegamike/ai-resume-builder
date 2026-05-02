@@ -12,6 +12,7 @@ import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer
 import { TEMPLATE_PAGE, type TemplateDefinition, type TemplateId } from "@/lib/templateCatalog";
 import TemplateSelector from "./TemplateSelector";
 import PersonalDetailsTab from "./form-nav/PersonalDetailsTab";
+import HeadshotTab from "./form-nav/HeadshotTab";
 import SummaryTab from "./form-nav/SummaryTab";
 import ExperienceTab from "./form-nav/ExperienceTab";
 import EducationTab from "./form-nav/EducationTab";
@@ -23,7 +24,7 @@ import { initialResume } from "@/constants/ResumeConstants";
 import type { ResumeContent } from "@/types/ResumeData";
 import { useSearchParams } from 'next/navigation';
 
-type Tab = "personal" | "summary" | "experience" | "education" | "skills";
+type Tab = "headshot" | "personal" | "summary" | "experience" | "education" | "skills";
 
 interface TabItem {
   id: Tab;
@@ -33,6 +34,7 @@ interface TabItem {
 
 const tabArray: TabItem[] = [
   { id: "personal", icon: FileText, label: "Personal Details" },
+  { id: "headshot", icon: ImageIcon, label: "Headshot" },
   { id: "experience", icon: Briefcase, label: "Work Experience" },
   { id: "education", icon: GraduationCap, label: "Education" },
   { id: "skills", icon: Code, label: "Skills" },
@@ -70,7 +72,7 @@ export default function ResumeEditor() {
   const [template, setTemplate] = useState<TemplateId>("template1");
   const [templateDefinitions, setTemplateDefinitions] = useState<TemplateDefinition[]>([]);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
-  const [activeTab, setActiveTab] = useState<Tab>("personal");
+  const [activeTab, setActiveTab] = useState<Tab>("headshot");
   const [newSkill, setNewSkill] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -391,6 +393,18 @@ export default function ResumeEditor() {
     }
   };
 
+  const handlePhotoChange = (photoUrl: string) => {
+    const newResume = {
+      ...resume,
+      personalInfo: { ...resume.personalInfo, photo: photoUrl }
+    };
+    setResume(newResume);
+    if (resumeId !== 'new') {
+      setAutoSaveStatus("saving");
+      debouncedAutoSave(title, newResume);
+    }
+  };
+
   const handleSummaryChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newResume = { ...resume, summary: e.target.value };
     setResume(newResume);
@@ -667,6 +681,13 @@ export default function ResumeEditor() {
             </div>
 
             <div className={styles.formContent}>
+              {activeTab === "headshot" && (
+                <HeadshotTab
+                  photo={resume.personalInfo.photo}
+                  onChange={handlePhotoChange}
+                />
+              )}
+
               {activeTab === "personal" && (
                 <PersonalDetailsTab
                   personalInfo={resume.personalInfo}
@@ -722,6 +743,13 @@ export default function ResumeEditor() {
                   <ArrowLeft className={styles.tabNavigationIcon} />
                   Previous
                 </Button>
+                <div className={styles.paginationIndicator}>
+                  {tabArray.map((tabItem) => { 
+                    return(
+                      <div className={`${styles.dot} ${activeTab===tabItem.id?styles.active: ""} `}></div>
+                    )
+                  })}
+                </div>
                 <Button className={styles.nextButton} disabled={getTabIndex(activeTab) === tabArray.length - 1} onClick={() => changeTab("next")}>
                   Next
                   <ArrowRight className={styles.tabNavigationIcon} />

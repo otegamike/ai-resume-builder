@@ -9,6 +9,7 @@ interface PersonalInfo {
   phone: string;
   location: string;
   website: string;
+  photo?: string;
 }
 
 interface PersonalDetailsTabProps {
