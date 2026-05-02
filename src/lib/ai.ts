@@ -1,33 +1,3 @@
-// import { GoogleGenAI } from "@google/genai";
-
-// const ai = new GoogleGenAI({
-//   apiKey: process.env.GEMINI_API_KEY,
-// });
-
-// const SYSTEM_INSTRUCTION =
-//   "You are a professional resume writer. Write concise, impactful content that is ATS-friendly and highlights achievements. Use action verbs and quantify results when possible.";
-
-// export async function generateWithAI(prompt: string): Promise<string> {
-//   if (
-//     !process.env.GEMINI_API_KEY ||
-//     process.env.GEMINI_API_KEY === "your-gemini-api-key-here"
-//   ) {
-//     throw new Error("Gemini API key not configured");
-//   }
-
-//   const response = await ai.models.generateContent({
-//     model: "gemini-1.5-flash",
-//     contents: prompt,
-//     config: {
-//       systemInstruction: SYSTEM_INSTRUCTION,
-//       temperature: 0.7,
-//       maxOutputTokens: 1000,
-//     },
-//   });
-
-//   return response.text ?? "";
-// }
-
 
 import Groq  from "groq-sdk";
 
@@ -79,33 +49,12 @@ export const getGroqChatCompletion = async (prompt:string) => {
 };
 
 
-// export async function generateWithAI(prompt: string): Promise<string> {
-//   if (
-//     !process.env.GEMINI_API_KEY ||
-//     process.env.GEMINI_API_KEY === "your-gemini-api-key-here"
-//   ) {
-//     throw new Error("Gemini API key not configured");
-//   }
-
-//   const response = await ai.models.generateContent({
-//     model: "gemini-1.5-flash",
-//     contents: prompt,
-//     config: {
-//       systemInstruction: SYSTEM_INSTRUCTION,
-//       temperature: 0.7,
-//       maxOutputTokens: 1000,
-//     },
-//   });
-
-//   return response.text ?? "";
-// }
-
 export async function generateSummary(
   jobTitle: string,
   experience: string,
   skills: string[]
 ): Promise<string> {
-  const prompt = `Write a professional summary for a ${jobTitle} with ${experience} years of experience. Skills include: ${skills.join(", ")}. Keep it to 3-4 sentences, impactful and ATS-friendly.`;
+  const prompt = `Write a professional summary for a ${jobTitle} with ${experience} years of experience. Skills include: ${skills.join(", ")}. Keep it very short and just in one sentences, impactful and ATS-friendly. Return only the professional summary, no explanations.`;
   return generateWithAI(prompt);
 }
 
@@ -114,21 +63,21 @@ export async function generateExperienceBulletPoints(
   role: string,
   description: string
 ): Promise<string> {
-  const prompt = `Transform this job description into 4-6 impactful, ATS-friendly bullet points. Company: ${company}, Role: ${role}. Original description: ${description}. Use action verbs and quantify achievements where possible.`;
+  const prompt = `Transform this job description into 4-6 impactful, ATS-friendly bullet points. Company: ${company}, Role: ${role}. Original description: ${description}. Use action verbs and quantify achievements where possible.Return only the bullet points, no explanations.`;
   return generateWithAI(prompt);
 }
 
 export async function improveSummary(
   existingSummary: string
 ): Promise<string> {
-  const prompt = `Improve this professional summary to make it more impactful and ATS-friendly. Keep it to 3-4 sentences:\n\n${existingSummary}`;
+  const prompt = `Improve this professional summary to make it more impactful and ATS-friendly. Keep it very short and just in one sentences.\n\n${existingSummary}. Return only professional summary, no explanations.`;
   return generateWithAI(prompt);
 }
 
 export async function generateSkillsSuggestions(
   jobTitle: string
 ): Promise<string[]> {
-  const prompt = `List 10-15 relevant technical and soft skills for a ${jobTitle}. Return only a comma-separated list, no explanations.`;
+  const prompt = `List 8-10 relevant technical and soft skills for a ${jobTitle}. Return only a comma-separated list, no explanations.`;
   const result = await generateWithAI(prompt);
   return result
     .split(",")

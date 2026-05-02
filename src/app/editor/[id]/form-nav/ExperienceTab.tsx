@@ -35,6 +35,7 @@ export default function ExperienceTab({
         </Button>
       </div>
 
+      <div className={styles.sectionCardsContainer} >
         {experience.map((exp, index) => (
           <div key={exp.id} className={styles.sectionCard}>
             <div className={styles.sectionHeader}>
@@ -84,6 +85,7 @@ export default function ExperienceTab({
             </div>
           </div>
         ))}
+      </div>
      </div>
   );
 }

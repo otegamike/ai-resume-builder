@@ -174,6 +174,7 @@
 }
 
 .mainWorkspace {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(20rem, 1fr) 3fr;
   height: 94vh;
@@ -181,11 +182,13 @@
 }
 
 .editorSection {
+  position: relative;
   display: flex;
   flex-direction: column;
   background-color: var(--neutral-100);
   border-right: 1px solid var(--gray-200);
   flex-shrink: 0;
+
 }
 
 .formNav {
@@ -451,10 +454,10 @@
 }
 
 .tabNavigation {
+  padding: 0 var(--space-4);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: var(--space-6);
 }
 
 
@@ -877,6 +880,17 @@
   background-color: var(--ai-accent-500);
 }
 
+.navFormFooter {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--neutral-100);
+  width: 100%;
+  gap: var(--space-4);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
 .paginationIndicator {
   display: flex;
   align-items: center;
@@ -897,11 +911,15 @@
 
 .formSectionTitle {
     font-size: var(--text-md);
-  }
+}
 
-  .formSectionDescription {
+.formSectionDescription {
     font-size: var(--text-sm);
-  }
+}
+
+.closeSectionButton {
+  display: none;
+}
 
 
 @keyframes spin {
@@ -918,6 +936,7 @@
    color: var(--neutral-100)
 }
 
+/* ---------------------Mobile and Small Devices Styles--------------------- */
 
 @container mainWorkspace (width < 800px) {
   .mainWorkspace {
@@ -948,10 +967,18 @@
   }
 
   .editorSection {
-    max-width: 100vw;
-    overflow-x: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
     border-bottom: 4px solid var(--neutral-300);
-    max-height: min(38vh, 450px);
+    max-width: min(1440px, 95vw);
+    max-height: min(70vh);
+    overflow-x: hidden;
+    transition: max-height 0.5s ease-in-out;
+  }
+
+  .closeSection {
+    max-height: min(8vh);
   }
 
   .formContent {
@@ -962,6 +989,11 @@
   .formSection {
     gap: var(--space-4);
   }
+
+  .sectionCardsContainer {
+    height: 100%;
+    margin-bottom: var(--space-24);
+   }
 
   .formSectionTitle {
     font-size: var(--text-md);
@@ -996,7 +1028,49 @@
     box-shadow: none;
     font-size: 16px;
   }
+
+  .previewSection {
+    padding: var(--space-2);
+    padding-top: var(--space-16);
+  }
+
+  .closeSectionButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-1);
+    right: var(--space-2);
+    background-color: var(--neutral-300);
+    color: var(--neutral-600);
+    padding: var(--space-2);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+
+    &:hover {
+      background-color: var(--neutral-400);
+      color: var(--neutral-700);
+    }
+  }
+}
+
+
+@keyframes b0bUpDown {
+  0% {
+    transform: translateY(-3px);
+  }
+  50% {
+    transform: translateY(3px);
+  }
+  100% {
+    transform: translateY(-3px);
+  }
+}
+
+.bounce{
+  animation: b0bUpDown 2s ease-in-out infinite;
 }
   
+
 
 

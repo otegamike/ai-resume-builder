@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
-import { ArrowLeft, ArrowRight, ChevronDown, ChevronUp, Download, Image as ImageIcon, Save, Layout, FileText, Briefcase, GraduationCap, Code, Plus, Trash2, Loader2, Sparkles, Check, Palette } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronDown, ChevronsDown, ChevronsUp, ChevronUp, Download, Image as ImageIcon, Save, Layout, FileText, Briefcase, GraduationCap, Code, Plus, Trash2, Loader2, Sparkles, Check, Palette } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -18,7 +18,7 @@ import ExperienceTab from "./form-nav/ExperienceTab";
 import EducationTab from "./form-nav/EducationTab";
 import SkillsTab from "./form-nav/SkillsTab";
 import styles from "./page.module.css";
-import { calculateEditorHeight } from "@/utils/headerSize";
+import { calculateEditorHeight, editorSectionHeight } from "@/utils/headerSize";
 import { scrollIntoView } from "@/utils/scrollIntoview"; 
 import { initialResume } from "@/constants/ResumeConstants";
 import type { ResumeContent } from "@/types/ResumeData";
@@ -58,6 +58,8 @@ function debounce(func: (...args: [string, ResumeContent]) => void, wait: number
 }
 
 const editorHeight = calculateEditorHeight();
+const SectionHeight = editorSectionHeight();
+
 
 export default function ResumeEditor() {
   const params = useParams();
@@ -72,7 +74,7 @@ export default function ResumeEditor() {
   const [template, setTemplate] = useState<TemplateId>("template1");
   const [templateDefinitions, setTemplateDefinitions] = useState<TemplateDefinition[]>([]);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
-  const [activeTab, setActiveTab] = useState<Tab>("headshot");
+  const [activeTab, setActiveTab] = useState<Tab>("personal");
   const [newSkill, setNewSkill] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -82,6 +84,12 @@ export default function ResumeEditor() {
   const [aiGeneratingFor, setAiGeneratingFor] = useState<string | null>(null);
   const previewIframeRef = useRef<HTMLIFrameElement | null>(null);
   const exportIframeRef = useRef<HTMLIFrameElement | null>(null);
+  const [isEditorTabOpen, setIsEditorTabOpen] = useState(true);
+
+  // editor open and close
+  const toggleEditorTab = () => {
+    setIsEditorTabOpen(!isEditorTabOpen);
+  }
 
   const [showExportOption, setShowExportOption] = useState<boolean>(false);
 
@@ -568,7 +576,7 @@ export default function ResumeEditor() {
 
   return (
     <div className={styles.container} style={{height: editorHeight}}>
-      <div className={styles.title_bar}>
+      <div className={styles.title_bar} id="title_bar">
         <div className={styles.navbarLeft}>
           <Link href="/dashboard" className={styles.backLink}>
             <ArrowLeft color='var(--neutral-100)' className={styles.backIcon} />
@@ -658,9 +666,11 @@ export default function ResumeEditor() {
         </div>
       </div>
 
+
+
       <div className={styles.mainWorkspaceContainer}>
         <main className={styles.mainWorkspace}>
-          <section className={styles.editorSection} style={{height: editorHeight}}>
+          <section className={`${isEditorTabOpen? "" : styles.closeSection} ${styles.editorSection} hideScrollbar`} style={{height: SectionHeight}}>
             <div className={styles.formNav}>
               <div id='formNavBar' className={`${styles.formNavContent} hideScrollbar`}>
                 {tabArray.map((tab) => {
@@ -738,11 +748,7 @@ export default function ResumeEditor() {
                 />
               )}
 
-              <div className={styles.tabNavigation}>
-                <Button variant="outline" className={styles.previousButton} disabled={getTabIndex(activeTab) === 0} onClick={() => changeTab("prev")}>
-                  <ArrowLeft className={styles.tabNavigationIcon} />
-                  Previous
-                </Button>
+              <div className={styles.navFormFooter}>
                 <div className={styles.paginationIndicator}>
                   {tabArray.map((tabItem) => { 
                     return(
@@ -750,12 +756,38 @@ export default function ResumeEditor() {
                     )
                   })}
                 </div>
-                <Button className={styles.nextButton} disabled={getTabIndex(activeTab) === tabArray.length - 1} onClick={() => changeTab("next")}>
-                  Next
-                  <ArrowRight className={styles.tabNavigationIcon} />
-                </Button>
+                <div className={styles.tabNavigation}>
+                  <Button variant="outline" className={styles.previousButton} disabled={getTabIndex(activeTab) === 0} onClick={() => changeTab("prev")}>
+                    <ArrowLeft className={styles.tabNavigationIcon} />
+                    Previous
+                  </Button>
+                  
+                  <Button className={styles.nextButton} disabled={getTabIndex(activeTab) === tabArray.length - 1} onClick={() => changeTab("next")}>
+                    Next
+                    <ArrowRight className={styles.tabNavigationIcon} />
+                  </Button>
+                </div>
+                <div
+                  onClick={() => toggleEditorTab()}
+                  className={styles.closeSectionButton}
+                >
+                  {isEditorTabOpen? (
+                      <>
+                        Preview Resume 
+                        <ChevronsUp className={styles.bounce} color="var(--neutral-600)" />
+                      </>
+                    ):(
+                      <>
+                        Continue Editing 
+                        <ChevronsDown className={styles.bounce} color="var(--neutral-600)" />
+                      </>
+                    )
+                  }
+                  
+                </div>
               </div>
             </div>
+            
           </section>
 
           <section className={styles.previewSection}>
