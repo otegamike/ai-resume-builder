@@ -55,6 +55,8 @@ function debounce(func: (...args: [string, ResumeContent]) => void, wait: number
   return debounced as typeof debounced & { cancel: () => void };
 }
 
+const editorHeight = calculateEditorHeight();
+
 export default function ResumeEditor() {
   const params = useParams();
   const searchParams = useSearchParams();
@@ -551,7 +553,7 @@ export default function ResumeEditor() {
   }
 
   return (
-    <div className={styles.container} style={{height: calculateEditorHeight()}}>
+    <div className={styles.container} style={{height: editorHeight}}>
       <div className={styles.title_bar}>
         <div className={styles.navbarLeft}>
           <Link href="/dashboard" className={styles.backLink}>
@@ -716,11 +718,11 @@ export default function ResumeEditor() {
               )}
 
               <div className={styles.tabNavigation}>
-                <Button variant="outline" className={styles.previousButton} disabled={activeTab === "personal"} onClick={() => changeTab("prev")}>
+                <Button variant="outline" className={styles.previousButton} disabled={getTabIndex(activeTab) === 0} onClick={() => changeTab("prev")}>
                   <ArrowLeft className={styles.tabNavigationIcon} />
                   Previous
                 </Button>
-                <Button className={styles.nextButton} disabled={activeTab === "skills"} onClick={() => changeTab("next")}>
+                <Button className={styles.nextButton} disabled={getTabIndex(activeTab) === tabArray.length - 1} onClick={() => changeTab("next")}>
                   Next
                   <ArrowRight className={styles.tabNavigationIcon} />
                 </Button>
