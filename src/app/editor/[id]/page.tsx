@@ -177,6 +177,29 @@ export default function ResumeEditor() {
     }
   };
 
+  const generateBulletPoints = async (index: number) => {
+    if (!resume.experience[index].description) return;
+    setAiGenerating(true);
+    setAiGeneratingFor(`generateBulletPoints_${index}`);
+    try {
+      const result = await callAI('generateBulletPoints', { 
+        description: resume.experience[index].description 
+      }) as string;
+      const newExperience = [...resume.experience];
+      newExperience[index] = { ...newExperience[index], description: result };
+      setResume({ ...resume, experience: newExperience });
+      if (resumeId !== 'new') {
+        setAutoSaveStatus("saving");
+        debouncedAutoSave(title, { ...resume, experience: newExperience });
+      }
+    } catch {
+      setError("Failed to improve experience");
+    } finally {
+      setAiGenerating(false);
+      setAiGeneratingFor(null);
+    }
+  };
+
   const generateAISkills = async () => {
     if (!resume.personalInfo.jobTitle) {
       setError("Please enter a job title first");
@@ -523,11 +546,43 @@ export default function ResumeEditor() {
     // Optional: wait a moment to ensure fonts are loaded
     await new Promise(r => setTimeout(r, 500));
 
+    const html2canvasOptions = {
+      scale: 2,
+      useCORS: true,
+      logging: true,
+      onclone: (clonedDoc: Document) => {
+        const images = clonedDoc.querySelectorAll('img');
+        images.forEach((img) => {
+          const computedStyle = clonedDoc.defaultView?.getComputedStyle(img);
+          const div = clonedDoc.createElement('div');
+          div.style.backgroundImage = `url("${img.src}")`;
+          div.style.backgroundSize = 'cover';
+          div.style.backgroundPosition = 'center';
+          
+          if (computedStyle) {
+            div.style.width = computedStyle.width !== 'auto' ? computedStyle.width : (img.width + 'px');
+            div.style.height = computedStyle.height !== 'auto' ? computedStyle.height : (img.height + 'px');
+            div.style.borderRadius = computedStyle.borderRadius;
+            div.style.border = computedStyle.border;
+            div.style.margin = computedStyle.margin;
+            div.style.display = computedStyle.display !== 'inline' ? computedStyle.display : 'block';
+          } else {
+            div.style.width = img.width + 'px';
+            div.style.height = img.height + 'px';
+            div.style.display = 'block';
+          }
+          
+          div.className = img.className;
+          img.replaceWith(div);
+        });
+      }
+    };
+
     const opt = {
       margin: 0,
       filename: `${title || "resume"}.pdf`,
       image: { type: "jpeg" as const, quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, logging: true },
+      html2canvas: html2canvasOptions,
       jsPDF: { unit: "px" as const, format: [TEMPLATE_PAGE.widthPx, TEMPLATE_PAGE.heightPx] as [number, number], orientation: "portrait" as const }
     };
     html2pdf().set(opt).from(element).save();
@@ -540,8 +595,40 @@ export default function ResumeEditor() {
 
     await new Promise(r => setTimeout(r, 500));
 
+    const html2canvasOptions = {
+      scale: 2,
+      useCORS: true,
+      logging: true,
+      onclone: (clonedDoc: Document) => {
+        const images = clonedDoc.querySelectorAll('img');
+        images.forEach((img) => {
+          const computedStyle = clonedDoc.defaultView?.getComputedStyle(img);
+          const div = clonedDoc.createElement('div');
+          div.style.backgroundImage = `url("${img.src}")`;
+          div.style.backgroundSize = 'cover';
+          div.style.backgroundPosition = 'center';
+          
+          if (computedStyle) {
+            div.style.width = computedStyle.width !== 'auto' ? computedStyle.width : (img.width + 'px');
+            div.style.height = computedStyle.height !== 'auto' ? computedStyle.height : (img.height + 'px');
+            div.style.borderRadius = computedStyle.borderRadius;
+            div.style.border = computedStyle.border;
+            div.style.margin = computedStyle.margin;
+            div.style.display = computedStyle.display !== 'inline' ? computedStyle.display : 'block';
+          } else {
+            div.style.width = img.width + 'px';
+            div.style.height = img.height + 'px';
+            div.style.display = 'block';
+          }
+          
+          div.className = img.className;
+          img.replaceWith(div);
+        });
+      }
+    };
+
     const worker = html2pdf().set({
-      html2canvas: { scale: 2, useCORS: true, logging: true }
+      html2canvas: html2canvasOptions
     }).from(element).toCanvas();
 
     worker.get("canvas").then((canvas: HTMLCanvasElement) => {
@@ -722,6 +809,8 @@ export default function ResumeEditor() {
                   addExperience={addExperience}
                   removeExperience={removeExperience}
                   onChange={handleExperienceChange}
+                  generateBulletPoints={generateBulletPoints}
+                  aiGeneratingFor={aiGeneratingFor}
                 />
               )}
 

@@ -1,7 +1,6 @@
-import React from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Sparkles, Loader2 } from "lucide-react";
 import styles from "../page.module.css";
 
 interface Experience {
@@ -17,6 +16,8 @@ interface ExperienceTabProps {
   experience: Experience[];
   addExperience: () => void;
   removeExperience: (id: string) => void;
+  generateBulletPoints: (index: number) => Promise<void>;
+  aiGeneratingFor: string | null;
   onChange: (id: string, field: string, value: string) => void;
 }
 
@@ -25,7 +26,10 @@ export default function ExperienceTab({
   addExperience,
   removeExperience,
   onChange,
+  generateBulletPoints,
+  aiGeneratingFor,
 }: ExperienceTabProps) {
+
   return (
     <div className={styles.formSection}>
       <div className={styles.formSectionHeader}>
@@ -75,8 +79,26 @@ export default function ExperienceTab({
                 />
               </div>
               <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                <label className={styles.formLabelSmall}>Description</label>
+                <div className={styles.descriptionHeader}>
+                  <label className={styles.formLabelSmall}>Description</label>
+                  
+                  {exp.description && (
+                    <Button variant="outline" size="sm" onClick={() => generateBulletPoints(index)} disabled={aiGeneratingFor === `generateBulletPoints_${index}`}>
+                      {aiGeneratingFor === `generateBulletPoints_${index}` ? (
+                          <>
+                            <Loader2 size={16} className={styles.spinner} /> Generating...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles size={16} /> Improve with AI
+                          </>
+                        )}
+                    </Button>
+                  )}
+
+                </div>
                 <textarea
+                  placeholder={`Describe your roles and responsiblities${exp.company? ` at ${exp.company}.`: "..."} `}
                   className={styles.textarea}
                   value={exp.description}
                   onChange={(e) => onChange(exp.id, "description", e.target.value)}
