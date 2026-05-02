@@ -21,6 +21,8 @@ export async function GET(
     }
 
     const resume = await Resume.findOne({ _id: id, userId });
+    console.log(resume);
+    console.log(userId);
 
     if (!resume) {
       return NextResponse.json({ error: 'Resume not found' }, { status: 404 });

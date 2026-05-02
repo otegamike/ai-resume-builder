@@ -660,7 +660,7 @@ export default function ResumeEditor() {
 
       <div className={styles.mainWorkspaceContainer}>
         <main className={styles.mainWorkspace}>
-          <section className={styles.editorSection}>
+          <section className={styles.editorSection} style={{height: editorHeight}}>
             <div className={styles.formNav}>
               <div id='formNavBar' className={`${styles.formNavContent} hideScrollbar`}>
                 {tabArray.map((tab) => {
@@ -746,7 +746,7 @@ export default function ResumeEditor() {
                 <div className={styles.paginationIndicator}>
                   {tabArray.map((tabItem) => { 
                     return(
-                      <div className={`${styles.dot} ${activeTab===tabItem.id?styles.active: ""} `}></div>
+                      <div key={`dot-${tabItem.id}`} onClick={() => changeTab(tabItem.id)} className={`${styles.dot} ${activeTab===tabItem.id?styles.active: ""} `}></div>
                     )
                   })}
                 </div>

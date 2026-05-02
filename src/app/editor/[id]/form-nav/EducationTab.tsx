@@ -33,34 +33,38 @@ export default function EducationTab({
           <Plus className={styles.addIcon} /> Add
         </Button>
       </div>
-      {education.map((edu, index) => (
-        <div key={edu.id} className={styles.sectionCard}>
-          <div className={styles.sectionHeader}>
-            <span>School/University #{index + 1}</span>
-            <button onClick={() => removeEducation(edu.id)} className={styles.deleteButton}>
-              <Trash2 className={styles.deleteIcon} />
-            </button>
+
+      <div className={styles.sectionCardsContainer} >
+        {education.map((edu, index) => (
+          <div key={edu.id} className={styles.sectionCard}>
+            <div className={styles.sectionHeader}>
+              <span>School/University #{index + 1}</span>
+              <button onClick={() => removeEducation(edu.id)} className={styles.deleteButton}>
+                <Trash2 className={styles.deleteIcon} />
+              </button>
+            </div>
+            <div className={styles.formGrid}>
+              <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
+                <label className={styles.formLabelSmall}>Institution Name</label>
+                <Input className={styles.input} value={edu.school} onChange={(e) => onChange(edu.id, "school", e.target.value)} />
+              </div>
+              <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
+                <label className={styles.formLabelSmall}>Degree/Field of Study</label>
+                <Input className={styles.input} value={edu.degree} onChange={(e) => onChange(edu.id, "degree", e.target.value)} />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabelSmall}>Start Year</label>
+                <Input className={styles.input} value={edu.startDate} onChange={(e) => onChange(edu.id, "startDate", e.target.value)} />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabelSmall}>End Year</label>
+                <Input className={styles.input} value={edu.endDate} onChange={(e) => onChange(edu.id, "endDate", e.target.value)} />
+              </div>
+            </div>
           </div>
-          <div className={styles.formGrid}>
-            <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-              <label className={styles.formLabelSmall}>Institution Name</label>
-              <Input className={styles.input} value={edu.school} onChange={(e) => onChange(edu.id, "school", e.target.value)} />
-            </div>
-            <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-              <label className={styles.formLabelSmall}>Degree/Field of Study</label>
-              <Input className={styles.input} value={edu.degree} onChange={(e) => onChange(edu.id, "degree", e.target.value)} />
-            </div>
-            <div className={styles.formGroup}>
-              <label className={styles.formLabelSmall}>Start Year</label>
-              <Input className={styles.input} value={edu.startDate} onChange={(e) => onChange(edu.id, "startDate", e.target.value)} />
-            </div>
-            <div className={styles.formGroup}>
-              <label className={styles.formLabelSmall}>End Year</label>
-              <Input className={styles.input} value={edu.endDate} onChange={(e) => onChange(edu.id, "endDate", e.target.value)} />
-            </div>
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
+      
     </div>
   );
 }

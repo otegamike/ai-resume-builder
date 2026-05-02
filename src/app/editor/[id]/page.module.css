@@ -308,7 +308,7 @@
   gap: var(--space-6);
   flex-direction: column;
   width: 100%;
-  max-height: 80vh;
+  max-height: 60vh;
   overflow: auto;
   display: flex;
   scrollbar-width: thin;
@@ -894,6 +894,15 @@
     background-color: var(--neutral-600);
   }
 }
+
+.formSectionTitle {
+    font-size: var(--text-md);
+  }
+
+  .formSectionDescription {
+    font-size: var(--text-sm);
+  }
+
 
 @keyframes spin {
   from {
