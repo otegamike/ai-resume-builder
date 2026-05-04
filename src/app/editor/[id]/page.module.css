@@ -892,7 +892,7 @@
   flex-direction: column;
   background-color: var(--neutral-100);
   width: 100%;
-  gap: var(--space-4);
+  gap: var(--space-2);
   position: absolute;
   bottom: 0;
   left: 0;
@@ -903,6 +903,7 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
+  margin-top: var(--space-2);
 
   .dot {
     width: 7px;
@@ -979,13 +980,13 @@
     left: 0;
     border-bottom: 4px solid var(--neutral-300);
     max-width: min(1440px, 95vw);
-    max-height: min(70vh);
+    max-height: min(75vh);
     overflow-x: hidden;
     transition: max-height 0.5s ease-in-out;
   }
 
   .closeSection {
-    max-height: min(8vh);
+    max-height: min(6vh);
   }
 
   .formContent {
@@ -999,7 +1000,7 @@
 
   .sectionCardsContainer {
     height: 100%;
-    margin-bottom: var(--space-24);
+    margin-bottom: 9rem;
    }
 
   .formSectionTitle {
@@ -1047,37 +1048,73 @@
     justify-content: center;
     gap: var(--space-1);
     right: var(--space-2);
-    background-color: var(--neutral-300);
-    color: var(--neutral-600);
+    background-color: var(--ai-accent-500);
+    color: var(--ai-accent-100);
+    font-weight: 600;
     padding: var(--space-2);
-    font-weight: 700;
-    cursor: pointer;
     transition: all 0.3s ease-in-out;
+    margin-top: var(--space-4);
+    cursor: pointer;
 
     &:hover {
-      background-color: var(--neutral-400);
-      color: var(--neutral-700);
+      background-color: var(--ai-accent-600);
+      color: var(--ai-accent-100);
     }
+
+
+  }
+
+  .completed {
+    background-color: #5B21B6;
+    background: linear-gradient(
+      45deg,
+      var(--ai-accent-500) 0%,
+      var(--ai-accent-400) 50%,
+      var(--ai-accent-300) 53%,
+      var(--ai-accent-200) 55%,
+      var(--ai-accent-300) 58%,
+      var(--ai-accent-400) 60%,
+      var(--ai-accent-500) 100%
+    );
+    background-size: 200% 100%;
+    background-position: 100% 0;
+    color: var(--ai-accent-100);
+
+    animation: shimmer 2.5s ease-in-out infinite;
+  
   }
 }
 
 
 @keyframes b0bUpDown {
   0% {
-    transform: translateY(-3px);
+    transform: translateY(-1px);
   }
   50% {
     transform: translateY(3px);
   }
   100% {
-    transform: translateY(-3px);
+    transform: translateY(-1px);
   }
 }
 
-.bounce{
-  animation: b0bUpDown 2s ease-in-out infinite;
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100%  { background-position: 0% 0; }
 }
-  
+
+.bounce{
+  animation: b0bUpDown 2s ease-in infinite;
+}
+
+.arrow {
+  transform: rotate(0deg);
+  transition: transform 0.2s ease-in-out;
+}
+
+.flipArrow {
+  transform: rotate(180deg);
+}
 
 
 

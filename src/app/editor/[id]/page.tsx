@@ -858,21 +858,12 @@ export default function ResumeEditor() {
                 </div>
                 <div
                   onClick={() => toggleEditorTab()}
-                  className={styles.closeSectionButton}
+                  className={`${styles.closeSectionButton} ${resume.summary?styles.completed: ""}`}
                 >
-                  {isEditorTabOpen? (
-                      <>
-                        Preview Resume 
-                        <ChevronsUp className={styles.bounce} color="var(--neutral-600)" />
-                      </>
-                    ):(
-                      <>
-                        Continue Editing 
-                        <ChevronsDown className={styles.bounce} color="var(--neutral-600)" />
-                      </>
-                    )
-                  }
-                  
+                  {isEditorTabOpen? 'View Resume' : 'Edit Resume'}
+                  <div className={`${styles.arrow} ${isEditorTabOpen? styles.flipArrow: ""}`}>
+                    <ChevronsUp className={styles.bounce} color="var(--ai-accent-100)" />
+                  </div>
                 </div>
               </div>
             </div>

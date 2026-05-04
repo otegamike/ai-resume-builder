@@ -41,9 +41,7 @@ export default function Header() {
                 <nav className={styles.nav}>
 
                 <div className={styles.nav__panel__container}>
-                    {showNavbar && (
-                        <NavBar menuState={isMenuOpen} />
-                    )}
+                    <NavBar menuState={isMenuOpen} />
                 </div>
 
                 
