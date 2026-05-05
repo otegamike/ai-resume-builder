@@ -371,21 +371,73 @@
   height: 1rem;
 }
 
-.textarea {
-    border: 1px solid var(--gray-300);
-    border-radius: var(--radius-md);
-    width: 100%;
-    height: 8rem;
-    padding: var(--space-3);
-    font-size: var(--text-sm);
-    background-color: var(--neutral-100);
-    color: var(--neutral-700);
+.experienceBulletContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  background-color: var(--neutral-100);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  width: 100%;
+  min-height: 8rem;
+
+  ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+
+    li {
+      padding-left: 14px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+
+      &::before {
+        content: "-";
+        position: absolute;
+        left: 0;
+        top: 0;
+        color: var(--gray-500);
+      }
+    }
+  }
 }
 
-.textarea:focus {
+.bulletRemoveButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 2px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  color: var(--gray-400);
+  transition: color 0.2s, background-color 0.2s;
+}
+
+.bulletRemoveButton:hover {
+  color: var(--red-500);
+  background-color: var(--red-100);
+}
+
+.experienceInput {
+    width: 100%;
+    border: none;
+    font-size: var(--text-sm);
+    padding-block: var(--space-1);
+    background-color: transparent;
+    color: var(--neutral-700);
+    resize: none;
+}
+
+.experienceInput:focus {
   outline: none;
-  border-color: var(--primary-1);
-  box-shadow: 0 0 0 2px var(--ring);
 }
 
 .skillsContainer {

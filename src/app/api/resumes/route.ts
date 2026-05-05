@@ -37,12 +37,12 @@ export async function POST(request: NextRequest) {
     const resume = new Resume({
       userId,
       title,
-      template: template || 'modern',
+      template: template || 'template1',
       content,
     });
 
     const savedResume = await resume.save();
-    return NextResponse.json(savedResume, { status: 201 });
+    return NextResponse.json({id: savedResume._id, content: savedResume.content, status: 201 });
   } catch (error) {
     console.error('Error creating resume:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

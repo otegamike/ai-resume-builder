@@ -12,6 +12,7 @@ interface GenerateBody {
     role?: string;
     description?: string;
     summary?: string;
+    achivements?: string[];
   };
 }
 
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
 
     switch (type) {
       case 'generateSummary':
-        result = await generateSummary(data.jobTitle || '', data.experience || '3', data.skills || []);
+        result = await generateSummary(data.jobTitle || '', data.experience || '3', data.skills || [], data.achivements || []);
         break;
       case 'generateBulletPoints':
         result = await generateExperienceBulletPoints(data.company || '', data.role || '', data.description || '');
@@ -44,6 +45,10 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Invalid generation type' }, { status: 400 });
     }
 
+    if (result==="error") {
+      return NextResponse.json({ error: 'AI generation failed' }, { status: 500 });
+    }
+    
     return NextResponse.json({ result });
   } catch (error) {
     console.error('AI Generation error:', error);

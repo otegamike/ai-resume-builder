@@ -14,7 +14,7 @@ export interface Experience {
   role: string;
   startDate: string;
   endDate: string;
-  description: string;
+  description: string[];
 }
 
 export interface Education {

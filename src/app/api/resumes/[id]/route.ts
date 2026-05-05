@@ -21,8 +21,6 @@ export async function GET(
     }
 
     const resume = await Resume.findOne({ _id: id, userId });
-    console.log(resume);
-    console.log(userId);
 
     if (!resume) {
       return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
@@ -56,7 +54,7 @@ export async function PUT(
     await dbConnect();
     const resume = await Resume.findOneAndUpdate(
       { _id: id, userId },
-      { title, content, template: template || undefined, updatedAt: new Date() },
+      { title, content, template: template || "template1", updatedAt: new Date() },
       { new: true }
     );
 

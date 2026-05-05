@@ -82,8 +82,11 @@ export function getTemplatePreviewData(): TemplateData {
         role: "Lead Product Designer",
         startDate: "2022",
         endDate: "Present",
-        description:
+        description:[
           "Led redesign of onboarding and activation flows, improving trial-to-paid conversion by 24% while reducing support tickets by 31%.",
+          "Established and scaled a centralized design system, reducing design-to-engineering handoff time by 40% and ensuring visual consistency across web and mobile platforms.",
+          "Mentored a team of 4 junior designers and spearheaded weekly design critiques, fostering a culture of feedback that increased overall sprint velocity by 15%."
+        ]
       },
       {
         id: "2",
@@ -91,8 +94,11 @@ export function getTemplatePreviewData(): TemplateData {
         role: "Product Designer",
         startDate: "2019",
         endDate: "2022",
-        description:
+        description:[
           "Shipped scalable checkout and account experiences across web and mobile, reducing cart abandonment and increasing retention.",
+          "Collaborated with cross-functional teams to define product strategy, roadmap, and design execution for key growth initiatives.",
+          "Conducted 20+ user interviews and usability tests to identify pain points and inform design decisions."
+        ]
       },
     ],
     education: [

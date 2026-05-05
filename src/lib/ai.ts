@@ -52,9 +52,10 @@ export const getGroqChatCompletion = async (prompt:string) => {
 export async function generateSummary(
   jobTitle: string,
   experience: string,
-  skills: string[]
+  skills: string[],
+  achivements:string[]
 ): Promise<string> {
-  const prompt = `Write a professional summary for a ${jobTitle} with ${experience} years of experience. Skills include: ${skills.join(", ")}. Keep it very short and just in one sentences, impactful and ATS-friendly. Return only the professional summary, no explanations.`;
+  const prompt = `Write a professional summary for a ${jobTitle} with ${experience} years of experience. Skills include: ${skills.join(", ")}. this is a bullet point of their achivements.\n - ${achivements.join("\n - ")} . Keep it very short and just in one sentences, impactful and ATS-friendly. Return only the professional summary, no explanations.`;
   return generateWithAI(prompt);
 }
 
@@ -62,9 +63,14 @@ export async function generateExperienceBulletPoints(
   company: string,
   role: string,
   description: string
-): Promise<string> {
-  const prompt = `Transform this job description into 4-6 impactful, ATS-friendly bullet points. Company: ${company}, Role: ${role}. Original description: ${description}. Use action verbs and quantify achievements where possible.Return only the bullet points, no explanations.`;
-  return generateWithAI(prompt);
+): Promise<string[]> {
+  const prompt = `Transform this job description into 3 impactful, ATS-friendly bullet points. Company: ${company}, Role: ${role}. Original description: ${description}. Use action verbs and quantify achievements where possible.Return only the bullet points seperated by commas, no explanations.`;
+  const result = await generateWithAI(prompt);
+  console.log(result)
+  return result
+    .split(/,|\n/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
 }
 
 export async function improveSummary(

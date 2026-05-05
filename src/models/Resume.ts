@@ -1,40 +1,14 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { TemplateData } from "@/lib/templateCatalog";
 
 export interface IResume extends Document {
   userId: string;
   title: string;
   template: string;
-  content: {
-    personalInfo: {
-      name: string;
-      jobTitle: string;
-      email: string;
-      phone: string;
-      location: string;
-      website: string;
-      photo?: string;
-    };
-    summary: string;
-    experience: Array<{
-      id: string;
-      company: string;
-      role: string;
-      startDate: string;
-      endDate: string;
-      description: string;
-    }>;
-    education: Array<{
-      id: string;
-      school: string;
-      degree: string;
-      startDate: string;
-      endDate: string;
-    }>;
-    skills: string[];
-  };
+  content: TemplateData;
 }
 
-const ResumeSchema: Schema = new Schema(
+const ResumeSchema: Schema = new Schema<IResume>(
   {
     userId: { type: String, required: true },
     title: { type: String, required: true },
@@ -57,7 +31,7 @@ const ResumeSchema: Schema = new Schema(
           role: { type: String },
           startDate: { type: String },
           endDate: { type: String },
-          description: { type: String },
+          description: [{ type: String }],
         },
       ],
       education: [

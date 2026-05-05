@@ -337,10 +337,13 @@
   }
 
   .exp-desc::before {
-    content: '•';
+    content: '-';
     position: absolute;
     left: 0;
     color: #2a2a2a;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1;
   }
 
   /* References */
@@ -492,7 +495,11 @@
               <div class="exp-dates">{{startDate}} – {{endDate}}</div>
             </div>
             {{?company}}<div class="exp-company">{{company}}</div>{{/company}}
-            <p class="exp-desc">{{description}}</p>
+            {{#description}}
+              <p class="exp-desc">
+                {{.}}
+              </p>
+            {{/description}}
           </div>
           {{/experience}}
         </div>

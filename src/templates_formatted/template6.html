@@ -220,8 +220,20 @@
   .exp-desc {
     font-size: 0.74rem;
     color: #4a3830;
-    line-height: 1.72;
+    line-height: 1.52;
     font-weight: 300;
+    padding-left: 14px;
+    position: relative;
+  }
+
+  .exp-desc::before {
+    content: '-';
+    position: absolute;
+    left: 0;
+    color: #4a3830;
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1;
   }
 
   .edu-entry { margin-bottom: 18px; }
@@ -342,7 +354,11 @@
         <div class="exp-role">{{role}}</div>
         {{?company}}<div class="exp-company">{{company}}</div>{{/company}}
         <div class="exp-years">{{startDate}} – {{endDate}}</div>
-        <p class="exp-desc">{{description}}</p>
+        {{#description}}
+          <p class="exp-desc">
+            {{.}}
+          </p>
+        {{/description}}
       </div>
       {{/experience}}
     </div>

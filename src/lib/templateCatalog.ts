@@ -1,43 +1,8 @@
-export type TemplateId =
-  | "template1"
-  | "template2"
-  | "template3"
-  | "template4"
-  | "template5"
-  | "template6"
-  | "template7";
-
-export interface TemplateData {
-  personalInfo: {
-    name: string;
-    jobTitle: string;
-    email: string;
-    phone: string;
-    location: string;
-    website: string;
-    photo?: string;
-  };
-  summary: string;
-  experience: Array<{
-    id: string;
-    company: string;
-    role: string;
-    startDate: string;
-    endDate: string;
-    description: string;
-  }>;
-  education: Array<{
-    id: string;
-    school: string;
-    degree: string;
-    startDate: string;
-    endDate: string;
-  }>;
-  skills: string[];
-}
+import type { ResumeContent } from "@/types/ResumeData";
+export type TemplateData = ResumeContent;
 
 export interface TemplateDefinition {
-  id: TemplateId;
+  id: string;
   name: string;
   description: string;
   html: string;
@@ -54,6 +19,7 @@ export const TEMPLATE_PAGE = {
   aspectRatio: 794 / 1123,
 } as const;
 
+
 export const templateDefinitions: TemplateDefinition[] = [
   { id: "template1", name: "Emerald", description: "Elegant two-column profile with modern accents", html: "", page: TEMPLATE_PAGE },
   { id: "template2", name: "Copper", description: "Warm editorial style for business-facing roles", html: "", page: TEMPLATE_PAGE },
@@ -64,3 +30,44 @@ export const templateDefinitions: TemplateDefinition[] = [
   { id: "template7", name: "Slate", description: "Structured corporate style optimized for scanning", html: "", page: TEMPLATE_PAGE },
 ];
 
+export type TemplateId = typeof templateDefinitions[number]["id"];
+
+
+
+// export type OldTemplateId =
+//   | "template1"
+//   | "template2"
+//   | "template3"
+//   | "template4"
+//   | "template5"
+//   | "template6"
+//   | "template7";
+
+// export interface OldTemplateData {
+//   personalInfo: {
+//     name: string;
+//     jobTitle: string;
+//     email: string;
+//     phone: string;
+//     location: string;
+//     website: string;
+//     photo?: string;
+//   };
+//   summary: string;
+//   experience: Array<{
+//     id: string;
+//     company: string;
+//     role: string;
+//     startDate: string;
+//     endDate: string;
+//     description: string;
+//   }>;
+//   education: Array<{
+//     id: string;
+//     school: string;
+//     degree: string;
+//     startDate: string;
+//     endDate: string;
+//   }>;
+//   skills: string[];
+// }

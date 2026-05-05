@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
@@ -23,6 +23,8 @@ import { scrollIntoView } from "@/utils/scrollIntoview";
 import { initialResume } from "@/constants/ResumeConstants";
 import type { ResumeContent } from "@/types/ResumeData";
 import { useSearchParams } from 'next/navigation';
+import { useAi } from "@/app/hooks/useAi";
+import { useAutoSave } from "@/app/hooks/useAutosave";
 
 type Tab = "headshot" | "personal" | "summary" | "experience" | "education" | "skills";
 
@@ -41,22 +43,6 @@ const tabArray: TabItem[] = [
   { id: "summary", icon: Layout, label: "Summary" },
 ];
 
-
-function debounce(func: (...args: [string, ResumeContent]) => void, wait: number) {
-  let timeoutId: ReturnType<typeof setTimeout> | null = null;
-  
-  const debounced = (...args: [string, ResumeContent]) => {
-    if (timeoutId) clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => func(...args), wait);
-  };
-  
-  (debounced as typeof debounced & { cancel: () => void }).cancel = () => {
-    if (timeoutId) clearTimeout(timeoutId);
-  };
-  
-  return debounced as typeof debounced & { cancel: () => void };
-}
-
 const editorHeight = calculateEditorHeight();
 const SectionHeight = editorSectionHeight();
 
@@ -67,35 +53,61 @@ export default function ResumeEditor() {
   const templateParams = searchParams.get('template');
   
 
-  const resumeId = params.id as string;
+  const initialResumeId = params.id as string;
+  const initialTemplateId = "template1";
+
   const { isLoaded, userId } = useAuth();
   const [resume, setResume] = useState(initialResume);
   const [title, setTitle] = useState("");
-  const [template, setTemplate] = useState<TemplateId>("template1");
   const [templateDefinitions, setTemplateDefinitions] = useState<TemplateDefinition[]>([]);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("personal");
   const [newSkill, setNewSkill] = useState("");
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  const [aiGenerating, setAiGenerating] = useState(false);
-  const [aiGeneratingFor, setAiGeneratingFor] = useState<string | null>(null);
+
   const previewIframeRef = useRef<HTMLIFrameElement | null>(null);
   const exportIframeRef = useRef<HTMLIFrameElement | null>(null);
   const [isEditorTabOpen, setIsEditorTabOpen] = useState(true);
+
+  
+  const { 
+    aiGenerating, 
+    aiGeneratingFor, 
+    aiError, 
+    generateAiSummary, 
+    improveAiSummary, 
+    generateAiSkills, 
+    generateAiBulletPoints 
+  } = useAi();
+
+  const {
+    resumeId,
+    templateId,
+    saving,
+    autoSaveStatus,
+    debouncedAutoSave,
+    saveResume,
+    updateResumeId,
+    updateTemplateId,
+    setAutoSaveStatus,
+  } = useAutoSave(initialResumeId, initialTemplateId, 5000 );
+
 
   // editor open and close
   const toggleEditorTab = () => {
     setIsEditorTabOpen(!isEditorTabOpen);
   }
 
+  const saveDraft = useCallback(() => {
+    saveResume(title, resume);
+  }, [title, resume, saveResume]);
+
   const [showExportOption, setShowExportOption] = useState<boolean>(false);
 
   const selectedTemplate = useMemo(
-    () => templateDefinitions.find((entry) => entry.id === template),
-    [templateDefinitions, template]
+    () => templateDefinitions.find((entry) => entry.id === templateId),
+    [templateDefinitions, templateId]
   );
 
   const renderedTemplate = useMemo(() => {
@@ -115,89 +127,39 @@ export default function ResumeEditor() {
     }
   }, [renderedTemplate]);
 
-  const callAI = async (type: string, data: Record<string, unknown>): Promise<string | string[]> => {
-    const response = await fetch('/api/ai/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type, data }),
-    });
-    
-    if (!response.ok) throw new Error('AI generation failed');
-    const result = await response.json();
-    return result.result;
-  };
-
-  const generateAISummary = async () => {
-    setAiGenerating(true);
-    setAiGeneratingFor("summary");
-    try {
-      const experienceYears = resume.experience.length > 0 
-        ? resume.experience.reduce((acc, exp) => {
-            const start = parseInt(exp.startDate?.replace(/\D/g, '') || '0');
-            const end = exp.endDate?.toLowerCase() === 'present' ? new Date().getFullYear() : parseInt(exp.endDate?.replace(/\D/g, '') || '0');
-            return acc + (end - start);
-          }, 0)
-        : 3;
-      
-      const result = await callAI('generateSummary', {
-        jobTitle: resume.personalInfo.jobTitle || 'Professional',
-        experience: Math.max(experienceYears, 1),
-        skills: resume.skills,
-      }) as string;
-      
-      setResume({ ...resume, summary: result });
-      if (resumeId !== 'new') {
-        setAutoSaveStatus("saving");
-        debouncedAutoSave(title, { ...resume, summary: result });
+  const generateSummary = async () => {
+      const result = await generateAiSummary(resume);
+      if (!result.success){
+        return;
       }
-    } catch {
-      setError("Failed to generate summary");
-    } finally {
-      setAiGenerating(false);
-      setAiGeneratingFor(null);
-    }
+
+      const summary = result.text;
+      debouncedAutoSave(title, { ...resume, summary });
+      setResume({ ...resume, summary });
   };
 
   const improveSummary = async () => {
-    if (!resume.summary) return;
-    setAiGenerating(true);
-    setAiGeneratingFor("improveSummary");
-    try {
-      const result = await callAI('improveSummary', { summary: resume.summary }) as string;
-      setResume({ ...resume, summary: result });
-      if (resumeId !== 'new') {
-        setAutoSaveStatus("saving");
-        debouncedAutoSave(title, { ...resume, summary: result });
-      }
-    } catch {
-      setError("Failed to improve summary");
-    } finally {
-      setAiGenerating(false);
-      setAiGeneratingFor(null);
+    const result = await improveAiSummary(resume.summary);
+    if (!result.success) {
+      return;
     }
+
+    const summary = result.text;
+    setResume({ ...resume, summary });
+    debouncedAutoSave(title, { ...resume, summary });
   };
 
   const generateBulletPoints = async (index: number) => {
-    if (!resume.experience[index].description) return;
-    setAiGenerating(true);
-    setAiGeneratingFor(`generateBulletPoints_${index}`);
-    try {
-      const result = await callAI('generateBulletPoints', { 
-        description: resume.experience[index].description 
-      }) as string;
-      const newExperience = [...resume.experience];
-      newExperience[index] = { ...newExperience[index], description: result };
-      setResume({ ...resume, experience: newExperience });
-      if (resumeId !== 'new') {
-        setAutoSaveStatus("saving");
-        debouncedAutoSave(title, { ...resume, experience: newExperience });
-      }
-    } catch {
-      setError("Failed to improve experience");
-    } finally {
-      setAiGenerating(false);
-      setAiGeneratingFor(null);
+    const result = await generateAiBulletPoints(resume.experience[index], index);
+    if (!result.success) {
+      return;
     }
+
+    const bulletPoints = result.array;
+    const newExperience = [...resume.experience];
+    newExperience[index] = { ...newExperience[index], description: bulletPoints };
+    setResume({ ...resume, experience: newExperience });
+    debouncedAutoSave(title, { ...resume, experience: newExperience });
   };
 
   const generateAISkills = async () => {
@@ -205,22 +167,16 @@ export default function ResumeEditor() {
       setError("Please enter a job title first");
       return;
     }
-    setAiGenerating(true);
-    setAiGeneratingFor("skills");
-    try {
-      const result = await callAI('generateSkills', { jobTitle: resume.personalInfo.jobTitle }) as string[];
-      const newSkills = [...new Set([...resume.skills, ...result])];
-      setResume({ ...resume, skills: newSkills });
-      if (resumeId !== 'new') {
-        setAutoSaveStatus("saving");
-        debouncedAutoSave(title, { ...resume, skills: newSkills });
-      }
-    } catch {
-      setError("Failed to generate skills");
-    } finally {
-      setAiGenerating(false);
-      setAiGeneratingFor(null);
+    const result = await generateAiSkills(resume.personalInfo.jobTitle);
+    if (!result.success) {
+      return;
     }
+
+    const skills = result.array;
+    const newSkills = [...new Set([...resume.skills, ...skills])];
+    setResume({ ...resume, skills: newSkills });
+    debouncedAutoSave(title, { ...resume, skills: newSkills });
+    
   };
 
   useEffect(() => {
@@ -237,7 +193,7 @@ export default function ResumeEditor() {
         if(templateParams){
           const template = data.find((entry) => entry.id === templateParams);
           if (template) {
-            setTemplate(template.id);
+            updateTemplateId(template.id);
           }
         }
 
@@ -263,7 +219,7 @@ export default function ResumeEditor() {
           const data = await response.json();
           setResume(data.content);
           setTitle(data.title);
-          setTemplate(normalizeTemplateId(data.template || "template1"));
+          updateTemplateId(normalizeTemplateId(data.template || "template1"));
         } else if (response.status === 404) {
           setTitle("Untitled Resume");
         } else {
@@ -280,80 +236,12 @@ export default function ResumeEditor() {
       loadResume();
     }
   }, [isLoaded, userId, resumeId]);
-
-  const autoSave = useCallback(async (titleToSave: string, resumeToSave: typeof initialResume) => {
-    if (resumeId === 'new') return;
-    
-    setAutoSaveStatus("saving");
-    try {
-      const response = await fetch(`/api/resumes/${resumeId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: titleToSave, content: resumeToSave }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Auto-save failed');
-      }
-      
-      setAutoSaveStatus("saved");
-      setTimeout(() => setAutoSaveStatus("idle"), 2000);
-    } catch {
-      setAutoSaveStatus("error");
-    }
-  }, [resumeId]);
-
-  const debouncedAutoSave = useCallback(
-    debounce((titleToSave: string, resumeToSave: typeof initialResume) => {
-      autoSave(titleToSave, resumeToSave);
-    }, 5000),
-    [autoSave]
-  );
-
-  useEffect(() => {
-    return () => {
-      debouncedAutoSave.cancel();
-    };
-  }, [debouncedAutoSave]);
-
+ 
   const handleTitleChange = (newTitle: string) => {
     setTitle(newTitle);
     if (resumeId !== 'new') {
       setAutoSaveStatus("saving");
       debouncedAutoSave(newTitle, resume);
-    }
-  };
-
-  const saveResume = async (showNotification = true) => {
-    debouncedAutoSave.cancel();
-    setSaving(true);
-    setError("");
-    try {
-      const method = resumeId === 'new' ? 'POST' : 'PUT';
-      const url = resumeId === 'new' ? '/api/resumes' : `/api/resumes/${resumeId}`;
-      
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content: resume, template }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save resume');
-      }
-
-      const data = await response.json();
-      if (resumeId === 'new') {
-        window.location.href = `/editor/${data._id}`;
-      } else {
-        setAutoSaveStatus("saved");
-        setTimeout(() => setAutoSaveStatus("idle"), 2000);
-      }
-    } catch {
-      setError("Failed to save resume");
-      setAutoSaveStatus("error");
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -403,13 +291,10 @@ export default function ResumeEditor() {
   };
 
   const changeTemplate = (newTemplate: TemplateId) => {
-    setTemplate(newTemplate);
+    updateTemplateId(newTemplate);
     setShowTemplatePicker(false);
-    if (resumeId !== 'new') {
-      setAutoSaveStatus("saving");
-      debouncedAutoSave(title, resume);
-      saveResume(false);
-    }
+    debouncedAutoSave(title, resume);
+    
   };
 
   const handlePersonalInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -445,7 +330,7 @@ export default function ResumeEditor() {
     }
   };
 
-  const handleExperienceChange = (id: string, field: string, value: string) => {
+  const handleExperienceChange = (id: string, field: string, value: string | string[]) => {
     const newResume = {
       ...resume,
       experience: resume.experience.map(exp => exp.id === id ? { ...exp, [field]: value } : exp)
@@ -460,7 +345,7 @@ export default function ResumeEditor() {
   const addExperience = () => {
     const newResume = {
       ...resume,
-      experience: [...resume.experience, { id: Date.now().toString(), company: "", role: "", startDate: "", endDate: "", description: "" }]
+      experience: [...resume.experience, { id: Date.now().toString(), company: "", role: "", startDate: "", endDate: "", description: [] }]
     };
     setResume(newResume);
     if (resumeId !== 'new') {
@@ -678,7 +563,7 @@ export default function ResumeEditor() {
 
           <TemplateSelector 
             templateDefinitions={templateDefinitions} 
-            template={template} 
+            template={templateId} 
             selectedTemplate={selectedTemplate} 
             changeTemplate={changeTemplate} 
             showTemplatePicker={showTemplatePicker} 
@@ -711,7 +596,7 @@ export default function ResumeEditor() {
           <Button 
             variant="light_outline" 
             className={styles.saveButton}
-            onClick={() => saveResume(true)}
+            onClick={() => saveDraft()}
             disabled={saving}
           >
             <Save color='var(--neutral-100)' className={styles.saveIcon} />
@@ -796,7 +681,7 @@ export default function ResumeEditor() {
                 <SummaryTab
                   summary={resume.summary}
                   onChange={handleSummaryChange}
-                  generateAISummary={generateAISummary}
+                  generateAISummary={generateSummary}
                   improveSummary={improveSummary}
                   aiGenerating={aiGenerating}
                   aiGeneratingFor={aiGeneratingFor}

@@ -260,11 +260,12 @@
   }
 
   .exp-desc::before {
-    content: '•';
+    content: '-';
     position: absolute;
     left: 0;
     color: #2e6b5e;
     font-size: 1rem;
+    font-weight: 700;
     line-height: 1;
   }
 </style>
@@ -375,7 +376,11 @@
             <span>{{role}}</span>
             <span>{{startDate}} – {{endDate}}</span>
           </div>
-          <p class="exp-desc">{{description}}</p>
+          {{#description}}
+          <p class="exp-desc">
+            {{.}}
+          </p>
+          {{/description}}
         </div>
         {{/experience}}
       </div>

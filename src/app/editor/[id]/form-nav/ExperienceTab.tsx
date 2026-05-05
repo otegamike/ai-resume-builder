@@ -1,16 +1,9 @@
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Plus, Trash2, Sparkles, Loader2 } from "lucide-react";
+import { Plus, Trash2, Sparkles, Loader2, X } from "lucide-react";
 import styles from "../page.module.css";
-
-interface Experience {
-  id: string;
-  company: string;
-  role: string;
-  startDate: string;
-  endDate: string;
-  description: string;
-}
+import type { Experience } from "@/types/ResumeData";
+import { useState } from "react";
 
 interface ExperienceTabProps {
   experience: Experience[];
@@ -18,7 +11,7 @@ interface ExperienceTabProps {
   removeExperience: (id: string) => void;
   generateBulletPoints: (index: number) => Promise<void>;
   aiGeneratingFor: string | null;
-  onChange: (id: string, field: string, value: string) => void;
+  onChange: (id: string, field: string, value: string | string[]) => void;
 }
 
 export default function ExperienceTab({
@@ -29,6 +22,35 @@ export default function ExperienceTab({
   generateBulletPoints,
   aiGeneratingFor,
 }: ExperienceTabProps) {
+  // Track bullet point input per experience card by id
+  const [bulletInputs, setBulletInputs] = useState<Record<string, string>>({});
+
+  const getBulletInput = (id: string) => bulletInputs[id] || "";
+
+  const setBulletInput = (id: string, value: string) => {
+    setBulletInputs((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleAddBullet = (exp: Experience) => {
+    const input = getBulletInput(exp.id);
+    if (input.trim()) {
+      const newDescription = [...(exp.description || []), input.trim()];
+      onChange(exp.id, "description", newDescription);
+      setBulletInput(exp.id, "");
+    }
+  };
+
+  const handleRemoveBullet = (exp: Experience, bulletIndex: number) => {
+    const newDescription = exp.description.filter((_, i) => i !== bulletIndex);
+    onChange(exp.id, "description", newDescription);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, exp: Experience) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddBullet(exp);
+    }
+  };
 
   return (
     <div className={styles.formSection}>
@@ -82,7 +104,7 @@ export default function ExperienceTab({
                 <div className={styles.descriptionHeader}>
                   <label className={styles.formLabelSmall}>Description</label>
                   
-                  {exp.description && (
+                  {exp.description?.length > 0 && (
                     <Button variant="outline" size="sm" onClick={() => generateBulletPoints(index)} disabled={aiGeneratingFor === `generateBulletPoints_${index}`}>
                       {aiGeneratingFor === `generateBulletPoints_${index}` ? (
                           <>
@@ -97,12 +119,34 @@ export default function ExperienceTab({
                   )}
 
                 </div>
-                <textarea
-                  placeholder={`Describe your roles and responsiblities${exp.company? ` at ${exp.company}.`: "..."} `}
-                  className={styles.textarea}
-                  value={exp.description}
-                  onChange={(e) => onChange(exp.id, "description", e.target.value)}
-                />
+                <div className={styles.experienceBulletContainer}>
+                  
+                  {exp.description && exp.description.length > 0 && (
+                    <ul>
+                      {exp.description.map((line, i) => (
+                        <li key={i}>
+                          <span>{line}</span>
+                          <button
+                            className={styles.bulletRemoveButton}
+                            onClick={() => handleRemoveBullet(exp, i)}
+                            title="Remove bullet point"
+                          >
+                            <X size={14} />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) }
+
+                  <input
+                    type="text"
+                    placeholder={`List your roles and responsiblities${exp.company ? ` at ${exp.company}` : ""}... (max 3)`}
+                    className={styles.experienceInput}
+                    value={getBulletInput(exp.id)}
+                    onChange={(e) => setBulletInput(exp.id, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, exp)}
+                  />
+                </div>
               </div>
             </div>
           </div>
