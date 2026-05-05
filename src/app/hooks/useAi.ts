@@ -125,7 +125,7 @@ export function useAi() {
                  description: experience.description.join('\n')
             })
             return result;
-        }, `generateBulletPoints-${index}`);
+        }, `generateBulletPoints_${index}`);
     }
 
     return {

@@ -374,7 +374,7 @@
 .experienceBulletContainer {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-2);
   padding: var(--space-3);
   background-color: var(--neutral-100);
   border: 1px solid var(--gray-300);
@@ -393,8 +393,13 @@
       position: relative;
       display: flex;
       align-items: center;
+      font-size: var(--text-sm);
       justify-content: space-between;
       gap: var(--space-2);
+
+      span {
+        color: var(--neutral-700);
+      }
 
       &::before {
         content: "-";
@@ -893,6 +898,10 @@
   width: 2rem;
   height: 2rem;
   color: var(--primary-1);
+  animation: spin 1s linear infinite;
+}
+
+.spinner {
   animation: spin 1s linear infinite;
 }
 

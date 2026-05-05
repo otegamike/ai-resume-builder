@@ -26,6 +26,8 @@ export async function GET(
       return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
     }
 
+    console.log(resume);
+
     return NextResponse.json(resume);
   } catch (error) {
     console.error('Error fetching resume:', error);

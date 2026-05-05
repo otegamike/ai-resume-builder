@@ -64,11 +64,11 @@ export async function generateExperienceBulletPoints(
   role: string,
   description: string
 ): Promise<string[]> {
-  const prompt = `Transform this job description into 3 impactful, ATS-friendly bullet points. Company: ${company}, Role: ${role}. Original description: ${description}. Use action verbs and quantify achievements where possible.Return only the bullet points seperated by commas, no explanations.`;
+  const prompt = `Transform this job description into 3 impactful, ATS-friendly bullet points. Company: ${company}, Role: ${role}. Original description: ${description}. Use action verbs and quantify achievements where possible. Return only the bullet points, one per line. no explanations.`;
   const result = await generateWithAI(prompt);
   console.log(result)
-  return result
-    .split(/,|\n/)
+  return result.replaceAll("- ", "")
+    .split("\n")
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
 }

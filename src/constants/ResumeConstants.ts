@@ -15,7 +15,7 @@ export const initialExperience: Experience = {
     role: "",
     startDate: "",
     endDate: "",
-    description: [""],
+    description: [],
 };
 
 export const initialEducation: Education = {
