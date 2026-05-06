@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
@@ -33,16 +33,16 @@ interface Resume {
 }
 
 export default function DashboardPage() {
-  const { isLoaded, userId } = useAuth();
+  const { status } = useSession();
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [templateDefinitions, setTemplateDefinitions] = useState<TemplateDefinition[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (status === "loading") return;
     
-    if (!userId) {
+    if (status !== "authenticated") {
       window.location.href = "/";
       return;
     }
@@ -76,7 +76,7 @@ export default function DashboardPage() {
     Promise.all([fetchResumes(), fetchTemplates()]).finally(() => {
       setLoading(false);
     });
-  }, [isLoaded, userId]);
+  }, [status]);
 
   const deleteResume = async (id: string) => {
     if (!confirm("Are you sure you want to delete this resume?")) return;
@@ -93,7 +93,7 @@ export default function DashboardPage() {
     }
   };
 
-  if (!isLoaded || loading) {
+  if (status === "loading" || loading) {
     return (
       <div className={styles.loadingContainer}>
         <div className={styles.loadingContent}>

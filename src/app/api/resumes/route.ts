@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import dbConnect from '@/lib/db';
 import Resume from '@/models/Resume';
+import { getAuthenticatedUser, buildResumeOwnerQuery } from '@/lib/authUser';
 
 export async function GET() {
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    const authUser = await getAuthenticatedUser();
+    if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     await dbConnect();
-    const resumes = await Resume.find({ userId }).sort({ updatedAt: -1 });
+    const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId, authUser.legacyUserId);
+    const resumes = await Resume.find(ownerQuery).sort({ updatedAt: -1 });
+    await Resume.updateMany({ ...ownerQuery, user: { $exists: false } }, { $set: { user: authUser.userObjectId } });
     return NextResponse.json(resumes);
   } catch (error) {
     console.error('Error fetching resumes:', error);
@@ -21,8 +23,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    const authUser = await getAuthenticatedUser();
+    if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -35,7 +37,8 @@ export async function POST(request: NextRequest) {
 
     await dbConnect();
     const resume = new Resume({
-      userId,
+      userId: authUser.legacyUserId || String(authUser.userObjectId),
+      user: authUser.userObjectId,
       title,
       template: template || 'template1',
       content,

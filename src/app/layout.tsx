@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Plus_Jakarta_Sans, Lora, Limelight} from "next/font/google";
-import { ClerkProvider } from '@clerk/nextjs';
 import "./globals.css";
 import "../styles/variables.css";
 import styles from "./layout.module.css";
 import Header from "@/components/header/header";
+import AppSessionProvider from "@/components/auth/SessionProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,22 +44,21 @@ export default function RootLayout({
 }>) {
  
   return (
-    <ClerkProvider>
-      <html lang="en" 
-        className={`
-          ${geistSans.variable} 
-          ${lora.variable} 
-          ${jakarta.variable} 
-          ${logoFont.variable}
-          ${geistMono.variable} 
-          ${styles.html}`}
-      >
-        <body className={styles.body}>
-          
+    <html lang="en" 
+      className={`
+        ${geistSans.variable} 
+        ${lora.variable} 
+        ${jakarta.variable} 
+        ${logoFont.variable}
+        ${geistMono.variable} 
+        ${styles.html}`}
+    >
+      <body className={styles.body}>
+        <AppSessionProvider>
           <Header />
           {children}
-        </body>
-      </html>
-    </ClerkProvider>
+        </AppSessionProvider>
+      </body>
+    </html>
   );
 }

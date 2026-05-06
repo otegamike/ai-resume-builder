@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import dbConnect from '@/lib/db';
 import Resume from '@/models/Resume';
+import { getAuthenticatedUser, buildResumeOwnerQuery } from '@/lib/authUser';
 
 export async function GET(
   request: NextRequest,
@@ -9,8 +9,8 @@ export async function GET(
 ) {
   const { id } = await params;
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    const authUser = await getAuthenticatedUser();
+    if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -20,13 +20,17 @@ export async function GET(
       return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
     }
 
-    const resume = await Resume.findOne({ _id: id, userId });
+    const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId, authUser.legacyUserId);
+    const resume = await Resume.findOne({ _id: id, ...ownerQuery });
 
     if (!resume) {
       return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
     }
 
-    console.log(resume);
+    if (resume && !resume.user) {
+      resume.user = authUser.userObjectId;
+      await resume.save();
+    }
 
     return NextResponse.json(resume);
   } catch (error) {
@@ -41,8 +45,8 @@ export async function PUT(
 ) {
   const { id } = await params;
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    const authUser = await getAuthenticatedUser();
+    if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -54,9 +58,17 @@ export async function PUT(
     }
 
     await dbConnect();
+    const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId, authUser.legacyUserId);
     const resume = await Resume.findOneAndUpdate(
-      { _id: id, userId },
-      { title, content, template: template || "template1", updatedAt: new Date() },
+      { _id: id, ...ownerQuery },
+      {
+        title,
+        content,
+        template: template || "template1",
+        user: authUser.userObjectId,
+        userId: authUser.legacyUserId || String(authUser.userObjectId),
+        updatedAt: new Date()
+      },
       { new: true }
     );
 
@@ -77,13 +89,14 @@ export async function DELETE(
 ) {
   const { id } = await params;
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    const authUser = await getAuthenticatedUser();
+    if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     await dbConnect();
-    const resume = await Resume.findOneAndDelete({ _id: id, userId });
+    const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId, authUser.legacyUserId);
+    const resume = await Resume.findOneAndDelete({ _id: id, ...ownerQuery });
 
     if (!resume) {
       return NextResponse.json({ error: 'Resume not found' }, { status: 404 });

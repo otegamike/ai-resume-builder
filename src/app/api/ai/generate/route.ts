@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { generateSummary, generateExperienceBulletPoints, improveSummary, generateSkillsSuggestions } from '@/lib/ai';
+import { getAuthenticatedUser } from '@/lib/authUser';
 
 interface GenerateBody {
   type: string;
@@ -18,8 +18,8 @@ interface GenerateBody {
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    const authUser = await getAuthenticatedUser();
+    if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

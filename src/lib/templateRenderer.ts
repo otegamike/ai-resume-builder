@@ -58,8 +58,112 @@ export function renderTemplate(templateHtml: string, data: TemplateData): string
   return renderInternal(templateHtml, data as unknown as Record<string, unknown>, data as unknown as Record<string, unknown>);
 }
 
+function injectPaginationSupport(html: string): string {
+  const pageStyle = `
+<style id="multi-page-resume-style">
+  html, body { overflow: auto !important; }
+  .cv-scaler { display: flex; flex-direction: column; gap: 24px; }
+  .cv { flex-shrink: 0; }
+</style>`;
+
+  const paginationScript = `
+<script>
+  (function () {
+    const BLOCK_SELECTOR = [
+      '[data-page-block]',
+      '.exp-entry',
+      '.experience-entry',
+      '.experience-item',
+      '.edu-entry',
+      '.education-entry',
+      '.education-item',
+      '.project-entry',
+      '.achievement-item',
+      '.bullet-list li',
+      '.skill-item'
+    ].join(',');
+
+    function markBlocks(cv) {
+      const blocks = Array.from(cv.querySelectorAll(BLOCK_SELECTOR));
+      blocks.forEach((block, index) => {
+        if (!block.dataset.pgid) {
+          block.dataset.pgid = String(index + 1);
+        }
+      });
+      return blocks;
+    }
+
+    function splitOverflow(cv) {
+      const pageHeight = cv.clientHeight;
+      if (cv.scrollHeight <= pageHeight + 1) return null;
+
+      const blocks = markBlocks(cv);
+      if (!blocks.length) return null;
+
+      let splitIndex = -1;
+      for (let i = blocks.length - 1; i >= 0; i--) {
+        const block = blocks[i];
+        const blockBottom = block.offsetTop + block.offsetHeight;
+        if (blockBottom > pageHeight) {
+          splitIndex = i;
+        }
+      }
+
+      if (splitIndex < 0) return null;
+
+      const nextPage = cv.cloneNode(true);
+      const currentBlocks = Array.from(cv.querySelectorAll('[data-pgid]'));
+      const nextBlocks = Array.from(nextPage.querySelectorAll('[data-pgid]'));
+
+      for (let i = 0; i < splitIndex; i++) {
+        if (nextBlocks[i]) nextBlocks[i].remove();
+      }
+
+      for (let i = splitIndex; i < currentBlocks.length; i++) {
+        if (currentBlocks[i]) currentBlocks[i].remove();
+      }
+
+      return nextPage;
+    }
+
+    function paginateResume() {
+      const scaler = document.querySelector('.cv-scaler');
+      if (!scaler) return;
+
+      let index = 0;
+      const maxPages = 10;
+
+      while (index < scaler.children.length && scaler.children.length < maxPages) {
+        const page = scaler.children[index];
+        if (!(page instanceof HTMLElement) || !page.classList.contains('cv')) {
+          index++;
+          continue;
+        }
+
+        const overflowPage = splitOverflow(page);
+        if (overflowPage) {
+          scaler.insertBefore(overflowPage, page.nextSibling);
+        } else {
+          index++;
+        }
+      }
+    }
+
+    const run = () => paginateResume();
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(run);
+    } else {
+      window.addEventListener('load', run);
+    }
+  })();
+</script>`;
+
+  const withStyle = html.includes("</head>") ? html.replace("</head>", `${pageStyle}\n</head>`) : `${pageStyle}\n${html}`;
+  return withStyle.includes("</body>") ? withStyle.replace("</body>", `${paginationScript}\n</body>`) : `${withStyle}\n${paginationScript}`;
+}
+
 export function buildTemplateSrcDoc(templateHtml: string, data: TemplateData): string {
-  return renderTemplate(templateHtml, data);
+  return injectPaginationSupport(renderTemplate(templateHtml, data));
 }
 
 export function getTemplatePreviewData(): TemplateData {

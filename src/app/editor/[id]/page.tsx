@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
-import { useAuth } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import { ArrowLeft, ArrowRight, ChevronDown, ChevronsDown, ChevronsUp, ChevronUp, Download, Image as ImageIcon, Save, Layout, FileText, Briefcase, GraduationCap, Code, Plus, Trash2, Loader2, Sparkles, Check, Palette } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
@@ -56,7 +56,7 @@ export default function ResumeEditor() {
   const initialResumeId = params.id as string;
   const initialTemplateId = "template1";
 
-  const { isLoaded, userId } = useAuth();
+  const { status } = useSession();
   const [resume, setResume] = useState(initialResume);
   const [title, setTitle] = useState("");
   const [templateDefinitions, setTemplateDefinitions] = useState<TemplateDefinition[]>([]);
@@ -210,8 +210,8 @@ export default function ResumeEditor() {
   }, []);
 
   useEffect(() => {
-    if (!isLoaded) return;
-    if (!userId) {
+    if (status === "loading") return;
+    if (status !== "authenticated") {
       window.location.href = "/";
       return;
     }
@@ -239,7 +239,7 @@ export default function ResumeEditor() {
     if (resumeId) {
       loadResume();
     }
-  }, [isLoaded, userId, resumeId]);
+  }, [status, resumeId]);
  
   const handleTitleChange = (newTitle: string) => {
     setTitle(newTitle);
@@ -425,6 +425,11 @@ export default function ResumeEditor() {
     return iframeDocument?.documentElement as HTMLElement | null;
   };
 
+  const getFirstPageElement = () => {
+    const iframeDocument = exportIframeRef.current?.contentDocument;
+    return iframeDocument?.querySelector(".cv") as HTMLElement | null;
+  };
+
   const exportPDF = async () => {
     console.log("Exporting PDF...");
     const element = getExportElement();
@@ -477,7 +482,7 @@ export default function ResumeEditor() {
   };
 
   const exportImage = async () => {
-    const element = getExportElement();
+    const element = getFirstPageElement();
     const iframeWindow = exportIframeRef.current?.contentWindow;
     if (!element || !iframeWindow) return;
 
@@ -527,7 +532,7 @@ export default function ResumeEditor() {
     });
   };
 
-  if (!isLoaded || loading || templateDefinitions.length === 0) {
+  if (status === "loading" || loading || templateDefinitions.length === 0) {
     return (
       <div className={styles.loadingContainer}>
         <div className={styles.loadingContent}>
