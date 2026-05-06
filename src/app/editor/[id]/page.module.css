@@ -1092,6 +1092,17 @@
     height: 1.5rem;
   }
 
+  .textarea {
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    width: 100%;
+    height: 8rem;
+    padding: var(--space-3);
+    font-size: var(--text-sm);
+    background-color: var(--neutral-100);
+    color: var(--neutral-700);
+}
+
   .textarea:focus, .input:focus {
     outline: none;
     box-shadow: none;

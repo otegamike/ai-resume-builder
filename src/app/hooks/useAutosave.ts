@@ -35,7 +35,7 @@ export function useAutoSave(
     setTemplateId(newTemplateId);
   }
 
-  const saveResume = useCallback(async (titleToSave: string, resume: ResumeContent) => {
+  const saveResume = useCallback(async (titleToSave: string, resume: ResumeContent, newTemplateId?: TemplateId) => {
     debouncedAutoSave.cancel();
     setSaving(true);
     const newResume = resumeId==='new';
@@ -47,7 +47,7 @@ export function useAutoSave(
       const response = await fetch(apiUrl, {
         method: method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: titleToSave, content: resume , template: "template1"}),
+        body: JSON.stringify({ title: titleToSave, content: resume , template: newTemplateId || templateId}),
       });
 
       if (!response.ok) {

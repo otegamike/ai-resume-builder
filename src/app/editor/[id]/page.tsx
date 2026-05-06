@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
@@ -101,6 +101,10 @@ export default function ResumeEditor() {
 
   const saveDraft = useCallback(() => {
     saveResume(title, resume);
+  }, [title, resume, saveResume]);
+
+  const saveTemplate = useCallback((newTemplateId: TemplateId) => {
+    saveResume(title, resume, newTemplateId);
   }, [title, resume, saveResume]);
 
   const [showExportOption, setShowExportOption] = useState<boolean>(false);
@@ -293,8 +297,7 @@ export default function ResumeEditor() {
   const changeTemplate = (newTemplate: TemplateId) => {
     updateTemplateId(newTemplate);
     setShowTemplatePicker(false);
-    debouncedAutoSave(title, resume);
-    
+    saveTemplate(newTemplate);
   };
 
   const handlePersonalInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
