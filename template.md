@@ -1,331 +1,152 @@
 # Template System Documentation
 
-## Overview
+This document is the source of truth for how template metadata, HTML files, and runtime rendering work in Resumy AI.
 
-The AI Resume Builder uses a custom templating system to render dynamic resume previews. Templates are static HTML files loaded from disk, populated with user data using a custom Mustache-like syntax, and rendered in an iframe with responsive scaling.
+For full project architecture, see [PROJECT_WALKTHROUGH.md](./PROJECT_WALKTHROUGH.md).  
+For setup and contributor onboarding, see [README.md](./README.md).
 
-## Architecture
+## 1) Overview
+Templates are static HTML files loaded on the server, combined with resume data using a custom Mustache-like renderer, and displayed in iframes in the dashboard/editor/templates pages.
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        TEMPLATE FILES                            │
-│              src/templates_formatted/template1-7.html           │
-└─────────────────────────┬───────────────────────────────────────┘
-                          │
-                          ▼读取 (templateServer.ts)
-┌─────────────────────────────────────────────────────────────────┐
-│                       API LAYER                                 │
-│  GET /api/templates        → getAllTemplateDefinitions()       │
-│  GET /api/templates/:id    → getTemplateDefinition(id)         │
-└─────────────────────────┬───────────────────────────────────────┘
-                          │
-                          ▼返回 TemplateDefinition (包含 html)
-┌─────────────────────────────────────────────────────────────────┐
-│                    FRONTEND USAGE                               │
-│  buildTemplateSrcDoc(templateHtml, resumeData)                │
-│  ↓                                                              │
-│  renderTemplate() → 替换 {{mustache}} 语法                     │
-│  ↓                                                              │
-│  iframe srcDoc → 显示缩放的 CV                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+Core pipeline:
+1. Metadata from `src/lib/templateCatalog.ts`
+2. HTML loaded from `src/templates_formatted/*.html` by `src/lib/templateServer.ts`
+3. Data merged into template HTML by `src/lib/templateRenderer.ts`
+4. Rendered HTML injected into iframe `srcDoc`
 
-## Template Files
+## 2) Template Catalog Contract
+Defined in `src/lib/templateCatalog.ts`.
 
-### Location
-`src/templates_formatted/`
+### Template IDs
+Valid IDs:
+- `template1`
+- `template2`
+- `template3`
+- `template4`
+- `template5`
+- `template6`
+- `template7`
 
-### Available Templates
-| ID | Name | Description |
-|----|------|-------------|
-| template1 | Emerald | Elegant two-column profile with modern accents |
-| template2 | Copper | Warm editorial style for business-facing roles |
-| template3 | Sandstone | Balanced professional layout with clean typography |
-| template4 | Monochrome | High-contrast minimal style with bold headings |
-| template5 | Aurora | Creative geometric style for portfolio-driven roles |
-| template6 | Rose | Soft modern design with refined spacing |
-| template7 | Slate | Structured corporate style optimized for scanning |
+### Metadata shape
+Each template definition includes:
+- `id`
+- `name`
+- `description`
+- `html` (populated at runtime by server loader)
+- `page` (`widthPx`, `heightPx`, `aspectRatio`)
 
-### File Structure
-Each template HTML file contains:
-1. `<!DOCTYPE html>` + `<head>` with meta, fonts, and embedded CSS
-2. `<body>` with the CV markup using template syntax
-3. Embedded `<script>` for scaling logic
+Current names/descriptions:
+- `template1` / Emerald
+- `template2` / Copper
+- `template3` / Sandstone
+- `template4` / Monochrome
+- `template5` / Aurora
+- `template6` / Rose
+- `template7` / Slate
 
-## Data Structures
+## 3) Data Shape Used by Renderer
+`TemplateData` is an alias of `ResumeContent` (`src/types/ResumeData.ts`), containing:
+- `personalInfo` (`name`, `jobTitle`, `email`, `phone`, `location`, `website`, optional `photo`)
+- `summary`
+- `experience[]` (`id`, `company`, `role`, `startDate`, `endDate`, `description: string[]`)
+- `education[]` (`id`, `school`, `degree`, `startDate`, `endDate`)
+- `skills[]`
 
-Defined in `src/lib/templateCatalog.ts`:
+## 4) Server Loading
+Implemented in `src/lib/templateServer.ts`.
 
-```typescript
-type TemplateId = "template1" | "template2" | "template3" | "template4" | "template5" | "template6" | "template7";
+Functions:
+- `isTemplateId(value)` validates IDs against the catalog.
+- `readTemplateHtml(id)` reads `src/templates_formatted/<id>.html`.
+- `getTemplateDefinition(id)` returns metadata + loaded HTML.
+- `getAllTemplateDefinitions()` returns all template definitions with HTML.
 
-interface TemplateData {
-  personalInfo: {
-    name: string;
-    jobTitle: string;
-    email: string;
-    phone: string;
-    location: string;
-    website: string;
-    photo?: string;
-  };
-  summary: string;
-  experience: Array<{
-    id: string;
-    company: string;
-    role: string;
-    startDate: string;
-    endDate: string;
-    description: string;
-  }>;
-  education: Array<{
-    id: string;
-    school: string;
-    degree: string;
-    startDate: string;
-    endDate: string;
-  }>;
-  skills: string[];
-}
+Exposed via API:
+- `GET /api/templates`
+- `GET /api/templates/:id`
 
-interface TemplateDefinition {
-  id: TemplateId;
-  name: string;
-  description: string;
-  html: string;
-  page: {
-    widthPx: number;    // 794 (A4 width in pixels at 96dpi)
-    heightPx: number;  // 1123 (A4 height in pixels at 96dpi)
-    aspectRatio: number;
-  };
-}
-```
+Both routes run in `nodejs` runtime and return full HTML strings.
 
-## Server-Side Loading
+## 5) Rendering Engine Details
+Implemented in `src/lib/templateRenderer.ts`.
 
-Located in `src/lib/templateServer.ts`:
-
-```typescript
-// 读取指定 ID 的模板 HTML 内容
-async function readTemplateHtml(id: TemplateId): Promise<string>
-
-// 获取模板定义（包含 metadata + HTML）
-async function getTemplateDefinition(id: TemplateId): TemplateDefinition
-
-// 获取所有模板定义
-async function getAllTemplateDefinitions(): TemplateDefinition[]
-
-// 验证是否为有效的模板 ID
-function isTemplateId(value: string): value is TemplateId
-```
-
-### API Routes
-- `GET /api/templates` - Returns all 7 templates with full HTML
-- `GET /api/templates/:id` - Returns single template by ID
-
-## Rendering Engine
-
-Located in `src/lib/templateRenderer.ts`:
-
-```typescript
-// 主渲染函数：将数据填充到模板 HTML 中
-function renderTemplate(templateHtml: string, data: TemplateData): string
-
-// 前端使用的别名，返回可直接放入 iframe srcDoc 的 HTML
-function buildTemplateSrcDoc(templateHtml: string, data: TemplateData): string
-
-// 获取预览用的示例数据
-function getTemplatePreviewData(): TemplateData
-
-// 将旧版模板 ID 转换为新版格式
-function normalizeTemplateId(templateId: string): TemplateId
-```
-
-## Template Syntax
-
-The renderer uses a custom Mustache-like syntax:
-
-### 1. Variable Substitution
+### Supported template syntax
+1. Variable token:
 ```html
 {{personalInfo.name}}
 {{summary}}
-{{experience.0.company}}
 ```
 
-### 2. Array Iteration (Sections)
+2. Section iteration over arrays:
 ```html
 {{#experience}}
-  <div class="job">
-    <h3>{{company}}</h3>
-    <p>{{role}}</p>
-  </div>
+  <h3>{{company}}</h3>
 {{/experience}}
 ```
 
-### 3. Conditionals
+3. Conditional blocks:
 ```html
 {{?personalInfo.photo}}
   <img src="{{personalInfo.photo}}" alt="Photo" />
 {{/personalInfo.photo}}
 ```
 
-### 4. Dot Notation (Current Context)
+4. Current context token:
 ```html
-{{#experience}}
-  {{company}}     <!-- 当前 item 的 company -->
-  {{.}}           <!-- 整个 current object -->
-{{/experience}}
+{{.}}
 ```
 
-## Template Scaling System
+### Resolution behavior
+- Paths resolve against current context first, then root data.
+- Section blocks render only when target value is a non-empty array.
+- Conditional blocks render when value is truthy (arrays must be non-empty).
 
-Each template contains embedded JavaScript that scales the CV to fit the iframe viewport.
+### Escaping behavior
+All token substitutions are HTML-escaped (`&`, `<`, `>`, `"`, `'`) before output, reducing XSS risk from text fields.
 
-### Three-Layer DOM Structure
+### Entry points
+- `renderTemplate(templateHtml, data)`
+- `buildTemplateSrcDoc(templateHtml, data)` (current frontend alias)
+- `getTemplatePreviewData()` sample preview content
 
-```html
-<div class="cv-viewport">       <!-- fills iframe, centers content -->
-  <div class="cv-scaler">       <!-- scaled via CSS transform -->
-    <div class="cv">            <!-- fixed dimensions (760x1076 or 780x1076) -->
-      <!-- CV CONTENT -->
-    </div>
-  </div>
-</div>
-```
+## 6) Legacy Template ID Normalization
+`normalizeTemplateId(templateId)` maps legacy labels:
+- `modern -> template1`
+- `classic -> template2`
+- `minimal -> template3`
+- `creative -> template4`
 
-### Scaling Algorithm
+If the input starts with `template`, it is cast and used. Unknown values fall back to `template1`.
 
-```javascript
-const CV_WIDTH  = 760;   // or 780 depending on template
-const CV_HEIGHT = 1076;
+## 7) Frontend Usage Patterns
+### Editor (`src/app/editor/[id]/page.tsx`)
+- Fetches templates from `/api/templates`
+- Selects active template by id
+- Builds rendered HTML with `buildTemplateSrcDoc`
+- Injects HTML into preview iframe `srcDoc`
 
-function scaleCv() {
-  const available = document.documentElement.clientWidth;
-  const scale = available / CV_WIDTH;
+### Dashboard (`src/app/dashboard/page.tsx`)
+- Fetches templates and resumes
+- Renders each resume card preview using selected template + resume content
 
-  scaler.style.transform = `scale(${scale})`;
+### Template gallery (`src/app/templates/page.tsx`)
+- Fetches templates
+- Renders each template with `getTemplatePreviewData()` sample data
 
-  const scaledHeight = CV_HEIGHT * scale;
-  scaler.style.marginBottom = (scaledHeight - CV_HEIGHT) + 'px';
-}
-```
+## 8) Add a New Template (Safe Checklist)
+1. Add a new HTML file: `src/templates_formatted/templateN.html`.
+2. Add matching metadata entry in `templateDefinitions` inside `src/lib/templateCatalog.ts`.
+3. Ensure the new id follows `templateN` naming.
+4. Use existing token syntax (`{{...}}`, `{{#...}}`, `{{?...}}`) and valid field paths from `TemplateData`.
+5. Confirm `/api/templates` includes the new entry with HTML.
+6. Verify preview rendering in:
+   - `/templates`
+   - `/editor/new?template=templateN`
+   - `/dashboard` cards for resumes using that template
+7. Verify export still works (PDF/PNG) from editor with the new template.
 
-### How It Works
-
-1. **Viewport Detection**: Uses `document.documentElement.clientWidth` to get available width
-2. **Scale Calculation**: `scale = availableWidth / CV_WIDTH`
-3. **CSS Transform**: Applies `transform: scale(n)` to scale the CV visually
-4. **Height Compensation**: Adjusts `marginBottom` to maintain proper document flow since CSS transforms don't affect layout
-
-### Event Handling
-
-```javascript
-// Debounced resize listener (60ms delay)
-let resizeTimer;
-window.addEventListener('resize', () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(scaleCv, 60);
-});
-
-// Initial scale after fonts load
-document.fonts.ready.then(scaleCv);
-```
-
-### Template Dimensions by ID
-
-| Template | CV_WIDTH | CV_HEIGHT |
-|----------|---------|-----------|
-| template1 | 760 | 1076 |
-| template2 | 780 | 1076 |
-| template3 | 780 | 1076 |
-| template4 | 780 | 1076 |
-| template5 | 780 | 1076 |
-| template6 | 760 | 1076 |
-| template7 | 780 | 1076 |
-
-## Frontend Integration
-
-### Editor Page (`src/app/editor/[id]/page.tsx`)
-
-```typescript
-const selectedTemplate = useMemo(
-  () => templateDefinitions.find((entry) => entry.id === template),
-  [templateDefinitions, template]
-);
-
-const renderedTemplate = useMemo(() => {
-  if (!selectedTemplate?.html) return "";
-  return buildTemplateSrcDoc(selectedTemplate.html, resume);
-}, [resume, selectedTemplate]);
-
-// Rendered into iframe
-<iframe srcDoc={renderedTemplate} />
-```
-
-### Templates Gallery (`src/app/templates/page.tsx`)
-
-```typescript
-const previewData = useMemo(() => getTemplatePreviewData(), []);
-
-<iframe
-  srcDoc={buildTemplateSrcDoc(template.html, previewData)}
-/>
-```
-
-## PDF Export
-
-The editor uses `html2pdf.js` to export rendered resumes:
-
-```typescript
-import html2pdf from 'html2pdf.js';
-
-const element = iframeDocument.querySelector(".page") as HTMLElement;
-
-html2pdf().set({
-  margin: 0,
-  filename: 'resume.pdf',
-  image: { type: 'jpeg', quality: 0.98 },
-  html2canvas: { scale: 2, useCORS: true },
-  jsPDF: { unit: 'px', format: 'a4', orientation: 'portrait' }
-}).from(element).save();
-```
-
-## Key Files Reference
-
-| File | Purpose |
-|------|---------|
-| `src/lib/templateCatalog.ts` | Type definitions and template metadata |
-| `src/lib/templateServer.ts` | File loading and template retrieval |
-| `src/lib/templateRenderer.ts` | Template syntax parsing and rendering |
-| `src/templates_formatted/*.html` | Static template HTML files |
-| `src/app/api/templates/route.ts` | GET /api/templates endpoint |
-| `src/app/api/templates/[id]/route.ts` | GET /api/templates/:id endpoint |
-| `src/app/editor/[id]/page.tsx` | Resume editor with live preview |
-| `src/app/templates/page.tsx` | Template gallery page |
-
-## Common Patterns
-
-### Adding a New Template
-
-1. Create HTML file in `src/templates_formatted/templateN.html`
-2. Add entry to `templateDefinitions` array in `src/lib/templateCatalog.ts`
-3. Template automatically available via API and in editor
-
-### Modifying Template Syntax
-
-Edit regex patterns in `src/lib/templateRenderer.ts`:
-
-```typescript
-const SECTION_PATTERN = /\{\{#([\w.]+)\}\}([\s\S]*?)\{\{\/\1\}\}/g;
-const CONDITIONAL_PATTERN = /\{\{\?([\w.]+)\}\}([\s\S]*?)\{\{\/\1\}\}/g;
-const TOKEN_PATTERN = /\{\{([\w.]+|\.)\}\}/g;
-```
-
-### Debugging Rendered Output
-
-```typescript
-import { renderTemplate } from '@/lib/templateRenderer';
-
-console.log(renderTemplate(templateHtml, resumeData));
-// Output: fully rendered HTML with substituted values
-```
+## 9) Troubleshooting
+- Invalid template id returns `404` from `/api/templates/:id`.
+- Blank preview usually means missing template HTML load or malformed placeholders.
+- Unexpected field output often comes from mismatched data paths vs `ResumeContent` shape.
+- If legacy IDs appear from older records, rely on `normalizeTemplateId` fallback behavior.
