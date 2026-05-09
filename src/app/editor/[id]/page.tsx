@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
@@ -116,7 +116,7 @@ export default function ResumeEditor() {
 
   const renderedTemplate = useMemo(() => {
     if (!selectedTemplate?.html) return "";
-    return buildTemplateSrcDoc(selectedTemplate.html, resume);
+    return buildTemplateSrcDoc(selectedTemplate.html, resume, { isMultipage: true });
   }, [resume, selectedTemplate]);
 
   useEffect(() => {
@@ -420,23 +420,17 @@ export default function ResumeEditor() {
     }
   };
 
-  const getExportElement = () => {
-    const iframeDocument = exportIframeRef.current?.contentDocument;
-    return iframeDocument?.documentElement as HTMLElement | null;
-  };
-
-  const getFirstPageElement = () => {
-    const iframeDocument = exportIframeRef.current?.contentDocument;
-    return iframeDocument?.querySelector(".cv") as HTMLElement | null;
-  };
-
   const exportPDF = async () => {
     console.log("Exporting PDF...");
-    const element = getExportElement();
+    const iframeDocument = exportIframeRef.current?.contentDocument;
+    const scaler = iframeDocument?.querySelector('.cv-scaler') as HTMLElement;
     const iframeWindow = exportIframeRef.current?.contentWindow;
-    if (!element || !iframeWindow) return;
+    if (!scaler || !iframeWindow) return;
 
-    // Optional: wait a moment to ensure fonts are loaded
+    const originalGap = scaler.style.gap;
+    scaler.style.gap = '0px';
+
+    // Optional: wait a moment to ensure fonts are loaded and layout is updated
     await new Promise(r => setTimeout(r, 500));
 
     const html2canvasOptions = {
@@ -478,13 +472,17 @@ export default function ResumeEditor() {
       html2canvas: html2canvasOptions,
       jsPDF: { unit: "px" as const, format: [TEMPLATE_PAGE.widthPx, TEMPLATE_PAGE.heightPx] as [number, number], orientation: "portrait" as const }
     };
-    html2pdf().set(opt).from(element).save();
+    
+    html2pdf().set(opt).from(scaler).save().then(() => {
+      scaler.style.gap = originalGap;
+    });
   };
 
   const exportImage = async () => {
-    const element = getFirstPageElement();
+    const iframeDocument = exportIframeRef.current?.contentDocument;
+    const elements = iframeDocument?.querySelectorAll(".cv");
     const iframeWindow = exportIframeRef.current?.contentWindow;
-    if (!element || !iframeWindow) return;
+    if (!elements || elements.length === 0 || !iframeWindow) return;
 
     await new Promise(r => setTimeout(r, 500));
 
@@ -520,16 +518,22 @@ export default function ResumeEditor() {
       }
     };
 
-    const worker = html2pdf().set({
-      html2canvas: html2canvasOptions
-    }).from(element).toCanvas();
+    for (let i = 0; i < elements.length; i++) {
+      const element = elements[i] as HTMLElement;
+      const worker = html2pdf().set({
+        html2canvas: html2canvasOptions
+      }).from(element).toCanvas();
 
-    worker.get("canvas").then((canvas: HTMLCanvasElement) => {
-      const link = document.createElement("a");
-      link.download = `${title || "resume"}.png`;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-    });
+      await worker.get("canvas").then((canvas: HTMLCanvasElement) => {
+        const link = document.createElement("a");
+        link.download = `${title || "resume"}${elements.length > 1 ? `_page_${i + 1}` : ''}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
+      
+      // Small delay between downloads to prevent browser blocking multiple downloads
+      await new Promise(r => setTimeout(r, 300));
+    }
   };
 
   if (status === "loading" || loading || templateDefinitions.length === 0) {

@@ -6,9 +6,11 @@ import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { buildTemplateSrcDoc, getTemplatePreviewData } from "@/lib/templateRenderer";
 import { TEMPLATE_PAGE, type TemplateDefinition } from "@/lib/templateCatalog";
+import { useSession } from "next-auth/react";
 import styles from "./page.module.css";
 
 export default function TemplatesPage() {
+  const { status } = useSession();
   const [templates, setTemplates] = useState<TemplateDefinition[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -74,7 +76,10 @@ export default function TemplatesPage() {
                 <p className={styles.cardMeta}>
                   {template.page.widthPx} x {template.page.heightPx} px
                 </p>
-                <Link href={`/editor/new?template=${template.id}`}>
+                <Link href={status === "authenticated"
+                  ? `/editor/new?template=${template.id}`
+                  : `/auth/login?callbackUrl=${encodeURIComponent(`/editor/new?template=${template.id}`)}`
+                }>
                   <Button variant="primary" size="sm" >
                     Use Template
                     <ArrowUpRight color="var(--neutral-100)" className={styles.icon} />

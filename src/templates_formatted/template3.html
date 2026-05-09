@@ -354,32 +354,32 @@
     <div class="left-body">
 
       <!-- Contact -->
-      {{?personalInfo.phone}}
       <div>
         <div class="l-section-title">Contact</div>
+        {{?personalInfo.phone}}
         <div class="contact-item">
           <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
           {{personalInfo.phone}}
         </div>
-      {{/personalInfo.phone}}
-      {{?personalInfo.email}}
+        {{/personalInfo.phone}}
+        {{?personalInfo.email}}
         <div class="contact-item">
           <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
           {{personalInfo.email}}
         </div>
-      {{/personalInfo.email}}
-      {{?personalInfo.website}}
+        {{/personalInfo.email}}
+        {{?personalInfo.website}}
         <div class="contact-item">
           <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
           {{personalInfo.website}}
         </div>
-      {{/personalInfo.website}}
-      {{?personalInfo.location}}
+        {{/personalInfo.website}}
+        {{?personalInfo.location}}
         <div class="contact-item">
           <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
           {{personalInfo.location}}
         </div>
-      {{/personalInfo.location}}
+        {{/personalInfo.location}}
       </div>
 
       <!-- Education -->

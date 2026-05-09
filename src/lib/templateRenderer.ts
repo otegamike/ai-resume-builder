@@ -70,7 +70,6 @@ function injectPaginationSupport(html: string): string {
 <script>
   (function () {
     const BLOCK_SELECTOR = [
-      '[data-page-block]',
       '.exp-entry',
       '.experience-entry',
       '.experience-item',
@@ -83,70 +82,173 @@ function injectPaginationSupport(html: string): string {
       '.skill-item'
     ].join(',');
 
-    function markBlocks(cv) {
-      const blocks = Array.from(cv.querySelectorAll(BLOCK_SELECTOR));
-      blocks.forEach((block, index) => {
-        if (!block.dataset.pgid) {
-          block.dataset.pgid = String(index + 1);
+    function cleanupEmptySections(page) {
+      const labels = Array.from(page.querySelectorAll('.section-label, .section-title'));
+      labels.forEach(label => {
+        const parent = label.parentElement;
+        if (!parent) return;
+        
+        const clone = parent.cloneNode(true);
+        const cloneLabel = clone.querySelector('.section-label, .section-title');
+        if (cloneLabel) cloneLabel.remove();
+        
+        if (clone.textContent.trim() === '' && clone.querySelectorAll('img').length === 0) {
+          parent.remove();
         }
       });
-      return blocks;
-    }
-
-    function splitOverflow(cv) {
-      const pageHeight = cv.clientHeight;
-      if (cv.scrollHeight <= pageHeight + 1) return null;
-
-      const blocks = markBlocks(cv);
-      if (!blocks.length) return null;
-
-      let splitIndex = -1;
-      for (let i = blocks.length - 1; i >= 0; i--) {
-        const block = blocks[i];
-        const blockBottom = block.offsetTop + block.offsetHeight;
-        if (blockBottom > pageHeight) {
-          splitIndex = i;
-        }
-      }
-
-      if (splitIndex < 0) return null;
-
-      const nextPage = cv.cloneNode(true);
-      const currentBlocks = Array.from(cv.querySelectorAll('[data-pgid]'));
-      const nextBlocks = Array.from(nextPage.querySelectorAll('[data-pgid]'));
-
-      for (let i = 0; i < splitIndex; i++) {
-        if (nextBlocks[i]) nextBlocks[i].remove();
-      }
-
-      for (let i = splitIndex; i < currentBlocks.length; i++) {
-        if (currentBlocks[i]) currentBlocks[i].remove();
-      }
-
-      return nextPage;
     }
 
     function paginateResume() {
       const scaler = document.querySelector('.cv-scaler');
       if (!scaler) return;
+      
+      const sourceCv = scaler.querySelector('.cv');
+      if (!sourceCv) return;
 
-      let index = 0;
+      const pageHeight = sourceCv.clientHeight; // unscaled A4 height
+      
+      // If content fits completely, don't paginate
+      if (sourceCv.scrollHeight <= pageHeight + 1) return;
+
+      const cvRect = sourceCv.getBoundingClientRect();
+      const scale = cvRect.height / sourceCv.offsetHeight;
+
+      const leftColSelector = sourceCv.querySelector('.left-body') ? '.left-body' : '.left';
+      const rightColSelector = sourceCv.querySelector('.right-body') ? '.right-body' : '.right';
+      
+      const remainingContent = {
+         left: [],
+         right: []
+      };
+      
+      const leftCol = sourceCv.querySelector(leftColSelector);
+      if (leftCol) {
+          Array.from(leftCol.children).forEach(child => remainingContent.left.push(child.cloneNode(true)));
+      }
+      
+      const rightCol = sourceCv.querySelector(rightColSelector);
+      if (rightCol) {
+          Array.from(rightCol.children).forEach(child => remainingContent.right.push(child.cloneNode(true)));
+      }
+      
+      // Hide original
+      sourceCv.style.display = 'none';
+
+      let pageCount = 0;
       const maxPages = 10;
 
-      while (index < scaler.children.length && scaler.children.length < maxPages) {
-        const page = scaler.children[index];
-        if (!(page instanceof HTMLElement) || !page.classList.contains('cv')) {
-          index++;
-          continue;
-        }
-
-        const overflowPage = splitOverflow(page);
-        if (overflowPage) {
-          scaler.insertBefore(overflowPage, page.nextSibling);
-        } else {
-          index++;
-        }
+      function fillColumn(pageCv, colSelector, remainingSections) {
+         const col = pageCv.querySelector(colSelector);
+         if (!col) return remainingSections;
+         
+         let columnFull = false;
+         
+         while (remainingSections.length > 0 && !columnFull) {
+            const section = remainingSections.shift();
+            col.appendChild(section);
+            
+            const cvRectNow = pageCv.getBoundingClientRect();
+            const sectionRect = section.getBoundingClientRect();
+            
+            const sectionTop = (sectionRect.top - cvRectNow.top) / scale;
+            const sectionHeight = sectionRect.height / scale;
+            const sectionBottom = sectionTop + sectionHeight;
+            
+            const BOTTOM_MARGIN = 50; // 2.5rem padding
+            const effectivePageHeight = pageHeight - BOTTOM_MARGIN;
+            
+            if (sectionBottom > effectivePageHeight) {
+                const visibleHeight = effectivePageHeight - sectionTop;
+                const fitsRatio = visibleHeight / sectionHeight;
+                
+                if (fitsRatio > 0.5) {
+                    const children = Array.from(section.querySelectorAll(BLOCK_SELECTOR));
+                    if (children.length > 0) {
+                        const leftoverSection = section.cloneNode(true);
+                        const leftoverChildren = Array.from(leftoverSection.querySelectorAll(BLOCK_SELECTOR));
+                        
+                        let childToMoveIndex = children.length - 1;
+                        let movedAny = false;
+                        
+                        while (childToMoveIndex >= 0) {
+                            const child = children[childToMoveIndex];
+                            child.remove();
+                            movedAny = true;
+                            
+                            const newSectionRect = section.getBoundingClientRect();
+                            const newSectionBottom = ((newSectionRect.top - cvRectNow.top) / scale) + (newSectionRect.height / scale);
+                            
+                            if (newSectionBottom <= effectivePageHeight) {
+                                break;
+                            }
+                            childToMoveIndex--;
+                        }
+                        
+                        if (!movedAny) {
+                           section.remove();
+                           remainingSections.unshift(section);
+                           columnFull = true;
+                        } else {
+                           for(let i=0; i<=childToMoveIndex; i++) {
+                              if (leftoverChildren[i]) leftoverChildren[i].remove();
+                           }
+                           remainingSections.unshift(leftoverSection);
+                           columnFull = true;
+                        }
+                    } else {
+                        section.remove();
+                        remainingSections.unshift(section);
+                        columnFull = true;
+                    }
+                } else {
+                    section.remove();
+                    remainingSections.unshift(section);
+                    columnFull = true;
+                }
+            }
+         }
+         return remainingSections;
       }
+
+      while ((remainingContent.left.length > 0 || remainingContent.right.length > 0) && pageCount < maxPages) {
+         pageCount++;
+         const newPage = sourceCv.cloneNode(true);
+         newPage.style.display = 'flex';
+         newPage.classList.add('paginated-page');
+         
+         const newLeftCol = newPage.querySelector(leftColSelector);
+         if (newLeftCol) newLeftCol.innerHTML = '';
+         
+         const newRightCol = newPage.querySelector(rightColSelector);
+         if (newRightCol) newRightCol.innerHTML = '';
+         
+         if (pageCount > 1) {
+            const firstPageOnlySelectors = [
+              '.header', '.right-hero', '.left-hero', '.photo-col', '.photo-wrapper',
+              '.name', '.name-block', '.job-title', '.title', '.contact-grid',
+              '.contact-item', '.left-top'
+            ];
+            newPage.querySelectorAll(firstPageOnlySelectors.join(',')).forEach(el => el.remove());
+         }
+         
+         scaler.appendChild(newPage);
+         
+         if (remainingContent.left.length > 0) {
+            remainingContent.left = fillColumn(newPage, leftColSelector, remainingContent.left);
+         }
+         
+         if (remainingContent.right.length > 0) {
+            remainingContent.right = fillColumn(newPage, rightColSelector, remainingContent.right);
+         }
+         
+         cleanupEmptySections(newPage);
+         
+         if (newPage.querySelectorAll('.left > *, .left-body > *, .right > *, .right-body > *').length === 0) {
+            break;
+         }
+      }
+      
+      sourceCv.remove();
     }
 
     const run = () => paginateResume();
@@ -162,8 +264,12 @@ function injectPaginationSupport(html: string): string {
   return withStyle.includes("</body>") ? withStyle.replace("</body>", `${paginationScript}\n</body>`) : `${withStyle}\n${paginationScript}`;
 }
 
-export function buildTemplateSrcDoc(templateHtml: string, data: TemplateData): string {
-  return injectPaginationSupport(renderTemplate(templateHtml, data));
+export function buildTemplateSrcDoc(templateHtml: string, data: TemplateData, options: { isMultipage?: boolean } = {}): string {
+  const rendered = renderTemplate(templateHtml, data);
+  if (options.isMultipage) {
+    return injectPaginationSupport(rendered);
+  }
+  return rendered;
 }
 
 export function getTemplatePreviewData(): TemplateData {

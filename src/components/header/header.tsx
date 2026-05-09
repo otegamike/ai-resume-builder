@@ -10,7 +10,7 @@ import { Button } from "../ui/Button";
 import Logo from "../svgs/logo";
 
 import { useState } from "react";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 
 export default function Header() {
   const pathname = usePathname();
@@ -45,9 +45,9 @@ export default function Header() {
 
           {!isSignedIn && (
             <span className={styles.clerk_button}>
-              <Button size="sm" onClick={() => signIn("google", { callbackUrl: "/dashboard" })}>
-                Sign In
-              </Button>
+              <Link href="/auth/login">
+                <Button size="sm">Sign In</Button>
+              </Link>
             </span>
           )}
 
@@ -55,12 +55,6 @@ export default function Header() {
             <Link href="/dashboard">
               <Button size="sm">Dashboard</Button>
             </Link>
-          )}
-
-          {isSignedIn && (
-            <Button size="sm" variant="outline" onClick={() => signOut({ callbackUrl: "/" })}>
-              Sign Out
-            </Button>
           )}
 
           <div className={styles.hamburger}>
