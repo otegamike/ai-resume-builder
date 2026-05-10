@@ -5,6 +5,7 @@ import "../styles/variables.css";
 import styles from "./layout.module.css";
 import Header from "@/components/header/header";
 import AppSessionProvider from "@/components/auth/SessionProvider";
+import PageBody from "@/components/page-body/PageBody";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -53,13 +54,13 @@ export default function RootLayout({
           ${geistMono.variable} 
           ${styles.html}`}
       >
-        <body className={styles.body}>
           
-          <AppSessionProvider>
-            <Header />
-            {children}
-          </AppSessionProvider>
-        </body>
+            <PageBody>
+              <AppSessionProvider>
+                <Header />
+                {children}
+              </AppSessionProvider>
+            </PageBody>
       </html>
   );
 }

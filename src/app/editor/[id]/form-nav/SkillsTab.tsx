@@ -32,7 +32,7 @@ export default function SkillsTab({
       <div className={styles.formSectionHeader}>
         <h2 className={styles.formSectionTitle}>Technical Skills</h2>
         <Button
-          variant="outline"
+          variant="ai"
           size="sm"
           onClick={generateAISkills}
           disabled={aiGenerating || !jobTitle}

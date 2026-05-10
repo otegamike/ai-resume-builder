@@ -63,6 +63,9 @@ export default function EducationTab({
             </div>
           </div>
         ))}
+        <Button variant="outline" size="sm" onClick={addEducation} className={`${styles.addButton} ${styles.addButtonFull}`}>
+          <Plus className={styles.addIcon} /> Add
+        </Button>
       </div>
       
     </div>

@@ -26,7 +26,7 @@ export default function SummaryTab({
         <h2 className={styles.formSectionTitle}>About Me</h2>
         <div className={styles.aiButtons}>
           <Button
-            variant="outline"
+            variant="ai"
             size="sm"
             onClick={generateAISummary}
             disabled={aiGenerating}
@@ -41,7 +41,7 @@ export default function SummaryTab({
           </Button>
           {summary && (
             <Button
-              variant="outline"
+              variant="ai"
               size="sm"
               onClick={improveSummary}
               disabled={aiGenerating}

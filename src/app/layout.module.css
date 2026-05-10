@@ -2,13 +2,6 @@
   height: 100%;
 }
 
-.body {
-  background-color: var(--background-color);
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
 .header {
   display: flex;
   align-items: center;

@@ -105,7 +105,7 @@ export default function ExperienceTab({
                   <label className={styles.formLabelSmall}>Description</label>
                   
                   {exp.description?.length > 0 && (
-                    <Button variant="outline" size="sm" onClick={() => generateBulletPoints(index)} disabled={aiGeneratingFor === `generateBulletPoints_${index}`}>
+                    <Button variant="ai" size="sm" onClick={() => generateBulletPoints(index)} disabled={aiGeneratingFor === `generateBulletPoints_${index}`}>
                       {aiGeneratingFor === `generateBulletPoints_${index}` ? (
                           <>
                             <Loader2 size={16} className={styles.spinner} /> Generating...
@@ -119,7 +119,7 @@ export default function ExperienceTab({
                   )}
 
                 </div>
-                <div className={styles.experienceBulletContainer}>
+                <div className={styles.experienceBulletContainer} >
                   
                   {exp.description && exp.description.length > 0 && (
                     <ul>
@@ -138,8 +138,7 @@ export default function ExperienceTab({
                     </ul>
                   ) }
 
-                  <input
-                    type="text"
+                  <textarea
                     placeholder={`List your roles and responsiblities${exp.company ? ` at ${exp.company}` : ""}... (max 3)`}
                     className={styles.experienceInput}
                     value={getBulletInput(exp.id)}
@@ -151,6 +150,10 @@ export default function ExperienceTab({
             </div>
           </div>
         ))}
+
+        <Button variant="outline" size="sm" onClick={addExperience} className={`${styles.addButton} ${styles.addButtonFull}`}>
+          <Plus className={styles.addIcon} /> Add Experience
+        </Button>
       </div>
      </div>
   );

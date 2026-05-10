@@ -23,12 +23,12 @@
 }
 
 .primary {
-  background-color: var(--primary-1);
+  background-color: var(--primary-600);
   color: white;
 }
 
 .primary:hover {
-  background-color: var(--primary-2);
+  background-color: var(--primary-700);
 }
 
 .primary:active {
@@ -93,4 +93,51 @@
 
 .fullWidth {
   width: 100%;
+}
+
+.ai {
+  --color: var(--ai-accent-500);
+
+  background-color: var(--color);
+  height: fit-content;
+  background: linear-gradient(
+    45deg,
+    var(--ai-accent-500) 0%,
+    var(--ai-accent-400) 50%,
+    var(--ai-accent-300) 53%,
+    var(--ai-accent-200) 55%,
+    var(--ai-accent-300) 58%,
+    var(--ai-accent-400) 60%,
+    var(--ai-accent-500) 100%
+  );
+
+  background-size: 200% 100%;
+  background-position: 100% 0;
+  border-radius: 8px;
+
+  animation: shimmer 2.5s ease-in-out infinite;
+
+  padding: 1px 2px ;
+  
+  .aiButtonContent {
+    padding: 0.5rem;
+    background-color: hsl(251 91% 95% / 0.8) ;
+    border-radius: 5px;
+    color: var(--color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-xs);
+    gap: 0.5rem;
+
+    svg {
+      stroke: var(--color);
+    }
+    
+  }
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100%  { background-position: 0% 0; }
 }

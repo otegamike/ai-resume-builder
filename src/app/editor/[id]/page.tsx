@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { ArrowLeft, ArrowRight, ChevronDown, ChevronsDown, ChevronsUp, ChevronUp, Download, Image as ImageIcon, Save, Layout, FileText, Briefcase, GraduationCap, Code, Plus, Trash2, Loader2, Sparkles, Check, Palette } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronDown, FileCheck, ChevronsUp, ChevronUp, Download, Image as ImageIcon, Save, Layout, FileText, Briefcase, GraduationCap, Code, Plus, Trash2, Loader2, Sparkles, Check, Palette } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -17,6 +17,7 @@ import SummaryTab from "./form-nav/SummaryTab";
 import ExperienceTab from "./form-nav/ExperienceTab";
 import EducationTab from "./form-nav/EducationTab";
 import SkillsTab from "./form-nav/SkillsTab";
+import FinishTab from "./form-nav/FinishTab";
 import styles from "./page.module.css";
 import { calculateEditorHeight, editorSectionHeight } from "@/utils/headerSize";
 import { scrollIntoView } from "@/utils/scrollIntoview"; 
@@ -26,7 +27,8 @@ import { useSearchParams } from 'next/navigation';
 import { useAi } from "@/app/hooks/useAi";
 import { useAutoSave } from "@/app/hooks/useAutosave";
 
-type Tab = "headshot" | "personal" | "summary" | "experience" | "education" | "skills";
+export type Tab = "headshot" | "personal" | "summary" | "experience" | "education" | "skills" | "finish";
+
 
 interface TabItem {
   id: Tab;
@@ -41,7 +43,9 @@ const tabArray: TabItem[] = [
   { id: "education", icon: GraduationCap, label: "Education" },
   { id: "skills", icon: Code, label: "Skills" },
   { id: "summary", icon: Layout, label: "Summary" },
+  { id: "finish", icon: FileCheck, label: "Finish" },
 ];
+
 
 const editorHeight = calculateEditorHeight();
 const SectionHeight = editorSectionHeight();
@@ -88,7 +92,6 @@ export default function ResumeEditor() {
     autoSaveStatus,
     debouncedAutoSave,
     saveResume,
-    updateResumeId,
     updateTemplateId,
     setAutoSaveStatus,
   } = useAutoSave(initialResumeId, initialTemplateId, 5000 );
@@ -725,25 +728,22 @@ export default function ResumeEditor() {
                 />
               )}
 
+              {activeTab === "finish" && (
+                <FinishTab
+                  changeTab={changeTab}
+                />
+              )}
+
               <div className={styles.navFormFooter}>
-                <div className={styles.paginationIndicator}>
-                  {tabArray.map((tabItem) => { 
-                    return(
-                      <div key={`dot-${tabItem.id}`} onClick={() => changeTab(tabItem.id)} className={`${styles.dot} ${activeTab===tabItem.id?styles.active: ""} `}></div>
-                    )
-                  })}
-                </div>
-                <div className={styles.tabNavigation}>
-                  <Button variant="outline" className={styles.previousButton} disabled={getTabIndex(activeTab) === 0} onClick={() => changeTab("prev")}>
-                    <ArrowLeft className={styles.tabNavigationIcon} />
-                    Previous
-                  </Button>
-                  
-                  <Button className={styles.nextButton} disabled={getTabIndex(activeTab) === tabArray.length - 1} onClick={() => changeTab("next")}>
-                    Next
-                    <ArrowRight className={styles.tabNavigationIcon} />
-                  </Button>
-                </div>
+                {activeTab === "finish"?
+                   <Button className={styles.finalExportButton} size="lg" onClick={() => {setShowExportOption(!showExportOption)}}>
+                      Export Resume
+                      <Download color='var(--neutral-100)' className={styles.exportIcon} />
+                    </Button>
+                   :
+                  <NavigationPanel changeTab={changeTab} activeTab={activeTab} getTabIndex={getTabIndex} />
+                }
+                
                 <div
                   onClick={() => toggleEditorTab()}
                   className={`${styles.closeSectionButton} ${resume.summary?styles.completed: ""}`}
@@ -779,4 +779,36 @@ export default function ResumeEditor() {
       </div>
     </div>
   );
+}
+
+
+interface NavigationPanelProp {
+  activeTab: Tab;
+  changeTab: (newTab: Tab | "next" | "prev") => void;
+  getTabIndex: (tab: Tab) => number;
+}
+
+const NavigationPanel = ({activeTab, changeTab, getTabIndex}: NavigationPanelProp) => {
+  return (
+    <>
+      <div className={styles.paginationIndicator}>
+        {tabArray.map((tabItem) => { 
+          return(
+            <div key={`dot-${tabItem.id}`} onClick={() => changeTab(tabItem.id)} className={`${styles.dot} ${activeTab===tabItem.id?styles.active: ""} `}></div>
+          )
+        })}
+      </div>
+      <div className={styles.tabNavigation}>
+        <Button variant="outline" className={styles.previousButton} disabled={getTabIndex(activeTab) === 0} onClick={() => changeTab("prev")}>
+          <ArrowLeft className={styles.tabNavigationIcon} />
+          Previous
+        </Button>
+        
+        <Button className={styles.nextButton} disabled={getTabIndex(activeTab) === tabArray.length - 1} onClick={() => changeTab("next")}>
+          Next
+          <ArrowRight className={styles.tabNavigationIcon} />
+        </Button>
+      </div>
+    </>
+  )
 }
