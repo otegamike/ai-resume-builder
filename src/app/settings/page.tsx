@@ -1,14 +1,21 @@
 import { User, Mail, Bell } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { currentUser } from '@clerk/nextjs/server';
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { getAuthenticatedUser } from "@/lib/authUser";
 import styles from "./page.module.css";
 
 export default async function SettingsPage() {
-  const user = await currentUser();
+  const session = await getServerSession(authOptions);
 
-  if (!user) {
+  if (!session?.user) {
     return <div className={styles.signInMessage}>Please sign in to view settings.</div>;
   }
+
+  const authUser = await getAuthenticatedUser();
+  const fullName = authUser?.user?.name || session.user.name || "";
+  const [firstName, ...rest] = fullName.split(" ");
+  const lastName = rest.join(" ");
 
   return (
     <div className={styles.container}>
@@ -32,11 +39,11 @@ export default async function SettingsPage() {
           <div className={styles.formGrid}>
             <div className={styles.formGroup}>
               <label className={styles.label}>First Name</label>
-              <input value={user.firstName || ''} className={styles.input} readOnly />
+              <input value={firstName || ''} className={styles.input} readOnly />
             </div>
             <div className={styles.formGroup}>
               <label className={styles.label}>Last Name</label>
-              <input value={user.lastName || ''} className={styles.input} readOnly />
+              <input value={lastName || ''} className={styles.input} readOnly />
             </div>
             <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
               <label className={styles.label}>
@@ -45,7 +52,7 @@ export default async function SettingsPage() {
                   Email Address
                 </div>
               </label>
-              <input value={user.primaryEmailAddress?.emailAddress || ''} className={styles.input} readOnly />
+              <input value={session.user.email || ''} className={styles.input} readOnly />
               <p className={styles.inputHelper}>Authentication will be required to change your email.</p>
             </div>
           </div>

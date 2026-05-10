@@ -178,7 +178,7 @@
 }
 
 .create__button {
-  background-color: var(--primary-2);
+ background-color: var(--primary-600);
   margin: 1rem auto;
   
   .navLinkText {

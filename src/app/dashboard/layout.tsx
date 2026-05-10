@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useClerk } from "@clerk/nextjs";
+import { signOut } from "next-auth/react";
 import { FileText, Settings, Plus, LayoutTemplate, LogOut} from "lucide-react";
 import styles from "./layout.module.css";
 
@@ -10,10 +10,8 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { signOut } = useClerk();
-
   const handleSignOut = () => {
-    signOut({ redirectUrl: "/" });
+    signOut({ callbackUrl: "/" });
   };
 
   return (

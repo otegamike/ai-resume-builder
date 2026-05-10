@@ -2,7 +2,8 @@ import mongoose, { Schema, Document } from "mongoose";
 import { TemplateData } from "@/lib/templateCatalog";
 
 export interface IResume extends Document {
-  userId: string;
+  userId?: string;
+  user?: mongoose.Types.ObjectId;
   title: string;
   template: string;
   content: TemplateData;
@@ -10,7 +11,8 @@ export interface IResume extends Document {
 
 const ResumeSchema: Schema = new Schema<IResume>(
   {
-    userId: { type: String, required: true },
+    userId: { type: String, index: true },
+    user: { type: Schema.Types.ObjectId, ref: "User", index: true },
     title: { type: String, required: true },
     template: { type: String, default: 'modern' },
     content: {
