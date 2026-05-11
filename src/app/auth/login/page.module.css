@@ -216,8 +216,9 @@
   }
 
   .formPanel {
+    width: 100%;
     justify-content: flex-start;
-    padding-top: 4rem;
+    padding-top: 7vh;
   }
 }
 
@@ -246,7 +247,7 @@
 /* Card */
 .card {
   width: 100%;
-  max-width: 420px;
+  max-width: 500px;
   background: hsl(0 0% 100% / 0.5);
   border: 1px solid var(--neutral-200, #e5e7eb);
   border-radius: 20px;

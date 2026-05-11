@@ -15,6 +15,7 @@ import { useSession } from "next-auth/react";
 export default function Header() {
   const pathname = usePathname();
   const showDashboardLink = pathname !== "/dashboard";
+  const isAuthPage = pathname.startsWith("/auth/login");
   const { status } = useSession();
   const isSignedIn = status === "authenticated";
 
@@ -43,7 +44,7 @@ export default function Header() {
             <NavBar menuState={isMenuOpen} />
           </div>
 
-          {!isSignedIn && (
+          {!isSignedIn && !isAuthPage && (
             <span className={styles.clerk_button}>
               <Link href="/auth/login">
                 <Button size="sm">Sign In</Button>
@@ -51,15 +52,17 @@ export default function Header() {
             </span>
           )}
 
-          {isSignedIn && showDashboardLink && (
+          {isSignedIn && showDashboardLink && !isAuthPage && (
             <Link href="/dashboard">
               <Button size="sm">Dashboard</Button>
             </Link>
           )}
 
-          <div className={styles.hamburger}>
-            <HamburgerMenu menuPanelProps={menuPanelProps} />
-          </div>
+          {!isAuthPage && (
+            <div className={styles.hamburger}>
+              <HamburgerMenu menuPanelProps={menuPanelProps} />
+            </div>
+          )}
         </nav>
       </div>
     </header>
