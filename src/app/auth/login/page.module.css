@@ -409,12 +409,14 @@
   transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
   outline: none;
   width: 100%;
+  transition: font-size 0.2s;
 }
 
 .inputField:focus {
   border-color: var(--primary-500, #84b179);
   box-shadow: 0 0 0 3px rgba(132, 177, 121, 0.15);
   background: #ffffff;
+  font-size: 16px;
 }
 
 .inputField::placeholder {
