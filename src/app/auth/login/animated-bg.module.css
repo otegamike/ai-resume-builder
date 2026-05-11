@@ -1,0 +1,107 @@
+/* ── animated_circles_bg ── */
+/* Requires @property support (Chrome 85+, Firefox 128+, Safari 16.4+) */
+
+@property --cx1  { syntax: '<percentage>'; inherits: false; initial-value: 10%; }
+@property --cy1  { syntax: '<percentage>'; inherits: false; initial-value: 15%; }
+@property --cx2  { syntax: '<percentage>'; inherits: false; initial-value: 55%; }
+@property --cy2  { syntax: '<percentage>'; inherits: false; initial-value:  8%; }
+@property --cx3  { syntax: '<percentage>'; inherits: false; initial-value: 82%; }
+@property --cy3  { syntax: '<percentage>'; inherits: false; initial-value: 72%; }
+@property --cx4  { syntax: '<percentage>'; inherits: false; initial-value: 28%; }
+@property --cy4  { syntax: '<percentage>'; inherits: false; initial-value: 85%; }
+@property --cx5  { syntax: '<percentage>'; inherits: false; initial-value: 68%; }
+@property --cy5  { syntax: '<percentage>'; inherits: false; initial-value: 38%; }
+@property --cx6  { syntax: '<percentage>'; inherits: false; initial-value: 18%; }
+@property --cy6  { syntax: '<percentage>'; inherits: false; initial-value: 52%; }
+@property --cx7  { syntax: '<percentage>'; inherits: false; initial-value: 62%; }
+@property --cy7  { syntax: '<percentage>'; inherits: false; initial-value: 92%; }
+@property --cx8  { syntax: '<percentage>'; inherits: false; initial-value: 88%; }
+@property --cy8  { syntax: '<percentage>'; inherits: false; initial-value: 22%; }
+@property --cx9  { syntax: '<percentage>'; inherits: false; initial-value: 42%; }
+@property --cy9  { syntax: '<percentage>'; inherits: false; initial-value: 48%; }
+@property --cx10 { syntax: '<percentage>'; inherits: false; initial-value:  5%; }
+@property --cy10 { syntax: '<percentage>'; inherits: false; initial-value: 60%; }
+@property --cx11 { syntax: '<percentage>'; inherits: false; initial-value: 75%; }
+@property --cy11 { syntax: '<percentage>'; inherits: false; initial-value:  5%; }
+@property --cx12 { syntax: '<percentage>'; inherits: false; initial-value: 50%; }
+@property --cy12 { syntax: '<percentage>'; inherits: false; initial-value: 95%; }
+
+@keyframes cx1  { to { --cx1:  82%; } } @keyframes cy1  { to { --cy1:  78%; } }
+@keyframes cx2  { to { --cx2:  22%; } } @keyframes cy2  { to { --cy2:  88%; } }
+@keyframes cx3  { to { --cx3:  12%; } } @keyframes cy3  { to { --cy3:  28%; } }
+@keyframes cx4  { to { --cx4:  72%; } } @keyframes cy4  { to { --cy4:  18%; } }
+@keyframes cx5  { to { --cx5:  38%; } } @keyframes cy5  { to { --cy5:  68%; } }
+@keyframes cx6  { to { --cx6:  82%; } } @keyframes cy6  { to { --cy6:  12%; } }
+@keyframes cx7  { to { --cx7:  12%; } } @keyframes cy7  { to { --cy7:  42%; } }
+@keyframes cx8  { to { --cx8:  32%; } } @keyframes cy8  { to { --cy8:  78%; } }
+@keyframes cx9  { to { --cx9:  62%; } } @keyframes cy9  { to { --cy9:  22%; } }
+@keyframes cx10 { to { --cx10: 90%; } } @keyframes cy10 { to { --cy10: 40%; } }
+@keyframes cx11 { to { --cx11: 20%; } } @keyframes cy11 { to { --cy11: 80%; } }
+@keyframes cx12 { to { --cx12: 85%; } } @keyframes cy12 { to { --cy12: 50%; } }
+
+.animated_circles_bg {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.animated_circles_bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-color: #fff;
+  background-image:
+    radial-gradient(circle  80px at var(--cx1)  var(--cy1),  #c4b5fdcc, transparent 70%),
+    radial-gradient(circle 130px at var(--cx2)  var(--cy2),  #84b179cc, transparent 70%),
+    radial-gradient(circle  55px at var(--cx3)  var(--cy3),  #a78bfacc, transparent 70%),
+    radial-gradient(circle 110px at var(--cx4)  var(--cy4),  #a2c499cc, transparent 70%),
+    radial-gradient(circle  95px at var(--cx5)  var(--cy5),  #8b5cf6cc, transparent 70%),
+    radial-gradient(circle  70px at var(--cx6)  var(--cy6),  #779f6dcc, transparent 70%),
+    radial-gradient(circle 150px at var(--cx7)  var(--cy7),  #7c3aedcc, transparent 70%),
+    radial-gradient(circle  45px at var(--cx8)  var(--cy8),  #6a8e61cc, transparent 70%),
+    radial-gradient(circle 105px at var(--cx9)  var(--cy9),  #6d28d9cc, transparent 70%),
+    radial-gradient(circle  65px at var(--cx10) var(--cy10), #5b21b6cc, transparent 70%),
+    radial-gradient(circle 120px at var(--cx11) var(--cy11), #5d7c55cc, transparent 70%),
+    radial-gradient(circle  85px at var(--cx12) var(--cy12), #4c1d95cc, transparent 70%);
+  animation:
+    cx1   7s ease-in-out infinite alternate,
+    cy1   5s ease-in-out infinite alternate,
+    cx2  11s ease-in-out infinite alternate,
+    cy2   9s ease-in-out infinite alternate,
+    cx3   6s ease-in-out infinite alternate,
+    cy3   8s ease-in-out infinite alternate,
+    cx4  13s ease-in-out infinite alternate,
+    cy4   7s ease-in-out infinite alternate,
+    cx5   9s ease-in-out infinite alternate,
+    cy5  11s ease-in-out infinite alternate,
+    cx6   8s ease-in-out infinite alternate,
+    cy6  14s ease-in-out infinite alternate,
+    cx7  15s ease-in-out infinite alternate,
+    cy7   6s ease-in-out infinite alternate,
+    cx8  10s ease-in-out infinite alternate,
+    cy8  13s ease-in-out infinite alternate,
+    cx9   5s ease-in-out infinite alternate,
+    cy9  10s ease-in-out infinite alternate,
+    cx10 12s ease-in-out infinite alternate,
+    cy10  4s ease-in-out infinite alternate,
+    cx11  4s ease-in-out infinite alternate,
+    cy11 12s ease-in-out infinite alternate,
+    cx12 16s ease-in-out infinite alternate,
+    cy12  7s ease-in-out infinite alternate;
+}
+
+.animated_circles_bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-color: hsl(251 91% 95% / 0.5);
+  backdrop-filter: blur(10px) brightness(1.5);
+}
+
+/* Lift direct children above the blur overlay */
+.animated_circles_bg > * {
+  position: relative;
+  z-index: 2;
+}

@@ -736,7 +736,7 @@ export default function ResumeEditor() {
 
               <div className={styles.navFormFooter}>
                 {activeTab === "finish"?
-                   <Button className={styles.finalExportButton} size="lg" onClick={() => {setShowExportOption(!showExportOption)}}>
+                   <Button className={styles.finalExportButton} size="lg" onClick={() => {exportPDF()}}>
                       Export Resume
                       <Download color='var(--neutral-100)' className={styles.exportIcon} />
                     </Button>
