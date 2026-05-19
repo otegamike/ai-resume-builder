@@ -139,7 +139,7 @@ export default function ExperienceTab({
                   ) }
 
                   <textarea
-                    placeholder={`List your roles and responsiblities${exp.company ? ` at ${exp.company}` : ""}... (max 3)`}
+                    placeholder={`List your roles and responsiblities${exp.company ? ` at ${exp.company}` : ""}... (press enter to add)`}
                     className={`${styles.experienceInput} ${styles.textarea}`}
                     value={getBulletInput(exp.id)}
                     onChange={(e) => setBulletInput(exp.id, e.target.value)}

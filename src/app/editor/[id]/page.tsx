@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
@@ -111,6 +111,7 @@ export default function ResumeEditor() {
   }, [title, resume, saveResume]);
 
   const [showExportOption, setShowExportOption] = useState<boolean>(false);
+  const [previewPages, setPreviewPages] = useState<number>(1);
 
   const selectedTemplate = useMemo(
     () => templateDefinitions.find((entry) => entry.id === templateId),
@@ -133,6 +134,16 @@ export default function ResumeEditor() {
       }
     }
   }, [renderedTemplate]);
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'RESIZE_IFRAME' && typeof event.data.pages === 'number') {
+        setPreviewPages(event.data.pages);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   const generateSummary = async () => {
       const result = await generateAiSummary(resume);
@@ -443,6 +454,9 @@ export default function ResumeEditor() {
       logging: true,
       onclone: (clonedDoc: Document) => {
         const images = clonedDoc.querySelectorAll('img');
+        const cv = clonedDoc.querySelector(".cv") as HTMLElement | null;
+        console.log(cv);
+
         images.forEach((img) => {
           const computedStyle = clonedDoc.defaultView?.getComputedStyle(img);
           const div = clonedDoc.createElement('div');
@@ -466,6 +480,25 @@ export default function ResumeEditor() {
           div.className = img.className;
           img.replaceWith(div);
         });
+
+        if (cv) {
+          cv.style.overflow = "visible";
+          cv.style.height = "auto";
+          cv.style.minHeight = "0";
+          cv.style.borderRadius = "0";
+          cv.style.marginTop = "0";
+        }
+        
+        // Remove page break indicators from export
+        clonedDoc.querySelectorAll('.page-indicator').forEach((el: Element) => (el as HTMLElement).style.display = 'none');
+        
+        // Remove border-radius from all elements that might have it
+        clonedDoc.querySelectorAll('.left, .right, .right-hero, .left-hero, .cv-scaler').forEach((el: Element) => {
+          (el as HTMLElement).style.borderRadius = '0';
+        });
+        
+        clonedDoc.documentElement.style.overflow = "visible";
+        clonedDoc.body.style.overflow = "visible";
       }
     };
 
@@ -515,6 +548,26 @@ export default function ResumeEditor() {
           div.className = img.className;
           img.replaceWith(div);
         });
+
+        const cv = clonedDoc.querySelector(".cv") as HTMLElement | null;
+        if (cv) {
+          cv.style.overflow = "visible";
+          cv.style.height = "auto";
+          cv.style.minHeight = "0";
+          cv.style.borderRadius = "0";
+          cv.style.marginTop = "0";
+        }
+        
+        // Remove page break indicators from export
+        clonedDoc.querySelectorAll('.page-indicator').forEach((el: Element) => (el as HTMLElement).style.display = 'none');
+        
+        // Remove border-radius from all elements
+        clonedDoc.querySelectorAll('.left, .right, .right-hero, .left-hero, .cv-scaler').forEach((el: Element) => {
+          (el as HTMLElement).style.borderRadius = '0';
+        });
+        
+        clonedDoc.documentElement.style.overflow = "visible";
+        clonedDoc.body.style.overflow = "visible";
       }
     };
 
@@ -759,7 +812,7 @@ export default function ResumeEditor() {
           </section>
 
           <section className={styles.previewSection}>
-            <div className={styles.previewCanvas}>
+            <div className={styles.previewCanvas} style={{ aspectRatio: `794 / ${1123 * previewPages}` }}>
               <iframe
                 ref={previewIframeRef}
                 title="Resume preview"

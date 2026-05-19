@@ -97,7 +97,7 @@
   inset: 0;
   z-index: 1;
   background-color: hsl(251 91% 95% / 0.4);
-  backdrop-filter: blur(10px) brightness(1.5);
+  backdrop-filter: blur(10px) brightness(1.25);
 }
 
 /* Lift direct children above the blur overlay */

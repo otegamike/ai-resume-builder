@@ -145,7 +145,7 @@ export default function DashboardPage() {
             <div key={resume._id} className={styles.resumeCard}>
               <div className={styles.previewArea}>
                 {renderedTemplate ? (
-                  <div className={styles.iframeWrapper}>
+                  <div className={`${styles.iframeWrapper} hideScrollbar`}>
                     <iframe
                       srcDoc={renderedTemplate}
                       className={styles.dashboardPreviewIframe}

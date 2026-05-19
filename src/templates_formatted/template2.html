@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" style="overflow: hidden;">
+<html lang="en">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -299,6 +299,12 @@
     font-weight: 700;
     min-width: 48px;
   }
+
+  /* Prevent page breaks inside sections */
+  .exp-entry, .edu-entry, .ref-entry, .contact-item, .l-block, .name-block {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
 </style>
 </head>
 <body>
@@ -450,16 +456,54 @@
   const scaler = document.querySelector('.cv-scaler');
 
   function scaleCv() {
-    // Use document width so this works whether in an iframe or standalone
     const available = document.documentElement.clientWidth;
     const scale = available / CV_WIDTH;
 
     scaler.style.transform = `scale(${scale})`;
 
-    // transform: scale doesn't affect document flow —
-    // shift the bottom margin so the page height stays correct
-    const scaledHeight = CV_HEIGHT * scale;
-    scaler.style.marginBottom = (scaledHeight - CV_HEIGHT) + 'px';
+    const cvElement = document.querySelector('.cv');
+    cvElement.style.height = 'auto';
+    cvElement.style.minHeight = '0px';
+    const contentHeight = cvElement.scrollHeight;
+    
+    const pages = Math.max(1, Math.ceil(contentHeight / CV_HEIGHT));
+    const newHeight = pages * CV_HEIGHT;
+    
+    cvElement.style.height = newHeight + 'px';
+    cvElement.style.minHeight = newHeight + 'px';
+    cvElement.style.position = 'relative';
+
+    const scaledHeight = newHeight * scale;
+    scaler.style.marginBottom = (scaledHeight - newHeight) + 'px';
+    
+    document.querySelectorAll('.page-indicator').forEach(el => el.remove());
+    for (let i = 1; i < pages; i++) {
+      const indicator = document.createElement('div');
+      indicator.className = 'page-indicator';
+      indicator.style.position = 'absolute';
+      indicator.style.top = (i * CV_HEIGHT) + 'px';
+      indicator.style.left = '0';
+      indicator.style.width = '100%';
+      indicator.style.borderTop = '2px dashed rgba(255, 0, 0, 0.6)';
+      indicator.style.zIndex = '9999';
+      
+      const label = document.createElement('div');
+      label.innerText = 'Page Break';
+      label.style.position = 'absolute';
+      label.style.top = '-10px';
+      label.style.right = '20px';
+      label.style.background = 'rgba(255, 0, 0, 0.6)';
+      label.style.color = 'white';
+      label.style.padding = '2px 8px';
+      label.style.fontSize = '12px';
+      label.style.borderRadius = '10px';
+      label.style.fontFamily = 'sans-serif';
+      
+      indicator.appendChild(label);
+      cvElement.appendChild(indicator);
+    }
+    
+    window.parent.postMessage({ type: 'RESIZE_IFRAME', pages: pages }, '*');
   }
 
   let resizeTimer;
