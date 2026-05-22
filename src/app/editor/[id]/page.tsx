@@ -22,10 +22,12 @@ import styles from "./page.module.css";
 import { calculateEditorHeight, editorSectionHeight } from "@/utils/headerSize";
 import { scrollIntoView } from "@/utils/scrollIntoview"; 
 import { initialResume } from "@/constants/ResumeConstants";
-import type { ResumeContent } from "@/types/ResumeData";
 import { useSearchParams } from 'next/navigation';
 import { useAi } from "@/app/hooks/useAi";
 import { useAutoSave } from "@/app/hooks/useAutosave";
+import { exportResumePdf } from "@/lib/pdf/exportResumePdf";
+import { ResumeContent } from "@/types/ResumeData";
+import { formatName } from "@/utils/nameFormatter";
 
 export type Tab = "headshot" | "personal" | "summary" | "experience" | "education" | "skills" | "finish";
 
@@ -78,7 +80,6 @@ export default function ResumeEditor() {
   const { 
     aiGenerating, 
     aiGeneratingFor, 
-    aiError, 
     generateAiSummary, 
     improveAiSummary, 
     generateAiSkills, 
@@ -119,8 +120,10 @@ export default function ResumeEditor() {
   );
 
   const renderedTemplate = useMemo(() => {
+    const formattedResume: ResumeContent = { ...resume, skills: resume.skills.slice(0, 12) };
+
     if (!selectedTemplate?.html) return "";
-    return buildTemplateSrcDoc(selectedTemplate.html, resume);
+    return buildTemplateSrcDoc(selectedTemplate.html, formattedResume);
   }, [resume, selectedTemplate]);
 
   useEffect(() => {
@@ -304,8 +307,8 @@ export default function ResumeEditor() {
 
   // Template functions
 
-  const toggleTemplatePicker = () => {
-    setShowTemplatePicker(!showTemplatePicker);
+  const toggleTemplatePicker = (toggle?: boolean) => {
+    setShowTemplatePicker(toggle ?? !showTemplatePicker);
   };
 
   const changeTemplate = (newTemplate: TemplateId) => {
@@ -315,11 +318,25 @@ export default function ResumeEditor() {
   };
 
   const handlePersonalInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newResume = {
-      ...resume,
-      personalInfo: { ...resume.personalInfo, [e.target.name]: e.target.value }
-    };
+
+    let newResume: ResumeContent = { ...resume };
+
+    if (e.target.name === "name") {
+      const formattedName = formatName(e.target.value);
+      newResume = {
+        ...resume,
+        personalInfo: { ...resume.personalInfo, [e.target.name]: e.target.value, fullname: formattedName }
+      };
+      
+    } else {
+      const newResume = {
+        ...resume,
+        personalInfo: { ...resume.personalInfo, [e.target.name]: e.target.value }
+      };
+    }
+
     setResume(newResume);
+    
     if (resumeId !== 'new') {
       setAutoSaveStatus("saving");
       debouncedAutoSave(title, newResume);
@@ -415,7 +432,7 @@ export default function ResumeEditor() {
 
   const addSkill = () => {
     if (newSkill.trim() && !resume.skills.includes(newSkill.trim())) {
-      const newResume = { ...resume, skills: [...resume.skills, newSkill.trim()] };
+      const newResume = { ...resume, skills: [...resume.skills, newSkill.trim()].slice(0, 12) };
       setResume(newResume);
       setNewSkill("");
       if (resumeId !== 'new') {
@@ -440,76 +457,90 @@ export default function ResumeEditor() {
   };
 
   const exportPDF = async () => {
-    console.log("Exporting PDF...");
-    const element = getExportElement();
-    const iframeWindow = exportIframeRef.current?.contentWindow;
-    if (!element || !iframeWindow) return;
+    const runLegacyPdfExport = async () => {
+      console.log("Exporting PDF...");
+      const element = getExportElement();
+      const iframeWindow = exportIframeRef.current?.contentWindow;
+      if (!element || !iframeWindow) return;
 
-    // Optional: wait a moment to ensure fonts are loaded
-    await new Promise(r => setTimeout(r, 500));
+      // Optional: wait a moment to ensure fonts are loaded
+      await new Promise(r => setTimeout(r, 500));
 
-    const html2canvasOptions = {
-      scale: 2,
-      useCORS: true,
-      logging: true,
-      onclone: (clonedDoc: Document) => {
-        const images = clonedDoc.querySelectorAll('img');
-        const cv = clonedDoc.querySelector(".cv") as HTMLElement | null;
-        console.log(cv);
+      const html2canvasOptions = {
+        scale: 2,
+        useCORS: true,
+        logging: true,
+        onclone: (clonedDoc: Document) => {
+          const images = clonedDoc.querySelectorAll('img');
+          const cv = clonedDoc.querySelector(".cv") as HTMLElement | null;
+          console.log(cv);
 
-        images.forEach((img) => {
-          const computedStyle = clonedDoc.defaultView?.getComputedStyle(img);
-          const div = clonedDoc.createElement('div');
-          div.style.backgroundImage = `url("${img.src}")`;
-          div.style.backgroundSize = 'cover';
-          div.style.backgroundPosition = 'center';
-          
-          if (computedStyle) {
-            div.style.width = computedStyle.width !== 'auto' ? computedStyle.width : (img.width + 'px');
-            div.style.height = computedStyle.height !== 'auto' ? computedStyle.height : (img.height + 'px');
-            div.style.borderRadius = computedStyle.borderRadius;
-            div.style.border = computedStyle.border;
-            div.style.margin = computedStyle.margin;
-            div.style.display = computedStyle.display !== 'inline' ? computedStyle.display : 'block';
-          } else {
-            div.style.width = img.width + 'px';
-            div.style.height = img.height + 'px';
-            div.style.display = 'block';
+          images.forEach((img) => {
+            const computedStyle = clonedDoc.defaultView?.getComputedStyle(img);
+            const div = clonedDoc.createElement('div');
+            div.style.backgroundImage = `url("${img.src}")`;
+            div.style.backgroundSize = 'cover';
+            div.style.backgroundPosition = 'center';
+            
+            if (computedStyle) {
+              div.style.width = computedStyle.width !== 'auto' ? computedStyle.width : (img.width + 'px');
+              div.style.height = computedStyle.height !== 'auto' ? computedStyle.height : (img.height + 'px');
+              div.style.borderRadius = computedStyle.borderRadius;
+              div.style.border = computedStyle.border;
+              div.style.margin = computedStyle.margin;
+              div.style.display = computedStyle.display !== 'inline' ? computedStyle.display : 'block';
+            } else {
+              div.style.width = img.width + 'px';
+              div.style.height = img.height + 'px';
+              div.style.display = 'block';
+            }
+            
+            div.className = img.className;
+            img.replaceWith(div);
+          });
+
+          if (cv) {
+            cv.style.overflow = "visible";
+            cv.style.height = "auto";
+            cv.style.minHeight = "0";
+            cv.style.borderRadius = "0";
+            cv.style.marginTop = "0";
           }
           
-          div.className = img.className;
-          img.replaceWith(div);
-        });
-
-        if (cv) {
-          cv.style.overflow = "visible";
-          cv.style.height = "auto";
-          cv.style.minHeight = "0";
-          cv.style.borderRadius = "0";
-          cv.style.marginTop = "0";
+          // Remove page break indicators from export
+          clonedDoc.querySelectorAll('.page-indicator').forEach((el: Element) => (el as HTMLElement).style.display = 'none');
+          
+          // Remove border-radius from all elements that might have it
+          clonedDoc.querySelectorAll('.left, .right, .right-hero, .left-hero, .cv-scaler').forEach((el: Element) => {
+            (el as HTMLElement).style.borderRadius = '0';
+          });
+          
+          clonedDoc.documentElement.style.overflow = "visible";
+          clonedDoc.body.style.overflow = "visible";
         }
-        
-        // Remove page break indicators from export
-        clonedDoc.querySelectorAll('.page-indicator').forEach((el: Element) => (el as HTMLElement).style.display = 'none');
-        
-        // Remove border-radius from all elements that might have it
-        clonedDoc.querySelectorAll('.left, .right, .right-hero, .left-hero, .cv-scaler').forEach((el: Element) => {
-          (el as HTMLElement).style.borderRadius = '0';
-        });
-        
-        clonedDoc.documentElement.style.overflow = "visible";
-        clonedDoc.body.style.overflow = "visible";
-      }
+      };
+
+      const opt = {
+        margin: 15,
+        filename: `${title || "resume"}.pdf`,
+        image: { type: "jpeg" as const, quality: 0.98 },
+        html2canvas: html2canvasOptions,
+        jsPDF: { unit: "px" as const, format: [TEMPLATE_PAGE.widthPx, TEMPLATE_PAGE.heightPx] as [number, number], orientation: "portrait" as const }
+      };
+      html2pdf().set(opt).from(element).save();
     };
 
-    const opt = {
-      margin: 0,
-      filename: `${title || "resume"}.pdf`,
-      image: { type: "jpeg" as const, quality: 0.98 },
-      html2canvas: html2canvasOptions,
-      jsPDF: { unit: "px" as const, format: [TEMPLATE_PAGE.widthPx, TEMPLATE_PAGE.heightPx] as [number, number], orientation: "portrait" as const }
-    };
-    html2pdf().set(opt).from(element).save();
+    const useReactPdfExport = process.env.NEXT_PUBLIC_USE_REACT_PDF_EXPORT !== "false";
+    if (useReactPdfExport) {
+      try {
+        await exportResumePdf(resume, templateId, `${title || "resume"}.pdf`);
+        return;
+      } catch (error) {
+        console.error("React PDF export failed, falling back to html2pdf", error);
+      }
+    }
+
+    await runLegacyPdfExport();
   };
 
   const exportImage = async () => {
@@ -662,8 +693,8 @@ export default function ResumeEditor() {
             <div className={styles.buttonText}>{saving ? 'Saving...' : 'Save Draft'}</div>
           </Button>
 
-          <div className={styles.relative}>
-            <Button className={styles.exportButton} onClick={() => {setShowExportOption(!showExportOption)}}>
+          <div className={styles.relative} onMouseEnter={() => setShowExportOption(true)} onMouseLeave={() => {setShowExportOption(false)} }>
+            <Button className={styles.exportButton}>
               <Download color='var(--neutral-100)' className={styles.exportIcon} />
               <div className={styles.buttonText}>Export</div>
               {showExportOption ? 

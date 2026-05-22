@@ -1,0 +1,1 @@
+Place PDF font files here:\n\n- public/fonts/raleway/Raleway-Regular.ttf\n- public/fonts/raleway/Raleway-Medium.ttf\n- public/fonts/raleway/Raleway-SemiBold.ttf\n- public/fonts/raleway/Raleway-Bold.ttf\n- public/fonts/playfair-display/PlayfairDisplay-Regular.ttf\n- public/fonts/playfair-display/PlayfairDisplay-Bold.ttf\n

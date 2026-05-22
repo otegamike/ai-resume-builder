@@ -2,6 +2,7 @@ import { PersonalInfo, Experience, Education, ResumeContent } from "@/types/Resu
 
 export const initialPersonalInfo: PersonalInfo = {
     name: "",
+    fullname: { firstName: "", otherNames: "" },
     jobTitle: "",
     email: "",
     phone: "",

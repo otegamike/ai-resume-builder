@@ -284,9 +284,11 @@
 
   <!-- HEADER -->
   <div class="header">
-    <div class="photo-wrapper">
-      {{?personalInfo.photo}}<img src="{{personalInfo.photo}}" alt="Profile photo" />{{/personalInfo.photo}}
-    </div>
+    {{?personalInfo.photo}}
+      <div class="photo-wrapper">
+        <img src="{{personalInfo.photo}}" alt="Profile photo" />
+      </div>
+    {{/personalInfo.photo}}
     <div class="header-content">
       <div class="name">{{personalInfo.name}}</div>
       <div class="title">{{personalInfo.jobTitle}}</div>

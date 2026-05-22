@@ -316,9 +316,11 @@
       <!-- HEADER -->
       <div class="header">
         <div class="photo-col">
-          <div class="photo-wrapper">
-            {{?personalInfo.photo}}<img src="{{personalInfo.photo}}" alt="Profile photo" />{{/personalInfo.photo}}
-          </div>
+          {{?personalInfo.photo}}
+            <div class="photo-wrapper">
+              <img src="{{personalInfo.photo}}" alt="Profile photo" />
+            </div>
+          {{/personalInfo.photo}}
         </div>
         <div class="header-text">
           <div class="name">{{personalInfo.name}}</div>

@@ -1,4 +1,5 @@
 import type { TemplateData, TemplateId } from "@/lib/templateCatalog";
+import { formatName } from "@/utils/nameFormatter";
 
 type RenderContext = Record<string, unknown> | string | number | boolean | null | undefined;
 
@@ -59,13 +60,22 @@ export function renderTemplate(templateHtml: string, data: TemplateData): string
 }
 
 export function buildTemplateSrcDoc(templateHtml: string, data: TemplateData): string {
-  return renderTemplate(templateHtml, data);
+  const fullName: string  = data.personalInfo?.name;
+  const firstName: string = data.personalInfo?.fullname?.firstName;
+  const formattedName = formatName(fullName);
+
+  const newData: TemplateData = (fullName&&!firstName)?
+    {...data, personalInfo: {...data.personalInfo, fullname:  formattedName }} 
+    : 
+    { ...data };
+  return renderTemplate(templateHtml, newData);
 }
 
 export function getTemplatePreviewData(): TemplateData {
   return {
     personalInfo: {
       name: "Avery Johnson",
+      fullname: { firstName: "Avery", otherNames: "Johnson" },
       jobTitle: "Senior Product Designer",
       email: "avery@example.com",
       phone: "+1 (555) 180-4091",

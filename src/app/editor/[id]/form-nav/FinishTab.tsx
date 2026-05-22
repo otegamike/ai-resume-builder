@@ -21,7 +21,7 @@ export default function FinishTab({
       </div>
       <div className={styles.formSectionContent}>
         <div className={styles.finishContainer}>
-          <FileCheck size={90} />
+          <FileCheck size={90} color="var(--ring)" />
           <p>Your ATS-optimized Resume is ready</p>
           <small>preview or export below</small>
         </div>

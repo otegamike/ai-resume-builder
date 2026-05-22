@@ -9,18 +9,17 @@ interface TemplateSelectorProps {
   template: TemplateId
   selectedTemplate?: TemplateDefinition
   showTemplatePicker: boolean
-  toggleTemplatePicker: () => void
+  toggleTemplatePicker: (toggle?: boolean) => void
   changeTemplate: (templateId: TemplateId) => void
 }
 
 function TemplateSelector({templateDefinitions, template, selectedTemplate, changeTemplate, showTemplatePicker, toggleTemplatePicker}: TemplateSelectorProps) {
 
   return (
-          <div className={styles.relative}>
+          <div className={styles.relative} onMouseEnter={() => toggleTemplatePicker(true)} onMouseLeave={() => {toggleTemplatePicker(false)} } >
             <Button 
               variant="light_outline" 
               size="sm"
-              onClick={toggleTemplatePicker}
               className={styles.templateButton}
             >
               <Palette color='var(--neutral-100)' className={styles.aiButtonIcon} />

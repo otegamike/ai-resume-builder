@@ -337,10 +337,13 @@
   }
 
   /* Prevent page breaks inside sections */
-  .exp-entry, .edu-entry, .ref-entry, .contact-item, .l-block, .name-block {
+  .exp-entry, .edu-entry, .r-section-title, .ref-entry, .contact-grid, .contact-item, .l-block, .name-block, .about-text {
+    margin-bottom: 0;
+    margin-top: 0.9rem;
     break-inside: avoid;
     page-break-inside: avoid;
   }
+  
 </style>
 </head>
 <body>
@@ -352,9 +355,11 @@
   <!-- ── LEFT ── -->
   <div class="left">
     <div class="left-hero">
-      <div class="photo-wrapper">
-        {{?personalInfo.photo}}<img src="{{personalInfo.photo}}" alt="Profile photo" />{{/personalInfo.photo}}
-      </div>
+      {{?personalInfo.photo}}
+        <div class="photo-wrapper">
+          <img src="{{personalInfo.photo}}" alt="Profile photo" />
+        </div>
+      {{/personalInfo.photo}}
     </div>
 
     <div class="left-body">
