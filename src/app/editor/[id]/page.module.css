@@ -1172,7 +1172,6 @@
     font-size: var(--text-sm);
     background-color: var(--neutral-100);
     color: var(--neutral-700);
-    transition: font-size 0.2s;
   }
 
   .textarea:focus, .input:focus {

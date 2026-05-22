@@ -409,7 +409,6 @@
   transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
   outline: none;
   width: 100%;
-  transition: font-size 0.2s;
 }
 
 .inputField:focus {

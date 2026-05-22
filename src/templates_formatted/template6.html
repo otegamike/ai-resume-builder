@@ -283,11 +283,13 @@
   <div class="left">
 
     <!-- Photo -->
-    {{?personalInfo.photo}}
-      <div class="photo-frame">
-        <img src="{{personalInfo.photo}}" alt="Profile photo" />
-      </div>
-    {{/personalInfo.photo}}
+    <div style="min-height: 4rem;">
+      {{?personalInfo.photo}}
+        <div class="photo-frame">
+          <img src="{{personalInfo.photo}}" alt="Profile photo" />
+        </div>
+      {{/personalInfo.photo}}
+    </div>
 
     <!-- About Me -->
     {{?summary}}
