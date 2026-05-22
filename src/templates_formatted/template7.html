@@ -9,7 +9,7 @@
 
   /*  font-size  */
 
-  html {font-size: 20px ;}
+  html {font-size: 18px ;}
   
   /* ── OUTER SHELL ── */
   body {
@@ -21,7 +21,7 @@
   /*
    * Three-layer A4 scaling:
    *   .cv-viewport  — fills the iframe body
-   *   .cv-scaler    — always 780px wide internally, scaled via JS
+   *   .cv-scaler    — always 794px wide internally, scaled via JS
    *   .cv           — fixed 780 × 1103px (A4 ratio 1:√2)
    */
   .cv-viewport {
@@ -39,8 +39,8 @@
 
   /* ── CV DOCUMENT ── */
   .cv {
-    width: 780px;
-    height: 1103px;
+    width: 794px;
+    height: 1123px;
     background: #fff;
     overflow: hidden;
     border-radius: 18px;
@@ -452,8 +452,8 @@
 </div>
 
 <script>
-  const CV_WIDTH  = 780;
-  const CV_HEIGHT = 1103;
+  const CV_WIDTH  = 794;
+  const CV_HEIGHT = 1123;
 
   const scaler = document.querySelector('.cv-scaler');
 
@@ -507,6 +507,8 @@
     
     window.parent.postMessage({ type: 'RESIZE_IFRAME', pages: pages }, '*');
   }
+
+  document.documentElement.style.fontSize = '20px';
 
   let resizeTimer;
   window.addEventListener('resize', () => {

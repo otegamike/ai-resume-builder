@@ -150,3 +150,46 @@ If the input starts with `template`, it is cast and used. Unknown values fall ba
 - Blank preview usually means missing template HTML load or malformed placeholders.
 - Unexpected field output often comes from mismatched data paths vs `ResumeContent` shape.
 - If legacy IDs appear from older records, rely on `normalizeTemplateId` fallback behavior.
+
+## 10) HTML2PDF Export Pipeline (Single Mode)
+PDF export now uses only the HTML template pipeline + `html2pdf.js`. The previous React-PDF export mode has been retired.
+
+### Step 1: Data -> Template HTML
+- The editor builds `formattedResume` from in-memory resume state.
+- It calls `buildTemplateSrcDoc(templateHtml, formattedResume)` from `src/lib/templateRenderer.ts`.
+- This resolves tokens (`{{...}}`), sections (`{{#...}}`), and conditionals (`{{?...}}`) into final HTML.
+
+### Step 2: Hidden export iframe hydration
+- The rendered HTML is written into an offscreen iframe (`exportIframeRef`) in `src/app/editor/[id]/page.tsx` using:
+  - `doc.open()`
+  - `doc.write(renderedTemplate)`
+  - `doc.close()`
+- Export targets `iframe.contentDocument.documentElement` so the full document (not just a subtree) is captured.
+
+### Step 3: In-template scaling and page counting
+- Each template script defines a fixed CV page geometry (`CV_WIDTH = 794`, `CV_HEIGHT = 1123`) and scales the visual preview with `.cv-scaler`.
+- The script computes content height and rounds page count with:
+  - `pages = Math.ceil(contentHeight / CV_HEIGHT)`
+  - `newHeight = pages * CV_HEIGHT`
+- It posts `window.parent.postMessage({ type: 'RESIZE_IFRAME', pages }, '*')` so the preview canvas can match page count.
+
+### Step 4: html2canvas clone transforms (export-time sanitation)
+- `html2pdf` runs with an `onclone` hook that adjusts the cloned DOM before rasterization:
+  - Replaces `<img>` elements with background-image `<div>` mirrors for more consistent capture.
+  - Removes page-indicator overlays.
+  - Clears border radius on key containers for print edges.
+  - Forces `overflow: visible` in clone document/container roots.
+- These are export-only clone edits and do not mutate live editor DOM.
+
+### Step 5: PDF generation settings
+- `html2pdf().set(opt).from(element).save()` is used in `exportPDF`.
+- Current export options include:
+  - filename from resume title
+  - image mode `jpeg` with high quality
+  - `html2canvas` scaling + CORS config
+  - jsPDF format `[794, 1123]` (portrait, px unit)
+
+### Step 6: Copyable text behavior and caveats
+- Export is generated from real rendered HTML text nodes, so PDF text remains selectable/copyable in normal cases.
+- Copy fidelity still depends on runtime font availability and browser/PDF viewer behavior.
+- Aggressive visual effects, unsupported CSS features, or external asset failures can still affect text layer quality.

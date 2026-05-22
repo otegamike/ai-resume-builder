@@ -25,9 +25,9 @@ import { initialResume } from "@/constants/ResumeConstants";
 import { useSearchParams } from 'next/navigation';
 import { useAi } from "@/app/hooks/useAi";
 import { useAutoSave } from "@/app/hooks/useAutosave";
-import { exportResumePdf } from "@/lib/pdf/exportResumePdf";
 import { ResumeContent } from "@/types/ResumeData";
 import { formatName } from "@/utils/nameFormatter";
+import { getNearestPageHeight } from "@/utils/pageDimension";
 
 export type Tab = "headshot" | "personal" | "summary" | "experience" | "education" | "skills" | "finish";
 
@@ -457,7 +457,7 @@ export default function ResumeEditor() {
   };
 
   const exportPDF = async () => {
-    const runLegacyPdfExport = async () => {
+    const runHtml2PdfExport = async () => {
       console.log("Exporting PDF...");
       const element = getExportElement();
       const iframeWindow = exportIframeRef.current?.contentWindow;
@@ -500,8 +500,12 @@ export default function ResumeEditor() {
           });
 
           if (cv) {
+            cv.style.height = 'auto';
+            cv.offsetHeight;
+            const intialHeight = cv.getBoundingClientRect().height;
+            
+            cv.style.height = getNearestPageHeight(intialHeight) + "px";
             cv.style.overflow = "visible";
-            cv.style.height = "auto";
             cv.style.minHeight = "0";
             cv.style.borderRadius = "0";
             cv.style.marginTop = "0";
@@ -530,17 +534,7 @@ export default function ResumeEditor() {
       html2pdf().set(opt).from(element).save();
     };
 
-    const useReactPdfExport = process.env.NEXT_PUBLIC_USE_REACT_PDF_EXPORT !== "false";
-    if (useReactPdfExport) {
-      try {
-        await exportResumePdf(resume, templateId, `${title || "resume"}.pdf`);
-        return;
-      } catch (error) {
-        console.error("React PDF export failed, falling back to html2pdf", error);
-      }
-    }
-
-    await runLegacyPdfExport();
+    await runHtml2PdfExport();
   };
 
   const exportImage = async () => {

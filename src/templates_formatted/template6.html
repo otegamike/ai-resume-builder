@@ -9,7 +9,7 @@
 
   /*  font-size  */
 
-  html {font-size: 20px ;}
+  html {font-size: 18px ;}
 
   /* ── OUTER SHELL ── */
   body {
@@ -39,8 +39,8 @@
 
   /* ── CV DOCUMENT ── */
   .cv {
-    width: 760px;
-    height: 1076px;
+    width: 794px;
+    height: 1123px;
     background: #fdf6f4;
     overflow: hidden;
     display: grid;
@@ -309,6 +309,20 @@
     </div>
     {{/skills}}
 
+    <!-- Education -->
+    {{?education}}
+    <div class="l-block">
+      <div class="l-section-bar"><span>Education</span></div>
+      {{#education}}
+      <div class="edu-entry">
+        <div class="edu-degree">{{degree}}</div>
+        <div class="edu-school">{{school}}</div>
+        <div class="edu-years">{{startDate}} – {{endDate}}</div>
+      </div>
+      {{/education}}
+    </div>
+    {{/education}}
+
     <!-- Languages -->
     {{?languages}}
     <div class="l-block">
@@ -384,20 +398,6 @@
     </div>
     {{/experience}}
 
-    <!-- Education -->
-    {{?education}}
-    <div>
-      <div class="r-section-bar"><span>Education</span></div>
-      {{#education}}
-      <div class="edu-entry">
-        <div class="edu-degree">{{degree}}</div>
-        <div class="edu-school">{{school}}</div>
-        <div class="edu-years">{{startDate}} – {{endDate}}</div>
-      </div>
-      {{/education}}
-    </div>
-    {{/education}}
-
   </div>
 
     </div>
@@ -405,8 +405,8 @@
 </div>
 
 <script>
-  const CV_WIDTH  = 760;
-  const CV_HEIGHT = 1076;
+  const CV_WIDTH  = 794;
+  const CV_HEIGHT = 1123;
 
   const scaler = document.querySelector('.cv-scaler');
 
@@ -461,18 +461,7 @@
     window.parent.postMessage({ type: 'RESIZE_IFRAME', pages: pages }, '*');
   }
 
-  // const nameElement = document.getElementById('name');
-  // if (nameElement) {
-  //   const fullname = nameElement.textContent.trim();
-  //   const parts = fullname.split(' ');
-  //   const firstName = parts[0] || fullname;
-  //   const otherNames = parts.slice(1).join(' ');
-  //   nameElement.textContent = firstName;
-  //   const lastElement = document.getElementById('lastname');
-  //   if (lastElement) {
-  //     lastElement.textContent = otherNames;
-  //   }
-  // } 
+  document.documentElement.style.fontSize = '20px';
 
   let resizeTimer;
   window.addEventListener('resize', () => {

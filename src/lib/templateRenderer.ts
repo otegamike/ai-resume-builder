@@ -62,12 +62,13 @@ export function renderTemplate(templateHtml: string, data: TemplateData): string
 export function buildTemplateSrcDoc(templateHtml: string, data: TemplateData): string {
   const fullName: string  = data.personalInfo?.name;
   const firstName: string = data.personalInfo?.fullname?.firstName;
+  const skillsFormatted: string[] = data.skills.slice(0, 12);
   const formattedName = formatName(fullName);
 
   const newData: TemplateData = (fullName&&!firstName)?
-    {...data, personalInfo: {...data.personalInfo, fullname:  formattedName }} 
+    {...data, personalInfo: {...data.personalInfo, fullname:  formattedName }, skills: skillsFormatted} 
     : 
-    { ...data };
+    { ...data, skills: skillsFormatted };
   return renderTemplate(templateHtml, newData);
 }
 
