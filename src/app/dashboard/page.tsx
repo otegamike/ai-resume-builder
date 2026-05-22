@@ -8,21 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
 import { type TemplateDefinition } from "@/lib/templateCatalog";
 import styles from "./page.module.css";
-
-interface ResumeContent {
-  personalInfo: {
-    name: string;
-    jobTitle: string;
-    email: string;
-    phone: string;
-    location: string;
-    website: string;
-  };
-  summary: string;
-  experience: any[];
-  education: any[];
-  skills: string[];
-}
+import { ResumeContent } from "@/types/ResumeData";
 
 interface Resume {
   _id: string;
