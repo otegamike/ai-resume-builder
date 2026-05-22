@@ -7,8 +7,8 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* ── OUTER SHELL ── */
-  html {font-size: 20px ;}
+  /* -- OUTER SHELL -- */
+  html { font-size: 20px; overflow: hidden; }
 
   body {
     margin: 0;
@@ -18,24 +18,27 @@
 
   /*
    * Three-layer A4 scaling:
-   *   .cv-viewport  — fills the iframe body
-   *   .cv-scaler    — always 794px wide internally, scaled via JS
-   *   .cv           — fixed 780 × 1103px (A4 ratio 1:√2)
+   *   .cv-viewport  � fills the iframe body
+   *   .cv-scaler    � always 794px wide internally, scaled via JS
+   *   .cv           � fixed 780 � 1103px (A4 ratio 1:v2)
    */
   .cv-viewport {
     width: 100%;
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: flex-start;
+    align-items: center;
   }
 
   .cv-scaler {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     transform-origin: top center;
     will-change: transform;
   }
 
-  /* ── CV DOCUMENT ── */
+  /* -- CV DOCUMENT -- */
   .cv {
     width: 794px;
     height: 1123px;
@@ -46,7 +49,7 @@
     position: relative;
   }
 
-  /* ═══════════ GEOMETRIC SHAPES ═══════════ */
+  /* ----------- GEOMETRIC SHAPES ----------- */
   .shape-top-navy {
     position: absolute;
     top: 0; left: 0;
@@ -114,7 +117,7 @@
     opacity: 0.7;
   }
 
-  /* ═══════════ LEFT COLUMN ═══════════ */
+  /* ----------- LEFT COLUMN ----------- */
   .left {
     position: relative;
     z-index: 3;
@@ -167,7 +170,7 @@
   }
 
   .bullet-list li::before {
-    content: '•';
+    content: '\2022';
     position: absolute;
     left: 0;
     color: #7ec8cc;
@@ -180,7 +183,7 @@
     font-weight: 400;
   }
 
-  /* ═══════════ RIGHT COLUMN ═══════════ */
+  /* ----------- RIGHT COLUMN ----------- */
   .right {
     position: relative;
     z-index: 3;
@@ -348,7 +351,7 @@
   </div>
   <div class="shape-bot-teal2"></div>
 
-  <!-- ── LEFT ── -->
+  <!-- -- LEFT -- -->
   <div class="left">
 
     {{?personalInfo.photo}}
@@ -382,7 +385,7 @@
     </div>
   </div>
 
-  <!-- ── RIGHT ── -->
+  <!-- -- RIGHT -- -->
   <div class="right">
 
     <!-- Name & Title -->
@@ -506,34 +509,23 @@
     const scaledHeight = newHeight * scale;
     scaler.style.marginBottom = (scaledHeight - newHeight) + 'px';
     
-    document.querySelectorAll('.page-indicator').forEach(el => el.remove());
-    for (let i = 1; i < pages; i++) {
-      const indicator = document.createElement('div');
-      indicator.className = 'page-indicator';
-      indicator.style.position = 'absolute';
-      indicator.style.top = (i * CV_HEIGHT) + 'px';
-      indicator.style.left = '0';
-      indicator.style.width = '100%';
-      indicator.style.borderTop = '2px dashed rgba(255, 0, 0, 0.6)';
-      indicator.style.zIndex = '9999';
+    if (!window.__SINGLE_PAGE__) {
+      document.querySelectorAll('.page-indicator').forEach(el => el.remove());
+      for (let i = 1; i < pages; i++) {
+        const indicator = document.createElement('div');
+        indicator.className = 'page-indicator';
+        indicator.style.position = 'absolute';
+        indicator.style.top = (i * CV_HEIGHT) + 'px';
+        indicator.style.left = '0';
+        indicator.style.width = '100%';
+        indicator.style.borderTop = '2px dashed rgba(255, 0, 0, 0.6)';
+        indicator.style.zIndex = '9999';
+        
+        cvElement.appendChild(indicator);
+      }
       
-      const label = document.createElement('div');
-      label.innerText = 'Page Break';
-      label.style.position = 'absolute';
-      label.style.top = '-10px';
-      label.style.right = '20px';
-      label.style.background = 'rgba(255, 0, 0, 0.6)';
-      label.style.color = 'white';
-      label.style.padding = '2px 8px';
-      label.style.fontSize = '12px';
-      label.style.borderRadius = '10px';
-      label.style.fontFamily = 'sans-serif';
-      
-      indicator.appendChild(label);
-      cvElement.appendChild(indicator);
+      window.parent.postMessage({ type: 'RESIZE_IFRAME', pages: pages }, '*');
     }
-    
-    window.parent.postMessage({ type: 'RESIZE_IFRAME', pages: pages }, '*');
   }
 
   let resizeTimer;

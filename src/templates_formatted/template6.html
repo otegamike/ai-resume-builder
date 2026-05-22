@@ -9,9 +9,9 @@
 
   /*  font-size  */
 
-  html {font-size: 18px ;}
+  html { font-size: 18px; overflow: hidden; }
 
-  /* ── OUTER SHELL ── */
+  /* -- OUTER SHELL -- */
   body {
     margin: 0;
     background: transparent;
@@ -20,9 +20,9 @@
 
   /*
    * Three-layer A4 scaling:
-   *   .cv-viewport  — fills the iframe body
-   *   .cv-scaler    — always 760px wide internally, scaled via JS
-   *   .cv           — fixed 760 × 1076px (A4 ratio)
+   *   .cv-viewport  � fills the iframe body
+   *   .cv-scaler    � always 760px wide internally, scaled via JS
+   *   .cv           � fixed 760 � 1076px (A4 ratio)
    */
   .cv-viewport {
     width: 100%;
@@ -33,11 +33,14 @@
   }
 
   .cv-scaler {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     transform-origin: top center;
     will-change: transform;
   }
 
-  /* ── CV DOCUMENT ── */
+  /* -- CV DOCUMENT -- */
   .cv {
     width: 794px;
     height: 1123px;
@@ -47,7 +50,7 @@
     grid-template-columns: 260px 1fr;
   }
 
-  /* ══════════ LEFT ══════════ */
+  /* ---------- LEFT ---------- */
   .left {
     background: #f5e8e4;
     display: flex;
@@ -133,13 +136,13 @@
   }
 
   .bullet-list li::before {
-    content: '•';
+    content: '�';
     position: absolute;
     left: 0;
     color: #b07060;
   }
 
-  /* ══════════ RIGHT ══════════ */
+  /* ---------- RIGHT ---------- */
   .right {
     background: #fdf6f4;
     padding: 30px 36px 36px 36px;
@@ -279,7 +282,7 @@
   <div class="cv-scaler">
     <div class="cv">
 
-  <!-- ── LEFT ── -->
+  <!-- -- LEFT -- -->
   <div class="left">
 
     <!-- Photo -->
@@ -317,7 +320,7 @@
       <div class="edu-entry">
         <div class="edu-degree">{{degree}}</div>
         <div class="edu-school">{{school}}</div>
-        <div class="edu-years">{{startDate}} – {{endDate}}</div>
+        <div class="edu-years">{{startDate}} � {{endDate}}</div>
       </div>
       {{/education}}
     </div>
@@ -335,7 +338,7 @@
 
   </div>
 
-  <!-- ── RIGHT ── -->
+  <!-- -- RIGHT -- -->
   <div class="right">
 
     <!-- Name & Title -->
@@ -387,7 +390,7 @@
       <div class="exp-entry">
         <div class="exp-role">{{role}}</div>
         {{?company}}<div class="exp-company">{{company}}</div>{{/company}}
-        <div class="exp-years">{{startDate}} – {{endDate}}</div>
+        <div class="exp-years">{{startDate}} � {{endDate}}</div>
         {{#description}}
           <p class="exp-desc">
             {{.}}
@@ -431,34 +434,36 @@
     const scaledHeight = newHeight * scale;
     scaler.style.marginBottom = (scaledHeight - newHeight) + 'px';
     
-    document.querySelectorAll('.page-indicator').forEach(el => el.remove());
-    for (let i = 1; i < pages; i++) {
-      const indicator = document.createElement('div');
-      indicator.className = 'page-indicator';
-      indicator.style.position = 'absolute';
-      indicator.style.top = (i * CV_HEIGHT) + 'px';
-      indicator.style.left = '0';
-      indicator.style.width = '100%';
-      indicator.style.borderTop = '2px dashed rgba(255, 0, 0, 0.6)';
-      indicator.style.zIndex = '9999';
+    if (!window.__SINGLE_PAGE__) {
+      document.querySelectorAll('.page-indicator').forEach(el => el.remove());
+      for (let i = 1; i < pages; i++) {
+        const indicator = document.createElement('div');
+        indicator.className = 'page-indicator';
+        indicator.style.position = 'absolute';
+        indicator.style.top = (i * CV_HEIGHT) + 'px';
+        indicator.style.left = '0';
+        indicator.style.width = '100%';
+        indicator.style.borderTop = '2px dashed rgba(255, 0, 0, 0.6)';
+        indicator.style.zIndex = '9999';
+        
+        const label = document.createElement('div');
+        label.innerText = 'Page Break';
+        label.style.position = 'absolute';
+        label.style.top = '-10px';
+        label.style.right = '20px';
+        label.style.background = 'rgba(255, 0, 0, 0.6)';
+        label.style.color = 'white';
+        label.style.padding = '2px 8px';
+        label.style.fontSize = '12px';
+        label.style.borderRadius = '10px';
+        label.style.fontFamily = 'sans-serif';
+        
+        indicator.appendChild(label);
+        cvElement.appendChild(indicator);
+      }
       
-      const label = document.createElement('div');
-      label.innerText = 'Page Break';
-      label.style.position = 'absolute';
-      label.style.top = '-10px';
-      label.style.right = '20px';
-      label.style.background = 'rgba(255, 0, 0, 0.6)';
-      label.style.color = 'white';
-      label.style.padding = '2px 8px';
-      label.style.fontSize = '12px';
-      label.style.borderRadius = '10px';
-      label.style.fontFamily = 'sans-serif';
-      
-      indicator.appendChild(label);
-      cvElement.appendChild(indicator);
+      window.parent.postMessage({ type: 'RESIZE_IFRAME', pages: pages }, '*');
     }
-    
-    window.parent.postMessage({ type: 'RESIZE_IFRAME', pages: pages }, '*');
   }
 
   document.documentElement.style.fontSize = '20px';

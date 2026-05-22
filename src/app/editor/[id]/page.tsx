@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
@@ -123,7 +123,7 @@ export default function ResumeEditor() {
     const formattedResume: ResumeContent = { ...resume, skills: resume.skills.slice(0, 12) };
 
     if (!selectedTemplate?.html) return "";
-    return buildTemplateSrcDoc(selectedTemplate.html, formattedResume);
+    return buildTemplateSrcDoc(selectedTemplate.html, formattedResume, { editorMode: true });
   }, [resume, selectedTemplate]);
 
   useEffect(() => {
@@ -890,3 +890,4 @@ const NavigationPanel = ({activeTab, changeTab, getTabIndex}: NavigationPanelPro
     </>
   )
 }
+

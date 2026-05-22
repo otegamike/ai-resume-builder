@@ -59,7 +59,11 @@ export function renderTemplate(templateHtml: string, data: TemplateData): string
   return renderInternal(templateHtml, data as unknown as Record<string, unknown>, data as unknown as Record<string, unknown>);
 }
 
-export function buildTemplateSrcDoc(templateHtml: string, data: TemplateData): string {
+export function buildTemplateSrcDoc(
+  templateHtml: string,
+  data: TemplateData,
+  options?: { editorMode?: boolean }
+): string {
   const fullName: string  = data.personalInfo?.name;
   const firstName: string = data.personalInfo?.fullname?.firstName;
   const skillsFormatted: string[] = data.skills.slice(0, 12);
@@ -69,7 +73,12 @@ export function buildTemplateSrcDoc(templateHtml: string, data: TemplateData): s
     {...data, personalInfo: {...data.personalInfo, fullname:  formattedName }, skills: skillsFormatted} 
     : 
     { ...data, skills: skillsFormatted };
-  return renderTemplate(templateHtml, newData);
+  const rendered = renderTemplate(templateHtml, newData);
+
+  if (!options?.editorMode) {
+    return `<script>window.__SINGLE_PAGE__=true;<\/script>${rendered}`;
+  }
+  return rendered;
 }
 
 export function getTemplatePreviewData(): TemplateData {
