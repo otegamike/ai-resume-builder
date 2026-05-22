@@ -7,22 +7,8 @@ import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
 import { type TemplateDefinition } from "@/lib/templateCatalog";
+import { type ResumeContent } from "@/types/ResumeData";
 import styles from "./page.module.css";
-
-interface ResumeContent {
-  personalInfo: {
-    name: string;
-    jobTitle: string;
-    email: string;
-    phone: string;
-    location: string;
-    website: string;
-  };
-  summary: string;
-  experience: any[];
-  education: any[];
-  skills: string[];
-}
 
 interface Resume {
   _id: string;
