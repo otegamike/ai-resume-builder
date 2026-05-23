@@ -1,6 +1,6 @@
 # Template System Documentation
 
-This document is the source of truth for how template metadata, HTML files, and runtime rendering work in Resumy AI.
+This document is the source of truth for how template metadata, HTML files, and runtime rendering work in Agentic CV.
 
 For full project architecture, see [PROJECT_WALKTHROUGH.md](./PROJECT_WALKTHROUGH.md).  
 For setup and contributor onboarding, see [README.md](./README.md).

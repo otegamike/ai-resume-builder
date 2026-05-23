@@ -1,4 +1,4 @@
-# Resumy AI Project Walkthrough
+# Agentic CV Project Walkthrough
 
 This document explains how the current system works end to end for contributors: architecture, boundaries, API contracts, and key user/data flows.
 
@@ -6,7 +6,7 @@ For setup and quick start, see [README.md](./README.md).
 For template engine internals, see [template.md](./template.md).
 
 ## 1) Architecture at a Glance
-Resumy AI is a single Next.js 16 App Router codebase that contains:
+Agentic CV is a single Next.js 16 App Router codebase that contains:
 - Frontend UI routes and client interactions
 - Backend route handlers under `src/app/api/**/route.ts`
 - Auth middleware and route-level authorization

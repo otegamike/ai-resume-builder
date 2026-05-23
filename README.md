@@ -1,6 +1,6 @@
-# Resumy AI Contributor Guide
+# Agentic CV Contributor Guide
 
-Resumy AI is a full-stack Next.js 16 App Router application for building ATS-friendly resumes with live template previews, AI writing assistance, autosave, and export tools.
+Agentic CV is a full-stack Next.js 16 App Router application for building ATS-friendly resumes with live template previews, AI writing assistance, autosave, and export tools.
 
 This README is the contributor entrypoint. For deep dives:
 - Architecture and request/data flows: [PROJECT_WALKTHROUGH.md](./PROJECT_WALKTHROUGH.md)
@@ -32,7 +32,7 @@ NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=...
 CLERK_SECRET_KEY=...
 
 # Database
-MONGODB_URI=mongodb://localhost:27017/resumy-ai
+MONGODB_URI=mongodb://localhost:27017/agentic-cv
 
 # AI
 GROQ_API_KEY=...
@@ -44,7 +44,7 @@ CLOUDINARY_API_SECRET=...
 ```
 
 Notes:
-- `src/lib/db.ts` falls back to `mongodb://localhost:27017/resumy-ai` if `MONGODB_URI` is unset.
+- `src/lib/db.ts` falls back to `mongodb://localhost:27017/agentic-cv` if `MONGODB_URI` is unset.
 - AI endpoints fail if `GROQ_API_KEY` is missing or placeholder.
 
 ## Local Development

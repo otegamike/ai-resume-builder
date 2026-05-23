@@ -513,6 +513,19 @@ export default function ResumeEditor() {
             cv.style.borderRadius = "0";
             cv.style.marginTop = "0";
           }
+
+          // Prevent viewport flex-centering from adding extra space above .cv in export
+          const viewport = clonedDoc.querySelector('.cv-viewport') as HTMLElement | null;
+          if (viewport) {
+            viewport.style.minHeight = '0';
+            viewport.style.display = 'block';
+          }
+
+          // Remove any scaler transform that could affect positioning
+          const scaler = clonedDoc.querySelector('.cv-scaler') as HTMLElement | null;
+          if (scaler) {
+            scaler.style.transform = 'none';
+          }
           
           // Remove page break indicators from export
           clonedDoc.querySelectorAll('.page-indicator').forEach((el: Element) => (el as HTMLElement).style.display = 'none');
@@ -584,6 +597,19 @@ export default function ResumeEditor() {
           cv.style.minHeight = "0";
           cv.style.borderRadius = "0";
           cv.style.marginTop = "0";
+        }
+
+        // Prevent viewport flex-centering from adding extra space above .cv in export
+        const viewport = clonedDoc.querySelector('.cv-viewport') as HTMLElement | null;
+        if (viewport) {
+          viewport.style.minHeight = '0';
+          viewport.style.display = 'block';
+        }
+
+        // Remove any scaler transform that could affect positioning
+        const scaler = clonedDoc.querySelector('.cv-scaler') as HTMLElement | null;
+        if (scaler) {
+          scaler.style.transform = 'none';
         }
         
         // Remove page break indicators from export
