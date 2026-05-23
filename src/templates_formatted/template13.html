@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:opsz@9..40&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,600;9..40,700&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 20px; overflow: hidden; }
+  body { margin: 0; background: transparent; font-family: 'DM Sans', sans-serif; }
+
+  .cv-viewport { width: 100%; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
+  .cv-scaler { display: flex; flex-direction: column; align-items: center; transform-origin: top center; will-change: transform; }
+
+  .cv {
+    width: 794px;
+    height: 1123px;
+    background: #fff;
+    border: 1px solid rgb(216, 216, 216);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  :root {
+    --accent: #1a2a4a;
+    --accent-dark: #0e1a30;
+    --gold: #c4a35a;
+    --surface: #e8ecf2;
+    --text: #0e1a30;
+    --text-muted: #5a6a80;
+  }
+
+  .header {
+    background: var(--accent);
+    padding: 28px 40px 22px 40px;
+    position: relative;
+    overflow: hidden;
+    min-height: 170px;
+  }
+
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--gold);
+  }
+
+  .header-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .header-left { flex: 1; }
+
+  .name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    font-weight: 400;
+    color: #fff;
+    line-height: 1.15;
+  }
+
+  .job-title {
+    font-size: 0.75rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 400;
+    margin-top: 6px;
+  }
+
+  .header-right {
+    text-align: right;
+    flex-shrink: 0;
+    padding-left: 24px;
+  }
+
+  .header-contact-item {
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.85);
+    margin-bottom: 4px;
+    line-height: 1.5;
+  }
+
+  .body {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    flex: 1;
+  }
+
+  .left {
+    background: var(--surface);
+    padding: 28px 20px 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .right {
+    background: #fff;
+    padding: 28px 36px 24px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .photo-wrapper {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    border: 4px solid #fff;
+    overflow: hidden;
+    background: #ccc;
+    margin: 0 auto;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+
+  .photo-wrapper img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+  }
+
+  .section-label {
+    font-size: 0.68rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+    border-bottom: 1px solid rgba(26,42,74,0.2);
+    padding-bottom: 5px;
+    margin-bottom: 12px;
+  }
+
+  .contact-item {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 0.72rem;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .contact-item svg {
+    flex-shrink: 0;
+    stroke: var(--accent);
+  }
+
+  .bullet-list { list-style: none; }
+
+  .bullet-list li {
+    font-size: 0.73rem;
+    color: var(--text);
+    padding-left: 14px;
+    margin-bottom: 5px;
+    position: relative;
+  }
+
+  .bullet-list li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: var(--gold);
+    font-weight: 700;
+  }
+
+  .exp-entry, .edu-entry, .ref-entry, .contact-item, .l-block, .name-block, .about-text, .summary-block {
+    margin-bottom: 0;
+    margin-top: 0;
+    padding-top: 0.9rem;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .exp-header { display: flex; justify-content: space-between; align-items: baseline; }
+  .exp-role { font-size: 0.82rem; font-weight: 700; color: var(--text); }
+  .exp-dates { font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; }
+  .exp-company { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; }
+  .exp-desc { font-size: 0.72rem; line-height: 1.7; color: var(--text); padding-left: 14px; position: relative; }
+  .exp-desc::before { content: '–'; position: absolute; left: 0; color: var(--gold); font-weight: 700; }
+  .edu-degree { font-size: 0.8rem; font-weight: 600; color: var(--text); }
+  .edu-detail { font-size: 0.73rem; color: var(--text-muted); }
+  .summary-text { font-size: 0.74rem; line-height: 1.8; color: var(--text); }
+
+  .page-indicator::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 0;
+    width: 100%;
+    height: 15px;
+    background: #fff;
+    border-top: 1px solid rgb(216, 216, 216);
+    border-bottom: 1px solid rgb(216, 216, 216);
+    z-index: -1;
+  }
+</style>
+</head>
+<body>
+<div class="cv-viewport">
+  <div class="cv-scaler">
+    <div class="cv">
+      <div class="header">
+        <div class="header-content">
+          <div class="header-left">
+            <div class="name">{{personalInfo.name}}</div>
+            <div class="job-title">{{personalInfo.jobTitle}}</div>
+          </div>
+          <div class="header-right">
+            {{?personalInfo.email}}<div class="header-contact-item">{{personalInfo.email}}</div>{{/personalInfo.email}}
+            {{?personalInfo.phone}}<div class="header-contact-item">{{personalInfo.phone}}</div>{{/personalInfo.phone}}
+            {{?personalInfo.location}}<div class="header-contact-item">{{personalInfo.location}}</div>{{/personalInfo.location}}
+            {{?personalInfo.website}}<div class="header-contact-item">{{personalInfo.website}}</div>{{/personalInfo.website}}
+          </div>
+        </div>
+      </div>
+      <div class="body">
+        <div class="left">
+          {{?personalInfo.photo}}
+          <div class="photo-wrapper"><img src="{{personalInfo.photo}}" alt="Profile photo"/></div>
+          {{/personalInfo.photo}}
+          {{?skills}}
+          <div>
+            <div class="section-label">Skills</div>
+            <ul class="bullet-list">{{#skills}}<li>{{.}}</li>{{/skills}}</ul>
+          </div>
+          {{/skills}}
+          {{?languages}}
+          <div>
+            <div class="section-label">Languages</div>
+            <ul class="bullet-list">{{#languages}}<li>{{.}}</li>{{/languages}}</ul>
+          </div>
+          {{/languages}}
+          {{?references}}
+          <div>
+            <div class="section-label">References</div>
+            {{#references}}
+            <div class="ref-entry" style="font-size:0.72rem;color:var(--text);margin-bottom:10px;">
+              <div style="font-weight:600">{{name}}</div>
+              <div style="color:var(--text-muted);font-size:0.7rem;">{{company}}</div>
+            </div>
+            {{/references}}
+          </div>
+          {{/references}}
+        </div>
+        <div class="right">
+          <div class="summary-block">
+            {{?summary}}
+            <div>
+              <div class="section-label">Profile</div>
+              <p class="summary-text about-text">{{summary}}</p>
+            </div>
+            {{/summary}}
+          </div>
+          {{?experience}}
+          <div>
+            <div class="section-label">Experience</div>
+            {{#experience}}
+            <div class="exp-entry">
+              <div class="exp-header"><span class="exp-role">{{role}}</span><span class="exp-dates">{{startDate}} – {{endDate}}</span></div>
+              <div class="exp-company">{{company}}</div>
+              {{#description}}<p class="exp-desc">{{.}}</p>{{/description}}
+            </div>
+            {{/experience}}
+          </div>
+          {{/experience}}
+          {{?education}}
+          <div>
+            <div class="section-label">Education</div>
+            {{#education}}
+            <div class="edu-entry">
+              <div class="edu-degree">{{degree}}</div>
+              <div class="edu-detail">{{school}} · {{startDate}} – {{endDate}}</div>
+            </div>
+            {{/education}}
+          </div>
+          {{/education}}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  const CV_WIDTH  = 794;
+  const CV_HEIGHT = 1123;
+  const MULTIPAGE = "{{multipage}}";
+  const isMultipage = MULTIPAGE === "true";
+  const scaler = document.querySelector('.cv-scaler');
+  function createPageIndicators(cvElement, cvHeight, pages) {
+    document.querySelectorAll('.page-indicator').forEach(el => el.remove());
+    for (let i = 1; i < pages; i++) {
+      const indicator = document.createElement('div');
+      indicator.className = 'page-indicator';
+      indicator.style.position = 'absolute';
+      indicator.style.top = (i * cvHeight) + 'px';
+      indicator.style.left = '0';
+      indicator.style.width = '100%';
+      indicator.style.borderTop = '2px dashed rgba(255,0,0,0.6)';
+      indicator.style.zIndex = '9999';
+      cvElement.appendChild(indicator);
+    }
+  }
+  function handleBreakAvoidElements(cvElement, cvHeight, avoidSelector) {
+    const avoids = Array.from(cvElement.querySelectorAll(avoidSelector));
+    let maxIter = 20;
+    while (maxIter-- > 0) {
+      let shifted = false;
+      const pages = Math.ceil(cvElement.scrollHeight / cvHeight);
+      for (let p = 1; p < pages; p++) {
+        const boundary = p * cvHeight;
+        for (const el of avoids) {
+          const top = el.offsetTop;
+          const bottom = top + el.offsetHeight;
+          if (top < boundary && bottom > boundary) {
+            el.style.marginTop = (parseFloat(el.style.marginTop)||0) + (boundary - top) + 15 + 'px';
+            shifted = true; break;
+          }
+        }
+        if (shifted) break;
+      }
+      if (!shifted) break;
+    }
+  }
+  function scaleCv() {
+    const scale = document.documentElement.clientWidth / CV_WIDTH;
+    scaler.style.transform = `scale(${scale})`;
+    const cvElement = document.querySelector('.cv');
+    cvElement.style.height = 'auto';
+    cvElement.style.minHeight = '0px';
+    const avoidSelector = '.exp-entry, .edu-entry, .ref-entry, .contact-item, .l-block, .name-block, .about-text, .summary-block';
+    handleBreakAvoidElements(cvElement, CV_HEIGHT, avoidSelector);
+    const pages = isMultipage ? Math.max(1, Math.ceil(cvElement.scrollHeight / CV_HEIGHT)) : 1;
+    const newHeight = pages * CV_HEIGHT;
+    cvElement.style.height = newHeight + 'px';
+    cvElement.style.minHeight = newHeight + 'px';
+    cvElement.style.position = 'relative';
+    scaler.style.marginBottom = (newHeight * scale - newHeight) + 'px';
+    createPageIndicators(cvElement, CV_HEIGHT, pages);
+    window.parent.postMessage({ type: 'RESIZE_IFRAME', pages }, '*');
+  }
+  let resizeTimer;
+  window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(scaleCv, 60); });
+  document.fonts.ready.then(scaleCv);
+</script>
+</body>
+</html>

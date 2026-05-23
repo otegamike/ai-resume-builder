@@ -86,6 +86,19 @@ Replace only the content between the `<!-- DESIGN STARTS HERE -->` comments.
     /* your layout properties: display:grid, flex, etc. */
   }
 
+  .page-indicator::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 0;
+    width: 100%;
+    height: 15px;
+    background: #fff;
+    border-top: 1px solid rgb(216, 216, 216);
+    border-bottom: 1px solid rgb(216, 216, 216);
+    z-index: -1;
+  }
+
   /* === YOUR DESIGN CSS HERE === */
 
 </style>
@@ -597,6 +610,29 @@ Use inline `<svg>` stroke icons. Stroke icons render crisply at small sizes with
 Add your design-specific block classes to this selector list **and** to the `avoidSelector`
 string in the JS `scaleCv` function.
 
+### Page indicator (page-break dividers)
+
+Every template must include this `.page-indicator::before` CSS rule to visually mask
+the red dashed page-break lines with a clean white border seam:
+
+```css
+.page-indicator::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 0;
+  width: 100%;
+  height: 15px;
+  background: #fff;
+  border-top: 1px solid rgb(216, 216, 216);
+  border-bottom: 1px solid rgb(216, 216, 216);
+  z-index: -1;
+}
+```
+
+If the template uses a non-white page background (e.g. cream `#faf0ea`), change the
+`background` value to match the body background color so the seam blends in.
+
 ---
 
 ## 11. Decorative Elements — Safe Techniques
@@ -677,6 +713,7 @@ Run through every item before producing the final template HTML.
 - [ ] No `vw/vh/%` on the `.cv` element
 - [ ] `overflow: hidden` on `.cv`
 - [ ] `transform-origin: top center` on `.cv-scaler`
+- [ ] `.page-indicator::before` CSS is present, with `background` matching the body/cv background color
 
 **Typography**
 - [ ] Two Google Fonts imported via single `<link>` tag
@@ -766,6 +803,19 @@ The following is the smallest valid template skeleton. Expand with your design:
     overflow: hidden;
     display: grid;
     grid-template-columns: 240px 1fr;
+  }
+
+  .page-indicator::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 0;
+    width: 100%;
+    height: 15px;
+    background: #fff;
+    border-top: 1px solid rgb(216, 216, 216);
+    border-bottom: 1px solid rgb(216, 216, 216);
+    z-index: -1;
   }
 
   :root {
