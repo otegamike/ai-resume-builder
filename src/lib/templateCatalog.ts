@@ -1,5 +1,9 @@
 import type { ResumeContent } from "@/types/ResumeData";
-export type TemplateData = ResumeContent;
+// export type TemplateData = ResumeContent;
+
+export interface TemplateData extends ResumeContent {
+  multipage?: "true" | "false";
+} 
 
 export interface TemplateDefinition {
   id: string;
@@ -32,42 +36,3 @@ export const templateDefinitions: TemplateDefinition[] = [
 
 export type TemplateId = typeof templateDefinitions[number]["id"];
 
-
-
-// export type OldTemplateId =
-//   | "template1"
-//   | "template2"
-//   | "template3"
-//   | "template4"
-//   | "template5"
-//   | "template6"
-//   | "template7";
-
-// export interface OldTemplateData {
-//   personalInfo: {
-//     name: string;
-//     jobTitle: string;
-//     email: string;
-//     phone: string;
-//     location: string;
-//     website: string;
-//     photo?: string;
-//   };
-//   summary: string;
-//   experience: Array<{
-//     id: string;
-//     company: string;
-//     role: string;
-//     startDate: string;
-//     endDate: string;
-//     description: string;
-//   }>;
-//   education: Array<{
-//     id: string;
-//     school: string;
-//     degree: string;
-//     startDate: string;
-//     endDate: string;
-//   }>;
-//   skills: string[];
-// }

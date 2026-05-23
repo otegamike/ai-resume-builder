@@ -504,7 +504,10 @@ export default function ResumeEditor() {
             cv.offsetHeight;
             const intialHeight = cv.getBoundingClientRect().height;
             
-            cv.style.height = getNearestPageHeight(intialHeight) + "px";
+            const finalHeight = getNearestPageHeight(intialHeight);
+
+            console.log("Initial Height:", intialHeight, "Final Height:", finalHeight);
+            cv.style.height = finalHeight + "px";
             cv.style.overflow = "visible";
             cv.style.minHeight = "0";
             cv.style.borderRadius = "0";

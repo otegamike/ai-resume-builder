@@ -1,6 +1,7 @@
 import type { TemplateData, TemplateId } from "@/lib/templateCatalog";
 import { formatName } from "@/utils/nameFormatter";
 
+
 type RenderContext = Record<string, unknown> | string | number | boolean | null | undefined;
 
 const SECTION_PATTERN = /\{\{#([\w.]+)\}\}([\s\S]*?)\{\{\/\1\}\}/g;
@@ -73,7 +74,8 @@ export function buildTemplateSrcDoc(
     {...data, personalInfo: {...data.personalInfo, fullname:  formattedName }, skills: skillsFormatted} 
     : 
     { ...data, skills: skillsFormatted };
-  const rendered = renderTemplate(templateHtml, newData);
+  const finalData: TemplateData = (options?.editorMode)? {...newData, multipage: "true"} : newData;
+  const rendered = renderTemplate(templateHtml, finalData);
 
   if (!options?.editorMode) {
     return `<script>window.__SINGLE_PAGE__=true;<\/script>${rendered}`;

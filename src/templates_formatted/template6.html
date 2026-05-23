@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -9,9 +9,9 @@
 
   /*  font-size  */
 
-  html { font-size: 18px; overflow: hidden; }
+  html {font-size: 18px ;}
 
-  /* -- OUTER SHELL -- */
+  /* ── OUTER SHELL ── */
   body {
     margin: 0;
     background: transparent;
@@ -20,9 +20,9 @@
 
   /*
    * Three-layer A4 scaling:
-   *   .cv-viewport  � fills the iframe body
-   *   .cv-scaler    � always 760px wide internally, scaled via JS
-   *   .cv           � fixed 760 � 1076px (A4 ratio)
+   *   .cv-viewport  — fills the iframe body
+   *   .cv-scaler    — always 760px wide internally, scaled via JS
+   *   .cv           — fixed 760 × 1076px (A4 ratio)
    */
   .cv-viewport {
     width: 100%;
@@ -33,14 +33,11 @@
   }
 
   .cv-scaler {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     transform-origin: top center;
     will-change: transform;
   }
 
-  /* -- CV DOCUMENT -- */
+  /* ── CV DOCUMENT ── */
   .cv {
     width: 794px;
     height: 1123px;
@@ -50,7 +47,7 @@
     grid-template-columns: 260px 1fr;
   }
 
-  /* ---------- LEFT ---------- */
+  /* ══════════ LEFT ══════════ */
   .left {
     background: #f5e8e4;
     display: flex;
@@ -136,13 +133,13 @@
   }
 
   .bullet-list li::before {
-    content: '�';
+    content: '•';
     position: absolute;
     left: 0;
     color: #b07060;
   }
 
-  /* ---------- RIGHT ---------- */
+  /* ══════════ RIGHT ══════════ */
   .right {
     background: #fdf6f4;
     padding: 30px 36px 36px 36px;
@@ -267,6 +264,17 @@
   }
 
   /* Prevent page breaks inside sections */
+  .page-indicator::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 0;
+    width: 100%;
+    height: 15px;
+    background: #fff;
+    z-index: -1;
+  }
+
   .exp-entry, .edu-entry, .r-section-bar, .ref-entry, .contact-grid, .l-block, .name-block, .about-text {
     margin-bottom: 0;
     margin-top: 1rem;
@@ -282,7 +290,7 @@
   <div class="cv-scaler">
     <div class="cv">
 
-  <!-- -- LEFT -- -->
+  <!-- ── LEFT ── -->
   <div class="left">
 
     <!-- Photo -->
@@ -320,7 +328,7 @@
       <div class="edu-entry">
         <div class="edu-degree">{{degree}}</div>
         <div class="edu-school">{{school}}</div>
-        <div class="edu-years">{{startDate}} � {{endDate}}</div>
+        <div class="edu-years">{{startDate}} – {{endDate}}</div>
       </div>
       {{/education}}
     </div>
@@ -338,7 +346,7 @@
 
   </div>
 
-  <!-- -- RIGHT -- -->
+  <!-- ── RIGHT ── -->
   <div class="right">
 
     <!-- Name & Title -->
@@ -390,7 +398,7 @@
       <div class="exp-entry">
         <div class="exp-role">{{role}}</div>
         {{?company}}<div class="exp-company">{{company}}</div>{{/company}}
-        <div class="exp-years">{{startDate}} � {{endDate}}</div>
+        <div class="exp-years">{{startDate}} – {{endDate}}</div>
         {{#description}}
           <p class="exp-desc">
             {{.}}
@@ -413,6 +421,48 @@
 
   const scaler = document.querySelector('.cv-scaler');
 
+  function createPageIndicators(cvElement, cvHeight, pages) {
+    document.querySelectorAll('.page-indicator').forEach(el => el.remove());
+    for (let i = 1; i < pages; i++) {
+      const indicator = document.createElement('div');
+      indicator.className = 'page-indicator';
+      indicator.style.position = 'absolute';
+      indicator.style.top = (i * cvHeight) + 'px';
+      indicator.style.left = '0';
+      indicator.style.width = '100%';
+      indicator.style.borderTop = '2px dashed rgba(255, 0, 0, 0.6)';
+      indicator.style.zIndex = '9999';
+      
+      cvElement.appendChild(indicator);
+    }
+  }
+
+  function handleBreakAvoidElements(cvElement, cvHeight, avoidSelector) {
+    const avoids = Array.from(cvElement.querySelectorAll(avoidSelector));
+    let maxIter = 20;
+    while (maxIter-- > 0) {
+      let shifted = false;
+      const height = cvElement.scrollHeight;
+      const pages = Math.ceil(height / cvHeight);
+      for (let p = 1; p < pages; p++) {
+        const boundary = p * cvHeight;
+        for (const el of avoids) {
+          const top = el.offsetTop;
+          const bottom = top + el.offsetHeight;
+          if (top < boundary && bottom > boundary) {
+            const pushDown = boundary - top;
+            const currentMT = parseFloat(el.style.marginTop) || 0;
+            el.style.marginTop = (currentMT + pushDown + 20) + 'px';
+            shifted = true;
+            break;
+          }
+        }
+        if (shifted) break;
+      }
+      if (!shifted) break;
+    }
+  }
+
   function scaleCv() {
     const available = document.documentElement.clientWidth;
     const scale = available / CV_WIDTH;
@@ -422,8 +472,11 @@
     const cvElement = document.querySelector('.cv');
     cvElement.style.height = 'auto';
     cvElement.style.minHeight = '0px';
+
+    const avoidSelector = '.exp-entry, .edu-entry, .r-section-bar, .ref-entry, .contact-grid, .l-block, .name-block, .about-text';
+    handleBreakAvoidElements(cvElement, CV_HEIGHT, avoidSelector);
+
     const contentHeight = cvElement.scrollHeight;
-    
     const pages = Math.max(1, Math.ceil(contentHeight / CV_HEIGHT));
     const newHeight = pages * CV_HEIGHT;
     
@@ -434,36 +487,9 @@
     const scaledHeight = newHeight * scale;
     scaler.style.marginBottom = (scaledHeight - newHeight) + 'px';
     
-    if (!window.__SINGLE_PAGE__) {
-      document.querySelectorAll('.page-indicator').forEach(el => el.remove());
-      for (let i = 1; i < pages; i++) {
-        const indicator = document.createElement('div');
-        indicator.className = 'page-indicator';
-        indicator.style.position = 'absolute';
-        indicator.style.top = (i * CV_HEIGHT) + 'px';
-        indicator.style.left = '0';
-        indicator.style.width = '100%';
-        indicator.style.borderTop = '2px dashed rgba(255, 0, 0, 0.6)';
-        indicator.style.zIndex = '9999';
-        
-        const label = document.createElement('div');
-        label.innerText = 'Page Break';
-        label.style.position = 'absolute';
-        label.style.top = '-10px';
-        label.style.right = '20px';
-        label.style.background = 'rgba(255, 0, 0, 0.6)';
-        label.style.color = 'white';
-        label.style.padding = '2px 8px';
-        label.style.fontSize = '12px';
-        label.style.borderRadius = '10px';
-        label.style.fontFamily = 'sans-serif';
-        
-        indicator.appendChild(label);
-        cvElement.appendChild(indicator);
-      }
-      
-      window.parent.postMessage({ type: 'RESIZE_IFRAME', pages: pages }, '*');
-    }
+    createPageIndicators(cvElement, CV_HEIGHT, pages);
+    
+    window.parent.postMessage({ type: 'RESIZE_IFRAME', pages: pages }, '*');
   }
 
   document.documentElement.style.fontSize = '20px';
