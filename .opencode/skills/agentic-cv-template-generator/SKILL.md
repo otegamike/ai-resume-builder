@@ -175,7 +175,7 @@ Replace only the content between the `<!-- DESIGN STARTS HERE -->` comments.
     cvElement.style.height = 'auto';
     cvElement.style.minHeight = '0px';
 
-    const avoidSelector = '.exp-entry, .edu-entry, .r-section-title, .ref-entry, .contact-grid, .contact-item, .l-block, .name-block, .about-text';
+    const avoidSelector = '.exp-entry, .edu-entry, .r-section-title, .ref-entry, .contact-grid, .contact-item, .l-block, .name-block, .about-text, .section-label, .summary-text, .photo-wrapper, .bullet-list';
     handleBreakAvoidElements(cvElement, CV_HEIGHT, avoidSelector);
 
     const contentHeight = cvElement.scrollHeight;
@@ -599,7 +599,7 @@ Use inline `<svg>` stroke icons. Stroke icons render crisply at small sizes with
 
 ### Break-avoidance (required on every block element that must not split across pages)
 ```css
-.exp-entry, .edu-entry, .ref-entry, .contact-item, .l-block, .name-block, .about-text {
+.exp-entry, .edu-entry, .ref-entry, .contact-item, .l-block, .name-block, .about-text, .section-label, .summary-text, .photo-wrapper, .bullet-list {
   margin-bottom: 0;
   margin-top: 0;
   padding-top: 0.9rem;
@@ -630,8 +630,8 @@ the red dashed page-break lines with a clean white border seam:
 }
 ```
 
-If the template uses a non-white page background (e.g. cream `#faf0ea`), change the
-`background` value to match the body background color so the seam blends in.
+The `background` must always be `#fff` so page breaks remain visible even on dark or
+tinted templates.
 
 ---
 
@@ -847,7 +847,7 @@ The following is the smallest valid template skeleton. Expand with your design:
   .bullet-list li { font-size: 0.75rem; color: var(--text); padding-left: 14px; margin-bottom: 6px; position: relative; }
   .bullet-list li::before { content: '•'; position: absolute; left: 0; color: var(--accent); }
 
-  .exp-entry, .edu-entry, .ref-entry, .contact-item, .l-block, .name-block, .about-text {
+  .exp-entry, .edu-entry, .ref-entry, .contact-item, .l-block, .name-block, .about-text, .section-label, .summary-text, .photo-wrapper, .bullet-list {
     margin-bottom: 0; margin-top: 0; padding-top: 0.9rem; break-inside: avoid; page-break-inside: avoid;
   }
   .exp-header { display: flex; justify-content: space-between; align-items: baseline; }
@@ -1008,7 +1008,7 @@ The following is the smallest valid template skeleton. Expand with your design:
     const cvElement = document.querySelector('.cv');
     cvElement.style.height = 'auto';
     cvElement.style.minHeight = '0px';
-    const avoidSelector = '.exp-entry, .edu-entry, .r-section-title, .ref-entry, .contact-grid, .contact-item, .l-block, .name-block, .about-text';
+    const avoidSelector = '.exp-entry, .edu-entry, .r-section-title, .ref-entry, .contact-grid, .contact-item, .l-block, .name-block, .about-text, .section-label, .summary-text, .photo-wrapper, .bullet-list';
     handleBreakAvoidElements(cvElement, CV_HEIGHT, avoidSelector);
     const pages = isMultipage ? Math.max(1, Math.ceil(cvElement.scrollHeight / CV_HEIGHT)) : 1;
     const newHeight = pages * CV_HEIGHT;

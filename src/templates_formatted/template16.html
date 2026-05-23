@@ -173,7 +173,7 @@
     background: rgba(42,42,42,0.15);
   }
 
-  .exp-entry, .edu-entry, .ref-entry, .contact-item, .l-block, .name-block, .about-text {
+  .exp-entry, .edu-entry, .ref-entry, .contact-item, .l-block, .name-block, .about-text, .section-label, .left-label, .photo-wrapper, .summary-text {
     margin-bottom: 0;
     margin-top: 0;
     padding-top: 0.9rem;
@@ -364,7 +364,7 @@
     const cvElement = document.querySelector('.cv');
     cvElement.style.height = 'auto';
     cvElement.style.minHeight = '0px';
-    const avoidSelector = '.exp-entry, .edu-entry, .ref-entry, .contact-item, .l-block, .name-block, .about-text';
+    const avoidSelector = '.exp-entry, .edu-entry, .ref-entry, .contact-item, .l-block, .name-block, .about-text, .section-label, .left-label, .photo-wrapper, .summary-text';
     handleBreakAvoidElements(cvElement, CV_HEIGHT, avoidSelector);
     const pages = isMultipage ? Math.max(1, Math.ceil(cvElement.scrollHeight / CV_HEIGHT)) : 1;
     const newHeight = pages * CV_HEIGHT;

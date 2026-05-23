@@ -67,9 +67,9 @@ export async function generateExperienceBulletPoints(
   const prompt = `Transform this job description into 3 impactful, ATS-friendly bullet points. Company: ${company}, Role: ${role}. Original description: ${description}. Use action verbs and quantify achievements where possible. Return only the bullet points, one per line. no explanations.`;
   const result = await generateWithAI(prompt);
   console.log(result)
-  return result.replaceAll("- ", "")
+  return result
     .split("\n")
-    .map((s) => s.trim())
+    .map((s) => s.trim().replace(/^[-•–—*]\s*/, ""))
     .filter((s) => s.length > 0);
 }
 
