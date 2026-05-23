@@ -312,13 +312,17 @@
     z-index: -1;
   }
 
-  .exp-entry, .edu-entry, .r-section-title, .ref-entry, .contact-grid, .contact-item, .l-block, .name-block, .about-text {
+  .exp-entry, .r-section-title, .ref-entry, .contact-grid, .contact-item, .l-block, .name-block, .about-text {
     margin-bottom: 0;
     margin-top: 0;
     padding-top: 0.9rem;
     break-inside: avoid;
     page-break-inside: avoid;
   }
+
+  .contact-item:first-of-type {
+    padding-top: 0;
+   }
   
 </style>
 </head>
@@ -468,6 +472,8 @@
 <script>
   const CV_WIDTH  = 794;
   const CV_HEIGHT = 1123;
+  const MULTIPAGE = "{{multipage}}";
+  const isMultipage = MULTIPAGE === "true";
 
   const scaler = document.querySelector('.cv-scaler');
 
@@ -525,9 +531,10 @@
 
     const avoidSelector = '.exp-entry, .edu-entry, .r-section-title, .ref-entry, .contact-grid, .contact-item, .l-block, .name-block, .about-text';
     handleBreakAvoidElements(cvElement, CV_HEIGHT, avoidSelector);
+  
 
     const contentHeight = cvElement.scrollHeight;
-    const pages = Math.max(1, Math.ceil(contentHeight / CV_HEIGHT));
+    const pages = isMultipage ? Math.max(1, Math.ceil(contentHeight / CV_HEIGHT)) : 1;
     const newHeight = pages * CV_HEIGHT;
     
     cvElement.style.height = newHeight + 'px';
@@ -541,8 +548,6 @@
     
     window.parent.postMessage({ type: 'RESIZE_IFRAME', pages: pages }, '*');
   }
-
-  document.documentElement.style.fontSize = '20px';
 
   let resizeTimer;
   window.addEventListener('resize', () => {

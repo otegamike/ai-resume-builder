@@ -75,12 +75,7 @@ export function buildTemplateSrcDoc(
     : 
     { ...data, skills: skillsFormatted };
   const finalData: TemplateData = (options?.editorMode)? {...newData, multipage: "true"} : newData;
-  const rendered = renderTemplate(templateHtml, finalData);
-
-  if (!options?.editorMode) {
-    return `<script>window.__SINGLE_PAGE__=true;<\/script>${rendered}`;
-  }
-  return rendered;
+  return renderTemplate(templateHtml, finalData);
 }
 
 export function getTemplatePreviewData(): TemplateData {

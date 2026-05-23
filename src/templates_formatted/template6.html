@@ -29,10 +29,13 @@
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: flex-start;
+    align-items: center;
   }
 
   .cv-scaler {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     transform-origin: top center;
     will-change: transform;
   }
@@ -42,6 +45,7 @@
     width: 794px;
     height: 1123px;
     background: #fdf6f4;
+    border: 1px solid rgb(216, 216, 216);
     overflow: hidden;
     display: grid;
     grid-template-columns: 260px 1fr;
@@ -187,7 +191,7 @@
   .r-section-bar {
     background: #f0dcd6;
     padding: 7px 12px;
-    margin-bottom: 18px;
+    margin-top: 18px;
   }
 
   .r-section-bar span {
@@ -272,12 +276,15 @@
     width: 100%;
     height: 15px;
     background: #fff;
+    border-top: 1px solid rgb(216, 216, 216);
+    border-bottom: 1px solid rgb(216, 216, 216);
     z-index: -1;
   }
 
-  .exp-entry, .edu-entry, .r-section-bar, .ref-entry, .contact-grid, .l-block, .name-block, .about-text {
+  .exp-entry, .edu-entry, .ref-entry, .contact-grid, .l-block, .name-block, .about-text {
     margin-bottom: 0;
-    margin-top: 1rem;
+    margin-top: 0;
+    padding-top: 0.9rem;
     break-inside: avoid;
     page-break-inside: avoid;
   }
@@ -418,6 +425,8 @@
 <script>
   const CV_WIDTH  = 794;
   const CV_HEIGHT = 1123;
+  const MULTIPAGE = "{{multipage}}";
+  const isMultipage = MULTIPAGE === "true";
 
   const scaler = document.querySelector('.cv-scaler');
 
@@ -452,7 +461,7 @@
           if (top < boundary && bottom > boundary) {
             const pushDown = boundary - top;
             const currentMT = parseFloat(el.style.marginTop) || 0;
-            el.style.marginTop = (currentMT + pushDown + 20) + 'px';
+            el.style.marginTop = (currentMT + pushDown + 15) + 'px';
             shifted = true;
             break;
           }
@@ -473,11 +482,13 @@
     cvElement.style.height = 'auto';
     cvElement.style.minHeight = '0px';
 
-    const avoidSelector = '.exp-entry, .edu-entry, .r-section-bar, .ref-entry, .contact-grid, .l-block, .name-block, .about-text';
+    
+    const avoidSelector = '.exp-entry, .edu-entry, .r-section-bar, .ref-entry, .contact-grid, .contact-item, .l-block, .name-block, .about-text';
     handleBreakAvoidElements(cvElement, CV_HEIGHT, avoidSelector);
+  
 
     const contentHeight = cvElement.scrollHeight;
-    const pages = Math.max(1, Math.ceil(contentHeight / CV_HEIGHT));
+    const pages = isMultipage ? Math.max(1, Math.ceil(contentHeight / CV_HEIGHT)) : 1;
     const newHeight = pages * CV_HEIGHT;
     
     cvElement.style.height = newHeight + 'px';
@@ -491,8 +502,6 @@
     
     window.parent.postMessage({ type: 'RESIZE_IFRAME', pages: pages }, '*');
   }
-
-  document.documentElement.style.fontSize = '20px';
 
   let resizeTimer;
   window.addEventListener('resize', () => {

@@ -18,9 +18,9 @@
 
   /*
    * Three-layer A4 scaling:
-   *   .cv-viewport  — fills the iframe body, centers content
-   *   .cv-scaler    — always 794px wide internally, scaled via JS
-   *   .cv           — fixed 780 × 1103px (true A4 ratio 1:v2)
+   *   .cv-viewport  ï¿½ fills the iframe body, centers content
+   *   .cv-scaler    ï¿½ always 794px wide internally, scaled via JS
+   *   .cv           ï¿½ fixed 780 ï¿½ 1103px (true A4 ratio 1:v2)
    */
   .cv-viewport {
     width: 100%;
@@ -43,6 +43,7 @@
     width: 794px;
     height: 1123px;
     background: #fff;
+    border: 1px solid rgb(216, 216, 216);
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -304,7 +305,23 @@
   }
 
   /* Prevent page breaks inside sections */
+  .page-indicator::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 0;
+    width: 100%;
+    height: 15px;
+    background: #fff;
+    border-top: 1px solid rgb(216, 216, 216);
+    border-bottom: 1px solid rgb(216, 216, 216);
+    z-index: -1;
+  }
+
   .exp-entry, .edu-entry, .ref-entry, .contact-item, .l-block, .name-block {
+    margin-bottom: 0;
+    margin-top: 0;
+    padding-top: 0.9rem;
     break-inside: avoid;
     page-break-inside: avoid;
   }
@@ -456,9 +473,53 @@
 
 <script>
   const CV_WIDTH  = 794;
-  const CV_HEIGHT = 1123; // 780 \u00d7 \u221a2 \u2248 true A4
+  const CV_HEIGHT = 1123;
+  const MULTIPAGE = "{{multipage}}";
+  const isMultipage = MULTIPAGE === "true";
 
   const scaler = document.querySelector('.cv-scaler');
+
+  function createPageIndicators(cvElement, cvHeight, pages) {
+    document.querySelectorAll('.page-indicator').forEach(el => el.remove());
+    for (let i = 1; i < pages; i++) {
+      const indicator = document.createElement('div');
+      indicator.className = 'page-indicator';
+      indicator.style.position = 'absolute';
+      indicator.style.top = (i * cvHeight) + 'px';
+      indicator.style.left = '0';
+      indicator.style.width = '100%';
+      indicator.style.borderTop = '2px dashed rgba(255, 0, 0, 0.6)';
+      indicator.style.zIndex = '9999';
+      
+      cvElement.appendChild(indicator);
+    }
+  }
+
+  function handleBreakAvoidElements(cvElement, cvHeight, avoidSelector) {
+    const avoids = Array.from(cvElement.querySelectorAll(avoidSelector));
+    let maxIter = 20;
+    while (maxIter-- > 0) {
+      let shifted = false;
+      const height = cvElement.scrollHeight;
+      const pages = Math.ceil(height / cvHeight);
+      for (let p = 1; p < pages; p++) {
+        const boundary = p * cvHeight;
+        for (const el of avoids) {
+          const top = el.offsetTop;
+          const bottom = top + el.offsetHeight;
+          if (top < boundary && bottom > boundary) {
+            const pushDown = boundary - top;
+            const currentMT = parseFloat(el.style.marginTop) || 0;
+            el.style.marginTop = (currentMT + pushDown + 15) + 'px';
+            shifted = true;
+            break;
+          }
+        }
+        if (shifted) break;
+      }
+      if (!shifted) break;
+    }
+  }
 
   function scaleCv() {
     const available = document.documentElement.clientWidth;
@@ -469,9 +530,12 @@
     const cvElement = document.querySelector('.cv');
     cvElement.style.height = 'auto';
     cvElement.style.minHeight = '0px';
+
+    const avoidSelector = '.exp-entry, .edu-entry, .r-section-title, .ref-entry, .contact-grid, .contact-item, .l-block, .name-block, .about-text';
+    handleBreakAvoidElements(cvElement, CV_HEIGHT, avoidSelector);
+  
     const contentHeight = cvElement.scrollHeight;
-    
-    const pages = Math.max(1, Math.ceil(contentHeight / CV_HEIGHT));
+    const pages = isMultipage ? Math.max(1, Math.ceil(contentHeight / CV_HEIGHT)) : 1;
     const newHeight = pages * CV_HEIGHT;
     
     cvElement.style.height = newHeight + 'px';
@@ -481,36 +545,9 @@
     const scaledHeight = newHeight * scale;
     scaler.style.marginBottom = (scaledHeight - newHeight) + 'px';
     
-    if (!window.__SINGLE_PAGE__) {
-      document.querySelectorAll('.page-indicator').forEach(el => el.remove());
-      for (let i = 1; i < pages; i++) {
-        const indicator = document.createElement('div');
-        indicator.className = 'page-indicator';
-        indicator.style.position = 'absolute';
-        indicator.style.top = (i * CV_HEIGHT) + 'px';
-        indicator.style.left = '0';
-        indicator.style.width = '100%';
-        indicator.style.borderTop = '2px dashed rgba(255, 0, 0, 0.6)';
-        indicator.style.zIndex = '9999';
-        
-        const label = document.createElement('div');
-        label.innerText = 'Page Break';
-        label.style.position = 'absolute';
-        label.style.top = '-10px';
-        label.style.right = '20px';
-        label.style.background = 'rgba(255, 0, 0, 0.6)';
-        label.style.color = 'white';
-        label.style.padding = '2px 8px';
-        label.style.fontSize = '12px';
-        label.style.borderRadius = '10px';
-        label.style.fontFamily = 'sans-serif';
-        
-        indicator.appendChild(label);
-        cvElement.appendChild(indicator);
-      }
-      
-      window.parent.postMessage({ type: 'RESIZE_IFRAME', pages: pages }, '*');
-    }
+    createPageIndicators(cvElement, CV_HEIGHT, pages);
+    
+    window.parent.postMessage({ type: 'RESIZE_IFRAME', pages: pages }, '*');
   }
 
   let resizeTimer;
@@ -519,7 +556,6 @@
     resizeTimer = setTimeout(scaleCv, 60);
   });
 
-  // Wait for fonts so layout is stable before first scale
   document.fonts.ready.then(scaleCv);
 </script>
 

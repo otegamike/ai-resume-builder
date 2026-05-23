@@ -553,8 +553,10 @@
     cvElement.style.height = 'auto';
     cvElement.style.minHeight = '0px';
 
+   
     const avoidSelector = '.exp-entry, .edu-entry, .r-section-title, .ref-entry, .contact-grid, .contact-item, .l-block, .name-block, .about-text';
     handleBreakAvoidElements(cvElement, CV_HEIGHT, avoidSelector);
+  
 
     const contentHeight = cvElement.scrollHeight;
     const pages = isMultipage ? Math.max(1, Math.ceil(contentHeight / CV_HEIGHT)) : 1;
