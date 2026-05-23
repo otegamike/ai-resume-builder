@@ -651,6 +651,7 @@ These techniques are tested and render correctly through html2canvas for PDF exp
 - `mix-blend-mode` other than `normal`
 - `position: sticky` inside the `.cv`
 - `overflow: auto` or `overflow: scroll` on any inner panel
+- `color-mix()` — html2canvas cannot parse this function; use hardcoded `rgba()` or `opacity` instead
 
 ---
 

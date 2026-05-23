@@ -26,6 +26,11 @@ Valid IDs:
 - `template5`
 - `template6`
 - `template7`
+- `template8`
+- `template9`
+- `template10`
+- `template11`
+- `template12`
 
 ### Metadata shape
 Each template definition includes:
@@ -43,6 +48,11 @@ Current names/descriptions:
 - `template5` / Aurora
 - `template6` / Rose
 - `template7` / Slate
+- `template8` / Ember
+- `template9` / Indigo
+- `template10` / Cascade
+- `template11` / Noir
+- `template12` / Citrine
 
 ## 3) Data Shape Used by Renderer
 `TemplateData` is an alias of `ResumeContent` (`src/types/ResumeData.ts`), containing:

@@ -32,6 +32,11 @@ export const templateDefinitions: TemplateDefinition[] = [
   { id: "template5", name: "Aurora", description: "Creative geometric style for portfolio-driven roles", html: "", page: TEMPLATE_PAGE },
   { id: "template6", name: "Rose", description: "Soft modern design with refined spacing", html: "", page: TEMPLATE_PAGE },
   { id: "template7", name: "Slate", description: "Structured corporate style optimized for scanning", html: "", page: TEMPLATE_PAGE },
+  { id: "template8", name: "Ember", description: "Classic full-width single column with warm rust accents", html: "", page: TEMPLATE_PAGE },
+  { id: "template9", name: "Indigo", description: "Diagonal gradient header with plum tones and rounded bullets", html: "", page: TEMPLATE_PAGE },
+  { id: "template10", name: "Cascade", description: "Two-column with angled clip-path sidebar in teal", html: "", page: TEMPLATE_PAGE },
+  { id: "template11", name: "Noir", description: "Inverted dark theme with high-contrast light text", html: "", page: TEMPLATE_PAGE },
+  { id: "template12", name: "Citrine", description: "Gold-accent two-column layout with warm ivory background", html: "", page: TEMPLATE_PAGE },
 ];
 
 export type TemplateId = typeof templateDefinitions[number]["id"];
