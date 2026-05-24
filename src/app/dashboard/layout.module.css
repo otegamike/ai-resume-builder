@@ -1,6 +1,9 @@
 .container {
   display: flex;
   height: 100vh;
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
   background-color: var(--gray-50);
   container-type: inline-size;
   container-name: --dashboard-container;
@@ -8,11 +11,13 @@
 
 .sidebar {
   width: fit-content;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   background-color: white;
   border-right: 1px solid var(--gray-200);
   transition: all 0.5s ease-in-out;
+  
 }
 
 .sidebarLogo {
@@ -121,7 +126,6 @@
   .sidebar {
     position: fixed;
     top:0;
-    height: 100dvh;
     z-index: 10;
     padding-top: 4rem;
     gap: 0.5rem;

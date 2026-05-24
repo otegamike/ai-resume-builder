@@ -76,17 +76,19 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token }) {
       if (!token.email) return token;
       await dbConnect();
-      const dbUser = await User.findOne({ email: token.email }).select("_id email name image");
+      const dbUser = await User.findOne({ email: token.email }).select("_id email name image isAdmin");
       if (dbUser) {
         token.userId = String(dbUser._id);
         token.name = dbUser.name;
         token.picture = dbUser.image;
+        token.isAdmin = dbUser.isAdmin ?? false;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = (token.userId as string | undefined) ?? "";
+        session.user.isAdmin = (token.isAdmin as boolean | undefined) ?? false;
       }
       return session;
     },

@@ -11,6 +11,7 @@ export interface IUser extends Document {
     provider: string;
     providerAccountId: string;
   }>;
+  isAdmin: boolean;
 }
 
 const UserSchema: Schema = new Schema<IUser>(
@@ -26,6 +27,7 @@ const UserSchema: Schema = new Schema<IUser>(
         providerAccountId: { type: String, required: true },
       },
     ],
+    isAdmin: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
