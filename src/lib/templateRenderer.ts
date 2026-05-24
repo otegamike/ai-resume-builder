@@ -67,7 +67,7 @@ export function buildTemplateSrcDoc(
 ): string {
   const fullName: string  = data.personalInfo?.name;
   const firstName: string = data.personalInfo?.fullname?.firstName;
-  const skillsFormatted: string[] = data.skills.slice(0, 12);
+  const skillsFormatted: string[] = data.skills;
   const formattedName = formatName(fullName);
 
   const newData: TemplateData = (fullName&&!firstName)?

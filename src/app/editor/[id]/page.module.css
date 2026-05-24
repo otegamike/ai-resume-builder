@@ -517,7 +517,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin-top: var(--space-4);
+  margin-top: var(--space-2);
 }
 
 .skillTag {
@@ -525,11 +525,20 @@
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-1) var(--space-3);
-  background-color: #b0c1da;
-  color: #223550;
+  background-color: #e0e7f1;
+  color: #1e293b;
   border-radius: var(--radius-full);
   font-weight: var(--font-medium);
   font-size: var(--text-sm);
+  border: 1px solid #cbd5e1;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+
+.skillTag:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  background-color: #cbd5e1;
 }
 
 .skillRemoveButton {
@@ -542,11 +551,10 @@
   transition: color 0.2s;
   background-color: transparent;
 
-
   svg {
     stroke: var(--red-500);
-    width: 1rem;
-    height: 1rem;
+    width: 0.875rem;
+    height: 0.875rem;
     transition: stroke 0.2s ease;
 
     &:hover {
@@ -556,8 +564,244 @@
 }
 
 .skillRemoveIcon {
-  width: 0.75rem;
-  height: 0.75rem;
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+/* Redesigned Premium Cards for Skills */
+.skillsSectionCard {
+  background-color: var(--neutral-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  box-shadow: var(--shadow-sm);
+}
+
+.skillsSectionCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.skillsSectionCardTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--gray-700);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.skillsCountBadge {
+  background-color: rgba(59, 130, 246, 0.08);
+  color: var(--primary-700);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  transition: all 0.2s ease;
+}
+
+.skillsCountBadgeWarning {
+  background-color: rgba(245, 158, 11, 0.08);
+  color: #d97706;
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.skillsCountBadgeMax {
+  background-color: rgba(239, 68, 68, 0.08);
+  color: #dc2626;
+  border-color: rgba(239, 68, 68, 0.2);
+  animation: pulse-border 1.5s infinite;
+}
+
+.skillsProgressBarContainer {
+  width: 100%;
+  height: 6px;
+  background-color: var(--gray-200);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-top: -4px;
+}
+
+.skillsProgressBar {
+  height: 100%;
+  background-color: var(--primary-600);
+  border-radius: var(--radius-full);
+  transition: width 0.3s ease;
+}
+
+.skillsProgressBarWarning {
+  background-color: #f59e0b;
+}
+
+.skillsProgressBarMax {
+  background-color: #ef4444;
+}
+
+.skillsWarningBanner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background-color: rgba(239, 68, 68, 0.04);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: var(--radius-md);
+  color: #b91c1c;
+}
+
+.skillsWarningIcon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  stroke: #ef4444;
+}
+
+.skillsWarningText {
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  line-height: 1.4;
+}
+
+.skillsEmptyState {
+  text-align: center;
+  color: var(--neutral-500);
+  font-size: var(--text-sm);
+  padding: var(--space-6) var(--space-4);
+  border: 1.5px dashed var(--gray-300);
+  border-radius: var(--radius-md);
+  font-style: italic;
+}
+
+/* AI Suggestions Premium Card */
+.suggestedSectionCard {
+  background-color: var(--neutral-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  box-shadow: var(--shadow-sm);
+  margin-top: var(--space-4);
+  margin-bottom: 10rem;
+}
+
+.suggestedSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.suggestedTitleContainer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.suggestedIcon {
+  color: #3b82f6;
+  fill: rgba(59, 130, 246, 0.2);
+}
+
+.suggestedSectionTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--gray-800);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.suggestedHint {
+  font-size: var(--text-xs);
+  color: var(--neutral-500);
+  font-style: italic;
+  margin-top: -4px;
+}
+
+.suggestedSkillsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.suggestedSkillTag {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1.5px dashed #94a3b8;
+  border-radius: var(--radius-full);
+  font-weight: var(--font-medium);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.suggestedSkillTag:hover {
+  background-color: rgba(59, 130, 246, 0.05);
+  border-color: #3b82f6;
+  color: #1e3a8a;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.suggestedTagAddIcon {
+  width: 0.875rem;
+  height: 0.875rem;
+  stroke: var(--primary-1);
+}
+
+.suggestedTagName {
+  font-weight: var(--font-medium);
+}
+
+/* Callout placeholder style */
+.suggestedPlaceholderCallout {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background-color: rgba(59, 130, 246, 0.03);
+  border: 1px solid rgba(59, 130, 246, 0.12);
+  border-radius: var(--radius-lg);
+  margin-top: var(--space-4);
+}
+
+.suggestedPlaceholderIcon {
+  color: #3b82f6;
+  flex-shrink: 0;
+  margin-top: 2px;
+  animation: pulse 2s infinite;
+}
+
+.suggestedPlaceholderText {
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--gray-600);
+  margin: 0;
+}
+
+.suggestedPlaceholderText em {
+  font-weight: var(--font-semibold);
+  color: #1d4ed8;
+  font-style: normal;
+}
+
+.suggestedPlaceholderText strong {
+  font-weight: var(--font-bold);
+  color: var(--gray-800);
+}
+
+@keyframes pulse-border {
+  0%, 100% { border-color: rgba(239, 68, 68, 0.2); }
+  50% { border-color: rgba(239, 68, 68, 0.6); }
 }
 
 .tabNavigation {
@@ -621,7 +865,8 @@
   height: 100%;
   border: 0;
   display: block;
-  overflow: hidden;
+  overflow: hidden; 
+
 }
 
 .exportFrame {
@@ -644,6 +889,18 @@
   padding: 3rem;
   margin-bottom: 2rem;
   align-self: flex-start;
+}
+
+.resumeLoadingIndicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--neutral-600);
+  padding: 0;
+
+  svg {
+    position: static;
+  }
 }
 
 .resumePreviewModern {

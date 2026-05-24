@@ -1,16 +1,7 @@
 import React from "react";
 import { Input } from "@/components/ui/Input";
 import styles from "../page.module.css";
-
-interface PersonalInfo {
-  name: string;
-  jobTitle: string;
-  email: string;
-  phone: string;
-  location: string;
-  website: string;
-  photo?: string;
-}
+import { PersonalInfo } from "@/types/ResumeData";
 
 interface PersonalDetailsTabProps {
   personalInfo: PersonalInfo;

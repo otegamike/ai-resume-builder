@@ -21,7 +21,7 @@ import FinishTab from "./form-nav/FinishTab";
 import styles from "./page.module.css";
 import { calculateEditorHeight, editorSectionHeight } from "@/utils/headerSize";
 import { scrollIntoView } from "@/utils/scrollIntoview"; 
-import { initialResume } from "@/constants/ResumeConstants";
+import { initialResume, maxSkillCount } from "@/constants/ResumeConstants";
 import { useSearchParams } from 'next/navigation';
 import { useAi } from "@/app/hooks/useAi";
 import { useAutoSave } from "@/app/hooks/useAutosave";
@@ -69,6 +69,8 @@ export default function ResumeEditor() {
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("personal");
   const [newSkill, setNewSkill] = useState("");
+  const [aiSuggestedSkills, setAiSuggestedSkills] = useState<string[]>([]);
+  const [skillsError, setSkillsError] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -120,7 +122,7 @@ export default function ResumeEditor() {
   );
 
   const renderedTemplate = useMemo(() => {
-    const formattedResume: ResumeContent = { ...resume, skills: resume.skills.slice(0, 12) };
+    const formattedResume: ResumeContent = { ...resume, skills: resume.skills };
 
     if (!selectedTemplate?.html) return "";
     return buildTemplateSrcDoc(selectedTemplate.html, formattedResume, { editorMode: true });
@@ -194,10 +196,8 @@ export default function ResumeEditor() {
     }
 
     const skills = result.array;
-    const newSkills = [...new Set([...resume.skills, ...skills])];
-    setResume({ ...resume, skills: newSkills });
-    debouncedAutoSave(title, { ...resume, skills: newSkills });
-    
+    const unseenSkills = skills.filter((s: string) => !resume.skills.includes(s));
+    setAiSuggestedSkills(unseenSkills);
   };
 
   useEffect(() => {
@@ -329,7 +329,7 @@ export default function ResumeEditor() {
       };
       
     } else {
-      const newResume = {
+      newResume = {
         ...resume,
         personalInfo: { ...resume.personalInfo, [e.target.name]: e.target.value }
       };
@@ -432,7 +432,12 @@ export default function ResumeEditor() {
 
   const addSkill = () => {
     if (newSkill.trim() && !resume.skills.includes(newSkill.trim())) {
-      const newResume = { ...resume, skills: [...resume.skills, newSkill.trim()].slice(0, 12) };
+      if (resume.skills.length >= maxSkillCount) {
+        setSkillsError(`Maximum of ${maxSkillCount} skills allowed to prevent resume layout overflow`);
+        return;
+      }
+      setSkillsError("");
+      const newResume = { ...resume, skills: [...resume.skills, newSkill.trim()] };
       setResume(newResume);
       setNewSkill("");
       if (resumeId !== 'new') {
@@ -445,10 +450,31 @@ export default function ResumeEditor() {
   const removeSkill = (skillToRemove: string) => {
     const newResume = { ...resume, skills: resume.skills.filter(s => s !== skillToRemove) };
     setResume(newResume);
+    setSkillsError("");
     if (resumeId !== 'new') {
       setAutoSaveStatus("saving");
       debouncedAutoSave(title, newResume);
     }
+  };
+
+  const addSkillFromSuggestion = (skill: string) => {
+    if (resume.skills.includes(skill)) return;
+    if (resume.skills.length >= maxSkillCount) {
+      setSkillsError(`Maximum of ${maxSkillCount} skills allowed to prevent resume layout overflow`);
+      return;
+    }
+    setSkillsError("");
+    const newResume = { ...resume, skills: [...resume.skills, skill] };
+    setResume(newResume);
+    setAiSuggestedSkills((prev) => prev.filter((s) => s !== skill));
+    if (resumeId !== 'new') {
+      setAutoSaveStatus("saving");
+      debouncedAutoSave(title, newResume);
+    }
+  };
+
+  const removeSuggestedSkill = (skill: string) => {
+    setAiSuggestedSkills((prev) => prev.filter((s) => s !== skill));
   };
 
   const getExportElement = () => {
@@ -823,15 +849,20 @@ export default function ResumeEditor() {
 
               {activeTab === "skills" && (
                 <SkillsTab
-                  skills={resume.skills}
-                  jobTitle={resume.personalInfo.jobTitle}
-                  newSkill={newSkill}
-                  setNewSkill={setNewSkill}
-                  addSkill={addSkill}
-                  removeSkill={removeSkill}
-                  generateAISkills={generateAISkills}
-                  aiGenerating={aiGenerating}
-                  aiGeneratingFor={aiGeneratingFor}
+                   skills={resume.skills}
+                   aiSuggestedSkills={aiSuggestedSkills}
+                   jobTitle={resume.personalInfo.jobTitle}
+                   newSkill={newSkill}
+                   setNewSkill={setNewSkill}
+                   addSkill={addSkill}
+                   removeSkill={removeSkill}
+                   addSkillFromSuggestion={addSkillFromSuggestion}
+                   removeSuggestedSkill={removeSuggestedSkill}
+                   generateAISkills={generateAISkills}
+                   aiGenerating={aiGenerating}
+                   aiGeneratingFor={aiGeneratingFor}
+                   skillsError={skillsError}
+                   setSkillsError={setSkillsError}
                 />
               )}
 
