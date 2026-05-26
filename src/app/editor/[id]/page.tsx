@@ -28,6 +28,7 @@ import { useAutoSave } from "@/app/hooks/useAutosave";
 import { ResumeContent } from "@/types/ResumeData";
 import { formatName } from "@/utils/nameFormatter";
 import { getNearestPageHeight } from "@/utils/pageDimension";
+import ResumeIframe from "@/components/resume/ResumeIframe";
 
 export type Tab = "headshot" | "personal" | "summary" | "experience" | "education" | "skills" | "finish";
 
@@ -99,6 +100,11 @@ export default function ResumeEditor() {
     setAutoSaveStatus,
   } = useAutoSave(initialResumeId, initialTemplateId, 5000 );
 
+  const [showLoader, setShowLoader] = useState(true);
+
+  const toggleShowLoader = (toggle?: boolean) => {
+      setShowLoader(prev => toggle??!prev);
+  }
 
   // editor open and close
   const toggleEditorTab = () => {
@@ -122,6 +128,7 @@ export default function ResumeEditor() {
   );
 
   const renderedTemplate = useMemo(() => {
+    toggleShowLoader(true);
     const formattedResume: ResumeContent = { ...resume, skills: resume.skills };
 
     if (!selectedTemplate?.html) return "";
@@ -897,7 +904,14 @@ export default function ResumeEditor() {
           </section>
 
           <section className={styles.previewSection}>
-            <div className={styles.previewCanvas} style={{ aspectRatio: `794 / ${1123 * previewPages}` }}>
+            <ResumeIframe
+              iframeRef={previewIframeRef}
+              type="preview"
+              renderedTemplate={renderedTemplate}
+              editorMode={true}
+              loaderObj={{showLoader, toggleShowLoader}}
+            />
+            {/* <div className={styles.previewCanvas} style={{ aspectRatio: `794 / ${1123 * previewPages}` }}>
               <iframe
                 ref={previewIframeRef}
                 title="Resume preview"
@@ -905,7 +919,7 @@ export default function ResumeEditor() {
                 srcDoc={renderedTemplate}
                 sandbox="allow-scripts allow-same-origin"
               />
-            </div>
+            </div> */}
             <iframe
               ref={exportIframeRef}
               title="Resume export"

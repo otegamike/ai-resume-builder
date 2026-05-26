@@ -203,7 +203,7 @@
   background-color: var(--neutral-100);
   border-right: 1px solid var(--gray-200);
   flex-shrink: 0;
-
+  z-index: 2;
 }
 
 .formNav {
@@ -849,8 +849,10 @@
   align-items: flex-start;
   border-left: 1px solid var(--gray-200);
   box-shadow: var(--shadow-inner);
+  position: relative;
+  z-index: 1;
 }
-
+/* marked for delete */
 .previewCanvas {
   width: min(100%, 54rem);
   aspect-ratio: 794 / 1123;

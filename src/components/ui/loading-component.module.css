@@ -1,0 +1,26 @@
+
+
+.loading_container {
+    width: 100%;
+    height: 100%;
+    background-color: hsl(225 0 0 / 0.3 );
+    backdrop-filter: blur(15px);
+}
+
+.loading_content {
+    position: absolute;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.loading_icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

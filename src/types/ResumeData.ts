@@ -34,3 +34,10 @@ export interface ResumeContent {
   skills: string[];
 }
 
+export interface Resume {
+  _id: string;
+  title: string;
+  updatedAt: string;
+  template: string;
+  content: ResumeContent;
+}

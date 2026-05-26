@@ -10,7 +10,7 @@ import { type TemplateDefinition } from "@/lib/templateCatalog";
 import styles from "./page.module.css";
 import { ResumeContent } from "@/types/ResumeData";
 
-interface Resume {
+export interface Resume {
   _id: string;
   title: string;
   updatedAt: string;
@@ -179,3 +179,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
