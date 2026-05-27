@@ -98,6 +98,9 @@
   overflow: hidden;
   position: relative;
   transition: box-shadow 0.2s;
+  /* Promote to a hardware-accelerated compositor layer to avoid scroll lag during rounded corner clipping */
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .resumeCard:hover {
@@ -113,23 +116,6 @@
   padding: var(--space-4);
   background-color: var(--gray-50);
   overflow: hidden;
-}
-
-.iframeWrapper {
-  width: 100%;
-  aspect-ratio: 794 / 1123;
-  overflow: hidden;
-  box-shadow: 0 0 4px rgba(0,0,0,0.05);
-  background-color: white;
-  border-radius: var(--radius-sm);
-}
-
-.dashboardPreviewIframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-  display: block;
-  pointer-events: none;
 }
 
 .previewPlaceholder {

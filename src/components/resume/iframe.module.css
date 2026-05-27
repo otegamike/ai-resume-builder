@@ -8,6 +8,9 @@
   box-shadow: var(--shadow-lg);
   overflow: hidden;
   position: relative;
+  /* Promote to a hardware-accelerated compositor layer to avoid scroll-sync lag */
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .previewFrame {
@@ -16,7 +19,11 @@
   border: 0;
   display: block;
   overflow: hidden; 
-
+  /* Prevent iframe from swallowing mouse and scroll events, allowing silky smooth scrolling */
+  pointer-events: none;
+  /* Promote to a hardware-accelerated compositor layer */
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .exportFrame {

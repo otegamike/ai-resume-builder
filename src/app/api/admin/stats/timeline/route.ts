@@ -5,25 +5,8 @@ import dbConnect from "@/lib/db";
 import User from "@/models/User";
 import Resume from "@/models/Resume";
 import SiteVisit from "@/models/SiteVisit";
-
-function daysAgo(days: number): Date {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function formatDate(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-interface TimelineEntry {
-  date: string;
-  count: number;
-}
+import { daysAgo, formatDate } from "@/utils/date";
+import type { TimelineEntry } from "@/types/Stats";
 
 function buildDateRange(days: number): string[] {
   const dates: string[] = [];

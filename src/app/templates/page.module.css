@@ -40,34 +40,66 @@
   border-radius: 0.5rem;
   overflow: hidden;
   box-shadow: var(--shadow-sm);
+  /* Promote to a hardware-accelerated compositor layer to avoid scroll lag during rounded corner clipping */
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 
 
 .previewShell {
   width: 100%;
-  aspect-ratio: 794 / 1123;
   overflow: hidden;
   border-bottom: 1px solid var(--gray-200);
   background: var(--gray-100);
-}
-
-.previewFrame {
-  width: 100%;
-  height: 100%;
-  border: 0;
-  display: block;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .cardBody {
   padding: 0.85rem;
 }
 
+.cardTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .cardTitle {
   font-size: 1rem;
   font-weight: 700;
   color: var(--gray-900);
+}
+
+.favButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  transition: transform 0.2s;
+}
+
+.favButton:hover {
+  transform: scale(1.2);
+}
+
+.favIcon {
+  width: 1.15rem;
+  height: 1.15rem;
+  color: var(--gray-400);
+  transition: color 0.2s;
+}
+
+.favIconActive {
+  width: 1.15rem;
+  height: 1.15rem;
+  color: var(--red-500);
+  fill: var(--red-500);
+  transition: color 0.2s;
 }
 
 .cardText {

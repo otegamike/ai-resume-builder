@@ -50,7 +50,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user, account, credentials }) {
+    async signIn({ user, account }) {
       if (!user.email) return false;
       await dbConnect();
 

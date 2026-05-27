@@ -1,0 +1,147 @@
+.container {
+  padding: var(--space-8);
+  max-width: 56rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.header {
+  margin-bottom: var(--space-8);
+}
+
+.title {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  letter-spacing: -0.025em;
+}
+
+.subtitle {
+  color: var(--gray-500);
+  margin-top: var(--space-1);
+}
+
+.card {
+  background-color: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.cardHeader {
+  padding: var(--space-6);
+  border-bottom: 1px solid var(--gray-200);
+  background-color: var(--gray-50);
+}
+
+.cardHeaderTop {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.cardHeaderIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--gray-500);
+}
+
+.cardHeaderTitle {
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+}
+
+.cardHeaderDescription {
+  font-size: var(--text-sm);
+  color: var(--gray-500);
+  margin-top: var(--space-1);
+}
+
+.cardContent {
+  padding: var(--space-6);
+}
+
+.formGrid {
+  display: grid;
+  gap: var(--space-6);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .formGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.formGroupFull {
+  grid-column: span 2;
+}
+
+@media (min-width: 768px) {
+  .formGroupFull {
+    grid-column: span 2;
+  }
+}
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--gray-700);
+}
+
+.labelWithIcon {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.labelIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.input {
+  width: 100%;
+  height: 2.5rem;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  background-color: white;
+  padding: 0 var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--foreground);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary-1);
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.inputHelper {
+  font-size: var(--text-xs);
+  color: var(--gray-400);
+  margin-top: var(--space-1);
+}
+
+.noticeContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.noticeButton {
+  background-color: var(--gray-300);
+  cursor: not-allowed;
+}
+
+.signInMessage {
+  padding: var(--space-8);
+  text-align: center;
+}

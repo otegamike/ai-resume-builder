@@ -2,7 +2,7 @@
 import styles from "../page.module.css";
 import { FileCheck, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Tab } from "../page";
+import { Tab } from "@/app/hooks/useTabNavigation";
 
 interface FinishTabProps {
    changeTab: (newTab: Tab | "next" | "prev") => void

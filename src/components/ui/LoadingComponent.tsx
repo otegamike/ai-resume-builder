@@ -1,6 +1,5 @@
 import styles from './loading-component.module.css'
-import { LoaderCircle } from 'lucide-react' 
-import { useState } from 'react'
+import { LoaderCircle } from 'lucide-react'
 
 interface LoadingComponentProps {
     showLoader: boolean;
@@ -11,8 +10,7 @@ interface LoadingComponentProps {
     loadingText?: string;
 }
 
-function LoadingComponent({ showLoader, toggleShowLoader, containerClassName, contentClassName, iconClassName, loadingText }: LoadingComponentProps) {
-
+function LoadingComponent({ showLoader, containerClassName, contentClassName, iconClassName, loadingText }: LoadingComponentProps) {
   return (
     <>
         {showLoader && (

@@ -1,23 +1,27 @@
 import styles from "./header.module.css";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import useMediaQuery from "@/app/hooks/useMediaQuery";
 
 export default function NavBar({ menuState }: { menuState: boolean }) {
     const [display, setDisplay] = useState<boolean>(false);
     const [animate, setAnimate] = useState<boolean>(false);
 
+    const isMobile = useMediaQuery(640, () => {setDisplay(true)});
+
     useEffect(() => {
-       if (menuState) {
-        setDisplay(menuState);
-            setTimeout(() => {
+        if (!isMobile) { setDisplay(true); return; }
+        if (menuState) {
+            setDisplay(menuState);
+                setTimeout(() => {
+                    setAnimate(menuState);
+                }, 50);
+        } else {
                 setAnimate(menuState);
-            }, 50);
-       } else {
-            setAnimate(menuState);
-            setTimeout(() => {
-                setDisplay(menuState);
-            }, 500);
-       }
+                setTimeout(() => {
+                    setDisplay(menuState);
+                }, 500);
+        }
         
     }, [menuState]);
 

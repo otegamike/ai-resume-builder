@@ -1,0 +1,163 @@
+.container {
+  padding: var(--space-4) var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.header {
+  margin-bottom: 0;
+}
+
+.title {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  letter-spacing: -0.025em;
+  color: var(--primary-900);
+}
+
+.subtitle {
+  color: var(--gray-500);
+  margin-top: var(--space-1);
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--gray-800);
+}
+
+.sectionIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--primary-1);
+
+  /* Optimize layer composition during scrolling */
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.sectionTitle h2 {
+  font-size: inherit;
+  margin: 0;
+
+  /* Optimize layer composition during scrolling */
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-xl);
+  background-color: white;
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+  /* Promote to a hardware-accelerated compositor layer to avoid scroll lag during rounded corner clipping */
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.previewWrap {
+  flex: 1;
+  width: 100%;
+  overflow: hidden;
+  border-bottom: 1px solid var(--gray-100);
+  background-color: var(--gray-50);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+.cardBody {
+  padding: var(--space-4);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.cardTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--gray-800);
+}
+
+.favButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  transition: transform 0.2s;
+}
+
+.favButton:hover {
+  transform: scale(1.15);
+}
+
+.favIcon {
+  width: 1.15rem;
+  height: 1.15rem;
+  color: var(--gray-400);
+  transition: color 0.2s;
+}
+
+.favIconActive {
+  width: 1.15rem;
+  height: 1.15rem;
+  color: var(--red-500);
+  fill: var(--red-500);
+  transition: color 0.2s;
+}
+
+.useButton {
+  width: 100%;
+}
+
+.moreSection {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-4) 0;
+}
+
+.moreButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.btnIcon {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  color: var(--gray-500);
+}

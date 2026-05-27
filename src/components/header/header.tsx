@@ -11,13 +11,16 @@ import Logo from "../svgs/logo";
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
+import useMediaQuery from '@/app/hooks/useMediaQuery';
 
 export default function Header() {
   const pathname = usePathname();
-  const showDashboardLink = pathname !== "/dashboard";
+  const isHome =  pathname === "/";
+  const showDashboardLink = !pathname.startsWith("/dashboard");
   const isAuthPage = pathname.startsWith("/auth/login");
   const { status } = useSession();
   const isSignedIn = status === "authenticated";
+  const isMobile = useMediaQuery(640); // Example breakpoint for mobile devices
 
   const [ isMenuOpen, setIsMenuOpen ] = useState<boolean>(false);
 
@@ -41,7 +44,7 @@ export default function Header() {
         </Link>
         <nav className={styles.nav}>
           <div className={styles.nav__panel__container}>
-            <NavBar menuState={isMenuOpen} />
+            {isHome && <NavBar menuState={isMenuOpen} />}
           </div>
 
           {!isSignedIn && !isAuthPage && (
@@ -58,7 +61,7 @@ export default function Header() {
             </Link>
           )}
 
-          {!isAuthPage && (
+          {!isAuthPage && isMobile && (
             <div className={styles.hamburger}>
               <HamburgerMenu menuPanelProps={menuPanelProps} />
             </div>

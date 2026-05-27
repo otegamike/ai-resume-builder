@@ -14,33 +14,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import styles from "./page.module.css";
-
-interface Stats {
-  totalUsers: number;
-  newUsersToday: number;
-  newUsersThisWeek: number;
-  newUsersThisMonth: number;
-  totalResumes: number;
-  resumesToday: number;
-  resumesThisWeek: number;
-  resumesThisMonth: number;
-  visitsToday: number;
-  visitsThisWeek: number;
-  visitsThisMonth: number;
-  activeUsers: number;
-}
-
-interface TimelineEntry {
-  date: string;
-  count: number;
-}
-
-interface Timeline {
-  visits: TimelineEntry[];
-  signups: TimelineEntry[];
-  resumes: TimelineEntry[];
-  chartData?: { date: string; visits: number; signups: number; resumes: number }[];
-}
+import type { Stats, Timeline } from "@/types/Stats";
 
 export default function AdminDashboardPage() {
   const { data: session, status } = useSession();

@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import ResumeIframe from "@/components/resume/ResumeIframe";
 import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
 import { type TemplateDefinition } from "@/lib/templateCatalog";
 import styles from "./page.module.css";
@@ -131,14 +132,10 @@ export default function DashboardPage() {
             <div key={resume._id} className={styles.resumeCard}>
               <div className={styles.previewArea}>
                 {renderedTemplate ? (
-                  <div className={`${styles.iframeWrapper} hideScrollbar`}>
-                    <iframe
-                      srcDoc={renderedTemplate}
-                      className={styles.dashboardPreviewIframe}
-                      sandbox="allow-same-origin allow-scripts"
-                      tabIndex={-1}
-                    />
-                  </div>
+                  <ResumeIframe
+                    renderedTemplate={renderedTemplate}
+                    type="preview"
+                  />
                 ) : (
                   <div className={styles.previewPlaceholder}>
                     <div className={`${styles.previewLine} ${styles.previewLineHalf}`} style={{ backgroundColor: 'var(--gray-200)', height: '0.5rem' }}></div>

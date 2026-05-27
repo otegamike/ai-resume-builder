@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/Button"
 import { ChevronDown, ChevronUp, Palette } from "lucide-react"
-import { useState } from "react"
 import styles from "./page.module.css"
 import type { TemplateDefinition, TemplateId } from "@/lib/templateCatalog"
 

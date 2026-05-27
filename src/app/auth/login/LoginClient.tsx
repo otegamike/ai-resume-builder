@@ -10,16 +10,6 @@ import { calculateEditorHeight } from "@/utils/headerSize";
 
 // ── SVG Icons ────────────────────────────────────────────────────────────────
 const containerHeight = `${calculateEditorHeight()}px`;
-/** Agentic CV logomark: a stylised "A" with a sparkle */
-function LogoIcon({ size = 20 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2L3 20h18L12 2z" />
-      <path d="M8 14h8" strokeWidth="1.5" />
-      <circle cx="20" cy="4" r="1.5" fill="white" stroke="none" />
-    </svg>
-  );
-}
 
 function CheckIcon() {
   return (

@@ -33,6 +33,6 @@ export const initialResume: ResumeContent = {
   experience: [initialExperience],
   education: [initialEducation],
   skills: ["Project Management", "Problem Solving"]
-} as const;
+};
 
 export const maxSkillCount = 15;

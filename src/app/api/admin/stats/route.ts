@@ -5,19 +5,7 @@ import dbConnect from "@/lib/db";
 import User from "@/models/User";
 import Resume from "@/models/Resume";
 import SiteVisit from "@/models/SiteVisit";
-
-function daysAgo(days: number): Date {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function startOfToday(): Date {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
+import { daysAgo, startOfToday } from "@/utils/date";
 
 export async function GET() {
   const session = await getServerSession(authOptions);

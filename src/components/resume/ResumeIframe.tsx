@@ -30,12 +30,19 @@ function ResumeIframe({ renderedTemplate, iframeRef, type, editorMode = false, l
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
           if (event.data?.type === 'RESIZE_IFRAME' && typeof event.data.pages === 'number') {
-            editorMode && setResumePages(event.data.pages);
-            loaderObj? loaderObj.toggleShowLoader(false) : toggleShowLoader(false);
+            if (editorMode) {
+              setResumePages(event.data.pages);
+            }
+            if (loaderObj) {
+              loaderObj.toggleShowLoader(false);
+            } else {
+              toggleShowLoader(false);
+            }
           }
         };
         window.addEventListener('message', handleMessage);
         return () => window.removeEventListener('message', handleMessage);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
       }, []);
 
 

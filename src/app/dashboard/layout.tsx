@@ -34,13 +34,13 @@ export default function DashboardLayout({
               My Resumes
             </span>
           </Link>
-          <Link href="/templates" className={`${styles.navLink} ${isActive("/templates")}`}>
+          <Link href="/dashboard/templates" className={`${styles.navLink} ${isActive("/dashboard/templates")}`}>
             <LayoutTemplate className={styles.navIcon} />
             <span className={styles.navLinkText}>
               Templates
             </span>
           </Link>
-          <Link href="/settings" className={`${styles.navLink} ${isActive("/settings")}`}>
+          <Link href="/dashboard/settings" className={`${styles.navLink} ${isActive("/dashboard/settings")}`}>
             <Settings className={styles.navIcon} />
             <span className={styles.navLinkText}>
               Settings
