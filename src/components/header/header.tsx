@@ -9,13 +9,16 @@ import { MenuPanelProps } from "./hamburger-menu/hamburgerMenu";
 import { Button } from "../ui/Button";
 import Logo from "../svgs/logo";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import useMediaQuery from '@/app/hooks/useMediaQuery';
 
 export default function Header() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
   const pathname = usePathname();
-  const isHome =  pathname === "/";
+  const showNav = pathname === "/" || pathname === "/pricing";
   const showDashboardLink = !pathname.startsWith("/dashboard");
   const isAuthPage = pathname.startsWith("/auth/login");
   const { status } = useSession();
@@ -44,7 +47,7 @@ export default function Header() {
         </Link>
         <nav className={styles.nav}>
           <div className={styles.nav__panel__container}>
-            {isHome && <NavBar menuState={isMenuOpen} />}
+            {showNav && <NavBar menuState={isMenuOpen} pathname={pathname} />}
           </div>
 
           {!isSignedIn && !isAuthPage && (
@@ -61,7 +64,7 @@ export default function Header() {
             </Link>
           )}
 
-          {!isAuthPage && isMobile && (
+          {mounted && !isAuthPage && isMobile && (
             <div className={styles.hamburger}>
               <HamburgerMenu menuPanelProps={menuPanelProps} />
             </div>

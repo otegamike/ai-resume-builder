@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import useMediaQuery from "@/app/hooks/useMediaQuery";
 
-export default function NavBar({ menuState }: { menuState: boolean }) {
+export default function NavBar({ menuState, pathname }: { menuState: boolean; pathname?: string }) {
     const [display, setDisplay] = useState<boolean>(false);
     const [animate, setAnimate] = useState<boolean>(false);
 
@@ -33,10 +33,10 @@ export default function NavBar({ menuState }: { menuState: boolean }) {
                     <Link className={styles.navLink} href="/templates">
                     <li>Templates</li> 
                     </Link>
-                    <Link className={styles.navLink} href="#features">
+                    <Link className={styles.navLink} href="/#features">
                         <li>Features</li>
                     </Link>
-                    <Link className={styles.navLink} href="#pricing">
+                    <Link className={`${styles.navLink} ${pathname === "/pricing" ? styles.navLinkActive : ""}`} href="/pricing">
                         <li>Pricing</li>
                     </Link>
                 </ul>

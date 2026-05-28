@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Pricing | ResumAI</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "ai-accent": "#6366F1",
+                        "surface-bright": "#f9faf3",
+                        "surface-variant": "#e2e3dc",
+                        "on-tertiary-fixed-variant": "#6d344d",
+                        "text-primary": "#1F2937",
+                        "outline-variant": "#c2c9bc",
+                        "surface": "#f9faf3",
+                        "surface-container-highest": "#e2e3dc",
+                        "primary": "#3f6838",
+                        "pale-mint": "#C7EABB",
+                        "surface-container": "#edeee7",
+                        "tertiary-fixed-dim": "#ffb0ce",
+                        "secondary-fixed-dim": "#a9d292",
+                        "primary-container": "#84b179",
+                        "on-primary-container": "#1b4317",
+                        "on-surface": "#1a1c18",
+                        "inverse-primary": "#a4d398",
+                        "on-tertiary-container": "#602841",
+                        "surface-tint": "#3f6838",
+                        "on-secondary-container": "#496e38",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed": "#002201",
+                        "on-primary": "#ffffff",
+                        "inverse-surface": "#2f312d",
+                        "background": "#f9faf3",
+                        "secondary": "#446832",
+                        "on-primary-fixed-variant": "#275022",
+                        "inverse-on-surface": "#f0f1ea",
+                        "deep-sage": "#84B179",
+                        "dew-green": "#E8F5BD",
+                        "on-background": "#1a1c18",
+                        "leaf-green": "#A2CB8B",
+                        "bg-surface": "#F9FAFB",
+                        "secondary-fixed": "#c4efab",
+                        "error-container": "#ffdad6",
+                        "on-error": "#ffffff",
+                        "secondary-container": "#c4efab",
+                        "primary-fixed-dim": "#a4d398",
+                        "on-secondary-fixed": "#062100",
+                        "on-error-container": "#93000a",
+                        "tertiary-container": "#da90ad",
+                        "primary-fixed": "#c0efb2",
+                        "surface-container-high": "#e8e9e2",
+                        "on-tertiary": "#ffffff",
+                        "surface-dim": "#d9dbd4",
+                        "on-secondary-fixed-variant": "#2d4f1d",
+                        "error": "#EF4444",
+                        "text-secondary": "#4B5563",
+                        "tertiary-fixed": "#ffd9e5",
+                        "surface-container-low": "#f3f4ed",
+                        "on-surface-variant": "#42493f",
+                        "success": "#22C55E",
+                        "on-tertiary-fixed": "#380821",
+                        "tertiary": "#894b65",
+                        "surface-container-lowest": "#ffffff",
+                        "bg-main": "#FFFFFF",
+                        "outline": "#72796e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "0.25rem",
+                        "xl": "2.5rem",
+                        "md": "1rem",
+                        "sm": "0.5rem",
+                        "gutter": "1.5rem",
+                        "lg": "1.5rem",
+                        "container-max": "1280px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "label-caps": ["Plus Jakarta Sans"],
+                        "body-sm": ["Plus Jakarta Sans"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "h3": ["Plus Jakarta Sans"],
+                        "h2": ["Plus Jakarta Sans"],
+                        "h1": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "h3": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "h2": ["36px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "h1": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-switch { transform: translateX(100%); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-background font-body-md text-on-surface selection:bg-pale-mint selection:text-on-primary-container">
+<!-- TopNavBar -->
+<nav class="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 h-16 px-6 md:px-12 w-full mx-auto flex justify-between items-center sticky top-0 z-50">
+<div class="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white font-h1">ResumAI</div>
+<div class="hidden md:flex items-center gap-8">
+<a class="text-gray-600 dark:text-gray-400 hover:text-[#84B179] transition-colors font-body-sm" href="#">Templates</a>
+<a class="text-gray-600 dark:text-gray-400 hover:text-[#84B179] transition-colors font-body-sm" href="#">Features</a>
+<a class="text-[#84B179] font-semibold border-b-2 border-[#84B179] pb-1 font-body-sm" href="#">Pricing</a>
+<a class="text-gray-600 dark:text-gray-400 hover:text-[#84B179] transition-colors font-body-sm" href="#">Resources</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-gray-600 dark:text-gray-400 hover:opacity-80 transition-all duration-200 text-sm font-medium active:scale-95">Sign In</button>
+<button class="bg-[#84B179] text-white px-5 py-2 rounded-lg font-medium text-sm hover:opacity-80 transition-all duration-200 active:scale-95 shadow-sm">Get Started</button>
+</div>
+</nav>
+<main class="relative">
+<!-- Hero Section -->
+<section class="pt-20 pb-12 px-6 text-center max-w-4xl mx-auto">
+<span class="inline-block px-4 py-1.5 mb-6 text-xs font-semibold tracking-wider text-primary uppercase bg-pale-mint rounded-full font-label-caps">Simple Plans for Success</span>
+<h1 class="font-h1 text-h1 text-on-surface mb-6">Simple, transparent pricing</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">
+                Find a plan that fits your career goals. Whether you're just starting out or a seasoned professional, we've got the AI tools to elevate your resume.
+            </p>
+<!-- Billing Toggle -->
+<div class="mt-12 flex items-center justify-center gap-4">
+<span class="text-sm font-medium text-on-surface-variant" id="monthly-label">Monthly</span>
+<button class="relative w-14 h-7 bg-surface-container-highest rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-deep-sage p-1" id="billing-toggle">
+<div class="w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-200 transform" id="toggle-thumb"></div>
+</button>
+<span class="text-sm font-medium text-on-surface" id="annual-label">Annual</span>
+<span class="bg-dew-green text-primary px-3 py-1 rounded-full text-xs font-bold font-label-caps animate-pulse">Save 20%</span>
+</div>
+</section>
+<!-- Pricing Cards Section -->
+<section class="px-6 py-12 max-w-7xl mx-auto">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Free Card -->
+<div class="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant hover:shadow-xl transition-all duration-300 flex flex-col h-full group">
+<div class="mb-8">
+<h3 class="font-h3 text-h3 mb-2">Free</h3>
+<p class="text-on-surface-variant font-body-sm">Best for getting started.</p>
+</div>
+<div class="mb-8">
+<span class="text-4xl font-bold">$0</span>
+<span class="text-on-surface-variant">/mo</span>
+</div>
+<ul class="space-y-4 mb-10 flex-grow">
+<li class="flex items-center gap-3 text-body-sm">
+<span class="material-symbols-outlined text-success" data-icon="check_circle">check_circle</span>
+                            1 Resume
+                        </li>
+<li class="flex items-center gap-3 text-body-sm">
+<span class="material-symbols-outlined text-success" data-icon="check_circle">check_circle</span>
+                            Basic Templates
+                        </li>
+<li class="flex items-center gap-3 text-body-sm opacity-60">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="check_circle">check_circle</span>
+                            AI Content Analysis (Limited)
+                        </li>
+</ul>
+<button class="w-full py-3 px-6 rounded-lg border border-outline text-on-surface font-semibold hover:bg-surface-container transition-colors active:scale-95">Get Started</button>
+</div>
+<!-- Pro Card -->
+<div class="relative p-8 rounded-xl bg-white border-2 border-deep-sage shadow-[0_0_40px_-15px_rgba(132,177,121,0.3)] flex flex-col h-full transform scale-105 z-10 overflow-hidden">
+<div class="absolute top-4 right-4">
+<span class="bg-deep-sage text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest font-label-caps">Most Popular</span>
+</div>
+<div class="mb-8">
+<h3 class="font-h3 text-h3 mb-2 text-deep-sage">Pro</h3>
+<p class="text-on-surface-variant font-body-sm">Best for active job seekers.</p>
+</div>
+<div class="mb-8">
+<span class="text-4xl font-bold" id="pro-price">$12</span>
+<span class="text-on-surface-variant" id="pro-period">/mo</span>
+<p class="text-xs text-primary mt-1 font-medium" id="pro-billing-note">Billed annually</p>
+</div>
+<ul class="space-y-4 mb-10 flex-grow">
+<li class="flex items-center gap-3 text-body-sm">
+<span class="material-symbols-outlined text-deep-sage" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            Unlimited Resumes
+                        </li>
+<li class="flex items-center gap-3 text-body-sm">
+<span class="material-symbols-outlined text-deep-sage" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            Premium Templates
+                        </li>
+<li class="flex items-center gap-3 text-body-sm">
+<span class="material-symbols-outlined text-deep-sage" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                            Unlimited AI Assistant
+                        </li>
+<li class="flex items-center gap-3 text-body-sm">
+<span class="material-symbols-outlined text-deep-sage" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            PDF &amp; DOCX Export
+                        </li>
+<li class="flex items-center gap-3 text-body-sm">
+<span class="material-symbols-outlined text-deep-sage" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            Job Application Tracker
+                        </li>
+</ul>
+<button class="w-full py-4 px-6 rounded-lg bg-deep-sage text-white font-bold hover:opacity-90 transition-opacity shadow-lg active:scale-95">Start Free Trial</button>
+<!-- Subtle AI Glow background effect -->
+<div class="absolute -bottom-20 -right-20 w-40 h-40 bg-pale-mint/20 rounded-full blur-3xl -z-10"></div>
+</div>
+<!-- Enterprise Card -->
+<div class="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant hover:shadow-xl transition-all duration-300 flex flex-col h-full">
+<div class="mb-8">
+<h3 class="font-h3 text-h3 mb-2">Enterprise</h3>
+<p class="text-on-surface-variant font-body-sm">For recruitment teams.</p>
+</div>
+<div class="mb-8">
+<span class="text-4xl font-bold">Custom</span>
+</div>
+<ul class="space-y-4 mb-10 flex-grow">
+<li class="flex items-center gap-3 text-body-sm">
+<span class="material-symbols-outlined text-success" data-icon="check_circle">check_circle</span>
+                            Team Collaboration
+                        </li>
+<li class="flex items-center gap-3 text-body-sm">
+<span class="material-symbols-outlined text-success" data-icon="check_circle">check_circle</span>
+                            Custom Brand Templates
+                        </li>
+<li class="flex items-center gap-3 text-body-sm">
+<span class="material-symbols-outlined text-success" data-icon="check_circle">check_circle</span>
+                            Bulk Export Options
+                        </li>
+<li class="flex items-center gap-3 text-body-sm">
+<span class="material-symbols-outlined text-success" data-icon="check_circle">check_circle</span>
+                            Priority Support
+                        </li>
+</ul>
+<button class="w-full py-3 px-6 rounded-lg border border-outline text-on-surface font-semibold hover:bg-surface-container transition-colors active:scale-95">Contact Sales</button>
+</div>
+</div>
+</section>
+<!-- Compare Plans (Bento Grid Style) -->
+<section class="px-6 py-24 max-w-7xl mx-auto overflow-hidden">
+<h2 class="font-h2 text-h2 text-center mb-16">Compare features</h2>
+<div class="overflow-x-auto rounded-xl border border-outline-variant bg-white">
+<table class="w-full text-left border-collapse min-w-[600px]">
+<thead>
+<tr class="bg-surface-container">
+<th class="p-6 font-semibold font-body-lg text-on-surface">Features</th>
+<th class="p-6 font-semibold font-body-lg text-center">Free</th>
+<th class="p-6 font-semibold font-body-lg text-center text-deep-sage">Pro</th>
+<th class="p-6 font-semibold font-body-lg text-center">Enterprise</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr>
+<td class="p-6 text-on-surface-variant">Resume Limits</td>
+<td class="p-6 text-center">1 active</td>
+<td class="p-6 text-center font-bold text-deep-sage">Unlimited</td>
+<td class="p-6 text-center font-bold">Unlimited</td>
+</tr>
+<tr>
+<td class="p-6 text-on-surface-variant">AI Bullet Point Optimization</td>
+<td class="p-6 text-center">5 per resume</td>
+<td class="p-6 text-center text-deep-sage"><span class="material-symbols-outlined" data-icon="check" data-weight="fill">check</span></td>
+<td class="p-6 text-center font-bold"><span class="material-symbols-outlined" data-icon="check" data-weight="fill">check</span></td>
+</tr>
+<tr>
+<td class="p-6 text-on-surface-variant">Job Description Matching</td>
+<td class="p-6 text-center"><span class="material-symbols-outlined text-outline" data-icon="close">close</span></td>
+<td class="p-6 text-center text-deep-sage"><span class="material-symbols-outlined" data-icon="check" data-weight="fill">check</span></td>
+<td class="p-6 text-center font-bold"><span class="material-symbols-outlined" data-icon="check" data-weight="fill">check</span></td>
+</tr>
+<tr>
+<td class="p-6 text-on-surface-variant">Custom Domain Portfolio</td>
+<td class="p-6 text-center"><span class="material-symbols-outlined text-outline" data-icon="close">close</span></td>
+<td class="p-6 text-center text-deep-sage"><span class="material-symbols-outlined" data-icon="check" data-weight="fill">check</span></td>
+<td class="p-6 text-center font-bold"><span class="material-symbols-outlined" data-icon="check" data-weight="fill">check</span></td>
+</tr>
+<tr>
+<td class="p-6 text-on-surface-variant">Branding Removal</td>
+<td class="p-6 text-center"><span class="material-symbols-outlined text-outline" data-icon="close">close</span></td>
+<td class="p-6 text-center text-deep-sage"><span class="material-symbols-outlined" data-icon="check" data-weight="fill">check</span></td>
+<td class="p-6 text-center font-bold"><span class="material-symbols-outlined" data-icon="check" data-weight="fill">check</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- FAQ Section (Accordion) -->
+<section class="px-6 py-24 bg-surface-container-low">
+<div class="max-w-3xl mx-auto">
+<h2 class="font-h2 text-h2 text-center mb-12">Frequently asked questions</h2>
+<div class="space-y-4">
+<!-- FAQ Item 1 -->
+<div class="group bg-white rounded-xl border border-outline-variant overflow-hidden">
+<button class="w-full p-6 text-left flex justify-between items-center focus:outline-none faq-trigger">
+<span class="font-semibold font-body-lg text-on-surface">Can I cancel my subscription anytime?</span>
+<span class="material-symbols-outlined transition-transform duration-300 transform group-active:scale-90" data-icon="expand_more">expand_more</span>
+</button>
+<div class="faq-content h-0 overflow-hidden transition-all duration-300">
+<div class="p-6 pt-0 text-on-surface-variant text-body-md border-t border-outline-variant">
+                                Yes, you can cancel your subscription at any time through your account settings. If you cancel, your premium features will remain active until the end of your current billing period.
+                            </div>
+</div>
+</div>
+<!-- FAQ Item 2 -->
+<div class="group bg-white rounded-xl border border-outline-variant overflow-hidden">
+<button class="w-full p-6 text-left flex justify-between items-center focus:outline-none faq-trigger">
+<span class="font-semibold font-body-lg text-on-surface">What are AI credits and how do they work?</span>
+<span class="material-symbols-outlined transition-transform duration-300 transform group-active:scale-90" data-icon="expand_more">expand_more</span>
+</button>
+<div class="faq-content h-0 overflow-hidden transition-all duration-300">
+<div class="p-6 pt-0 text-on-surface-variant text-body-md border-t border-outline-variant">
+                                AI credits power our bullet point optimizer and summary generator. Pro users have unlimited credits, while Free users receive a fixed amount upon registration to test our premium AI tools.
+                            </div>
+</div>
+</div>
+<!-- FAQ Item 3 -->
+<div class="group bg-white rounded-xl border border-outline-variant overflow-hidden">
+<button class="w-full p-6 text-left flex justify-between items-center focus:outline-none faq-trigger">
+<span class="font-semibold font-body-lg text-on-surface">Can I export my resume to Word?</span>
+<span class="material-symbols-outlined transition-transform duration-300 transform group-active:scale-90" data-icon="expand_more">expand_more</span>
+</button>
+<div class="faq-content h-0 overflow-hidden transition-all duration-300">
+<div class="p-6 pt-0 text-on-surface-variant text-body-md border-t border-outline-variant">
+                                Absolutely. Pro and Enterprise users can export their resumes in both high-fidelity PDF and fully editable DOCX formats to suit any job application requirement.
+                            </div>
+</div>
+</div>
+<!-- FAQ Item 4 -->
+<div class="group bg-white rounded-xl border border-outline-variant overflow-hidden">
+<button class="w-full p-6 text-left flex justify-between items-center focus:outline-none faq-trigger">
+<span class="font-semibold font-body-lg text-on-surface">Is my data secure with ResumAI?</span>
+<span class="material-symbols-outlined transition-transform duration-300 transform group-active:scale-90" data-icon="expand_more">expand_more</span>
+</button>
+<div class="faq-content h-0 overflow-hidden transition-all duration-300">
+<div class="p-6 pt-0 text-on-surface-variant text-body-md border-t border-outline-variant">
+                                We prioritize your privacy. All your personal data and resumes are encrypted. We never sell your data to third parties, and our AI processing is strictly for enhancing your content.
+                            </div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- CTA Section -->
+<section class="py-24 px-6 text-center max-w-5xl mx-auto">
+<div class="bg-primary-container rounded-3xl p-12 md:p-20 relative overflow-hidden shadow-2xl">
+<div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.4) 1px, transparent 0); background-size: 24px 24px;"></div>
+<div class="relative z-10">
+<h2 class="font-h2 text-h2 text-on-primary-container mb-6">Ready to land your dream job?</h2>
+<p class="text-on-primary-container/80 font-body-lg mb-10 max-w-xl mx-auto">Join over 50,000 professionals who used ResumAI to accelerate their career growth.</p>
+<div class="flex flex-col sm:flex-row gap-4 justify-center">
+<button class="bg-white text-primary font-bold py-4 px-10 rounded-xl hover:bg-opacity-90 transition-all active:scale-95 shadow-lg">Get Started for Free</button>
+<button class="bg-primary border-2 border-primary/20 text-white font-bold py-4 px-10 rounded-xl hover:bg-opacity-90 transition-all active:scale-95 shadow-lg">Schedule a Demo</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 py-12 mt-auto">
+<div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+<div class="space-y-4">
+<div class="text-lg font-bold text-gray-900 dark:text-white font-brand_logo">ResumAI</div>
+<p class="font-body-sm text-gray-500">© 2024 ResumAI. Elevate your career with AI.</p>
+</div>
+<div class="flex flex-wrap gap-x-8 gap-y-4 justify-start md:justify-end">
+<a class="text-xs text-gray-400 hover:text-gray-600 underline decoration-[#84B179] transition-all" href="#">Privacy Policy</a>
+<a class="text-xs text-gray-400 hover:text-gray-600 underline decoration-[#84B179] transition-all" href="#">Terms of Service</a>
+<a class="text-xs text-gray-400 hover:text-gray-600 underline decoration-[#84B179] transition-all" href="#">Cookie Policy</a>
+<a class="text-xs text-gray-400 hover:text-gray-600 underline decoration-[#84B179] transition-all" href="#">Contact Support</a>
+</div>
+</div>
+</footer>
+<script>
+        // Billing Toggle Logic
+        const toggleBtn = document.getElementById('billing-toggle');
+        const thumb = document.getElementById('toggle-thumb');
+        const proPrice = document.getElementById('pro-price');
+        const proPeriod = document.getElementById('pro-period');
+        const proBillingNote = document.getElementById('pro-billing-note');
+        const monthlyLabel = document.getElementById('monthly-label');
+        const annualLabel = document.getElementById('annual-label');
+
+        let isAnnual = true;
+
+        function updatePricing() {
+            if (isAnnual) {
+                thumb.style.transform = 'translateX(1.75rem)';
+                toggleBtn.classList.add('bg-deep-sage');
+                toggleBtn.classList.remove('bg-surface-container-highest');
+                proPrice.textContent = '$12';
+                proPeriod.textContent = '/mo';
+                proBillingNote.style.opacity = '1';
+                annualLabel.classList.add('text-deep-sage');
+                monthlyLabel.classList.remove('text-deep-sage');
+            } else {
+                thumb.style.transform = 'translateX(0)';
+                toggleBtn.classList.remove('bg-deep-sage');
+                toggleBtn.classList.add('bg-surface-container-highest');
+                proPrice.textContent = '$15';
+                proPeriod.textContent = '/mo';
+                proBillingNote.style.opacity = '0';
+                monthlyLabel.classList.add('text-deep-sage');
+                annualLabel.classList.remove('text-deep-sage');
+            }
+        }
+
+        toggleBtn.addEventListener('click', () => {
+            isAnnual = !isAnnual;
+            updatePricing();
+        });
+
+        // Initialize state
+        updatePricing();
+
+        // FAQ Accordion Logic
+        document.querySelectorAll('.faq-trigger').forEach(trigger => {
+            trigger.addEventListener('click', () => {
+                const content = trigger.nextElementSibling;
+                const icon = trigger.querySelector('.material-symbols-outlined');
+                const isOpen = content.style.height !== '0px' && content.style.height !== '';
+
+                // Close all other FAQs
+                document.querySelectorAll('.faq-content').forEach(c => {
+                    c.style.height = '0px';
+                    c.previousElementSibling.querySelector('.material-symbols-outlined').style.transform = 'rotate(0deg)';
+                });
+
+                if (!isOpen) {
+                    content.style.height = content.scrollHeight + 'px';
+                    icon.style.transform = 'rotate(180deg)';
+                } else {
+                    content.style.height = '0px';
+                    icon.style.transform = 'rotate(0deg)';
+                }
+            });
+        });
+    </script>
+</body></html>

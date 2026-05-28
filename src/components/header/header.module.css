@@ -58,6 +58,11 @@
 
 }
 
+.hamburger {
+  display: flex;
+  align-items: center;
+}
+
 .nav__panel__container {
   width: 100%;
 }
@@ -77,6 +82,11 @@
 
 .navLink:hover {
   color: var(--primary-1);
+}
+
+.navLinkActive {
+  color: var(--primary-600);
+  font-weight: var(--font-semibold);
 }
 
 
