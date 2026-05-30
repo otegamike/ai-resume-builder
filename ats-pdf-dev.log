@@ -1,0 +1,13 @@
+
+> resumy-ai@0.1.0 dev
+> next dev --port 3017
+
+▲ Next.js 16.2.3 (Turbopack)
+- Local:         http://localhost:3017
+- Network:       http://172.20.10.3:3017
+✓ Ready in 2.4s
+
+ POST /api/export/pdf 500 in 26.4s (next.js: 3.0s, application-code: 23.3s)
+ POST /api/export/pdf 500 in 21.9s (next.js: 215ms, application-code: 21.7s)
+ POST /api/export/pdf 200 in 7.8s (next.js: 196ms, application-code: 7.6s)
+[?25h

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -9,7 +9,6 @@ import bgStyles from "./animated-bg.module.css";
 import { calculateEditorHeight } from "@/utils/headerSize";
 
 // ── SVG Icons ────────────────────────────────────────────────────────────────
-const containerHeight = `${calculateEditorHeight()}px`;
 
 function CheckIcon() {
   return (
@@ -69,6 +68,11 @@ export default function LoginClient({ callbackUrl }: { callbackUrl: string }) {
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [containerHeight, setContainerHeight] = useState("100vh");
+
+  useEffect(() => {
+    setContainerHeight(`${calculateEditorHeight()}px`);
+  }, []);
 
   if (status === "authenticated") {
     router.replace(callbackUrl);

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Loader2, Trash2, Upload, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import styles from "../page.module.css";
+import formNavStyles from './formNav.module.css';
 
 interface HeadshotTabProps {
   photo?: string;
@@ -55,7 +56,7 @@ export default function HeadshotTab({ photo, onChange }: HeadshotTabProps) {
     <div className={styles.formSection}>
       <div className={styles.formTitleHeader}>
         <h2 className={styles.formSectionTitle}>Headshot</h2>
-        <p className={styles.formSectionDescription}>Add a professional headshot to your resume to help you stand out from the rest.</p>
+        <p className={`${formNavStyles.headshot_description} ${styles.formSectionDescription}`}>Add a professional headshot to your resume to help you stand out from the rest.</p>
       </div>
       <div className={styles.formGrid}>
         <div className={`${styles.formGroup} ${styles.formGroupFull}`}>

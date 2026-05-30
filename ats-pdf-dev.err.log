@@ -1,0 +1,24 @@
+Failed to export PDF: Error [TimeoutError]: page.setContent: Timeout 20000ms exceeded.
+Call log:
+[2m  - setting frame content, waiting until "networkidle"[22m
+
+    at POST (src\app\api\export\pdf\route.ts:144:16)
+  142 |     });
+  143 |
+> 144 |     await page.setContent(html, { waitUntil: "networkidle", timeout: 20_000 });
+      |                ^
+  145 |     await waitForTemplateLayout(page);
+  146 |     await page.addStyleTag({ content: buildPrintCss() });
+  147 |
+Failed to export PDF: Error [TimeoutError]: page.setContent: Timeout 20000ms exceeded.
+Call log:
+[2m  - setting frame content, waiting until "domcontentloaded"[22m
+
+    at POST (src\app\api\export\pdf\route.ts:146:16)
+  144 |     });
+  145 |
+> 146 |     await page.setContent(html, { waitUntil: "domcontentloaded", timeout: 20_000 });
+      |                ^
+  147 |     await waitForTemplateLayout(page);
+  148 |     await page.addStyleTag({ content: buildPrintCss() });
+  149 |

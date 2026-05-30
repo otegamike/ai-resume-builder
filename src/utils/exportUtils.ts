@@ -1,5 +1,6 @@
 import html2pdf from "html2pdf.js";
-import { getNearestPageHeight } from "@/utils/pageDimension";
+import type { ResumeContent } from "@/types/ResumeData";
+import type { TemplateId } from "@/lib/templateCatalog";
 
 function replaceImagesWithDivs(clonedDoc: Document) {
   const images = clonedDoc.querySelectorAll("img");
@@ -66,47 +67,41 @@ function buildOncloneHandler(cvAdjust?: (cv: HTMLElement) => void) {
   };
 }
 
+function sanitizeFilename(value: string) {
+  return (value || "resume").replace(/[\\/:*?"<>|]+/g, "-").trim() || "resume";
+}
+
 export async function exportResumeAsPdf(
-  exportIframeRef: React.RefObject<HTMLIFrameElement | null>,
+  resume: ResumeContent,
+  templateId: TemplateId,
   title: string,
-  pageWidth: number,
-  pageHeight: number,
 ): Promise<void> {
-  const element = getExportElement(exportIframeRef);
-  const iframeWindow = exportIframeRef.current?.contentWindow;
-  if (!element || !iframeWindow) return;
+  const response = await fetch("/api/export/pdf", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ resume, templateId, title }),
+  });
 
-  await new Promise((r) => setTimeout(r, 500));
+  if (!response.ok) {
+    let message = "Failed to export PDF";
+    try {
+      const payload = await response.json();
+      if (typeof payload?.error === "string") message = payload.error;
+    } catch {
+      // The route may fail before returning JSON; keep the generic message.
+    }
+    throw new Error(message);
+  }
 
-  html2pdf()
-    .set({
-      margin: 15,
-      filename: `${title || "resume"}.pdf`,
-      image: { type: "jpeg" as const, quality: 0.98 },
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-        logging: true,
-        onclone: buildOncloneHandler((cv) => {
-          cv.style.height = "auto";
-          void cv.offsetHeight;
-          const initialHeight = cv.getBoundingClientRect().height;
-          const finalHeight = getNearestPageHeight(initialHeight);
-          cv.style.height = finalHeight + "px";
-          cv.style.overflow = "visible";
-          cv.style.minHeight = "0";
-          cv.style.borderRadius = "0";
-          cv.style.marginTop = "0";
-        }),
-      },
-      jsPDF: {
-        unit: "px" as const,
-        format: [pageWidth, pageHeight] as [number, number],
-        orientation: "portrait" as const,
-      },
-    })
-    .from(element)
-    .save();
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${sanitizeFilename(title)}.pdf`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 export async function exportResumeAsImage(

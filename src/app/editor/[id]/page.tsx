@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams, useSearchParams } from "next/navigation";
@@ -11,7 +11,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
-import { TEMPLATE_PAGE, type TemplateDefinition, type TemplateId } from "@/lib/templateCatalog";
+import { type TemplateDefinition, type TemplateId } from "@/lib/templateCatalog";
 import TemplateSelector from "./TemplateSelector";
 import PersonalDetailsTab from "./form-nav/PersonalDetailsTab";
 import HeadshotTab from "./form-nav/HeadshotTab";
@@ -31,6 +31,7 @@ import { exportResumeAsPdf, exportResumeAsImage } from "@/utils/exportUtils";
 import { addRecentlyUsedTemplate } from "@/utils/templateStorage";
 import type { ResumeContent } from "@/types/ResumeData";
 import ResumeIframe from "@/components/resume/ResumeIframe";
+import LoadingComponent from "@/components/ui/LoadingComponent";
 
 export default function ResumeEditor() {
   const params = useParams();
@@ -41,6 +42,7 @@ export default function ResumeEditor() {
   const initialResumeId = params.id as string;
   const [title, setTitle] = useState("");
 
+  const [isExporting, setIsExporting] = useState(false);
   const [templateDefinitions, setTemplateDefinitions] = useState<TemplateDefinition[]>([]);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [showExportOption, setShowExportOption] = useState(false);
@@ -177,7 +179,7 @@ export default function ResumeEditor() {
         }
       } catch {
         setError("Failed to load templates");
-      }
+      } 
     };
     loadTemplates();
   }, []);
@@ -220,12 +222,23 @@ export default function ResumeEditor() {
     saveTemplate(newTemplate);
   };
 
-  const exportPDF = useCallback(() => {
-    exportResumeAsPdf(exportIframeRef, title, TEMPLATE_PAGE.widthPx, TEMPLATE_PAGE.heightPx);
-  }, [title]);
+  const exportPDF = useCallback(async () => {
+    setIsExporting(true);
+    try {
+      await exportResumeAsPdf(resume, templateId, title)
+    } catch (exportError) {
+      console.error("Failed to export PDF:", exportError);
+      window.alert(exportError instanceof Error ? exportError.message : "Failed to export PDF");
+    } finally {
+      setIsExporting(false);
+    }
+  }, [resume, templateId, title]);
 
   const exportImage = useCallback(() => {
-    exportResumeAsImage(exportIframeRef, title);
+    setIsExporting(true);
+    exportResumeAsImage(exportIframeRef, title).finally(() => {
+      setIsExporting(false);
+    });
   }, [title]);
 
   useEffect(() => {
@@ -325,11 +338,11 @@ export default function ResumeEditor() {
             </Button>
             {showExportOption && (
               <div className={styles.dropdown}>
-                <button onClick={() => exportPDF()} className={`${styles.dropdown_option} ${styles.export_option}`}>
+                <button onClick={() => exportPDF()} className={`${styles.dropdown_option} ${styles.export_option}`} disabled={isExporting || saving}>
                   <Download className={styles.exportIcon} />
                   Export PDF
                 </button>
-                <button onClick={() => exportImage()} className={`${styles.dropdown_option} ${styles.export_option}`}>
+                <button onClick={() => exportImage()} className={`${styles.dropdown_option} ${styles.export_option}`} disabled={isExporting || saving}>
                   <ImageIcon className={styles.exportIcon} />
                   Export Image
                 </button>
@@ -456,6 +469,7 @@ export default function ResumeEditor() {
               sandbox="allow-same-origin"
             />
           </section>
+          <LoadingComponent showLoader={isExporting} containerClassName={styles.exportLoaderContainer} contentClassName={styles.exportLoaderContent} loadingText="Generating PDF..." />
         </main>
       </div>
     </div>
@@ -481,11 +495,11 @@ function NavigationPanel({ activeTab, changeTab, getTabIndex }: NavigationPanelP
         ))}
       </div>
       <div className={styles.tabNavigation}>
-        <Button variant="outline" className={styles.previousButton} disabled={getTabIndex(activeTab) === 0} onClick={() => changeTab("prev")}>
+        <Button size="sm" variant="outline" className={styles.previousButton} disabled={getTabIndex(activeTab) === 0} onClick={() => changeTab("prev")}>
           <ArrowLeft className={styles.tabNavigationIcon} />
           Previous
         </Button>
-        <Button className={styles.nextButton} disabled={getTabIndex(activeTab) === TAB_ARRAY.length - 1} onClick={() => changeTab("next")}>
+        <Button size="sm" className={styles.nextButton} disabled={getTabIndex(activeTab) === TAB_ARRAY.length - 1} onClick={() => changeTab("next")}>
           Next
           <ArrowRight className={styles.tabNavigationIcon} />
         </Button>

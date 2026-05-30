@@ -1,14 +1,17 @@
 export function getHeaderHeight() {
+    if (typeof document === 'undefined') return 0;
     const header = document.querySelector('header') as HTMLElement;
     return header?.offsetHeight || 0;
 }
 
 export function gettitleBarHeight() {
+    if (typeof document === 'undefined') return 0;
     const header = document.querySelector('header') as HTMLElement;
     return header?.offsetHeight || 0;
 }
 
 export function getViewportHeight() {
+    if (typeof window === 'undefined') return 0;
     const viewportHeight = window.innerHeight;
     return viewportHeight;
 }
