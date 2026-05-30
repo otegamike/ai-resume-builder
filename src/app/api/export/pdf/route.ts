@@ -8,6 +8,12 @@ import type { Browser } from "playwright-core";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+interface ExportPdfPayload {
+  title?: string;
+  templateId?: string;
+  resume?: ResumeContent;
+}
+
 let browserPromise: Promise<Browser> | null = null;
 
 async function getBrowser(): Promise<Browser> {
