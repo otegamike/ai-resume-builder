@@ -1,7 +1,5 @@
-import fs from "fs";
-import path from "path";
 import { NextResponse } from "next/server";
-import { chromium, type Browser } from "playwright";
+import { chromium, type Browser } from "playwright-core";
 import { buildTemplateSrcDoc } from "@/lib/templateRenderer";
 import { getTemplateDefinition, isTemplateId } from "@/lib/templateServer";
 import { TEMPLATE_PAGE, type TemplateId } from "@/lib/templateCatalog";
@@ -18,32 +16,28 @@ interface ExportPdfPayload {
   resume?: ResumeContent;
 }
 
-function findCachedChromiumExecutable() {
-  const defaultPath = chromium.executablePath();
-  if (fs.existsSync(defaultPath)) return defaultPath;
+async function getBrowser(): Promise<Browser> {
+  if (browserPromise) return browserPromise;
 
-  const cacheRoot = process.env.PLAYWRIGHT_BROWSERS_PATH
-    || (process.env.LOCALAPPDATA ? path.join(process.env.LOCALAPPDATA, "ms-playwright") : "");
+  browserPromise = (async () => {
+    if (process.env.NODE_ENV === "development") {
+      return chromium.launch({
+        headless: true,
+        args: ["--no-sandbox", "--disable-dev-shm-usage"],
+      });
+    }
 
-  if (!cacheRoot || !fs.existsSync(cacheRoot)) return undefined;
-
-  const candidates = fs.readdirSync(cacheRoot)
-    .filter((entry) => entry.startsWith("chromium-"))
-    .sort()
-    .reverse()
-    .map((entry) => path.join(cacheRoot, entry, "chrome-win64", "chrome.exe"));
-
-  return candidates.find((candidate) => fs.existsSync(candidate));
-}
-
-function getBrowser() {
-  const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || findCachedChromiumExecutable();
-
-  browserPromise ??= chromium.launch({
-    headless: true,
-    executablePath,
-    args: ["--no-sandbox", "--disable-dev-shm-usage"],
+    const sparticuzChromium = await import("@sparticuz/chromium");
+    return chromium.launch({
+      args: sparticuzChromium.default.args,
+      executablePath: await sparticuzChromium.default.executablePath(),
+      headless: true,
+    });
+  })().catch((err) => {
+    browserPromise = null;
+    throw err;
   });
+
   return browserPromise;
 }
 
