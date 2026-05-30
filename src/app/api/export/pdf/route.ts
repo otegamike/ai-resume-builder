@@ -1,25 +1,21 @@
 import { NextResponse } from "next/server";
-import { chromium, type Browser } from "playwright-core";
+import { TEMPLATE_PAGE, type TemplateId } from "@/lib/templateCatalog";
 import { buildTemplateSrcDoc } from "@/lib/templateRenderer";
 import { getTemplateDefinition, isTemplateId } from "@/lib/templateServer";
-import { TEMPLATE_PAGE, type TemplateId } from "@/lib/templateCatalog";
 import type { ResumeContent } from "@/types/ResumeData";
+import type { Browser } from "playwright-core";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 let browserPromise: Promise<Browser> | null = null;
 
-interface ExportPdfPayload {
-  title?: string;
-  templateId?: string;
-  resume?: ResumeContent;
-}
-
 async function getBrowser(): Promise<Browser> {
   if (browserPromise) return browserPromise;
 
   browserPromise = (async () => {
+    const { chromium } = await import("playwright-core");
+
     if (process.env.NODE_ENV === "development") {
       return chromium.launch({
         headless: true,
