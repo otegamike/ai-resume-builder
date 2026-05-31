@@ -2,7 +2,6 @@ import fs from "fs";
 import path from "path";
 import { NextResponse } from "next/server";
 import { chromium as playwright, type Browser } from "playwright-core";
-import "playwright-core/browsers.json";
 import { buildTemplateSrcDoc } from "@/lib/templateRenderer";
 import { getTemplateDefinition, isTemplateId } from "@/lib/templateServer";
 import { TEMPLATE_PAGE, type TemplateId } from "@/lib/templateCatalog";
