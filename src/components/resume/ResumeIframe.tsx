@@ -59,7 +59,6 @@ function ResumeIframe({ renderedTemplate, iframeRef, type, editorMode = false, l
         />
         <LoadingComponent 
             showLoader={loaderObj?.showLoader ?? showLoader} 
-            toggleShowLoader={toggleShowLoader} 
             containerClassName={styles.loadingContainer}
             contentClassName={styles.loadingContent}
         />

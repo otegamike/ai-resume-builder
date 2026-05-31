@@ -3,7 +3,6 @@ import { LoaderCircle } from 'lucide-react'
 
 interface LoadingComponentProps {
     showLoader: boolean;
-    toggleShowLoader: (toggle: boolean) => void;
     containerClassName?: string;
     contentClassName?: string;
     iconClassName?: string;

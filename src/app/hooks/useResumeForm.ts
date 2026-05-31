@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import type { ResumeContent } from "@/types/ResumeData";
 import { initialResume, maxSkillCount } from "@/constants/ResumeConstants";
 import { formatName } from "@/utils/nameFormatter";
+import type { Tab } from "./useTabNavigation";
 
 export function useResumeForm(onChange?: (next: ResumeContent) => void) {
   const [resume, setResume] = useState<ResumeContent>(initialResume);
@@ -109,6 +110,38 @@ export function useResumeForm(onChange?: (next: ResumeContent) => void) {
     setAiSuggestedSkills(prev => prev.filter(s => s !== skill));
   }, []);
 
+  const formFilled = useCallback((activeTab: Tab): boolean => {
+    switch (activeTab) {
+      case "personal":
+        const personalInfoFilled = (resume.personalInfo.name && resume.personalInfo.jobTitle && resume.personalInfo.email && resume.personalInfo.phone && resume.personalInfo.website && resume.personalInfo.location)? true : false;
+        return personalInfoFilled;
+      case "summary":
+        return (resume.summary.length > 0);
+      case "experience":
+        {
+          if (resume.experience && resume.experience.length === 0) return false;
+          if (resume.experience && resume.experience.length > 0) {
+            const unfilledExperience = resume.experience.some((exp) => !exp.company || !exp.role || !exp.startDate || !exp.endDate || !exp.description);
+            return !unfilledExperience;
+          }
+          return false;
+        }
+      case "education":
+        {
+          if (resume.education && resume.education.length === 0) return false;
+          if (resume.education && resume.education.length > 0) {
+            const unfilledEducation = resume.education.some((edu) => !edu.school || !edu.degree || !edu.startDate || !edu.endDate);
+            return !unfilledEducation;
+          }
+          return false;
+        }
+      case "skills":
+        return resume.skills.length > 0;
+      default:
+        return false;
+    }
+  }, [resume]);
+
   return {
     resume, setResume,
     newSkill, setNewSkill,
@@ -127,5 +160,6 @@ export function useResumeForm(onChange?: (next: ResumeContent) => void) {
     removeSkill,
     addSkillFromSuggestion,
     removeSuggestedSkill,
+    formFilled,
   };
 }
