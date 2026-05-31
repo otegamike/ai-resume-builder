@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { NextResponse } from "next/server";
-import { chromium, type Browser } from "playwright";
+import { chromium as playwright, type Browser } from "playwright-core";
 import { buildTemplateSrcDoc } from "@/lib/templateRenderer";
 import { getTemplateDefinition, isTemplateId } from "@/lib/templateServer";
 import { TEMPLATE_PAGE, type TemplateId } from "@/lib/templateCatalog";
@@ -19,7 +19,7 @@ interface ExportPdfPayload {
 }
 
 function findCachedChromiumExecutable() {
-  const defaultPath = chromium.executablePath();
+  const defaultPath = playwright.executablePath();
   if (fs.existsSync(defaultPath)) return defaultPath;
 
   const cacheRoot = process.env.PLAYWRIGHT_BROWSERS_PATH
@@ -36,14 +36,24 @@ function findCachedChromiumExecutable() {
   return candidates.find((candidate) => fs.existsSync(candidate));
 }
 
-function getBrowser() {
-  const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || findCachedChromiumExecutable();
+async function getBrowser() {
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    const sparticuzChromium = (await import("@sparticuz/chromium")).default;
+    (sparticuzChromium as any).setGraphicsMode = false;
 
-  browserPromise ??= chromium.launch({
-    headless: true,
-    executablePath,
-    args: ["--no-sandbox", "--disable-dev-shm-usage"],
-  });
+    browserPromise ??= playwright.launch({
+      args: sparticuzChromium.args,
+      executablePath: await sparticuzChromium.executablePath(),
+      headless: true,
+    });
+  } else {
+    const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || findCachedChromiumExecutable();
+    browserPromise ??= playwright.launch({
+      headless: true,
+      executablePath,
+      args: ["--no-sandbox", "--disable-dev-shm-usage"],
+    });
+  }
   return browserPromise;
 }
 
