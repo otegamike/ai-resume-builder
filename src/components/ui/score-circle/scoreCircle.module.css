@@ -1,0 +1,81 @@
+
+/* 1. Register the custom percentage property so it can be animated */
+@property --score-percent {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
+@property --score-percent-report {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
+@property --score-percent-color {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: hsl(0, 100%, 60%);
+}
+
+
+.score_circle {
+  /* Dimensions of your circle */
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  
+  /* Layout to center the inner text */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  
+  /* 2. The conic gradient mimics the outer border thickness */
+  background: conic-gradient(
+    var(--score-percent-color) var(--score-percent), /* Active color (Blue) */
+    #e5e7eb var(--score-percent)  /* Track color (Gray) */
+  );
+  
+  /* Apply your multi-stage timeline from earlier */
+  animation: 
+    introFill 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards,
+    breatheLoop 3s ease-in-out 2.5s infinite alternate;
+}
+
+/* 3. The inner mask that creates the "border" effect */
+.score_circle::before {
+  content: '';
+  position: absolute;
+  /* Adjust these sizes to change the border thickness */
+  inset: 12px; 
+  background-color: #ffffff; /* Matches your page background */
+  border-radius: 50%;
+  z-index: 1;
+}
+
+/* Ensure text sits on top of the mask layer */
+.score_text {
+  position: relative;
+  z-index: 2;
+  font-family: sans-serif;
+  font-size: 1.75rem;
+  font-weight: bold;
+  color: #1f2937;
+}
+
+/* ===================================================
+   ANIMATION TIMELINES
+   =================================================== */
+
+/* Stage 1: Fills up smoothly to the final score layout once */
+@keyframes introFill {
+  from { --score-percent: 0%; --score-percent-color: hsl(0, 100%, 60%); }
+  to { --score-percent: var(--score-percent-report); --score-percent-color: var(--score-percent-color-report); } /* Put your target score here */
+}
+
+/* Stage 2: Subtly breathes back and forth around the score after loading */
+@keyframes breatheLoop {
+  from { --score-percent: calc(var(--score-percent-report) - 4%) }
+  to { --score-percent: var(--score-percent-report); }
+}

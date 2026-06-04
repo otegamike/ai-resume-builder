@@ -133,8 +133,37 @@
   }
 }
 
+@property --gradient-1 {
+  syntax: '<color>';
+  initial-value: hsl(0 0% 100% / 0.55);
+  inherits: false;
+}
+
+@property --gradient-2 {
+  syntax: '<color>';
+  initial-value: hsl(0 0% 100% / 0.55);
+  inherits: false;
+}
+
+@property --gradient-position-1 {
+  syntax: '<percentage>';
+  initial-value: 20%;
+  inherits: false;
+}
+
+@property --gradient-position-2 {
+  syntax: '<percentage>';
+  initial-value: 80%;
+  inherits: false;
+}
+
 .pricingCard {
-  background: hsl(0 0% 100% / 0.55);
+  
+  --radial-gradient-1: radial-gradient(circle at var(--gradient-position-1) 80%, var(--gradient-1) 0%, transparent 60%);
+  --radial-gradient-2: radial-gradient(circle at var(--gradient-position-2) 20%, var(--gradient-2) 0%, transparent 60%);
+  --card-bg: var(--radial-gradient-1), var(--radial-gradient-2), hsl(0 0% 100% / 0.55); ;
+
+  background: var(--card-bg);
   border: 1px solid hsl(0 0% 100% / 0.4);
   border-radius: var(--radius-2xl);
   padding: var(--space-8);
@@ -144,56 +173,30 @@
     0 2px 4px rgb(0 0 0 / 0.04),
     0 12px 40px rgb(0 0 0 / 0.06);
   backdrop-filter: blur(16px);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.5s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease,--gradient-1 0.5s ease,--gradient-2 0.5s ease;
   opacity: 0;
-  animation: cardEnter 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: 
+    animateGradient 10s ease-in-out infinite,
+    cardEnter 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .pricingCard:hover {
-  background:
-  radial-gradient(
-    circle at 20% 80%,
-    hsl(0 100% 71% / 0.3) 0%,
-    transparent 60%
-  ),
-  radial-gradient(
-    circle at 80% 20%,
-    hsl(210 100% 60% / 0.3) 0%,
-    transparent 60%
-  ),
-  hsl(240 28% 85% / 0.2);
+  --gradient-1: hsl(0 100% 71% / 0.3);
+  --gradient-2: hsl(210 100% 60% / 0.3);
+
   transform: translateY(-4px);
   box-shadow:
     0 4px 8px rgb(0 0 0 / 0.06),
-    0 20px 60px rgb(0 0 0 / 0.1);
+    0 20px 60px rgb(0 0 0 / 0.1)
+  ;
+
+  .ctaBtn {
+    border-color: var(--neutral-500);
+    
+  }
+    
 }
 
-.pricingCard.isPro {
-  background: hsl(0 0% 100% / 0.72);
-  border: 2px solid var(--primary-400);
-  box-shadow:
-    0 0 0 4px hsl(120 24% 55% / 0.15),
-    0 4px 8px rgb(0 0 0 / 0.06),
-    0 20px 60px rgb(0 0 0 / 0.1);
-  transform: scale(1.04);
-  z-index: 1;
-}
-
-.pricingCard.isPro:hover {
-  background:
-  radial-gradient(
-    circle at 20% 80%,
-    hsl(0 100% 81% / 0.3) 0%,
-    transparent 60%
-  ),
-  radial-gradient(
-    circle at 80% 20%,
-    hsl(210 100% 70% / 0.3) 0%,
-    transparent 60%
-  ),
-  hsl(240 28% 95% / 0.2);
-  transform: scale(1.04) translateY(-4px);
-}
 
 @keyframes cardEnter {
   from {
@@ -222,6 +225,21 @@
   to {
     opacity: 1;
     transform: scale(1.04);
+  }
+}
+
+@keyframes animateGradient {
+  0% {
+    --gradient-position-1: 20%;
+    --gradient-position-2: 80%;
+  }
+  50% {
+    --gradient-position-1: 80%;
+    --gradient-position-2: 20%;
+  }
+  100% {
+    --gradient-position-1: 20%;
+    --gradient-position-2: 80%;
   }
 }
 
@@ -337,14 +355,16 @@
   cursor: pointer;
   transition: all 0.2s ease;
   border: 1px solid var(--neutral-200);
-  background: transparent;
+  background-color: transparent;
   color: var(--neutral-700);
   font-family: inherit;
   text-decoration: none;
+
+  transition: 0.3s border-color ease, background-color 0.3s ease;
 }
 
 .ctaBtn:hover {
-  background: var(--neutral-100);
+  background-color: var(--neutral-50);
   border-color: var(--neutral-300);
   transform: translateY(-1px);
 }

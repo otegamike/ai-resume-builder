@@ -6,8 +6,8 @@ import styles from "./header.module.css";
 import NavBar from "./NavBar";
 import HamburgerMenu from "./hamburger-menu/hamburgerMenu";
 import { MenuPanelProps } from "./hamburger-menu/hamburgerMenu";
-import { Button } from "../ui/Button";
 import Logo from "../svgs/logo";
+import NavBarCTA from "./NavBarCTA";
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
@@ -35,6 +35,7 @@ export default function Header() {
     isMenuOpen,
     toggleMenu
   }
+  
 
   return (
     <header className={styles.header}>
@@ -50,18 +51,8 @@ export default function Header() {
             {showNav && <NavBar menuState={isMenuOpen} pathname={pathname} />}
           </div>
 
-          {!isSignedIn && !isAuthPage && (
-            <span className={styles.clerk_button}>
-              <Link href="/auth/login">
-                <Button size="sm">Sign In</Button>
-              </Link>
-            </span>
-          )}
-
-          {isSignedIn && showDashboardLink && !isAuthPage && (
-            <Link href="/dashboard">
-              <Button size="sm">Dashboard</Button>
-            </Link>
+          {showDashboardLink && !isAuthPage && (
+            <NavBarCTA status={status} />
           )}
 
           {mounted && !isAuthPage && isMobile && (
@@ -74,3 +65,4 @@ export default function Header() {
     </header>
   )
 }
+

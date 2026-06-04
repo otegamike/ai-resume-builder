@@ -10,6 +10,7 @@ import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer
 import { type TemplateDefinition } from "@/lib/templateCatalog";
 import styles from "./page.module.css";
 import { ResumeContent } from "@/types/ResumeData";
+import LoadingComponent from "@/components/ui/LoadingComponent";
 
 export interface Resume {
   _id: string;
@@ -104,6 +105,7 @@ export default function DashboardPage() {
   
   return (
     <div className={styles.container}>
+
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>My Resumes</h1>

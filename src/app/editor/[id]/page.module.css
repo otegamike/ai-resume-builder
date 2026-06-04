@@ -617,10 +617,9 @@
 }
 
 .skillsCountBadgeMax {
-  background-color: rgba(239, 68, 68, 0.08);
-  color: #dc2626;
-  border-color: rgba(239, 68, 68, 0.2);
-  animation: pulse-border 1.5s infinite;
+  background-color: hsl(131 55% 96%);
+  color: #34b54c;
+  border-color: #34b54c;
 }
 
 .skillsProgressBarContainer {
@@ -644,7 +643,7 @@
 }
 
 .skillsProgressBarMax {
-  background-color: #ef4444;
+  background-color: #34b54c;
 }
 
 .skillsWarningBanner {
@@ -652,17 +651,17 @@
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
-  background-color: rgba(239, 68, 68, 0.04);
-  border: 1px solid rgba(239, 68, 68, 0.25);
+  background-color: var(--neutral-100);
+  border: 1px solid var(--neutral-500);
   border-radius: var(--radius-md);
-  color: #b91c1c;
+  color: var(--neutral-500);
 }
 
 .skillsWarningIcon {
   width: 1rem;
   height: 1rem;
   flex-shrink: 0;
-  stroke: #ef4444;
+  stroke: var(--neutral-500);
 }
 
 .skillsWarningText {
@@ -777,6 +776,7 @@
   border: 1px solid rgba(59, 130, 246, 0.12);
   border-radius: var(--radius-lg);
   margin-top: var(--space-4);
+  margin-bottom: 8rem;
 }
 
 .suggestedPlaceholderIcon {

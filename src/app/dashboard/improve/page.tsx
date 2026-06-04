@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/Button";
 import { AtsIssue, AtsReport } from "@/types/AtsReport";
 import { ResumeContent } from "@/types/ResumeData";
 import styles from "./page.module.css";
+import ScoreCircle from "@/components/ui/score-circle/ScoreCircle";
+import { CircleCheck } from "lucide-react";
 
 interface SavedResume {
   _id: string;
@@ -256,10 +258,7 @@ export default function ImproveResumePage() {
       {report && (
         <section className={styles.reportGrid}>
           <article className={styles.scorePanel}>
-            <div className={styles.scoreCircle}>
-              <span>{report.score}</span>
-              <small>/100</small>
-            </div>
+            <ScoreCircle score={report.score} />
             <div>
               <h2 className={styles.sectionTitle}>ATS rating</h2>
               <p className={styles.verdict}>{report.verdict}</p>
@@ -273,7 +272,10 @@ export default function ImproveResumePage() {
             <h2 className={styles.sectionTitle}>Strengths</h2>
             <ul className={styles.cleanList}>
               {report.strengths.map((strength, index) => (
-                <li key={`${strength}-${index}`}>{strength}</li>
+                <li key={`${strength}-${index}`}>
+                  <CircleCheck size={25} className={styles.checkIcon} />
+                  {strength}
+                </li>
               ))}
             </ul>
           </article>
@@ -293,15 +295,16 @@ export default function ImproveResumePage() {
             <h2 className={styles.sectionTitle}>Flagged ATS issues</h2>
             <div className={styles.issueList}>
               {report.issues.map((issue, index) => (
-                <div key={`${issue.title}-${index}`} className={styles.issue}>
-                  <span className={`${styles.severity} ${severityClass(issue)}`}>
-                    {issue.severity}
-                  </span>
-                  <div>
+                <div key={`${issue.title}-${index}`} className={`${styles.issue} ${issue.severity === 'high' ? styles.highIssue : issue.severity === 'medium' ? styles.mediumIssue : styles.lowIssue}`}>
+                  <div className={styles.issueHeader}>
                     <h3>{issue.title}</h3>
-                    <p>{issue.detail}</p>
-                    <strong>{issue.suggestion}</strong>
+                    <span className={`${styles.severity} ${severityClass(issue)}`}>
+                      {issue.severity}
+                    </span>
                   </div>
+                  <p>{issue.detail}</p>
+                  <strong>{issue.suggestion}</strong>
+
                 </div>
               ))}
             </div>

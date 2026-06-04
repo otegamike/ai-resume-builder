@@ -176,7 +176,6 @@ export default function PricingPage() {
               id={`pricing-card-${plan.id}`}
               className={[
                 styles.pricingCard,
-                plan.isPro ? styles.isPro : "",
                 index === 0 ? styles.cardDelay0 : index === 1 ? styles.cardDelay1 : styles.cardDelay2,
               ].join(" ")}
             >
