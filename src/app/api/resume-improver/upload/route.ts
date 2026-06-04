@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
-import { analyzeResumeForAts, extractResumeTextFromImage } from "@/lib/ai";
+import { analyzeResumeForAts, extractResumeTextFromImages } from "@/lib/ai";
 import { getAuthenticatedUser } from "@/lib/authUser";
 import {
   assertSupportedUpload,
   extractTextFromPdf,
   fileToDataUrl,
-  isImageUpload,
   isPdfUpload,
 } from "@/lib/resumeImprover";
 import { AtsIssue } from "@/types/AtsReport";
@@ -30,22 +29,27 @@ export async function POST(request: Request) {
     }
 
     const formData = await request.formData();
-    const file = formData.get("file");
+    const entries = formData.getAll("file");
+    const files = entries.filter((f): f is File => f instanceof File);
 
-    if (!(file instanceof File)) {
+    if (files.length === 0) {
       return NextResponse.json({ error: "No resume file provided" }, { status: 400 });
     }
 
-    assertSupportedUpload(file);
+    for (const f of files) {
+      assertSupportedUpload(f);
+    }
 
     let extractedText = "";
     let hasScannedPdfWarning = false;
-    if (isPdfUpload(file)) {
-      const pdfExtraction = await extractTextFromPdf(file);
+
+    if (files.length === 1 && isPdfUpload(files[0])) {
+      const pdfExtraction = await extractTextFromPdf(files[0]);
       extractedText = pdfExtraction.text;
       hasScannedPdfWarning = pdfExtraction.source === "pdf-vision";
-    } else if (isImageUpload(file)) {
-      extractedText = await extractResumeTextFromImage(await fileToDataUrl(file));
+    } else {
+      const dataUrls = await Promise.all(files.map(fileToDataUrl));
+      extractedText = await extractResumeTextFromImages(dataUrls);
     }
 
     if (!extractedText.trim()) {

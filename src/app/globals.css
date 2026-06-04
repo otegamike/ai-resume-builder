@@ -63,6 +63,10 @@ ul {
   margin: 0;
 }
 
+.nowrap {
+  text-wrap: nowrap;
+}
+
 .loading_icon {
   animation: spin 1s linear infinite;
 }

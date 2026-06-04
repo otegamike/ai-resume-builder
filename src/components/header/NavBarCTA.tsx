@@ -17,7 +17,7 @@ const NavBarCTA = ({status}: NavBarCTAProps) => {
       </Link>
     ) : (
       <Link href="/auth/login">
-        <Button size="sm">Sign In</Button>
+        <Button size="sm" className="nowrap">Sign In</Button>
       </Link>
     )
   )
