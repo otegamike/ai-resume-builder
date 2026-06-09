@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { FileText, Settings, Plus, LayoutTemplate, LogOut, BarChart3, WandSparkles } from "lucide-react";
+import { FileText, Settings, Plus, LayoutTemplate, LogOut, BarChart3, WandSparkles, Sparkles } from "lucide-react";
 import styles from "./layout.module.css";
 
 export default function DashboardLayout({
@@ -44,6 +44,12 @@ export default function DashboardLayout({
             <WandSparkles className={styles.navIcon} />
             <span className={styles.navLinkText}>
               Improve
+            </span>
+          </Link>
+          <Link href="/dashboard/tailor" className={`${styles.navLink} ${isActive("/dashboard/tailor")}`}>
+            <Sparkles className={styles.navIcon} />
+            <span className={styles.navLinkText}>
+              Tailor
             </span>
           </Link>
           <Link href="/dashboard/settings" className={`${styles.navLink} ${isActive("/dashboard/settings")}`}>

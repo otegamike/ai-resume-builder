@@ -1,6 +1,7 @@
 import Groq from "groq-sdk";
 import { AtsReport } from "@/types/AtsReport";
 import { ResumeContent } from "@/types/ResumeData";
+import { TailorReport } from "@/types/TailorReport";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -14,6 +15,9 @@ const ATS_SYSTEM_INSTRUCTION =
 
 const WRITER_SYSTEM_INSTRUCTION =
   "You are a professional resume writer. Write concise, impactful content that is ATS-friendly and highlights achievements. Use action verbs and quantify results when possible.";
+
+const TAILOR_SYSTEM_INSTRUCTION =
+  "You are an expert recruiter and resume writer. You ONLY output raw valid JSON. Never use markdown code fences. Never add explanations before or after the JSON object. Your entire response must be parseable by JSON.parse().";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -113,6 +117,16 @@ function normalizeAtsReport(report: Partial<AtsReport>, extractedText: string): 
     extractedText: report.extractedText || extractedText,
     parsedResume: normalizeResumeContent(report.parsedResume),
     improvedResume: normalizeResumeContent(report.improvedResume),
+  };
+}
+
+function normalizeTailorReport(report: Partial<TailorReport>): TailorReport {
+  return {
+    matchScoreBefore: Math.max(0, Math.min(100, Number(report.matchScoreBefore) || 0)),
+    matchScoreAfter: Math.max(0, Math.min(100, Number(report.matchScoreAfter) || 0)),
+    explanation: report.explanation || "CV tailored for the job.",
+    keyChanges: normalizeStringList(report.keyChanges),
+    tailoredResume: normalizeResumeContent(report.tailoredResume),
   };
 }
 
@@ -239,7 +253,7 @@ Deduct for: missing sections, vague bullets, no metrics, missing skills.
 
 Resume:
 ${extractedText}
-${knownResumeBlock}`.trim();
+${knownResumeBlock}`;
 
 export async function analyzeResumeForAts(
   extractedText: string,
@@ -314,6 +328,147 @@ export async function extractResumeTextFromImages(dataUrls: string[]): Promise<s
 
 export async function extractResumeTextFromImage(dataUrl: string): Promise<string> {
   return extractResumeTextFromImages([dataUrl]);
+}
+
+export async function extractTextFromJobImage(dataUrl: string): Promise<string> {
+  assertApiKey();
+  const completion = await groq.chat.completions.create({
+    model: VISION_MODEL,
+    temperature: 0.1,
+    max_completion_tokens: 4096,
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: "Extract all readable text from this job description / job posting image. Preserve job title, responsibilities, requirements, and keywords. Return only the extracted text.",
+          },
+          {
+            type: "image_url" as const,
+            image_url: { url: dataUrl },
+          },
+        ],
+      },
+    ],
+  });
+
+  return completion.choices[0]?.message?.content?.trim() || "";
+}
+
+// ─── AI Tailoring ─────────────────────────────────────────────────────────────
+
+const TAILOR_PROMPT = (
+  resumeText: string,
+  knownResumeBlock: string,
+  jobDescription: string,
+  targetTitle?: string,
+  targetCompany?: string
+) => `
+You are an expert recruiter and professional resume writer. Your task is to tailor the candidate's resume/CV to perfectly align with the provided job description and requirements.
+
+Analyze the resume/CV against the job description. First, evaluate how well the current resume matches the job description and calculate a 'before' compatibility score (0-100).
+Then, perform the tailoring and optimize the resume content for the job, calculating an 'after' compatibility score (0-100) representing how well the tailored resume matches the job description.
+
+Target job information (optional):
+- Target Job Title: ${targetTitle || "Not specified"}
+- Target Company: ${targetCompany || "Not specified"}
+
+## TAILORING RULES:
+1. **Be Truthful**: Do NOT invent new job roles, companies, dates, schools, degrees, or certifications. Only optimize and highlight existing facts.
+2. **Optimize Job Title**: If the candidate's job title or desired title can be aligned closer to the target job title without lying, update it (e.g. "Software Developer" to "Full-Stack Engineer" if the job is for a Full-Stack Engineer and the candidate has experience in both frontend and backend).
+3. **Tailor Professional Summary**: Rewrite the summary to highlight key accomplishments, technologies, and alignment with the target job's primary goals. Keep it to 2-3 impactful sentences.
+4. **Tailor Experience Bullets**: Rewrite and restructure the candidate's experience description bullet points to emphasize relevant projects, results, and skills. Inject relevant keywords and action verbs. Keep the bullet points concise.
+5. **Tailor Skills**: Re-organize and filter the skills list to prioritize key terms and technologies mentioned in the job description that the candidate actually possesses or can be inferred to possess from their experience.
+6. **Assign Compatibility Scores**: 
+   - 'matchScoreBefore': compatibility score (0-100) of the original resume.
+   - 'matchScoreAfter': compatibility score (0-100) of the tailored resume.
+
+## REQUIRED JSON SCHEMA
+{
+  "matchScoreBefore": 45,
+  "matchScoreAfter": 85,
+  "explanation": "Brief paragraph summarizing why this resume is a strong fit for the role after tailoring, and where the candidate's strengths align best.",
+  "keyChanges": [
+    "Rewrote summary to emphasize React and GraphQL experience requested in the job post.",
+    "Refactored experience bullets at Company X to highlight system design and AWS cloud infrastructure.",
+    "Prioritized TypeScript and Next.js in the skills list and removed legacy tools."
+  ],
+  "tailoredResume": {
+    "personalInfo": {
+      "name": "string",
+      "fullname": { "firstName": "string", "otherNames": "string" },
+      "jobTitle": "string",
+      "email": "string",
+      "phone": "string",
+      "location": "string",
+      "website": "string"
+    },
+    "summary": "string",
+    "experience": [
+      { "id": "1", "company": "string", "role": "string", "startDate": "string", "endDate": "string", "description": ["string"] }
+    ],
+    "education": [
+      { "id": "1", "school": "string", "degree": "string", "startDate": "string", "endDate": "string" }
+    ],
+    "skills": ["string"]
+  }
+}
+
+Job Description:
+${jobDescription}
+
+Resume/CV Text:
+${resumeText}
+${knownResumeBlock}`;
+
+export async function tailorResume(
+  resumeText: string,
+  jobDescription: string,
+  targetTitle?: string,
+  targetCompany?: string,
+  existingResume?: ResumeContent
+): Promise<TailorReport> {
+  assertApiKey();
+
+  const knownResumeBlock = existingResume
+    ? `\nExisting structured resume JSON:\n${JSON.stringify(existingResume, null, 2)}`
+    : "";
+
+  const prompt = TAILOR_PROMPT(
+    resumeText,
+    knownResumeBlock,
+    jobDescription,
+    targetTitle,
+    targetCompany
+  );
+
+  // Attempt 1
+  let raw = await callGroq(prompt, {
+    model: ATS_MODEL,
+    systemInstruction: TAILOR_SYSTEM_INSTRUCTION,
+    temperature: 0.1,
+    maxTokens: 4096,
+  });
+
+  let parsed: Partial<TailorReport>;
+  try {
+    parsed = parseJsonObject<Partial<TailorReport>>(raw);
+  } catch {
+    console.warn("First tailor parse failed, retrying...");
+    raw = await callGroq(
+      `Your previous response was not valid JSON. Return ONLY the raw JSON object, no markdown, no explanation.\n\n${prompt}`,
+      {
+        model: ATS_MODEL,
+        systemInstruction: TAILOR_SYSTEM_INSTRUCTION,
+        temperature: 0,
+        maxTokens: 4096,
+      }
+    );
+    parsed = parseJsonObject<Partial<TailorReport>>(raw);
+  }
+
+  return normalizeTailorReport(parsed);
 }
 
 // ─── Resume Writing Helpers ───────────────────────────────────────────────────
