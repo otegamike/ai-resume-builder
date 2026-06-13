@@ -56,6 +56,7 @@ function ResumeIframe({ renderedTemplate, iframeRef, type, editorMode = false, l
             title={`Resume ${type || 'preview'}`}
             className={exportFrame ? styles.exportFrame : styles.previewFrame}
             sandbox={`allow-same-origin ${exportFrame ? '' : 'allow-scripts'}`}
+            loading="lazy"
         />
         <LoadingComponent 
             showLoader={loaderObj?.showLoader ?? showLoader} 

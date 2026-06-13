@@ -1,0 +1,147 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  top: 50px;
+  background-color: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(3px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.overlayVisible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.panel {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  z-index: 0;
+  background-color: var(--neutral-700);
+  box-shadow: var(--shadow-lg);
+  max-height: calc(100vh - 60px);
+  min-width: 15rem;
+  overflow-y: auto;
+  transform: translateY(-120%);
+  opacity: 0;
+  transition: transform 0.35s ease-in-out, opacity 0.35s ease-in-out;
+}
+
+.panelOpen {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.content {
+  padding: var(--space-6) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.userSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.userName {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--neutral-100);
+}
+
+.subscriptionBadge {
+  font-size: var(--text-xxs);
+  font-weight: var(--font-medium);
+  color: var(--primary-900);
+  background-color: var(--primary-300);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
+  text-transform: capitalize;
+}
+
+.creditsRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.creditsLabel {
+  font-size: var(--text-sm);
+  color: var(--ai);
+}
+
+.creditsValue {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--ai-accent-300);
+}
+
+.actionsSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-light);
+}
+
+
+
+.secondaryLinks {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.secondaryLink {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--neutral-200);
+  transition: color 0.2s;
+  padding: var(--space-2) var(--space-4);
+}
+
+.secondaryLink:hover {
+   background-color: var(--neutral-600);
+}
+
+.navLinks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.navLink {
+  display: block;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--neutral-100);
+  border-radius: var(--radius-md);
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.navLink:hover {
+  background-color: var(--neutral-600);
+}
+
+.navLinkActive {
+  color: var(--neutral-800);
+  font-weight: var(--font-semibold);
+  background-color: var(--neutral-400);
+}
+
+.navLinkActive:hover {
+  background-color: var(--neutral-400);
+}
+

@@ -12,6 +12,11 @@ export interface IUser extends Document {
     providerAccountId: string;
   }>;
   isAdmin: boolean;
+  subscriptionPlan: "free"|"pro"|"proPlus";
+  subscriptionStatus: "active"|"inactive";
+  subscriptionId: string;
+  AiCredits: number;
+  AiCreditRateLimit: number;
 }
 
 const UserSchema: Schema = new Schema<IUser>(
@@ -28,6 +33,11 @@ const UserSchema: Schema = new Schema<IUser>(
       },
     ],
     isAdmin: { type: Boolean, default: false },
+    subscriptionPlan: { type: String, default: "free" },
+    subscriptionStatus: { type: String, default: "inactive" },
+    subscriptionId: { type: String, default: "" },
+    AiCredits: { type: Number, default: 1000 },
+    AiCreditRateLimit: { type: Number, default: 10 },
   },
   { timestamps: true }
 );

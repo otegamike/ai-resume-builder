@@ -5,12 +5,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-direction: column;
   z-index: var(--z-50);
+  container-type: inline-size;
+  container-name: header;
+}
+
+.header__boundary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  position: relative;
+  z-index: 1;
   background-color: hsl(69 20% 93%/ 0.5);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-default);
-  container-type: inline-size;
-  container-name: header;
 }
 
 .header__content {

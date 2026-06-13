@@ -1,5 +1,6 @@
 .menu__container {
     padding: 0;
+    cursor: pointer;
 
     &.active {
         background-color: var(--panel-color-dark);

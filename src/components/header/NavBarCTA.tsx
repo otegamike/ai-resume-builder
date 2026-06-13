@@ -12,9 +12,7 @@ const NavBarCTA = ({status}: NavBarCTAProps) => {
     status === "loading" ? (
       <Loader2 size={25} className="loading_icon" color='var(--neutral-500)' />
     ) : status === "authenticated" ? (
-      <Link href="/dashboard">
-        <Button size="sm">Dashboard</Button>
-      </Link>
+      <></>
     ) : (
       <Link href="/auth/login">
         <Button size="sm" className="nowrap">Sign In</Button>

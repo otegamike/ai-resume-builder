@@ -76,12 +76,14 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token }) {
       if (!token.email) return token;
       await dbConnect();
-      const dbUser = await User.findOne({ email: token.email }).select("_id email name image isAdmin");
+      const dbUser = await User.findOne({ email: token.email }).select("_id email name image isAdmin subscriptionPlan AiCredits");
       if (dbUser) {
         token.userId = String(dbUser._id);
         token.name = dbUser.name;
         token.picture = dbUser.image;
         token.isAdmin = dbUser.isAdmin ?? false;
+        token.subscriptionPlan = dbUser.subscriptionPlan ?? "free";
+        token.AiCredits = dbUser.AiCredits ?? 0;
       }
       return token;
     },
@@ -89,6 +91,8 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = (token.userId as string | undefined) ?? "";
         session.user.isAdmin = (token.isAdmin as boolean | undefined) ?? false;
+        session.user.subscriptionPlan = (token.subscriptionPlan as string | undefined) ?? "free";
+        session.user.AiCredits = (token.AiCredits as number | undefined) ?? 0;
       }
       return session;
     },
