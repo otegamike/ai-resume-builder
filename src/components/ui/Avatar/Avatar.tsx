@@ -1,5 +1,6 @@
 import React from "react";
 import styles from "./Avatar.module.css";
+import { motion } from "framer-motion";
 
 interface AvatarProps {
   src?: string | null;
@@ -55,7 +56,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   }
 
   return (
-    <div
+    <motion.div
       className={`${styles.avatar} ${styles.letter} ${className}`}
       style={{
         width: size,
@@ -65,8 +66,9 @@ export const Avatar: React.FC<AvatarProps> = ({
         fontSize: size * 0.5,
       }}
       title={alt}
+      layoutId='avatar'
     >
       <span style={{ color: textColor }}>{letter}</span>
-    </div>
+    </motion.div>
   );
 };

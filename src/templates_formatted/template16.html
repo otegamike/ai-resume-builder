@@ -373,7 +373,11 @@
     cvElement.style.position = 'relative';
     scaler.style.marginBottom = (newHeight * scale - newHeight) + 'px';
     createPageIndicators(cvElement, CV_HEIGHT, pages);
-    window.parent.postMessage({ type: 'RESIZE_IFRAME', pages }, '*');
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.parent.postMessage({ type: 'RESIZE_IFRAME', pages }, '*');
+      });
+    });
   }
   let resizeTimer;
   window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(scaleCv, 60); });

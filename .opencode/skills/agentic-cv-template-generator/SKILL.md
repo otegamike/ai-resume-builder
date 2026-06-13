@@ -190,7 +190,13 @@ Replace only the content between the `<!-- DESIGN STARTS HERE -->` comments.
     scaler.style.marginBottom = (scaledHeight - newHeight) + 'px';
 
     createPageIndicators(cvElement, CV_HEIGHT, pages);
-    window.parent.postMessage({ type: 'RESIZE_IFRAME', pages: pages }, '*');
+
+    
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.parent.postMessage({ type: 'RESIZE_IFRAME', pages: pages }, '*');
+      });
+    });
   }
 
   let resizeTimer;
@@ -1017,7 +1023,11 @@ The following is the smallest valid template skeleton. Expand with your design:
     cvElement.style.position = 'relative';
     scaler.style.marginBottom = (newHeight * scale - newHeight) + 'px';
     createPageIndicators(cvElement, CV_HEIGHT, pages);
-    window.parent.postMessage({ type: 'RESIZE_IFRAME', pages }, '*');
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.parent.postMessage({ type: 'RESIZE_IFRAME', pages }, '*');
+      });
+    });
   }
   let resizeTimer;
   window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(scaleCv, 60); });

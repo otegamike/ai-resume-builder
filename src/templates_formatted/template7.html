@@ -546,7 +546,11 @@
     
     createPageIndicators(cvElement, CV_HEIGHT, pages);
     
-    window.parent.postMessage({ type: 'RESIZE_IFRAME', pages: pages }, '*');
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.parent.postMessage({ type: 'RESIZE_IFRAME', pages: pages }, '*');
+      });
+    });
   }
 
   let resizeTimer;

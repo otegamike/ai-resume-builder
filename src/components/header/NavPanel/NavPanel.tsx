@@ -3,10 +3,14 @@
 import styles from './navpanel.module.css'
 import { Avatar } from '@/components/ui/Avatar/Avatar'
 import { Session } from 'next-auth'
+import { signOut } from 'next-auth/react'
 import Link from 'next/link'
-import { Button } from '@/components/ui/Button'
+import { LogOut } from 'lucide-react'
 import { usePathname } from 'next/navigation'
-
+import { useState, useEffect, useCallback } from 'react'
+import { getDistanceFromRight } from '@/utils/elementPosition'
+import NavBarCTA from '../NavBarCTA'
+import { getHeaderHeight } from '@/utils/headerSize'
 
 interface NavPanelProps {
   session: Session | null
@@ -25,7 +29,21 @@ function formatPlan(plan: string | null | undefined): string {
 }
 
 function NavPanel({ session, isOpen, toggleMenu, status }: NavPanelProps) {
-  const pathname = usePathname()
+  const pathname = usePathname();
+  const [panelRight, setPanelRight] = useState(getDistanceFromRight('hamburger-container') || 0);
+  const [panelTop, setPanelTop] = useState(getHeaderHeight() || 50);
+
+  const updatePanelPosition = useCallback(() => {
+    setPanelRight(getDistanceFromRight('hamburger-container'))
+    setPanelTop(getHeaderHeight())
+  }, [isOpen])
+
+  useEffect(() => {
+    updatePanelPosition()
+    window.addEventListener('resize', updatePanelPosition)
+    return () => window.removeEventListener('resize', updatePanelPosition)
+  }, [updatePanelPosition])
+
   const isSignedIn = status === "authenticated"
   const userName = session?.user?.name || "Guest"
   const userImage = session?.user?.image
@@ -41,14 +59,20 @@ function NavPanel({ session, isOpen, toggleMenu, status }: NavPanelProps) {
     toggleMenu(false)
   }
 
+  const handleSignOut = () => {
+    signOut({ callbackUrl: "/" })
+    toggleMenu(false)
+  }
+
   return (
     <>
       <div
         className={`${styles.overlay} ${isOpen ? styles.overlayVisible : ''}`}
+        style={{"--header-height": `${panelTop}px`} as React.CSSProperties}
         onClick={handleOverlayClick}
         aria-hidden="true"
       />
-      <div className={`${styles.panel} ${isOpen ? styles.panelOpen : ''}`}>
+      <div className={`${styles.panel} ${isOpen ? styles.panelOpen : ''}`} style={{ right: `calc(${panelRight}px - 1rem)`,"--header-height": `${panelTop}px`} as React.CSSProperties}>
         <div className={styles.content}>
           <div className={styles.userSection}>
             <Avatar
@@ -73,32 +97,27 @@ function NavPanel({ session, isOpen, toggleMenu, status }: NavPanelProps) {
           </div>
 
           <div className={styles.actionsSection}>
-            {status === "loading" ? null : isSignedIn ? (
-              <Link href="/dashboard" onClick={handleLinkClick}>
-                <Button size="md" fullWidth>Dashboard</Button>
-              </Link>
-            ) : (
-              <Link href="/auth/login" onClick={handleLinkClick}>
-                <Button size="sm" fullWidth>Sign In</Button>
-              </Link>
-            )}
+            <NavBarCTA status={status} buttonSize='md' onClick={handleLinkClick} />
+            
 
-            <div className={styles.secondaryLinks}>
-              <Link
-                href="/dashboard/tailor"
-                className={styles.secondaryLink}
-                onClick={handleLinkClick}
-              >
-                Tailor
-              </Link>
-              <Link
-                href="/dashboard/improve"
-                className={styles.secondaryLink}
-                onClick={handleLinkClick}
-              >
-                Improve
-              </Link>
-            </div>
+            {isSignedIn && (
+              <div className={styles.secondaryLinks}>
+                <Link
+                  href="/dashboard/tailor"
+                  className={styles.secondaryLink}
+                  onClick={handleLinkClick}
+                >
+                  Tailor
+                </Link>
+                <Link
+                  href="/dashboard/improve"
+                  className={styles.secondaryLink}
+                  onClick={handleLinkClick}
+                >
+                  Improve
+                </Link>
+              </div>
+            )}
           </div>
 
           <nav className={styles.navLinks}>
@@ -124,6 +143,15 @@ function NavPanel({ session, isOpen, toggleMenu, status }: NavPanelProps) {
               Pricing
             </Link>
           </nav>
+
+          {isSignedIn && (
+            <div className={styles.signOutButtonContainer}>
+              <button className={styles.signOutButton} onClick={handleSignOut}>
+                <LogOut size={16} />
+                Sign Out
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </>

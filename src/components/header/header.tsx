@@ -37,6 +37,10 @@ export default function Header() {
     isMenuOpen,
     toggleMenu
   }
+
+  const closeMenu = () => {
+    toggleMenu(false);
+  }
   
 
   return (
@@ -55,11 +59,11 @@ export default function Header() {
               {mounted && !isMobile && showNav && <NavBar menuState={isMenuOpen} pathname={pathname} />}
             </div>
 
-            {showDashboardLink && !isAuthPage && (
-              <NavBarCTA status={status} />
+            {showDashboardLink && !isAuthPage && !isMenuOpen && (
+              <NavBarCTA status={status} onClick={closeMenu} hideDashboard/>
             )}
             
-            {mounted && isSignedIn && (
+            {mounted && isSignedIn && !isMenuOpen && (
               <Avatar
                 src={session?.user?.image}
                 alt={session?.user?.name || session?.user?.email || "User"}
@@ -68,7 +72,7 @@ export default function Header() {
             )}
 
             {mounted && !isAuthPage && (
-              <div className={styles.hamburger}>
+              <div id="hamburger-container" className={styles.hamburger}>
                 <HamburgerMenu menuPanelProps={menuPanelProps} />
               </div>
             )}

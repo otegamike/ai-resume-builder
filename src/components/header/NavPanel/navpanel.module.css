@@ -1,7 +1,9 @@
 .overlay {
+  --top: var(--header-height, 50px);
+
   position: fixed;
   inset: 0;
-  top: 50px;
+  top: var(--top);
   background-color: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(3px);
   opacity: 0;
@@ -15,9 +17,10 @@
 }
 
 .panel {
+  --top: var(--header-height, 50px);
+
   position: absolute;
-  top: 50px;
-  right: 0;
+  top: var(--top);
   z-index: 0;
   background-color: var(--neutral-700);
   box-shadow: var(--shadow-lg);
@@ -143,5 +146,32 @@
 
 .navLinkActive:hover {
   background-color: var(--neutral-400);
+}
+
+.signOutButtonContainer {
+  border-top: 1px solid var(--border-light);
+  
+}
+
+.signOutButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--neutral-50);
+  border-radius: var(--radius-md);
+  transition: background-color 0.2s, color 0.2s;
+  border: none;
+  background-color: hsl(0 74% 52% / 0.2);
+  cursor: pointer;
+  margin-top: var(--space-2);
+}
+
+.signOutButton:hover {
+  background-color: hsl(0 74% 32% / 0.3);
 }
 
