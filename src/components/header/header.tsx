@@ -48,7 +48,7 @@ export default function Header() {
       <div className={styles.header__boundary}>
       
         <div className={styles.header__content}>
-          <Link className={styles.logo} href="/">
+          <Link className={styles.logo} onClick={closeMenu} href="/">
             <Logo size={20} color='var(--primary-1)' />
             <span className={styles.logoText}>
               Agentic CV
@@ -59,8 +59,8 @@ export default function Header() {
               {mounted && !isMobile && showNav && <NavBar menuState={isMenuOpen} pathname={pathname} />}
             </div>
 
-            {showDashboardLink && !isAuthPage && !isMenuOpen && (
-              <NavBarCTA status={status} onClick={closeMenu} hideDashboard/>
+            {showDashboardLink && !isAuthPage && (
+              <NavBarCTA status={status} hideCTA={isMenuOpen} onClick={closeMenu} hideDashboard/>
             )}
             
             {mounted && isSignedIn && !isMenuOpen && (

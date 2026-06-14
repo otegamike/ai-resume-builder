@@ -30,8 +30,8 @@ function formatPlan(plan: string | null | undefined): string {
 
 function NavPanel({ session, isOpen, toggleMenu, status }: NavPanelProps) {
   const pathname = usePathname();
-  const [panelRight, setPanelRight] = useState(getDistanceFromRight('hamburger-container') || 0);
-  const [panelTop, setPanelTop] = useState(getHeaderHeight() || 50);
+  const [panelRight, setPanelRight] = useState(0);
+  const [panelTop, setPanelTop] = useState(0);
 
   const updatePanelPosition = useCallback(() => {
     setPanelRight(getDistanceFromRight('hamburger-container'))
