@@ -1,0 +1,273 @@
+.container {
+  padding: var(--space-4) var(--space-8);
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.title {
+
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  letter-spacing: -0.025em;
+  color:var(--primary-900);
+}
+
+.subtitle {
+  color: var(--gray-500);
+  margin-top: var(--space-1);
+}
+
+.createButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+
+}
+
+.createButtonIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.grid {
+  display: grid;
+  gap: var(--space-6);
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+}
+
+
+.createCard {
+  height: 100%;
+  min-height: 16rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--gray-300);
+  border-radius: var(--radius-xl);
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background-color 0.2s;
+}
+
+.createCard:hover {
+  border-color: var(--primary-1);
+  color: var(--primary-1);
+  background-color: var(--primary-4);
+}
+
+.createCardIcon {
+  height: 3.5rem;
+  width: 3.5rem;
+  border-radius: var(--radius-full);
+  background-color: var(--gray-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-4);
+  transition: background-color 0.2s;
+}
+
+.createCard:hover .createCardIcon {
+  background-color: white;
+}
+
+.createCardIconSvg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.createCardText {
+  font-weight: var(--font-medium);
+  font-size: var(--text-base);
+  text-align: center;
+}
+
+.resumeCard {
+  position: relative;
+  /* height: 16rem; */
+  border-radius: var(--radius-xl);
+  background-color: white;
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  transition: box-shadow 0.2s;
+  /* Promote to a hardware-accelerated compositor layer to avoid scroll lag during rounded corner clipping */
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.resumeCard:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.previewArea {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--gray-100);
+  padding: var(--space-4);
+  background-color: var(--gray-50);
+  overflow: hidden;
+}
+
+.previewPlaceholder {
+  width: 100%;
+  max-width: 9rem;
+  height: 11rem;
+  background-color: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.previewLine {
+  border-radius: 2px;
+}
+
+.previewLineHalf {
+  width: 50%;
+}
+
+.previewLineFull {
+  width: 100%;
+}
+
+.previewLineThreeQuarters {
+  width: 75%;
+}
+
+.cardFooter {
+  padding: var(--space-4);
+  background-color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.resumeTitle {
+  font-weight: var(--font-semibold);
+  font-size: small;
+  color: var(--neutral-500);
+  max-width: 12.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resumeMeta {
+  display: flex;
+  align-items: center;
+  font-size: var(--text-xxs);
+  color: var(--gray-500);
+  margin-top: var(--space-1);
+}
+
+.resumeMetaIcon {
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-right: var(--space-1);
+}
+
+.actions {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  display: flex;
+  background-color: hsl(69 20% 73%/ 0.3);
+  backdrop-filter: blur(13px);
+  border-radius: var(--radius-md);
+  gap: var(--space-1);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.resumeCard:hover .actions {
+  opacity: 1;
+}
+
+.actionButton {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.2rem;
+  padding: 0;
+  color: var(--neutral-800);
+  
+}
+
+.actionButtonSvg {
+  width: 1.2rem;
+  height: 1.2rem;
+  
+}
+
+.deleteButton {
+  color: var(--red-500);
+}
+
+.deleteButton:hover {
+  color: var(--red-700);
+  background-color: var(--red-100);
+}
+
+.loadingContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.loadingContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.loadingIcon {
+  width: 2rem;
+  height: 2rem;
+  color: var(--primary-1);
+  animation: spin 1s linear infinite;
+}
+
+.loadingText {
+  color: var(--gray-500);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.errorContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.errorContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.errorText {
+  color: var(--red-500);
+}

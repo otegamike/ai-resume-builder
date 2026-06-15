@@ -16,6 +16,9 @@ const ATS_SYSTEM_INSTRUCTION =
 const WRITER_SYSTEM_INSTRUCTION =
   "You are a professional resume writer. Write concise, impactful content that is ATS-friendly and highlights achievements. Use action verbs and quantify results when possible.";
 
+const COVER_LETTER_SYSTEM_INSTRUCTION =
+  "You are a professional cover letter writer. Write tailored, concise, and compelling cover letters that highlight the candidate's relevant experience and enthusiasm for the role. Keep each letter to 3-4 paragraphs. Use a professional tone and avoid generic statements.";
+
 const TAILOR_SYSTEM_INSTRUCTION =
   "You are an expert recruiter and resume writer. You ONLY output raw valid JSON. Never use markdown code fences. Never add explanations before or after the JSON object. Your entire response must be parseable by JSON.parse().";
 
@@ -518,4 +521,61 @@ export async function generateSkillsSuggestions(jobTitle: string): Promise<strin
     .split(",")
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
+}
+
+const COVER_LETTER_PROMPT = (
+  resumeText: string,
+  jobDescription: string,
+  targetCompany: string,
+  targetRole: string,
+  knownResumeBlock: string
+) => `
+Write a professional cover letter for the following job application.
+
+## INSTRUCTIONS
+- Write 3-4 paragraphs: engaging opening, body highlighting relevant experience, confident closing
+- Use the candidate's actual experience from their resume — do NOT invent qualifications
+- Reference specific skills and achievements that match the job description
+- Keep it concise and compelling
+- Address the letter to the hiring manager (use "Dear Hiring Manager" if no name is given)
+- Return ONLY the cover letter text, no subject line or salutation prefix
+
+## TARGET
+Role: ${targetRole || "Not specified"}
+Company: ${targetCompany || "Not specified"}
+
+## JOB DESCRIPTION
+${jobDescription}
+
+## RESUME
+${resumeText}
+${knownResumeBlock}`;
+
+export async function generateCoverLetter(
+  resumeText: string,
+  jobDescription: string,
+  targetCompany: string,
+  targetRole: string,
+  existingResume?: ResumeContent
+): Promise<string> {
+  assertApiKey();
+
+  const knownResumeBlock = existingResume
+    ? `\nExisting structured resume JSON:\n${JSON.stringify(existingResume, null, 2)}`
+    : "";
+
+  const prompt = COVER_LETTER_PROMPT(
+    resumeText,
+    jobDescription,
+    targetCompany,
+    targetRole,
+    knownResumeBlock
+  );
+
+  return callGroq(prompt, {
+    model: GENERATION_MODEL,
+    systemInstruction: COVER_LETTER_SYSTEM_INSTRUCTION,
+    temperature: 0.3,
+    maxTokens: 1536,
+  });
 }

@@ -17,7 +17,9 @@ const NavBarCTA = ({status, buttonSize = "sm", fullWidth=true, hideDashboard=fal
   return (
     <div className={`${styles.CTA__container} ${hideCTA? styles.hide : ''}`} >
       {status === "loading" ? (
-        <Loader2 size={25} className="loading_icon" color='var(--neutral-500)' />
+        <div className="place__center">
+          <Loader2 size={25} className="loading_icon" color='var(--neutral-500)' />
+        </div>
       ) : status === "authenticated" ? (
         <Link href="/dashboard" onClick={onClick} style={hideDashboard ? {display: 'none'} : {}}>
           <Button size={buttonSize} fullWidth={fullWidth}>Dashboard</Button>

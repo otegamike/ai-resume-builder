@@ -3,179 +3,282 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
-import ResumeIframe from "@/components/resume/ResumeIframe";
-import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
-import { type TemplateDefinition } from "@/lib/templateCatalog";
+import { useRouter } from "next/navigation";
+import {
+  FileText,
+  PenLine,
+  Briefcase,
+  Sparkles,
+  Loader2,
+  LayoutTemplate,
+  WandSparkles,
+  Settings,
+  Clock,
+  BarChart3,
+} from "lucide-react";
 import styles from "./page.module.css";
-import { ResumeContent } from "@/types/ResumeData";
-import LoadingComponent from "@/components/ui/LoadingComponent";
 
-export interface Resume {
-  _id: string;
-  title: string;
-  updatedAt: string;
-  template: string;
-  content: ResumeContent;
+interface DashboardStats {
+  counts: {
+    resumes: number;
+    coverLetters: number;
+    applications: number;
+    applicationsByStatus: Record<string, number>;
+  };
+  recent: {
+    resumes: Array<{ _id: string; title: string; updatedAt: string; template: string }>;
+    coverLetters: Array<{ _id: string; title: string; targetCompany: string; targetRole: string; updatedAt: string; status: string }>;
+    applications: Array<{ _id: string; company: string; role: string; status: string; updatedAt: string }>;
+  };
 }
 
-export default function DashboardPage() {
-  const { status } = useSession();
-  const [resumes, setResumes] = useState<Resume[]>([]);
-  const [templateDefinitions, setTemplateDefinitions] = useState<TemplateDefinition[]>([]);
+interface RecentActivity {
+  id: string;
+  type: "resume" | "cover-letter" | "application";
+  label: string;
+  detail: string;
+  timestamp: string;
+  href: string;
+}
+
+export default function OverviewPage() {
+  const router = useRouter();
+  const { data: session, status } = useSession();
+  const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
     if (status === "loading") return;
-    
     if (status !== "authenticated") {
-      window.location.href = "/";
+      router.push("/");
       return;
     }
 
-    const fetchResumes = async () => {
+    const fetchStats = async () => {
       try {
-        const response = await fetch('/api/resumes');
-        if (response.ok) {
-          const data: Resume[] = await response.json();
-          setResumes(data);
-        } else {
-          setError("Failed to load resumes");
+        const res = await fetch("/api/dashboard/stats");
+        if (res.ok) {
+          const data: DashboardStats = await res.json();
+          setStats(data);
         }
       } catch {
-        setError("Failed to load resumes");
+        // silent fail — stats are non-critical
+      } finally {
+        setLoading(false);
       }
     };
 
-    const fetchTemplates = async () => {
-      try {
-        const response = await fetch('/api/templates');
-        if (response.ok) {
-          const data = await response.json();
-          setTemplateDefinitions(data);
-        }
-      } catch (err) {
-        console.error("Failed to load templates", err);
-      }
-    };
+    fetchStats();
+  }, [status, router]);
 
-    Promise.all([fetchResumes(), fetchTemplates()]).finally(() => {
-      setLoading(false);
-    });
-  }, [status]);
+  const activeApplications = stats?.counts.applicationsByStatus
+    ? Object.entries(stats.counts.applicationsByStatus)
+        .filter(([s]) => s === "saved" || s === "applied" || s === "interviewing")
+        .reduce((sum, [, c]) => sum + c, 0)
+    : 0;
 
-  const deleteResume = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this resume?")) return;
+  const recentActivity: RecentActivity[] = [
+    ...(stats?.recent.resumes.map((r) => ({
+      id: r._id,
+      type: "resume" as const,
+      label: "Edited Resume",
+      detail: r.title,
+      timestamp: r.updatedAt,
+      href: `/editor/${r._id}`,
+    })) ?? []),
+    ...(stats?.recent.coverLetters.map((c) => ({
+      id: c._id,
+      type: "cover-letter" as const,
+      label: "Created Cover Letter",
+      detail: c.title,
+      timestamp: c.updatedAt,
+      href: `/dashboard/writer`,
+    })) ?? []),
+    ...(stats?.recent.applications.map((a) => ({
+      id: a._id,
+      type: "application" as const,
+      label: `Application ${a.status}`,
+      detail: `${a.role} at ${a.company}`,
+      timestamp: a.updatedAt,
+      href: `/dashboard/applications`,
+    })) ?? []),
+  ]
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    .slice(0, 5);
 
-    try {
-      const response = await fetch(`/api/resumes/${id}`, { method: 'DELETE' });
-      if (response.ok) {
-        setResumes(resumes.filter((r) => r._id !== id));
-      } else {
-        alert("Failed to delete resume");
-      }
-    } catch {
-      alert("Failed to delete resume");
-    }
-  };
+  const quickActions = [
+    {
+      icon: FileText,
+      title: "My Resumes",
+      description: "View and manage your resume collection",
+      href: "/dashboard/resumes",
+      color: "var(--primary-1)",
+      bg: "#f0f7ed",
+    },
+    {
+      icon: PenLine,
+      title: "Writer Studio",
+      description: "Create cover letters and application letters",
+      href: "/dashboard/writer",
+      color: "var(--ai-accent-500)",
+      bg: "#f5f3ff",
+    },
+    {
+      icon: BarChart3,
+      title: "Applications",
+      description: "Track your job applications",
+      href: "/dashboard/applications",
+      color: "var(--info)",
+      bg: "#eff6ff",
+    },
+    {
+      icon: LayoutTemplate,
+      title: "Templates",
+      description: "Browse and choose resume templates",
+      href: "/dashboard/templates",
+      color: "var(--primary-leaf)",
+      bg: "#f4faf2",
+    },
+    {
+      icon: WandSparkles,
+      title: "Improve Resume",
+      description: "ATS check and optimization",
+      href: "/dashboard/improve",
+      color: "var(--warning)",
+      bg: "#fffbeb",
+    },
+    {
+      icon: Sparkles,
+      title: "Tailor Resume",
+      description: "Customize your CV for a specific job",
+      href: "/dashboard/tailor",
+      color: "var(--ai-accent-700)",
+      bg: "#f3e8ff",
+    },
+    {
+      icon: Settings,
+      title: "Settings",
+      description: "Manage your account and preferences",
+      href: "/dashboard/settings",
+      color: "var(--gray-500)",
+      bg: "#f9fafb",
+    },
+  ];
 
   if (status === "loading" || loading) {
     return (
       <div className={styles.loadingContainer}>
-        <div className={styles.loadingContent}>
-          <Loader2 className={styles.loadingIcon} />
-          <p className={styles.loadingText}>Loading your resumes...</p>
-        </div>
+        <Loader2 className={styles.loadingIcon} />
       </div>
     );
   }
 
-  if (error) {
-    return (
-      <div className={styles.errorContainer}>
-        <div className={styles.errorContent}>
-          <p className={styles.errorText}>{error}</p>
-          <Button onClick={() => window.location.reload()}>Try Again</Button>
-        </div>
-      </div>
-    );
-  }
-  
   return (
     <div className={styles.container}>
-
-      <div className={styles.header}>
+      <section className={styles.welcomeBanner}>
         <div>
-          <h1 className={styles.title}>My Resumes</h1>
-          <p className={styles.subtitle}>Manage and edit your created resumes.</p>
+          <h1 className={styles.welcomeTitle}>
+            Welcome back{ session?.user?.name ? `, ${session.user.name}` : "" }
+          </h1>
+          <p className={styles.welcomeSubtitle}>
+            Your career hub. manage resumes, cover letters, applications, and more.
+          </p>
         </div>
-      </div>
+      </section>
 
-      <div className={styles.grid}>
-        <Link href="/editor/new">
-          <div className={styles.createCard}>
-            <div className={styles.createCardIcon}>
-              <Plus className={styles.createCardIconSvg} />
-            </div>
-            <span className={styles.createCardText}>Start from scratch</span>
+      <section className={styles.statsRow}>
+        <div className={styles.statCard}>
+          <div className={styles.statIconWrapper} style={{ backgroundColor: "var(--primary-4)", color: "var(--primary-1)" }}>
+            <FileText className={styles.statIcon} />
           </div>
-        </Link>
+            <p className={styles.statValue}>{stats?.counts.resumes ?? 0}</p>
+            <p className={styles.statLabel}>Resumes</p>
+        </div>
+        <div className={styles.statCard}>
+          <div className={styles.statIconWrapper} style={{ backgroundColor: "#ddd5e5ff", color: "#765e8fff" }}>
+            <PenLine className={styles.statIcon} />
+          </div>
+            <p className={styles.statValue}>{stats?.counts.coverLetters ?? 0}</p>
+            <p className={styles.statLabel}>Cover Letters</p>
+        </div>
+        <div className={styles.statCard}>
+          <div className={styles.statIconWrapper} style={{ backgroundColor: "#ecfdf5", color: "#578a72ff" }}>
+            <Briefcase className={styles.statIcon} />
+          </div>
+            <p className={styles.statValue}>{activeApplications}</p>
+            <p className={styles.statLabel}>Active Applications</p>
+        </div>
+        <div className={styles.statCard}>
+          <div className={styles.statIconWrapper} style={{ backgroundColor: "#fef3c7", color: "#998f68ff" }}>
+            <Sparkles className={styles.statIcon} />
+          </div>
+            <p className={styles.statValue}>{stats?.counts.applications ?? 0}</p>
+            <p className={styles.statLabel}>Total Applications</p>
+        </div>
+      </section>
 
-        {resumes.map((resume) => {
-          const templateId = normalizeTemplateId(resume.template);
-          const templateDef = templateDefinitions.find(t => t.id === templateId) || templateDefinitions[0];
-          const renderedTemplate = templateDef?.html && resume.content 
-            ? buildTemplateSrcDoc(templateDef.html, resume.content) 
-            : '';
-
-          return (
-            <div key={resume._id} className={styles.resumeCard}>
-              <div className={styles.previewArea}>
-                {renderedTemplate ? (
-                  <ResumeIframe
-                    renderedTemplate={renderedTemplate}
-                    type="preview"
-                  />
-                ) : (
-                  <div className={styles.previewPlaceholder}>
-                    <div className={`${styles.previewLine} ${styles.previewLineHalf}`} style={{ backgroundColor: 'var(--gray-200)', height: '0.5rem' }}></div>
-                    <div className={`${styles.previewLine} ${styles.previewLineFull}`} style={{ backgroundColor: 'var(--gray-200)', height: '0.25rem' }}></div>
-                    <div className={`${styles.previewLine} ${styles.previewLineFull}`} style={{ backgroundColor: 'var(--gray-200)', height: '0.25rem' }}></div>
-                    <div className={`${styles.previewLine} ${styles.previewLineThreeQuarters}`} style={{ backgroundColor: 'var(--gray-200)', height: '0.25rem' }}></div>
-                  </div>
-                )}
+      <section className={styles.quickActionsSection}>
+        <h2 className={styles.sectionTitle}>Quick Actions</h2>
+        <div className={styles.quickActionsGrid}>
+          {quickActions.map((action) => (
+            <Link
+              key={action.href}
+              href={action.href}
+              className={styles.actionCard}
+              style={{ backgroundColor: action.bg }}
+            >
+              <div className={styles.actionIconWrapper} style={{ backgroundColor: `${action.color}20`, color: action.color }}>
+                <action.icon className={styles.actionIcon} />
               </div>
-              
-              <div className={styles.cardFooter}>
               <div>
-                <h3 className={styles.resumeTitle}>{resume.title}</h3>
-                <div className={styles.resumeMeta}>
-                  {new Date(resume.updatedAt).toLocaleDateString()}
+                <h3 className={styles.actionTitle}>{action.title}</h3>
+                <p className={styles.actionDescription}>{action.description}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.activitySection}>
+        <h2 className={styles.sectionTitle}>
+          <Clock className={styles.sectionTitleIcon} />
+          Recent Activity
+        </h2>
+        {recentActivity.length > 0 ? (
+          <div className={styles.activityList}>
+            {recentActivity.map((item) => (
+              <Link key={item.id} href={item.href} className={styles.activityItem}>
+                <div className={styles.activityDot} data-type={item.type} />
+                <div className={styles.activityContent}>
+                  <p className={styles.activityLabel}>{item.label}</p>
+                  <p className={styles.activityDetail}>{item.detail}</p>
                 </div>
-              </div>
-              
-              <div className={styles.actions}>
-                <Link href={`/editor/${resume._id}`}>
-                  <Button variant="ghost" size="sm" className={styles.actionButton}>
-                    <Edit className={styles.actionButtonSvg} />
-                  </Button>
-                </Link>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className={`${styles.actionButton} ${styles.deleteButton}`}
-                  onClick={() => deleteResume(resume._id)}
-                >
-                  <Trash2 className={styles.actionButtonSvg} />
-                </Button>
-              </div>
-            </div>
+                <span className={styles.activityTime}>
+                  {formatRelativeTime(item.timestamp)}
+                </span>
+              </Link>
+            ))}
           </div>
-        )})}
-      </div>
+        ) : (
+          <div className={styles.activityEmpty}>
+            <p>No recent activity yet. Start by creating your first resume!</p>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
 
+function formatRelativeTime(dateStr: string): string {
+  const now = Date.now();
+  const date = new Date(dateStr).getTime();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return new Date(dateStr).toLocaleDateString();
+}
