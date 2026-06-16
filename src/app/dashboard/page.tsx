@@ -19,8 +19,14 @@ import {
   Plus,
   ChevronDown,
   ChevronUp,
+  ArrowRight,
 } from "lucide-react";
+import ResumeIframe from "@/components/resume/ResumeIframe";
+import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
+import type { TemplateDefinition } from "@/lib/templateCatalog";
+import type { Resume } from "@/types/ResumeData";
 import styles from "./page.module.css";
+import LoadingComponent from "@/components/ui/LoadingComponent";
 
 interface DashboardStats {
   counts: {
@@ -52,6 +58,9 @@ export default function OverviewPage() {
   const [loading, setLoading] = useState(true);
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
   const createDropdownRef = useRef<HTMLDivElement>(null);
+  const [latestResumes, setLatestResumes] = useState<Resume[]>([]);
+  const [allTemplates, setAllTemplates] = useState<TemplateDefinition[]>([]);
+  const [loadingLatestResumes, setLoadingLatestResumes] = useState(true);
 
   useEffect(() => {
     if (!showCreateDropdown) return;
@@ -87,6 +96,33 @@ export default function OverviewPage() {
 
     fetchStats();
   }, [status, router]);
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
+
+    const fetchLatestResumes = async () => {
+      try {
+        const [resumesRes, templatesRes] = await Promise.all([
+          fetch("/api/resumes"),
+          fetch("/api/templates"),
+        ]);
+        if (resumesRes.ok) {
+          const data = (await resumesRes.json()) as Resume[];
+          setLatestResumes(data.slice(0, 4));
+        }
+        if (templatesRes.ok) {
+          const data = (await templatesRes.json()) as TemplateDefinition[];
+          setAllTemplates(data);
+        }
+      } catch {
+        // silent fail
+      } finally {
+        setLoadingLatestResumes(false);
+      }
+    };
+
+    fetchLatestResumes();
+  }, [status]);
 
   const activeApplications = stats?.counts.applicationsByStatus
     ? Object.entries(stats.counts.applicationsByStatus)
@@ -124,14 +160,6 @@ export default function OverviewPage() {
     .slice(0, 5);
 
   const quickActions = [
-    {
-      icon: FileText,
-      title: "My Resumes",
-      description: "View and manage your resume collection",
-      href: "/dashboard/resumes",
-      color: "var(--primary-1)",
-      bg: "#f0f7ed",
-    },
     {
       icon: PenLine,
       title: "Writer Studio",
@@ -192,18 +220,15 @@ export default function OverviewPage() {
 
   return (
     <div className={styles.container}>
-      
+
       <section className={styles.welcomeBanner}>
-        <div>
-          
           <h1 className={styles.welcomeTitle}>
             Welcome back{ session?.user?.name ? `, ${session.user.name}` : "" }
           </h1>
           <p className={styles.welcomeSubtitle}>
             Your career hub. manage resumes, cover letters, applications, and more.
+            <AiCredits aiCredit={session?.user?.AiCredits ?? null} />
           </p>
-          <AiCredits aiCredit={session?.user?.AiCredits ?? null} />
-        </div>
       </section>
 
       <section className={styles.createNewSection} ref={createDropdownRef}>
@@ -275,6 +300,57 @@ export default function OverviewPage() {
             <p className={styles.statValue}>{stats?.counts.applications ?? 0}</p>
             <p className={styles.statLabel}>Total Applications</p>
         </div>
+      </section>
+
+      <section className={styles.myResumesSection}>
+        <h2 className={styles.sectionTitle}>
+          <FileText className={styles.sectionTitleIcon} />
+          My Resumes
+        </h2>
+        {loadingLatestResumes ? (
+          <div className={styles.myResumesLoading}>
+            <Loader2 className={styles.myResumesSpinner} />
+            <span>Loading your resumes...</span>
+          </div>
+        ) : latestResumes.length === 0 ? (
+          <div className={styles.myResumesEmpty}>
+            <FileText size={32} />
+            <span>No resumes yet.</span>
+            <Link href="/editor/new" className={styles.myResumesEmptyLink}>
+              Create your first resume
+            </Link>
+          </div>
+        ) : (
+          <div className={styles.myResumesScroll}>
+            {latestResumes.map((resume) => {
+              const templateId = normalizeTemplateId(resume.template);
+              const templateDef = allTemplates.find((t) => t.id === templateId) || allTemplates[0];
+              const renderedTemplate = templateDef?.html && resume.content
+                ? buildTemplateSrcDoc(templateDef.html, resume.content)
+                : "";
+              return (
+                <Link
+                  key={resume._id}
+                  href={`/editor/${resume._id}`}
+                  className={styles.myResumesCard}
+                >
+                  <div className={styles.myResumesCardPreview}>
+                    {renderedTemplate ? (
+                      <ResumeIframe renderedTemplate={renderedTemplate} type="preview" />
+                    ) : (
+                      <div className={styles.myResumesCardNoPreview}>No preview</div>
+                    )}
+                  </div>
+                  <div className={styles.myResumesCardTitle}>{resume.title}</div>
+                </Link>
+              );
+            })}
+            <Link href="/dashboard/resumes" className={styles.myResumesArrowCard}>
+              <ArrowRight className={styles.myResumesArrowIcon} />
+              <span>View All</span>
+            </Link>
+          </div>
+        )}
       </section>
 
       <section className={styles.quickActionsSection}>

@@ -8,17 +8,16 @@
   gap: var(--space-8);
 }
 
-
-
 .welcomeBanner {
   display: flex;
-  align-items: center;
-  margin-top: var(--space-10);
-  justify-content: space-between;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top:var(--title-padding--top);
   padding: var(--space-4) var(--space-6);
   border-radius: var(--radius-xl);
   border: 1px solid var(--gray-200);
   box-shadow: var(--shadow-sm);
+  transition: margin 0.5s ease;
 }
 
 .welcomeTitle {
@@ -29,6 +28,9 @@
 }
 
 .welcomeSubtitle {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
   color: var(--gray-500);
   font-size: var(--text-sm);
   margin-bottom: var(--space-4);
@@ -97,6 +99,146 @@
   width: 1.25rem;
   height: 1.25rem;
   color: var(--gray-400);
+}
+
+.myResumesSection {
+  display: flex;
+  flex-direction: column;
+}
+
+.myResumesLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-8);
+  color: var(--gray-500);
+  font-size: var(--text-sm);
+}
+
+.myResumesSpinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  animation: spin 1s linear infinite;
+  color: var(--primary-1);
+}
+
+.myResumesScroll {
+  display: flex;
+  gap: var(--space-3);
+  overflow-x: auto;
+  padding: var(--space-2) 0 var(--space-3);
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.myResumesScroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.myResumesScroll::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: var(--radius-full);
+}
+
+.myResumesCard {
+  flex: 0 0 auto;
+  width: 180px;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  scroll-snap-align: start;
+  background: white;
+  text-decoration: none;
+  display: block;
+}
+
+.myResumesCard:hover {
+  border-color: var(--primary-1);
+  box-shadow: var(--shadow-sm);
+}
+
+.myResumesCardPreview {
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+  background: var(--gray-50);
+  position: relative;
+}
+
+.myResumesCardNoPreview {
+  padding: var(--space-3);
+  color: var(--gray-500);
+  font-size: var(--text-sm);
+}
+
+.myResumesCardTitle {
+  padding: var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--neutral-700);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-top: 1px solid var(--gray-100);
+}
+
+.myResumesArrowCard {
+  flex: 0 0 auto;
+  width: 180px;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+  scroll-snap-align: start;
+  background: white;
+  text-decoration: none;
+  color: var(--gray-500);
+}
+
+.myResumesArrowCard:hover {
+  border-color: var(--primary-1);
+  box-shadow: var(--shadow-sm);
+  background: var(--primary-50);
+  color: var(--primary-1);
+}
+
+.myResumesArrowIcon {
+  width: 2rem;
+  height: 2rem;
+}
+
+.myResumesArrowCard span {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+}
+
+.myResumesEmpty {
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--gray-400);
+  font-size: var(--text-sm);
+  background-color: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.myResumesEmptyLink {
+  color: var(--primary-1);
+  font-weight: var(--font-semibold);
+  text-decoration: underline;
 }
 
 .quickActionsGrid {
@@ -327,7 +469,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  height: 90vh;
 }
 
 .loadingIcon {

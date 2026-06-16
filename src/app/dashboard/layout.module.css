@@ -138,6 +138,9 @@
 }
 
 .mainContent {
+  --title-padding--top: 0rem;
+  
+
   flex: 1;
   overflow: auto;
   transition: padding 0.5s ease;
@@ -260,9 +263,11 @@
 
   .mainContent {
       --title-padding: 0rem;
+
       padding-left: 3rem;
 
       &.hide__sidebar {
+        --title-padding--top: var(--space-10);
         --title-padding: 1rem;
         padding-left: 0rem;
       }

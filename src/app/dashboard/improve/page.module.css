@@ -26,7 +26,6 @@
   color: var(--primary-900);
   font-size: var(--text-xl);
   font-weight: var(--font-bold);
-  margin-top: var(--space-1);
 }
 
 .subtitle {
