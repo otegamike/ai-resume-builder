@@ -1,6 +1,6 @@
 .container {
-  padding: var(--space-8);
-  max-width: 56rem;
+  padding: var(--space-4) var(--space-8);
+  max-width: var(--container-max-width);
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -8,18 +8,21 @@
 }
 
 .header {
-  margin-bottom: var(--space-8);
+  padding-left: var(--title-padding);
+  transition: padding-left 0.3s ease;
 }
 
 .title {
-  font-size: var(--text-3xl);
+  font-size: var(--text-xl);
   font-weight: var(--font-bold);
   letter-spacing: -0.025em;
+  color: var(--primary-900);
 }
 
 .subtitle {
   color: var(--gray-500);
   margin-top: var(--space-1);
+  font-size: var(--text-sm);
 }
 
 .card {
@@ -31,8 +34,7 @@
 
 .cardHeader {
   padding: var(--space-6);
-  border-bottom: 1px solid var(--gray-200);
-  background-color: var(--gray-50);
+  color:  var(--neutral-500);
 }
 
 .cardHeaderTop {
@@ -44,11 +46,11 @@
 .cardHeaderIcon {
   width: 1.25rem;
   height: 1.25rem;
-  color: var(--gray-500);
+  color: var(--primary-1);
 }
 
 .cardHeaderTitle {
-  font-size: var(--text-xl);
+  font-size: var(--text-base);
   font-weight: var(--font-semibold);
 }
 
@@ -115,13 +117,20 @@
   background-color: white;
   padding: 0 var(--space-3);
   font-size: var(--text-sm);
-  color: var(--foreground);
+  color: var(--neutral-500);
 }
 
 .input:focus {
   outline: none;
   border-color: var(--primary-1);
   box-shadow: 0 0 0 2px var(--ring);
+}
+
+.input:read-only {
+  background-color: #f5f5f5;
+  color: #71717a;
+  border-color: #e4e4e7;
+  cursor: not-allowed;
 }
 
 .inputHelper {

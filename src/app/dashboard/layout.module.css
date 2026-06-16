@@ -1,3 +1,4 @@
+
 .container {
   display: flex;
   height: 100vh;
@@ -144,6 +145,7 @@
 
 .sidebar__toggle__button {
   cursor: pointer;
+  display: none;
 }
 
 .floating__sidebar_toggle {
@@ -152,7 +154,7 @@
   padding: var(--space-2);
   background-color: hsl(69 20% 93%/ 0.3);
   backdrop-filter: blur(12px);
-  top: 3.5rem;
+  top: 4rem;
   left: 0.5rem;
   opacity: 0;
   transform: translateX(-200%);
@@ -162,6 +164,10 @@
 
 
 @container --dashboard-container (width < 650px) {
+
+  .sidebar__toggle__button {
+    display: flex;
+  }
 
   .floating__sidebar_toggle {
     cursor: pointer;
@@ -253,9 +259,11 @@
   }
 
   .mainContent {
+      --title-padding: 0rem;
       padding-left: 3rem;
 
       &.hide__sidebar {
+        --title-padding: 1rem;
         padding-left: 0rem;
       }
   }

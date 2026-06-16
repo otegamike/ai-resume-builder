@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import AiCredits from "@/components/ui/ai-credit/AiCredits";
 import {
   FileText,
   PenLine,
@@ -15,6 +16,9 @@ import {
   Settings,
   Clock,
   BarChart3,
+  Plus,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import styles from "./page.module.css";
 
@@ -46,6 +50,19 @@ export default function OverviewPage() {
   const { data: session, status } = useSession();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showCreateDropdown, setShowCreateDropdown] = useState(false);
+  const createDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showCreateDropdown) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (createDropdownRef.current && !createDropdownRef.current.contains(e.target as Node)) {
+        setShowCreateDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showCreateDropdown]);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -175,15 +192,58 @@ export default function OverviewPage() {
 
   return (
     <div className={styles.container}>
+      
       <section className={styles.welcomeBanner}>
         <div>
+          
           <h1 className={styles.welcomeTitle}>
             Welcome back{ session?.user?.name ? `, ${session.user.name}` : "" }
           </h1>
           <p className={styles.welcomeSubtitle}>
             Your career hub. manage resumes, cover letters, applications, and more.
           </p>
+          <AiCredits aiCredit={session?.user?.AiCredits ?? null} />
         </div>
+      </section>
+
+      <section className={styles.createNewSection} ref={createDropdownRef}>
+        <button
+          className={styles.createNewTrigger}
+          onClick={() => setShowCreateDropdown((v) => !v)}
+        >
+          <Plus className={styles.createNewTriggerIcon} />
+          <span>Create New</span>
+          {showCreateDropdown
+            ? <ChevronUp className={styles.createNewTriggerArrow} />
+            : <ChevronDown className={styles.createNewTriggerArrow} />
+          }
+        </button>
+        {showCreateDropdown && (
+          <div className={styles.createNewDropdown}>
+            <Link
+              href="/editor/new"
+              className={styles.createNewOption}
+              onClick={() => setShowCreateDropdown(false)}
+            >
+              <FileText className={styles.createNewOptionIcon} />
+              <div>
+                <p className={styles.createNewOptionTitle}>Resume</p>
+                <p className={styles.createNewOptionDesc}>Create a new resume from scratch or a template</p>
+              </div>
+            </Link>
+            <Link
+              href="/dashboard/writer"
+              className={styles.createNewOption}
+              onClick={() => setShowCreateDropdown(false)}
+            >
+              <PenLine className={styles.createNewOptionIcon} />
+              <div>
+                <p className={styles.createNewOptionTitle}>Cover Letter</p>
+                <p className={styles.createNewOptionDesc}>Write a cover letter for a job application</p>
+              </div>
+            </Link>
+          </div>
+        )}
       </section>
 
       <section className={styles.statsRow}>

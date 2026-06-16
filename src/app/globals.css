@@ -11,6 +11,7 @@
 html {
   font-size: var(--rem);
   height: 100%;
+  overflow-x: hidden;
 }
 
 body {

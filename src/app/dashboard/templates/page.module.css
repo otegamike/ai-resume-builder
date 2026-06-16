@@ -7,6 +7,8 @@
 
 .header {
   margin-bottom: 0;
+  padding-left: var(--title-padding);
+  transition: padding-left 0.3s ease;
 }
 
 .title {

@@ -7,9 +7,14 @@
   gap: var(--space-8);
 }
 
-.title {
 
-  font-size: var(--text-2xl);
+.header {
+  padding-left: var(--title-padding);
+  transition: padding-left 0.3s ease;
+}
+
+.title {
+  font-size: var(--text-xl);
   font-weight: var(--font-bold);
   letter-spacing: -0.025em;
   color:var(--primary-900);

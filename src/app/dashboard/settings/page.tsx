@@ -19,7 +19,7 @@ export default async function DashboardSettingsPage() {
 
   return (
     <div className={styles.container}>
-      <div>
+      <div className={styles.header}>
         <h1 className={styles.title}>Settings</h1>
         <p className={styles.subtitle}>Manage your account preferences and profile.</p>
       </div>

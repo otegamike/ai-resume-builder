@@ -11,6 +11,8 @@
   display: flex;
   justify-content: space-between;
   gap: var(--space-4);
+  padding-left: var(--title-padding);
+  transition: padding-left 0.3s ease;
 }
 
 .eyebrow {

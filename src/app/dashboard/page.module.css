@@ -1,5 +1,5 @@
 .container {
-  padding: var(--space-8);
+  padding: var(--space-4) var(--space-8);
   padding-right: var(--space-4);
   max-width: var(--container-max-width);
   margin: 0 auto;
@@ -8,9 +8,12 @@
   gap: var(--space-8);
 }
 
+
+
 .welcomeBanner {
   display: flex;
   align-items: center;
+  margin-top: var(--space-10);
   justify-content: space-between;
   padding: var(--space-4) var(--space-6);
   border-radius: var(--radius-xl);
@@ -28,6 +31,7 @@
 .welcomeSubtitle {
   color: var(--gray-500);
   font-size: var(--text-sm);
+  margin-bottom: var(--space-4);
 }
 
 .statsRow {
@@ -213,6 +217,110 @@
   background-color: white;
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-xl);
+}
+
+
+/* Create New Section */
+.createNewSection {
+  position: relative;
+}
+
+.createNewTrigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-4) var(--space-6);
+  background: linear-gradient(135deg, var(--primary-800), var(--primary-400));
+  color: white;
+  border: none;
+  border-radius: var(--radius-xl);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.createNewTrigger:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.createNewTriggerIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.createNewTriggerArrow {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-left: auto;
+  transition: transform 0.2s;
+}
+
+.createNewDropdown {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  z-index: var(--z-10);
+  overflow: hidden;
+  animation: dropdownFadeIn 0.15s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.createNewOption {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  text-decoration: none;
+  transition: background-color 0.15s;
+}
+
+.createNewOption:not(:last-child) {
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.createNewOption:hover {
+  background-color: var(--gray-50);
+}
+
+.createNewOptionIcon {
+  width: 2rem;
+  height: 2rem;
+  padding: var(--space-1);
+  border-radius: var(--radius-lg);
+  background-color: var(--primary-4);
+  color: var(--primary-1);
+  flex-shrink: 0;
+}
+
+.createNewOptionTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--gray-900);
+  margin-bottom: var(--space-1);
+}
+
+.createNewOptionDesc {
+  font-size: var(--text-xs);
+  color: var(--gray-500);
+  line-height: 1.4;
 }
 
 .loadingContainer {

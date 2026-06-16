@@ -1,0 +1,31 @@
+
+/* AI Credits Badge */
+.creditsBadge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  background: linear-gradient(135deg, var(--primary-4), var(--primary-3));
+  border-radius: var(--radius-full);
+  border: 1px solid var(--primary-2);
+  flex-shrink: 0;
+}
+
+.creditsIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--primary-1);
+}
+
+.creditsValue {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--primary-900);
+  line-height: 1;
+}
+
+.creditsLabel {
+  font-size: var(--text-xxs);
+  color: var(--primary-700);
+  font-weight: var(--font-medium);
+}

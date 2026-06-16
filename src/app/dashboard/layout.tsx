@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { FileText, Settings, Plus, LayoutTemplate, PanelRightClose,  PanelRightOpen, LogOut, BarChart3, WandSparkles, Sparkles, Home, PenLine, Briefcase } from "lucide-react";
@@ -56,6 +56,10 @@ export default function DashboardLayout({
     return pathname === path ? styles.navLinkActive : "";
   }
 
+  function closeSidebar () {
+    toggleSidebar(false);
+  }
+
   return (
     <div className={styles.container}>
       <aside className={`${styles.sidebar} ${isSideBarOpen? styles.open : ''} ${sidebarState === 'hide'? styles.hide : ''}`}>
@@ -69,56 +73,56 @@ export default function DashboardLayout({
               <PanelRightClose className={styles.navIcon} />
             }
           </div>
-          <Link href="/dashboard" className={`${styles.navLink} ${isActive("/dashboard")}`}>
+          <Link href="/dashboard" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard")}`}>
             <Home className={styles.navIcon} />
             <span className={styles.navLinkText}>
               Overview
             </span>
           </Link>
-          <Link href="/dashboard/resumes" className={`${styles.navLink} ${isActive("/dashboard/resumes")}`}>
+          <Link href="/dashboard/resumes" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/resumes")}`}>
             <FileText className={styles.navIcon} />
             <span className={styles.navLinkText}>
               My Resumes
             </span>
           </Link>
-          <Link href="/dashboard/writer" className={`${styles.navLink} ${isActive("/dashboard/writer")}`}>
+          <Link href="/dashboard/writer" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/writer")}`}>
             <PenLine className={styles.navIcon} />
             <span className={styles.navLinkText}>
               Writer
             </span>
           </Link>
-          <Link href="/dashboard/applications" className={`${styles.navLink} ${isActive("/dashboard/applications")}`}>
+          <Link href="/dashboard/applications" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/applications")}`}>
             <Briefcase className={styles.navIcon} />
             <span className={styles.navLinkText}>
               Applications
             </span>
           </Link>
-          <Link href="/dashboard/templates" className={`${styles.navLink} ${isActive("/dashboard/templates")}`}>
+          <Link href="/dashboard/templates" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/templates")}`}>
             <LayoutTemplate className={styles.navIcon} />
             <span className={styles.navLinkText}>
               Templates
             </span>
           </Link>
-          <Link href="/dashboard/improve" className={`${styles.navLink} ${isActive("/dashboard/improve")}`}>
+          <Link href="/dashboard/improve" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/improve")}`}>
             <WandSparkles className={styles.navIcon} />
             <span className={styles.navLinkText}>
               Improve
             </span>
           </Link>
-          <Link href="/dashboard/tailor" className={`${styles.navLink} ${isActive("/dashboard/tailor")}`}>
+          <Link href="/dashboard/tailor" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/tailor")}`}>
             <Sparkles className={styles.navIcon} />
             <span className={styles.navLinkText}>
               Tailor
             </span>
           </Link>
-          <Link href="/dashboard/settings" className={`${styles.navLink} ${isActive("/dashboard/settings")}`}>
+          <Link href="/dashboard/settings" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/settings")}`}>
             <Settings className={styles.navIcon} />
             <span className={styles.navLinkText}>
               Settings
             </span>
           </Link>
           {isAdmin && (
-            <Link href="/dashboard/admin" className={`${styles.navLink} ${isActive("/dashboard/admin")}`}>
+            <Link href="/dashboard/admin" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/admin")}`}>
               <BarChart3 className={styles.navIcon} />
               <span className={styles.navLinkText}>
                 Admin
@@ -129,7 +133,7 @@ export default function DashboardLayout({
 
         <div className={styles.sidebarFooter}>
         
-          <Link href="/editor/new" className={`${styles.navLink} ${styles.create__button}`}>
+          <Link href="/editor/new" onClick={closeSidebar} className={`${styles.navLink} ${styles.create__button}`}>
             <Plus className={styles.navIcon} color="var(--neutral-50)" />
             <span className={styles.navLinkText}> 
               Create New
