@@ -141,7 +141,7 @@ export default function OverviewPage() {
       bg: "#f5f3ff",
     },
     {
-      icon: BarChart3,
+      icon: Briefcase,
       title: "Applications",
       description: "Track your job applications",
       href: "/dashboard/applications",
