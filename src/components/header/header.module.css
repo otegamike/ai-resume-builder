@@ -11,6 +11,13 @@
   container-name: header;
 }
 
+.fixed {
+  position: relative;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
 .header__boundary {
   display: flex;
   align-items: center;

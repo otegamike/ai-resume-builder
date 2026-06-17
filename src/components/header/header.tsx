@@ -22,6 +22,7 @@ export default function Header() {
   const pathname = usePathname();
   const showNav = pathname === "/" || pathname === "/pricing";
   const showDashboardLink = !pathname.startsWith("/dashboard");
+  const isEditorPage = pathname.startsWith("/editor");
   const isAuthPage = pathname.startsWith("/auth/login");
   const { data: session, status } = useSession();
   const isSignedIn = status === "authenticated";
@@ -44,7 +45,7 @@ export default function Header() {
   
 
   return (
-    <header className={styles.header}>
+    <header className={`${styles.header} ${isEditorPage || !showDashboardLink ? styles.fixed : ""}`}>
       <div className={styles.header__boundary}>
       
         <div className={styles.header__content}>
