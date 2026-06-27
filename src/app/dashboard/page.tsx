@@ -225,10 +225,10 @@ export default function OverviewPage() {
           <h1 className={styles.welcomeTitle}>
             Welcome back{ session?.user?.name ? `, ${session.user.name}` : "" }
           </h1>
-          <p className={styles.welcomeSubtitle}>
+          <div className={styles.welcomeSubtitle}>
             Your career hub. manage resumes, cover letters, applications, and more.
             <AiCredits aiCredit={session?.user?.AiCredits ?? null} />
-          </p>
+          </div>
       </section>
 
       <section className={styles.createNewSection} ref={createDropdownRef}>

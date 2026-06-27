@@ -14,6 +14,7 @@ import {
   Upload,
   AlignLeft,
   X,
+  ChevronDown,
   AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -26,6 +27,13 @@ type JobInputMode = "text" | "image";
 interface SavedResume {
   _id: string;
   title: string;
+}
+
+function buildTitle(role: string, company: string) {
+  if (role && company) return `Cover Letter — ${role} at ${company}`;
+  if (role) return `Cover Letter — ${role}`;
+  if (company) return `Cover Letter — ${company}`;
+  return "Cover Letter";
 }
 
 export default function WriterPage() {
@@ -50,6 +58,7 @@ export default function WriterPage() {
   const [clGenerating, setClGenerating] = useState(false);
   const [clSaving, setClSaving] = useState(false);
   const [clError, setClError] = useState("");
+  const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
   const [resumes, setResumes] = useState<SavedResume[]>([]);
   const clJobFileRef = useRef<HTMLInputElement>(null);
 
@@ -135,10 +144,6 @@ export default function WriterPage() {
   }
 
   async function generateCoverLetter() {
-    if (!clCompany.trim() && !clRole.trim()) {
-      setClError("Please enter at least a target company or role.");
-      return;
-    }
     if (!resumeSelection) {
       setClError("Please select a resume.");
       return;
@@ -199,7 +204,7 @@ export default function WriterPage() {
 
       setClContent(data.content);
       if (!clTitle) {
-        setClTitle(data.title || `Cover Letter — ${clRole} at ${clCompany}`);
+        setClTitle(data.title || buildTitle(clRole, clCompany));
       }
     } catch (err) {
       setClError(err instanceof Error ? err.message : "Failed to generate cover letter");
@@ -217,7 +222,7 @@ export default function WriterPage() {
     setClError("");
 
     try {
-      const title = clTitle.trim() || `Cover Letter — ${clRole} at ${clCompany}`;
+      const title = clTitle.trim() || buildTitle(clRole, clCompany);
       const body = {
         title,
         targetCompany: clCompany,
@@ -300,29 +305,6 @@ export default function WriterPage() {
           </div>
 
           <div className={styles.formBody}>
-            <div className={styles.formRow}>
-              <div className={styles.field}>
-                <label className={styles.label}>Target Company</label>
-                <input
-                  type="text"
-                  className={styles.input}
-                  placeholder="e.g. Google"
-                  value={clCompany}
-                  onChange={(e) => setClCompany(e.target.value)}
-                />
-              </div>
-              <div className={styles.field}>
-                <label className={styles.label}>Target Role</label>
-                <input
-                  type="text"
-                  className={styles.input}
-                  placeholder="e.g. Software Engineer"
-                  value={clRole}
-                  onChange={(e) => setClRole(e.target.value)}
-                />
-              </div>
-            </div>
-
             <div className={styles.field}>
               <label className={styles.label}>Select Resume</label>
               <ResumeSelector onSelectionChange={setResumeSelection} />
@@ -378,6 +360,49 @@ export default function WriterPage() {
                       <span>Upload job posting screenshot</span>
                     </label>
                   )}
+                </div>
+              )}
+            </div>
+
+            <div className={styles.collapsibleSection}>
+              <button
+                type="button"
+                className={styles.collapsibleHeader}
+                onClick={() => setShowAdditionalInfo(!showAdditionalInfo)}
+              >
+                <span>Additional Information (Optional)</span>
+                <ChevronDown
+                  className={`${styles.collapsibleIcon} ${showAdditionalInfo ? styles.collapsibleIconOpen : ""}`}
+                />
+              </button>
+              {showAdditionalInfo && (
+                <div className={styles.collapsibleBody}>
+                  <div className={styles.formRow}>
+                    <div className={styles.field}>
+                      <label className={styles.label}>
+                        Target Company <span className={styles.optionalLabel}>(Optional)</span>
+                      </label>
+                      <input
+                        type="text"
+                        className={styles.input}
+                        placeholder="e.g. Google"
+                        value={clCompany}
+                        onChange={(e) => setClCompany(e.target.value)}
+                      />
+                    </div>
+                    <div className={styles.field}>
+                      <label className={styles.label}>
+                        Target Role <span className={styles.optionalLabel}>(Optional)</span>
+                      </label>
+                      <input
+                        type="text"
+                        className={styles.input}
+                        placeholder="e.g. Software Engineer"
+                        value={clRole}
+                        onChange={(e) => setClRole(e.target.value)}
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

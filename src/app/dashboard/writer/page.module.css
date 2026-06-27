@@ -223,7 +223,7 @@
 
 .formRow {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
   gap: var(--space-4);
 }
 
@@ -389,6 +389,52 @@
 .uploadIcon {
   width: 2rem;
   height: 2rem;
+}
+
+.collapsibleSection {
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+
+}
+
+.collapsibleHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: none;
+  background: var(--gray-50);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--gray-600);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.collapsibleHeader:hover {
+  background-color: var(--gray-100);
+}
+
+.collapsibleIcon {
+  width: 1rem;
+  height: 1rem;
+  transition: transform 0.2s;
+}
+
+.collapsibleIconOpen {
+  transform: rotate(180deg);
+}
+
+.collapsibleBody {
+  padding: var(--space-4);
+  border-top: 1px solid var(--gray-200);
+}
+
+.optionalLabel {
+  font-weight: var(--font-normal);
+  color: var(--gray-400);
 }
 
 .generateBtn {

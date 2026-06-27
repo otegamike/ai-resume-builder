@@ -76,7 +76,7 @@ export default function DashboardLayout({
           <Link href="/dashboard" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard")}`}>
             <Home className={styles.navIcon} />
             <span className={styles.navLinkText}>
-              Overview
+              Home
             </span>
           </Link>
           <Link href="/dashboard/resumes" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/resumes")}`}>

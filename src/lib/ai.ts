@@ -8,7 +8,8 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 // Use a capable model for structured JSON output
 const ATS_MODEL = "llama-3.3-70b-versatile";
 const VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
-const GENERATION_MODEL = "llama-3.1-8b-instant"; // fine for simple text gen
+const GENERATION_MODEL = "openai/gpt-oss-20b"; // fine for simple text gen
+
 
 const ATS_SYSTEM_INSTRUCTION =
   "You are an expert ATS resume analyst. You ONLY output raw valid JSON. Never use markdown code fences. Never add explanations before or after the JSON object. Your entire response must be parseable by JSON.parse().";
@@ -539,6 +540,8 @@ Write a professional cover letter for the following job application.
 - Keep it concise and compelling
 - Address the letter to the hiring manager (use "Dear Hiring Manager" if no name is given)
 - Return ONLY the cover letter text, no subject line or salutation prefix
+- No use of em dashes, emojis, or special characters. Use standard punctuation and formatting.
+- if theres company name or role in the job description, reference it in the letter. If not specified, use generic references like "the role" or "the company".
 
 ## TARGET
 Role: ${targetRole || "Not specified"}
@@ -554,8 +557,8 @@ ${knownResumeBlock}`;
 export async function generateCoverLetter(
   resumeText: string,
   jobDescription: string,
-  targetCompany: string,
-  targetRole: string,
+  targetCompany = "",
+  targetRole = "",
   existingResume?: ResumeContent
 ): Promise<string> {
   assertApiKey();
