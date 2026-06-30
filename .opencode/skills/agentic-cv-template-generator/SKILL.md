@@ -150,12 +150,33 @@ Replace only the content between the `<!-- DESIGN STARTS HERE -->` comments.
       for (let p = 1; p < pages; p++) {
         const boundary = p * cvHeight;
         for (const el of avoids) {
-          const top = el.offsetTop;
-          const bottom = top + el.offsetHeight;
-          if (top < boundary && bottom > boundary) {
-            const pushDown = boundary - top;
-            const currentMT = parseFloat(el.style.marginTop) || 0;
-            el.style.marginTop = (currentMT + pushDown + 15) + 'px';
+          let groupTop = el.offsetTop;
+          let groupBottom = groupTop + el.offsetHeight;
+          let target = el;
+          let isGroupShift = false;
+
+          const parent = el.closest('.block__parent');
+          if (parent) {
+            const firstBlockChild = parent.querySelector(avoidSelector);
+            if (firstBlockChild === el) {
+              const firstChild = parent.firstElementChild;
+              if (firstChild) {
+                groupTop = firstChild.offsetTop;
+                target = firstChild;
+                isGroupShift = true;
+              }
+            }
+          }
+
+          if (groupTop < boundary && groupBottom > boundary) {
+            const pushDown = boundary - groupTop;
+            const currentMT = parseFloat(target.style.marginTop) || 0;
+            target.style.marginTop = (currentMT + pushDown + 15) + 'px';
+
+            if (isGroupShift) {
+              target.style.paddingTop = '0.4rem';
+            }
+
             shifted = true;
             break;
           }
@@ -175,7 +196,7 @@ Replace only the content between the `<!-- DESIGN STARTS HERE -->` comments.
     cvElement.style.height = 'auto';
     cvElement.style.minHeight = '0px';
 
-    const avoidSelector = '.exp-entry, .edu-entry, .r-section-title, .ref-entry, .contact-grid, .contact-item, .l-block, .name-block, .about-text, .section-label, .summary-text, .photo-wrapper, .bullet-list';
+    const avoidSelector = '.block';
     handleBreakAvoidElements(cvElement, CV_HEIGHT, avoidSelector);
 
     const contentHeight = cvElement.scrollHeight;
@@ -215,8 +236,9 @@ Replace only the content between the `<!-- DESIGN STARTS HERE -->` comments.
 - Copy the script block **verbatim**. Do not rename functions, change constants, or remove the
   `postMessage` call — the parent app depends on it.
 - `{{multipage}}` is a renderer token; leave it exactly as written inside the string literal.
-- The `avoidSelector` string must include every block-level class used in your design that
-  should never be split across pages. Append your own classes to the list.
+- The `avoidSelector` string is simply `'.block'`. Add the `block` class to any HTML
+  element that should never be split across pages.
+- For sections with a section label + repeating items (Experience, Education, Projects, Skills with categories), use `class="block__parent"` on the outer wrapper and `class="block"` on each inner repeating item. The JS detects the first `.block` child inside a `block__parent` and shifts the entire group (label + first item) together.
 - `document.fonts.ready.then(scaleCv)` must be the final trigger — Google Fonts load async.
 
 ---
@@ -262,6 +284,16 @@ fullname is an object that breaks the name into first and other names, provided 
 {{#references}}
   {{name}}, {{company}}, {{phone}}, {{email}}
 {{/references}}
+
+{{#skillCategories}}
+  <div>{{category}}</div>
+  {{#skills}}<span>{{.}}</span>{{/skills}}
+{{/skillCategories}}
+
+{{#projects}}
+  <div>{{name}}</div>
+  {{#description}}<p>{{.}}</p>{{/description}}
+{{/projects}}
 ```
 
 ### 4c. Conditional blocks (render only if truthy / non-empty)
@@ -276,6 +308,8 @@ fullname is an object that breaks the name into first and other names, provided 
 {{?education}}...{{/education}}
 {{?languages}}...{{/languages}}
 {{?references}}...{{/references}}
+{{?skillCategories}}...{{/skillCategories}}
+{{?projects}}...{{/projects}}
 ```
 
 ### 4d. Current-context shorthand (inside array loops)
@@ -322,15 +356,23 @@ education[]
   .endDate       string
 
 skills[]         string[]   ← iterate with {{#skills}}{{.}}{{/skills}}
+skillCategories[]
+  .id            string
+  .category      string
+  .skills        string[]   ← iterate with {{#skills}}{{.}}{{/skills}}
 languages[]      string[]
 references[]
   .name          string
   .company       string
   .phone         string
   .email         string
+projects[]
+  .id            string
+  .name          string
+  .description   string[]   ← iterate with {{#description}}{{.}}{{/description}}
 ```
 
-Always wrap optional fields (`photo`, `website`, `references`, `languages`) in `{{?...}}` guards.
+Always wrap optional fields (`photo`, `website`, `references`, `languages`, `skillCategories`, `projects`) in `{{?...}}` guards.
 
 ---
 
@@ -546,7 +588,7 @@ never interfere with machine reading:
 </div>
 ```
 ```css
-.exp-entry { margin-bottom: 0; margin-top: 0; padding-top: 0.9rem; break-inside: avoid; }
+.exp-entry { margin-bottom: 0; margin-top: 0; }
 .exp-header { display: flex; justify-content: space-between; align-items: baseline; }
 .exp-role { font-size: 0.82rem; font-weight: 700; color: var(--text); }
 .exp-dates { font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; }
@@ -604,17 +646,52 @@ Use inline `<svg>` stroke icons. Stroke icons render crisply at small sizes with
 ```
 
 ### Break-avoidance (required on every block element that must not split across pages)
+Use a single reusable `.block` class instead of listing individual selectors.
+Add the `block` class to any HTML wrapper element that should stay together:
+
 ```css
-.exp-entry, .edu-entry, .ref-entry, .contact-item, .l-block, .name-block, .about-text, .section-label, .summary-text, .photo-wrapper, .bullet-list {
+.block {
   margin-bottom: 0;
   margin-top: 0;
-  padding-top: 0.9rem;
+  padding-top: 0.4rem;
   break-inside: avoid;
   page-break-inside: avoid;
 }
 ```
-Add your design-specific block classes to this selector list **and** to the `avoidSelector`
-string in the JS `scaleCv` function.
+
+Add `.block` to section wrappers in your HTML:
+```html
+<div class="block">
+  <div class="section-label">Contact</div>
+  <!-- content -->
+</div>
+```
+
+### Block-parent pattern (label + repeating items)
+For sections that have a section label followed by repeating child items (Experience, Education, Projects, Skills with categories), use `block__parent` on the outer wrapper and `block` on the inner items. This ensures the section label stays with the first child item when paginating:
+
+```html
+<div class="block__parent">
+  <div class="section-label">Experience</div>
+  {{#experience}}
+  <div class="exp-entry">
+    <div class="exp-header">
+      <span class="exp-role">{{role}}</span>
+      <span class="exp-dates">{{startDate}} – {{endDate}}</span>
+    </div>
+    <div class="exp-company">{{company}}</div>
+    {{#description}}<p class="exp-desc block">{{.}}</p>{{/description}}
+  </div>
+  {{/experience}}
+</div>
+```
+
+The JS detects the first `.block` child inside a `block__parent` and shifts the entire parent group (label + first item) downward together.
+
+Then reference `.block` in the JS `avoidSelector`:
+```js
+const avoidSelector = '.block';
+```
 
 ### Page indicator (page-break dividers)
 
@@ -853,8 +930,11 @@ The following is the smallest valid template skeleton. Expand with your design:
   .bullet-list li { font-size: 0.75rem; color: var(--text); padding-left: 14px; margin-bottom: 6px; position: relative; }
   .bullet-list li::before { content: '•'; position: absolute; left: 0; color: var(--accent); }
 
-  .exp-entry, .edu-entry, .ref-entry, .contact-item, .l-block, .name-block, .about-text, .section-label, .summary-text, .photo-wrapper, .bullet-list {
-    margin-bottom: 0; margin-top: 0; padding-top: 0.9rem; break-inside: avoid; page-break-inside: avoid;
+  .block {
+    margin-bottom: 0; margin-top: 0; padding-top: 0.4rem; break-inside: avoid; page-break-inside: avoid;
+  }
+  .skill-category-name {
+    font-weight: 700; font-size: 0.81rem; color: var(--text); margin-bottom: 0.25rem;
   }
   .exp-header { display: flex; justify-content: space-between; align-items: baseline; }
   .exp-role { font-size: 0.82rem; font-weight: 600; color: var(--text); }
@@ -879,7 +959,7 @@ The following is the smallest valid template skeleton. Expand with your design:
         </div>
         {{/personalInfo.photo}}
 
-        <div>
+        <div class="block">
           <div class="section-label">Contact</div>
           {{?personalInfo.email}}
           <div class="contact-item">
@@ -907,15 +987,26 @@ The following is the smallest valid template skeleton. Expand with your design:
           {{/personalInfo.website}}
         </div>
 
+        {{?skillCategories}}
+        <div class="block">
+          <div class="section-label">Skills</div>
+          {{#skillCategories}}
+          <div class="block">
+            <div class="skill-category-name">{{category}}</div>
+            <ul class="bullet-list">{{#skills}}<li>{{.}}</li>{{/skills}}</ul>
+          </div>
+          {{/skillCategories}}
+        </div>
+        {{/skillCategories}}
         {{?skills}}
-        <div>
+        <div class="block">
           <div class="section-label">Skills</div>
           <ul class="bullet-list">{{#skills}}<li>{{.}}</li>{{/skills}}</ul>
         </div>
         {{/skills}}
 
         {{?languages}}
-        <div>
+        <div class="block">
           <div class="section-label">Languages</div>
           <ul class="bullet-list">{{#languages}}<li>{{.}}</li>{{/languages}}</ul>
         </div>
@@ -952,7 +1043,7 @@ The following is the smallest valid template skeleton. Expand with your design:
         {{/experience}}
 
         {{?education}}
-        <div>
+        <div class="block">
           <div class="section-label">Education</div>
           {{#education}}
           <div class="edu-entry">
@@ -962,6 +1053,18 @@ The following is the smallest valid template skeleton. Expand with your design:
           {{/education}}
         </div>
         {{/education}}
+
+        {{?projects}}
+        <div class="block">
+          <div class="section-label">Projects</div>
+          {{#projects}}
+          <div class="exp-entry">
+            <div class="exp-role">{{name}}</div>
+            {{#description}}<p class="exp-desc">{{.}}</p>{{/description}}
+          </div>
+          {{/projects}}
+        </div>
+        {{/projects}}
       </div>
 
     </div>
@@ -1014,7 +1117,7 @@ The following is the smallest valid template skeleton. Expand with your design:
     const cvElement = document.querySelector('.cv');
     cvElement.style.height = 'auto';
     cvElement.style.minHeight = '0px';
-    const avoidSelector = '.exp-entry, .edu-entry, .r-section-title, .ref-entry, .contact-grid, .contact-item, .l-block, .name-block, .about-text, .section-label, .summary-text, .photo-wrapper, .bullet-list';
+    const avoidSelector = '.block';
     handleBreakAvoidElements(cvElement, CV_HEIGHT, avoidSelector);
     const pages = isMultipage ? Math.max(1, Math.ceil(cvElement.scrollHeight / CV_HEIGHT)) : 1;
     const newHeight = pages * CV_HEIGHT;

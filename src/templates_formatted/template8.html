@@ -103,12 +103,16 @@
     text-align: justify;
   }
 
-  .exp-entry {
+  .block {
     margin-bottom: 0;
     margin-top: 0;
-    padding-top: 0.9rem;
+    padding-top: 0.4rem;
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+
+  .exp-entry {
+    padding-top: 0.4rem;
   }
 
   .exp-header {
@@ -158,8 +162,6 @@
     margin-bottom: 0;
     margin-top: 0;
     padding-top: 0.7rem;
-    break-inside: avoid;
-    page-break-inside: avoid;
   }
 
   .edu-degree {
@@ -215,17 +217,10 @@
     z-index: -1;
   }
 
-  .exp-entry, .edu-entry, .skill-tags, .section-label, .name, .job-title, .contact-line, .divider {
-    margin-bottom: 0;
-    margin-top: 0;
-    padding-top: 0.9rem;
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
 .skill-category-name {
   font-weight: 700;
-  font-size: 0.9rem;
-  margin-top: 0.5rem;
+  font-size: 0.81rem;
+  color: var(--text);
   margin-bottom: 0.25rem;
 }
 </style>
@@ -269,7 +264,7 @@
       <hr class="divider"/>
 
       {{?summary}}
-      <div>
+      <div class="block">
         <div class="section-label">About</div>
         <p class="summary-text">{{summary}}</p>
       </div>
@@ -277,7 +272,7 @@
       {{/summary}}
 
       {{?experience}}
-      <div>
+      <div class="block__parent">
         <div class="section-label">Experience</div>
         {{#experience}}
         <div class="exp-entry">
@@ -286,7 +281,7 @@
             <span class="exp-dates">{{startDate}} – {{endDate}}</span>
           </div>
           <div class="exp-company">{{company}}</div>
-          {{#description}}<p class="exp-desc">{{.}}</p>{{/description}}
+          {{#description}}<p class="exp-desc block">{{.}}</p>{{/description}}
         </div>
         {{/experience}}
       </div>
@@ -294,10 +289,10 @@
       {{/experience}}
 
       {{?education}}
-      <div>
+      <div class="block__parent">
         <div class="section-label">Education</div>
         {{#education}}
-        <div class="edu-entry">
+        <div class="edu-entry block">
           <div class="edu-degree">{{degree}}</div>
           <div class="edu-school">{{school}}</div>
           <div class="edu-years">{{startDate}} – {{endDate}}</div>
@@ -308,10 +303,10 @@
       {{/education}}
 
       {{?skillCategories}}
-      <div>
+      <div class="block__parent">
         <div class="section-label">Skills</div>
         {{#skillCategories}}
-        <div>
+        <div class="block">
           <div class="skill-category-name">{{category}}</div>
           <div class="skill-tags">{{#skills}}<span class="skill-tag">{{.}}</span>{{/skills}}</div>
         </div>
@@ -320,7 +315,7 @@
       <hr class="divider"/>
       {{/skillCategories}}
       {{?skills}}
-      <div>
+      <div class="block">
         <div class="section-label">Skills</div>
         <div class="skill-tags">
           {{#skills}}<span class="skill-tag">{{.}}</span>{{/skills}}
@@ -330,11 +325,26 @@
       {{/skills}}
 
       {{?languages}}
-      <div>
+      <div class="block">
         <div class="section-label">Languages</div>
         {{#languages}}<div class="lang-item">{{.}}</div>{{/languages}}
       </div>
       {{/languages}}
+
+      {{?projects}}
+      <hr class="divider"/>
+      <div class="block__parent">
+        <div class="section-label">Projects</div>
+        {{#projects}}
+        <div class="exp-entry">
+          <div class="exp-header">
+            <span class="exp-role">{{name}}</span>
+          </div>
+          {{#description}}<p class="exp-desc block">{{.}}</p>{{/description}}
+        </div>
+        {{/projects}}
+      </div>
+      {{/projects}}
 
     </div>
   </div>
@@ -373,12 +383,33 @@
       for (let p = 1; p < pages; p++) {
         const boundary = p * cvHeight;
         for (const el of avoids) {
-          const top = el.offsetTop;
-          const bottom = top + el.offsetHeight;
-          if (top < boundary && bottom > boundary) {
-            const pushDown = boundary - top;
-            const currentMT = parseFloat(el.style.marginTop) || 0;
-            el.style.marginTop = (currentMT + pushDown + 15) + 'px';
+          let groupTop = el.offsetTop;
+          let groupBottom = groupTop + el.offsetHeight;
+          let target = el;
+          let isGroupShift = false;
+
+          const parent = el.closest('.block__parent');
+          if (parent) {
+            const firstBlockChild = parent.querySelector(avoidSelector);
+            if (firstBlockChild === el) {
+              const firstChild = parent.firstElementChild;
+              if (firstChild) {
+                groupTop = firstChild.offsetTop;
+                target = firstChild;
+                isGroupShift = true;
+              }
+            }
+          }
+
+          if (groupTop < boundary && groupBottom > boundary) {
+            const pushDown = boundary - groupTop;
+            const currentMT = parseFloat(target.style.marginTop) || 0;
+            target.style.marginTop = (currentMT + pushDown + 15) + 'px';
+
+            if (isGroupShift) {
+              target.style.paddingTop = '0.4rem';
+            }
+
             shifted = true;
             break;
           }
@@ -399,7 +430,7 @@
     cvElement.style.height = 'auto';
     cvElement.style.minHeight = '0px';
 
-    const avoidSelector = '.exp-entry, .edu-entry, .skill-tags, .section-label, .name, .job-title, .contact-line, .divider';
+    const avoidSelector = '.block';
     handleBreakAvoidElements(cvElement, CV_HEIGHT, avoidSelector);
 
     const contentHeight = cvElement.scrollHeight;

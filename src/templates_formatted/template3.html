@@ -353,20 +353,19 @@
     z-index: -1;
   }
 
-  .exp-entry, .edu-entry, .r-section-title, .ref-entry, .contact-grid, .contact-item, .l-block, .name-block, .about-text {
+  .block {
     margin-bottom: 0;
     margin-top: 0;
-    padding-top: 0.9rem;
+    padding-top: 0.4rem;
     break-inside: avoid;
     page-break-inside: avoid;
   }
-  
-.skill-category-name {
-  font-weight: 700;
-  font-size: 0.9rem;
-  margin-top: 0.5rem;
-  margin-bottom: 0.25rem;
-}
+  .skill-category-name {
+    font-weight: 700;
+    font-size: 0.81rem;
+    color: #1a1a1a;
+    margin-bottom: 0.25rem;
+  }
 </style>
 </head>
 <body>
@@ -389,7 +388,7 @@
 
       <!-- Contact -->
       {{?personalInfo.phone}}
-      <div>
+      <div class="block">
         <div class="l-section-title">Contact</div>
         <div class="contact-item">
           <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
@@ -418,10 +417,10 @@
 
       <!-- Education -->
       {{?education}}
-      <div class="edu-entry">
+      <div class="block__parent">
         <div class="l-section-title">Education</div>
         {{#education}}
-        <div>
+        <div class="block">
           <div class="edu-years">{{startDate}} - {{endDate}}</div>
           <div class="edu-degree">{{degree}}</div>
           <div class="edu-detail">{{school}}{{?detail}}<br/>{{detail}}{{/detail}}</div>
@@ -432,10 +431,10 @@
 
       <!-- Skills - list format, ignoring level -->
       {{?skillCategories}}
-      <div>
+      <div class="block__parent">
         <div class="l-section-title">Skills</div>
         {{#skillCategories}}
-        <div>
+        <div class="block">
           <div class="skill-category-name">{{category}}</div>
           <ul class="skill-list">{{#skills}}<li>{{.}}</li>{{/skills}}</ul>
         </div>
@@ -443,7 +442,7 @@
       </div>
       {{/skillCategories}}
       {{?skills}}
-      <div>
+      <div class="block">
         <div class="l-section-title">Skills</div>
         <ul class="skill-list">
           {{#skills}}<li>{{.}}</li>{{/skills}}
@@ -466,7 +465,7 @@
 
       <!-- Experience -->
       {{?experience}}
-      <div>
+      <div class="block__parent">
         <div class="r-section-title">Experience</div>
         {{#experience}}
         <div class="exp-entry">
@@ -476,7 +475,7 @@
           </div>
           {{?company}}<div class="exp-company">{{company}}</div>{{/company}}
           {{#description}}
-            <p class="exp-desc">
+            <p class="exp-desc block">
               {{.}}
             </p>
           {{/description}}
@@ -487,9 +486,30 @@
 
       <hr class="divider"/>
 
+      <!-- Projects -->
+      {{?projects}}
+        <div class="block__parent">
+          <div class="r-section-title">Projects</div>
+            {{#projects}}
+              <div class="exp-entry">
+                <div class="exp-header">
+                  <div class="exp-role">{{name}}</div>
+                </div>
+                {{#description}}
+                  <p class="exp-desc block">
+                    {{.}}
+                  </p>
+                {{/description}}
+              </div>
+            {{/projects}}
+          </div>
+        </div>
+        <hr class="divider"/>
+      {{/projects}}
+
       <!-- Language -->
       {{?languages}}
-      <div>
+      <div class="block">
         <div class="r-section-title">Language</div>
         <div class="lang-grid">
           {{#languages}}
@@ -505,11 +525,11 @@
 
       <!-- Reference -->
       {{?references}}
-      <div>
+      <div class="block__parent">
         <div class="r-section-title">Reference</div>
         <div class="ref-grid">
           {{#references}}
-          <div>
+          <div class="block">
             <div class="ref-name">{{name}}</div>
             <div class="ref-company">{{company}}</div>
             {{?phone}}<div class="ref-detail"><span class="lbl">Phone:</span> {{phone}}</div>{{/phone}}
@@ -561,12 +581,33 @@
       for (let p = 1; p < pages; p++) {
         const boundary = p * cvHeight;
         for (const el of avoids) {
-          const top = el.offsetTop;
-          const bottom = top + el.offsetHeight;
-          if (top < boundary && bottom > boundary) {
-            const pushDown = boundary - top;
-            const currentMT = parseFloat(el.style.marginTop) || 0;
-            el.style.marginTop = (currentMT + pushDown + 15) + 'px';
+          let groupTop = el.offsetTop;
+          let groupBottom = groupTop + el.offsetHeight;
+          let target = el;
+          let isGroupShift = false;
+
+          const parent = el.closest('.block__parent');
+          if (parent) {
+            const firstBlockChild = parent.querySelector(avoidSelector);
+            if (firstBlockChild === el) {
+              const firstChild = parent.firstElementChild;
+              if (firstChild) {
+                groupTop = firstChild.offsetTop;
+                target = firstChild;
+                isGroupShift = true;
+              }
+            }
+          }
+
+          if (groupTop < boundary && groupBottom > boundary) {
+            const pushDown = boundary - groupTop;
+            const currentMT = parseFloat(target.style.marginTop) || 0;
+            target.style.marginTop = (currentMT + pushDown + 15) + 'px';
+
+            if (isGroupShift) {
+              target.style.paddingTop = '0.4rem';
+            }
+
             shifted = true;
             break;
           }
@@ -587,7 +628,7 @@
     cvElement.style.height = 'auto';
     cvElement.style.minHeight = '0px';
 
-    const avoidSelector = '.exp-entry, .edu-entry, .r-section-title, .ref-entry, .contact-grid, .contact-item, .l-block, .name-block, .about-text';
+    const avoidSelector = '.block';
     handleBreakAvoidElements(cvElement, CV_HEIGHT, avoidSelector);
 
     const contentHeight = cvElement.scrollHeight;

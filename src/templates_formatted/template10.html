@@ -159,12 +159,16 @@
     text-align: justify;
   }
 
-  .exp-entry {
+  .block {
     margin-bottom: 0;
     margin-top: 0;
-    padding-top: 0.9rem;
+    padding-top: 0.4rem;
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+
+  .exp-entry {
+    padding-top: 0.4rem;
   }
 
   .exp-header {
@@ -214,8 +218,6 @@
     margin-bottom: 0;
     margin-top: 0;
     padding-top: 0.8rem;
-    break-inside: avoid;
-    page-break-inside: avoid;
     display: grid;
     grid-template-columns: 80px 1fr;
     gap: 0 16px;
@@ -254,17 +256,10 @@
     z-index: -1;
   }
 
-  .exp-entry, .edu-entry, .ref-entry, .contact-item, .lang-item, .section-label, .name, .job-title, .summary-text, .bullet-list {
-    margin-bottom: 0;
-    margin-top: 0;
-    padding-top: 0.9rem;
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
 .skill-category-name {
   font-weight: 700;
-  font-size: 0.9rem;
-  margin-top: 0.5rem;
+  font-size: 0.81rem;
+  color: var(--text);
   margin-bottom: 0.25rem;
 }
 </style>
@@ -283,7 +278,7 @@
         </div>
         {{/personalInfo.photo}}
 
-        <div>
+        <div class="block">
           <div class="section-label">Contact</div>
           {{?personalInfo.email}}
           <div class="contact-item">
@@ -312,10 +307,10 @@
         </div>
 
         {{?skillCategories}}
-        <div>
+        <div class="block__parent">
           <div class="section-label">Skills</div>
           {{#skillCategories}}
-          <div>
+          <div class="block">
             <div class="skill-category-name">{{category}}</div>
             <ul class="bullet-list">{{#skills}}<li>{{.}}</li>{{/skills}}</ul>
           </div>
@@ -323,14 +318,14 @@
         </div>
         {{/skillCategories}}
         {{?skills}}
-        <div>
+        <div class="block">
           <div class="section-label">Skills</div>
           <ul class="bullet-list">{{#skills}}<li>{{.}}</li>{{/skills}}</ul>
         </div>
         {{/skills}}
 
         {{?languages}}
-        <div>
+        <div class="block">
           <div class="section-label">Languages</div>
           {{#languages}}<div class="lang-item">{{.}}</div>{{/languages}}
         </div>
@@ -344,14 +339,14 @@
         <div class="job-title">{{personalInfo.jobTitle}}</div>
 
         {{?summary}}
-        <div>
+        <div class="block">
           <div class="section-label">About</div>
           <p class="summary-text">{{summary}}</p>
         </div>
         {{/summary}}
 
         {{?experience}}
-        <div>
+        <div class="block__parent">
           <div class="section-label">Experience</div>
           {{#experience}}
           <div class="exp-entry">
@@ -360,17 +355,31 @@
               <span class="exp-dates">{{startDate}} – {{endDate}}</span>
             </div>
             <div class="exp-company">{{company}}</div>
-            {{#description}}<p class="exp-desc">{{.}}</p>{{/description}}
+            {{#description}}<p class="exp-desc block">{{.}}</p>{{/description}}
           </div>
           {{/experience}}
         </div>
         {{/experience}}
 
+        {{?projects}}
+        <div class="block__parent">
+          <div class="section-label">Projects</div>
+          {{#projects}}
+          <div class="exp-entry">
+            <div class="exp-header">
+              <span class="exp-role">{{name}}</span>
+            </div>
+            {{#description}}<p class="exp-desc block">{{.}}</p>{{/description}}
+          </div>
+          {{/projects}}
+        </div>
+        {{/projects}}
+
         {{?education}}
-        <div>
+        <div class="block__parent">
           <div class="section-label">Education</div>
           {{#education}}
-          <div class="edu-entry">
+          <div class="edu-entry block">
             <div class="edu-year">{{endDate}}</div>
             <div>
               <div class="edu-degree">{{degree}}</div>
@@ -420,12 +429,33 @@
       for (let p = 1; p < pages; p++) {
         const boundary = p * cvHeight;
         for (const el of avoids) {
-          const top = el.offsetTop;
-          const bottom = top + el.offsetHeight;
-          if (top < boundary && bottom > boundary) {
-            const pushDown = boundary - top;
-            const currentMT = parseFloat(el.style.marginTop) || 0;
-            el.style.marginTop = (currentMT + pushDown + 15) + 'px';
+          let groupTop = el.offsetTop;
+          let groupBottom = groupTop + el.offsetHeight;
+          let target = el;
+          let isGroupShift = false;
+
+          const parent = el.closest('.block__parent');
+          if (parent) {
+            const firstBlockChild = parent.querySelector(avoidSelector);
+            if (firstBlockChild === el) {
+              const firstChild = parent.firstElementChild;
+              if (firstChild) {
+                groupTop = firstChild.offsetTop;
+                target = firstChild;
+                isGroupShift = true;
+              }
+            }
+          }
+
+          if (groupTop < boundary && groupBottom > boundary) {
+            const pushDown = boundary - groupTop;
+            const currentMT = parseFloat(target.style.marginTop) || 0;
+            target.style.marginTop = (currentMT + pushDown + 15) + 'px';
+
+            if (isGroupShift) {
+              target.style.paddingTop = '0.4rem';
+            }
+
             shifted = true;
             break;
           }
@@ -446,7 +476,7 @@
     cvElement.style.height = 'auto';
     cvElement.style.minHeight = '0px';
 
-    const avoidSelector = '.exp-entry, .edu-entry, .ref-entry, .contact-item, .lang-item, .section-label, .name, .job-title, .summary-text, .bullet-list';
+    const avoidSelector = '.block';
     handleBreakAvoidElements(cvElement, CV_HEIGHT, avoidSelector);
 
     const contentHeight = cvElement.scrollHeight;

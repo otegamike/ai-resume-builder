@@ -296,12 +296,12 @@
     page-break-inside: avoid;
   }
 
-.skill-category-name {
-  font-weight: 700;
-  font-size: 0.81rem;
-  color: #1a3330;
-  margin-bottom: 0.25rem;
-}
+  .skill-category-name {
+    font-weight: 700;
+    font-size: 0.81rem;
+    color: #1a3330;
+    margin-bottom: 0.25rem;
+  }
 </style>
 </head>
 <body>
@@ -363,7 +363,7 @@
 
       <!-- Skills -->
       {{?skillCategories}}
-      <div>
+      <div class="block__parent">
         <div class="section-label">Skills</div>
         {{#skillCategories}}
         <div class="block">
@@ -374,9 +374,9 @@
       </div>
       {{/skillCategories}}
       {{?skills}}
-      <div>
+      <div class="block__parent">
         <div class="section-label">Skills</div>
-        <ul class="bullet-list">
+        <ul class="bullet-list block">
           {{#skills}}<li>{{.}}</li>{{/skills}}
         </ul>
       </div>
@@ -414,7 +414,7 @@
 
       <!-- Experience -->
       {{?experience}}
-      <div>
+      <div class="block__parent">
         <div class="section-label">Experience</div>
         {{#experience}}
         <div class="exp-entry">
@@ -435,7 +435,7 @@
 
       <!-- Projects -->
       {{?projects}}
-      <div>
+      <div class="block__parent">
         <div class="section-label">Projects</div>
         {{#projects}}
         <div class="exp-entry">
@@ -491,12 +491,36 @@
       for (let p = 1; p < pages; p++) {
         const boundary = p * cvHeight;
         for (const el of avoids) {
-          const top = el.offsetTop;
-          const bottom = top + el.offsetHeight;
-          if (top < boundary && bottom > boundary) {
-            const pushDown = boundary - top;
-            const currentMT = parseFloat(el.style.marginTop) || 0;
-            el.style.marginTop = (currentMT + pushDown + 15) + 'px';
+          // Determine the effective group this element belongs to.
+          // If el is the first .block inside a .block__parent, the group
+          // spans from the parent's first child through el itself.
+          let groupTop = el.offsetTop;
+          let groupBottom = groupTop + el.offsetHeight;
+          let target = el;
+          let isGroupShift = false;
+
+          const parent = el.closest('.block__parent');
+          if (parent) {
+            const firstBlockChild = parent.querySelector(avoidSelector);
+            if (firstBlockChild === el) {
+              const firstChild = parent.firstElementChild;
+              if (firstChild) {
+                groupTop = firstChild.offsetTop;
+                target = firstChild;
+                isGroupShift = true;
+              }
+            }
+          }
+
+          if (groupTop < boundary && groupBottom > boundary) {
+            const pushDown = boundary - groupTop;
+            const currentMT = parseFloat(target.style.marginTop) || 0;
+            target.style.marginTop = (currentMT + pushDown + 15) + 'px';
+
+            if (isGroupShift) {
+              target.style.paddingTop = '0.4rem';
+            }
+
             shifted = true;
             break;
           }

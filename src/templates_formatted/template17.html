@@ -170,10 +170,10 @@
     font-size: 0.6rem;
   }
 
-  .exp-entry, .edu-entry, .ref-entry, .contact-item, .l-block, .name-block, .about-text, .section-label, .photo-wrapper, .summary-text, .bullet-list {
+  .block {
     margin-bottom: 0;
     margin-top: 0;
-    padding-top: 0.9rem;
+    padding-top: 0.4rem;
     break-inside: avoid;
     page-break-inside: avoid;
   }
@@ -222,7 +222,7 @@
         <div class="photo-wrapper"><img src="{{personalInfo.photo}}" alt="Profile photo"/></div>
         {{/personalInfo.photo}}
 
-        <div>
+        <div class="block">
           <div class="section-label">Contact</div>
           {{?personalInfo.email}}
           <div class="contact-item">
@@ -251,10 +251,10 @@
         </div>
 
         {{?skillCategories}}
-        <div>
+        <div class="block__parent">
           <div class="section-label">Skills</div>
           {{#skillCategories}}
-          <div>
+          <div class="block">
             <div class="skill-category-name">{{category}}</div>
             <ul class="bullet-list">{{#skills}}<li>{{.}}</li>{{/skills}}</ul>
           </div>
@@ -262,14 +262,14 @@
         </div>
         {{/skillCategories}}
         {{?skills}}
-        <div>
+        <div class="block">
           <div class="section-label">Skills</div>
           <ul class="bullet-list">{{#skills}}<li>{{.}}</li>{{/skills}}</ul>
         </div>
         {{/skills}}
 
         {{?languages}}
-        <div>
+        <div class="block">
           <div class="section-label">Languages</div>
           <ul class="bullet-list">{{#languages}}<li>{{.}}</li>{{/languages}}</ul>
         </div>
@@ -283,30 +283,42 @@
         </div>
 
         {{?summary}}
-        <div>
+        <div class="block">
           <div class="section-label">About</div>
           <p class="summary-text about-text">{{summary}}</p>
         </div>
         {{/summary}}
 
         {{?experience}}
-        <div>
+        <div class="block__parent">
           <div class="section-label">Experience</div>
           {{#experience}}
           <div class="exp-entry">
             <div class="exp-header"><span class="exp-role">{{role}}</span><span class="exp-dates">{{startDate}} – {{endDate}}</span></div>
             <div class="exp-company">{{company}}</div>
-            {{#description}}<p class="exp-desc">{{.}}</p>{{/description}}
+            {{#description}}<p class="exp-desc block">{{.}}</p>{{/description}}
           </div>
           {{/experience}}
         </div>
         {{/experience}}
 
+        {{?projects}}
+        <div class="block__parent">
+          <div class="section-label">Projects</div>
+          {{#projects}}
+          <div class="exp-entry">
+            <div class="exp-header"><span class="exp-role">{{name}}</span></div>
+            {{#description}}<p class="exp-desc block">{{.}}</p>{{/description}}
+          </div>
+          {{/projects}}
+        </div>
+        {{/projects}}
+
         {{?education}}
-        <div>
+        <div class="block__parent">
           <div class="section-label">Education</div>
           {{#education}}
-          <div class="edu-entry">
+          <div class="edu-entry block">
             <div class="edu-degree">{{degree}}</div>
             <div class="edu-detail">{{school}} · {{startDate}} – {{endDate}}</div>
           </div>
@@ -315,10 +327,10 @@
         {{/education}}
 
         {{?references}}
-        <div>
+        <div class="block__parent">
           <div class="section-label">References</div>
           {{#references}}
-          <div class="ref-entry" style="margin-bottom:8px;">
+          <div class="block" style="margin-bottom:8px;">
             <div class="ref-name">{{name}}</div>
             <div class="ref-detail">{{company}} · {{email}}</div>
           </div>
@@ -354,15 +366,40 @@
     let maxIter = 20;
     while (maxIter-- > 0) {
       let shifted = false;
-      const pages = Math.ceil(cvElement.scrollHeight / cvHeight);
+      const height = cvElement.scrollHeight;
+      const pages = Math.ceil(height / cvHeight);
       for (let p = 1; p < pages; p++) {
         const boundary = p * cvHeight;
         for (const el of avoids) {
-          const top = el.offsetTop;
-          const bottom = top + el.offsetHeight;
-          if (top < boundary && bottom > boundary) {
-            el.style.marginTop = (parseFloat(el.style.marginTop)||0) + (boundary - top) + 15 + 'px';
-            shifted = true; break;
+          let groupTop = el.offsetTop;
+          let groupBottom = groupTop + el.offsetHeight;
+          let target = el;
+          let isGroupShift = false;
+
+          const parent = el.closest('.block__parent');
+          if (parent) {
+            const firstBlockChild = parent.querySelector(avoidSelector);
+            if (firstBlockChild === el) {
+              const firstChild = parent.firstElementChild;
+              if (firstChild) {
+                groupTop = firstChild.offsetTop;
+                target = firstChild;
+                isGroupShift = true;
+              }
+            }
+          }
+
+          if (groupTop < boundary && groupBottom > boundary) {
+            const pushDown = boundary - groupTop;
+            const currentMT = parseFloat(target.style.marginTop) || 0;
+            target.style.marginTop = (currentMT + pushDown + 15) + 'px';
+
+            if (isGroupShift) {
+              target.style.paddingTop = '0.4rem';
+            }
+
+            shifted = true;
+            break;
           }
         }
         if (shifted) break;
@@ -376,7 +413,7 @@
     const cvElement = document.querySelector('.cv');
     cvElement.style.height = 'auto';
     cvElement.style.minHeight = '0px';
-    const avoidSelector = '.exp-entry, .edu-entry, .ref-entry, .contact-item, .l-block, .name-block, .about-text, .section-label, .photo-wrapper, .summary-text, .bullet-list';
+    const avoidSelector = '.block';
     handleBreakAvoidElements(cvElement, CV_HEIGHT, avoidSelector);
     const pages = isMultipage ? Math.max(1, Math.ceil(cvElement.scrollHeight / CV_HEIGHT)) : 1;
     const newHeight = pages * CV_HEIGHT;
