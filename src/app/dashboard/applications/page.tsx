@@ -944,6 +944,7 @@ export default function ApplicationsPage() {
           )}
         </div>
       )}
+
     </div>
   );
 }

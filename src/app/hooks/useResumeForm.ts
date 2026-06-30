@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import type { ResumeContent } from "@/types/ResumeData";
+import type { ResumeContent, SkillCategory } from "@/types/ResumeData";
 import { initialResume, maxSkillCount } from "@/constants/ResumeConstants";
 import { formatName } from "@/utils/nameFormatter";
 import type { Tab } from "./useTabNavigation";
@@ -78,6 +78,28 @@ export function useResumeForm(onChange?: (next: ResumeContent) => void) {
     update({ ...resume, education: resume.education.filter(edu => edu.id !== id) });
   }, [resume, update]);
 
+  const handleProjectChange = useCallback((id: string, field: string, value: string | string[]) => {
+    update({
+      ...resume,
+      projects: (resume.projects || []).map(proj => proj.id === id ? { ...proj, [field]: value } : proj),
+    });
+  }, [resume, update]);
+
+  const addProject = useCallback(() => {
+    update({
+      ...resume,
+      projects: [...(resume.projects || []), { id: Date.now().toString(), name: "", description: [] }],
+    });
+  }, [resume, update]);
+
+  const removeProject = useCallback((id: string) => {
+    update({ ...resume, projects: (resume.projects || []).filter(proj => proj.id !== id) });
+  }, [resume, update]);
+
+  const updateSkillCategories = useCallback((skillCategories: SkillCategory[]) => {
+    update({ ...resume, skillCategories });
+  }, [resume, update]);
+
   const addSkill = useCallback(() => {
     if (!newSkill.trim() || resume.skills.includes(newSkill.trim())) return;
     if (resume.skills.length >= maxSkillCount) {
@@ -135,8 +157,17 @@ export function useResumeForm(onChange?: (next: ResumeContent) => void) {
           }
           return false;
         }
+      case "projects":
+        {
+          if (resume.projects && resume.projects.length === 0) return false;
+          if (resume.projects && resume.projects.length > 0) {
+            const unfilledProject = resume.projects.some((proj) => !proj.name || !proj.description || proj.description.length === 0);
+            return !unfilledProject;
+          }
+          return true; // if projects array is undefined (optional)
+        }
       case "skills":
-        return resume.skills.length > 0;
+        return resume.skills.length > 0 || (resume.skillCategories && resume.skillCategories.length > 0) || false;
       default:
         return false;
     }
@@ -156,6 +187,10 @@ export function useResumeForm(onChange?: (next: ResumeContent) => void) {
     handleEducationChange,
     addEducation,
     removeEducation,
+    handleProjectChange,
+    addProject,
+    removeProject,
+    updateSkillCategories,
     addSkill,
     removeSkill,
     addSkillFromSuggestion,

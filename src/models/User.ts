@@ -17,6 +17,9 @@ export interface IUser extends Document {
   subscriptionId: string;
   AiCredits: number;
   AiCreditRateLimit: number;
+  gmailAccessToken?: string;
+  gmailRefreshToken?: string;
+  gmailTokenExpiresAt?: Date;
 }
 
 const UserSchema: Schema = new Schema<IUser>(
@@ -38,6 +41,9 @@ const UserSchema: Schema = new Schema<IUser>(
     subscriptionId: { type: String, default: "" },
     AiCredits: { type: Number, default: 1000 },
     AiCreditRateLimit: { type: Number, default: 10 },
+    gmailAccessToken: { type: String },
+    gmailRefreshToken: { type: String },
+    gmailTokenExpiresAt: { type: Date },
   },
   { timestamps: true }
 );

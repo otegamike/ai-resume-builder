@@ -144,3 +144,47 @@ export async function exportResumeAsImage(
     link.click();
   });
 }
+
+export async function exportResumeAsPdfBase64(
+  exportIframeRef: React.RefObject<HTMLIFrameElement | null>,
+  pageWidth: number,
+  pageHeight: number,
+): Promise<string | null> {
+  const element = getExportElement(exportIframeRef);
+  const iframeWindow = exportIframeRef.current?.contentWindow;
+  if (!element || !iframeWindow) return null;
+
+  await new Promise((r) => setTimeout(r, 500));
+
+  const pdfBase64 = await html2pdf()
+    .set({
+      margin: 15,
+      image: { type: "jpeg" as const, quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        logging: true,
+        onclone: buildOncloneHandler((cv) => {
+          cv.style.height = "auto";
+          void cv.offsetHeight;
+          const initialHeight = cv.getBoundingClientRect().height;
+          const finalHeight = getNearestPageHeight(initialHeight);
+          cv.style.height = finalHeight + "px";
+          cv.style.overflow = "visible";
+          cv.style.minHeight = "0";
+          cv.style.borderRadius = "0";
+          cv.style.marginTop = "0";
+        }),
+      },
+      jsPDF: {
+        unit: "px" as const,
+        format: [pageWidth, pageHeight] as [number, number],
+        orientation: "portrait" as const,
+      },
+    })
+    .from(element)
+    .outputPdf("datauristring");
+
+  return pdfBase64 as string;
+}
+

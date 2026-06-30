@@ -18,6 +18,7 @@ import HeadshotTab from "./form-nav/HeadshotTab";
 import SummaryTab from "./form-nav/SummaryTab";
 import ExperienceTab from "./form-nav/ExperienceTab";
 import EducationTab from "./form-nav/EducationTab";
+import ProjectsTab from "./form-nav/ProjectsTab";
 import SkillsTab from "./form-nav/SkillsTab";
 import FinishTab from "./form-nav/FinishTab";
 import styles from "./page.module.css";
@@ -55,7 +56,7 @@ export default function ResumeEditor() {
 
   const {
     aiGenerating, aiGeneratingFor,
-    generateAiSummary, improveAiSummary, generateAiSkills, generateAiBulletPoints,
+    generateAiSummary, improveAiSummary, generateAiSkills, generateAiCategorizedSkills, generateAiCategorizeExistingSkills, generateAiBulletPoints,
   } = useAi();
 
   const {
@@ -168,6 +169,64 @@ export default function ResumeEditor() {
     const skills = result.array;
     const unseenSkills = skills.filter((s: string) => !resume.skills.includes(s));
     setAiSuggestedSkills(unseenSkills);
+  };
+
+  const generateCategorizedSkills = async () => {
+    if (!resume.personalInfo.jobTitle) {
+      setError("Please enter a job title first");
+      return;
+    }
+    const result = await generateAiCategorizedSkills(resume.personalInfo.jobTitle);
+    if (!result.success) return;
+    
+    // result.array should be an array of {category: string, skills: string[]}
+    const newCategories = result.array as unknown as { category: string, skills: string[] }[];
+    const formattedCategories = newCategories.map((c) => ({
+      id: Date.now().toString() + Math.random().toString(),
+      category: c.category,
+      skills: c.skills,
+    }));
+    
+    const nextResume = { ...resume, skillCategories: formattedCategories, skills: [], skillCategorized: true };
+    setResume(nextResume); 
+    debouncedAutoSave(title, nextResume);
+  };
+
+  const categorizeSkills = async () => {
+    if (resume.skills.length === 0) return;
+
+    const result = await generateAiCategorizeExistingSkills(resume.skills);
+    if (!result.success) {
+      const categories = [{ id: Date.now().toString(), category: "Core Skills", skills: [...resume.skills] }];
+      const next = { ...resume, skillCategories: categories, skills: [], skillCategorized: true };
+      setResume(next);
+      debouncedAutoSave(title, next);
+      return;
+    }
+
+    const newCategories = result.array as unknown as { category: string; skills: string[] }[];
+    const allCategorized = newCategories.flatMap(c => c.skills);
+    const missing = resume.skills.filter(s => !allCategorized.includes(s));
+    if (missing.length > 0) {
+      newCategories.push({ category: "Other", skills: missing });
+    }
+
+    const formattedCategories = newCategories.map(c => ({
+      id: Date.now().toString() + Math.random().toString(),
+      category: c.category,
+      skills: c.skills,
+    }));
+
+    const nextResume = { ...resume, skillCategories: formattedCategories, skills: [], skillCategorized: true };
+    setResume(nextResume);
+    debouncedAutoSave(title, nextResume);
+  };
+
+  const uncategorizeSkills = () => {
+    const flatSkills = (resume.skillCategories || []).flatMap(cat => cat.skills);
+    const next = { ...resume, skills: flatSkills, skillCategories: [], skillCategorized: false };
+    setResume(next);
+    debouncedAutoSave(title, next);
   };
 
   useEffect(() => {
@@ -416,9 +475,27 @@ export default function ResumeEditor() {
                   onChange={form.handleEducationChange}
                 />
               )}
+              {activeTab === "projects" && (
+                <ProjectsTab
+                  projects={resume.projects || []}
+                  addProject={form.addProject}
+                  removeProject={form.removeProject}
+                  onChange={form.handleProjectChange}
+                />
+              )}
               {activeTab === "skills" && (
                 <SkillsTab
                   skills={resume.skills}
+                  skillCategories={resume.skillCategories || []}
+                  skillCategorized={resume.skillCategorized || false}
+                  onCategorizeSkills={categorizeSkills}
+                  onUncategorizeSkills={uncategorizeSkills}
+                  updateSkillCategories={form.updateSkillCategories}
+                  setSkills={(newSkills: string[]) => {
+                    const nextResume = { ...resume, skills: newSkills };
+                    setResume(nextResume);
+                    debouncedAutoSave(title, nextResume);
+                  }}
                   aiSuggestedSkills={aiSuggestedSkills}
                   jobTitle={resume.personalInfo.jobTitle}
                   newSkill={newSkill}
@@ -428,6 +505,7 @@ export default function ResumeEditor() {
                   addSkillFromSuggestion={form.addSkillFromSuggestion}
                   removeSuggestedSkill={form.removeSuggestedSkill}
                   generateAISkills={generateAISkills}
+                  generateCategorizedSkills={generateCategorizedSkills}
                   aiGenerating={aiGenerating}
                   aiGeneratingFor={aiGeneratingFor}
                   skillsError={skillsError}

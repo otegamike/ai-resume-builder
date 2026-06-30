@@ -361,6 +361,12 @@
     page-break-inside: avoid;
   }
   
+.skill-category-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.25rem;
+}
 </style>
 </head>
 <body>
@@ -425,6 +431,17 @@
       {{/education}}
 
       <!-- Skills - list format, ignoring level -->
+      {{?skillCategories}}
+      <div>
+        <div class="l-section-title">Skills</div>
+        {{#skillCategories}}
+        <div>
+          <div class="skill-category-name">{{category}}</div>
+          <ul class="skill-list">{{#skills}}<li>{{.}}</li>{{/skills}}</ul>
+        </div>
+        {{/skillCategories}}
+      </div>
+      {{/skillCategories}}
       {{?skills}}
       <div>
         <div class="l-section-title">Skills</div>

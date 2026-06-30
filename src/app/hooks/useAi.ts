@@ -17,7 +17,7 @@ export function useAi() {
     const [aiGeneratingFor, setAiGeneratingFor] = useState<string | null>(null);
     const [aiError, setAiError] = useState<string|null>(null);
 
-    const callAI = async (type: string, data: Record<string, unknown>): Promise<string | string[]> => {
+    const callAI = async (type: string, data: Record<string, unknown>): Promise<any> => {
         const response = await fetch('/api/ai/generate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -29,7 +29,7 @@ export function useAi() {
         return result.result;
     };
 
-    const AiWrapper = async (logic: () => Promise<string | string[]>, type: string): Promise<AiResult | AiErrorResponse> =>{
+    const AiWrapper = async (logic: () => Promise<any>, type: string): Promise<AiResult | AiErrorResponse> =>{
         setAiError(null);
         setAiGenerating(true);
         setAiGeneratingFor(type);
@@ -45,8 +45,10 @@ export function useAi() {
             const response = await logic();
             if (typeof response === 'string') {
                 result.string = response;
-            } else {
+            } else if (Array.isArray(response)) {
                 result.array = response;
+            } else {
+                result.array = response; // For any other type, just pass it through
             }
 
             success = true;
@@ -113,6 +115,22 @@ export function useAi() {
         }, "generateSkills");
     };
 
+    const generateAiCategorizedSkills = (jobTitle: string): Promise<AiResult | AiErrorResponse> => {
+        return AiWrapper(async () => {
+            const result = await callAI('generateCategorizedSkills', {
+                 jobTitle
+            })
+            return result;
+        }, "generateCategorizedSkills");
+    };
+
+    const generateAiCategorizeExistingSkills = (skills: string[]): Promise<AiResult | AiErrorResponse> => {
+        return AiWrapper(async () => {
+            const result = await callAI('categorizeExistingSkills', { skills });
+            return result;
+        }, "categorizeExistingSkills");
+    };
+
     const generateAiBulletPoints = (experience: Experience, index: number) => {
         return AiWrapper(async () => {
             if(!experience.company || !experience.role || experience.description.length === 0){
@@ -135,6 +153,8 @@ export function useAi() {
         generateAiSummary,
         improveAiSummary,
         generateAiSkills,
+        generateAiCategorizedSkills,
+        generateAiCategorizeExistingSkills,
         generateAiBulletPoints,
     };
 

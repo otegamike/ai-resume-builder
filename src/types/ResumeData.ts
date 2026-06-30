@@ -26,12 +26,27 @@ export interface Education {
   endDate: string;
 }
 
+export interface Project {
+  id: string;
+  name: string;
+  description: string[];
+}
+
+export interface SkillCategory {
+  id: string;
+  category: string;
+  skills: string[];
+}
+
 export interface ResumeContent {
   personalInfo: PersonalInfo;
   summary: string;
   experience: Experience[];
   education: Education[];
+  projects?: Project[];
   skills: string[];
+  skillCategories?: SkillCategory[];
+  skillCategorized?: boolean;
 }
 
 export interface Resume {

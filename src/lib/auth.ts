@@ -76,7 +76,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token }) {
       if (!token.email) return token;
       await dbConnect();
-      const dbUser = await User.findOne({ email: token.email }).select("_id email name image isAdmin subscriptionPlan AiCredits");
+      const dbUser = await User.findOne({ email: token.email }).select("_id email name image isAdmin subscriptionPlan AiCredits gmailAccessToken");
       if (dbUser) {
         token.userId = String(dbUser._id);
         token.name = dbUser.name;
@@ -84,6 +84,7 @@ export const authOptions: NextAuthOptions = {
         token.isAdmin = dbUser.isAdmin ?? false;
         token.subscriptionPlan = dbUser.subscriptionPlan ?? "free";
         token.AiCredits = dbUser.AiCredits ?? 0;
+        token.hasGmailConnected = !!dbUser.gmailAccessToken;
       }
       return token;
     },
@@ -93,6 +94,7 @@ export const authOptions: NextAuthOptions = {
         session.user.isAdmin = (token.isAdmin as boolean | undefined) ?? false;
         session.user.subscriptionPlan = (token.subscriptionPlan as string | undefined) ?? "free";
         session.user.AiCredits = (token.AiCredits as number | undefined) ?? 0;
+        (session.user as any).hasGmailConnected = (token.hasGmailConnected as boolean | undefined) ?? false;
       }
       return session;
     },

@@ -69,6 +69,27 @@ function parseJsonObject<T>(value: string): T {
   throw new Error(`AI returned unparseable JSON. Raw: ${value.slice(0, 300)}`);
 }
 
+function parseJsonArray<T>(value: string): T[] {
+  const cleaned = stripJsonFence(value);
+
+  // Attempt 1: direct parse
+  try {
+    const parsed = JSON.parse(cleaned);
+    if (Array.isArray(parsed)) return parsed as T[];
+  } catch {}
+
+  // Attempt 2: extract outermost [ ]
+  const start = cleaned.indexOf("[");
+  const end = cleaned.lastIndexOf("]");
+  if (start >= 0 && end > start) {
+    try {
+      return JSON.parse(cleaned.slice(start, end + 1)) as T[];
+    } catch {}
+  }
+
+  throw new Error(`AI returned unparseable JSON array. Raw: ${value.slice(0, 300)}`);
+}
+
 // ─── Normalizers ──────────────────────────────────────────────────────────────
 
 function stringifyListItem(item: unknown): string {
@@ -383,7 +404,7 @@ Target job information (optional):
 2. **Optimize Job Title**: If the candidate's job title or desired title can be aligned closer to the target job title without lying, update it (e.g. "Software Developer" to "Full-Stack Engineer" if the job is for a Full-Stack Engineer and the candidate has experience in both frontend and backend).
 3. **Tailor Professional Summary**: Rewrite the summary to highlight key accomplishments, technologies, and alignment with the target job's primary goals. Keep it to 2-3 impactful sentences.
 4. **Tailor Experience Bullets**: Rewrite and restructure the candidate's experience description bullet points to emphasize relevant projects, results, and skills. Inject relevant keywords and action verbs. Keep the bullet points concise.
-5. **Tailor Skills**: Re-organize and filter the skills list to prioritize key terms and technologies mentioned in the job description that the candidate actually possesses or can be inferred to possess from their experience.
+5. **Tailor Skills**: Re-organize and filter the skills list to prioritize key terms and technologies mentioned in the job description that the candidate actually possesses or can be inferred to possess from their experience. you can also add new skills if they are relevant to the job descriptionand can be inferred from the candidate's experience or are closely related to existing skills.
 6. **Assign Compatibility Scores**: 
    - 'matchScoreBefore': compatibility score (0-100) of the original resume.
    - 'matchScoreAfter': compatibility score (0-100) of the tailored resume.
@@ -524,6 +545,53 @@ export async function generateSkillsSuggestions(jobTitle: string): Promise<strin
     .filter((s) => s.length > 0);
 }
 
+export async function generateCategorizedSkills(jobTitle: string): Promise<any[]> {
+  const result = await callGroq(
+    `Generate 3-5 categories of skills for a ${jobTitle} with 3-5 skills each.
+     Return ONLY a valid JSON array of objects with keys "category" and "skills" (array of strings).
+     No markdown, no explanation.`,
+    {
+      temperature: 0.1,
+      maxTokens: 2048,
+      systemInstruction: ATS_SYSTEM_INSTRUCTION,
+    }
+  );
+  return parseJsonArray<{ category: string; skills: string[] }>(result);
+}
+
+export async function categorizeExistingSkills(skills: string[]): Promise<{ category: string; skills: string[] }[]> {
+  if (skills.length === 0) return [];
+
+  const result = await callGroq(
+    `Group these skills into 2-4 logical categories:
+     ${skills.join(", ")}
+
+     Rules:
+     - Use EVERY skill from the list. Do not leave any out.
+     - Do NOT add any new skills not in the list.
+     - Each skill must appear in exactly one category.
+     - Categories must be meaningful (e.g. "Frontend", "Backend", "DevOps", "Soft Skills", "Languages", etc.).
+     - If only 1-2 skills fit a category, that's fine.
+     Return ONLY a valid JSON array of objects with keys "category" and "skills" (array of strings).
+     No markdown, no explanation.`,
+    {
+      temperature: 0.1,
+      maxTokens: 2048,
+      systemInstruction: ATS_SYSTEM_INSTRUCTION,
+    }
+  );
+
+  const parsed = parseJsonArray<{ category: string; skills: string[] }>(result);
+
+  const allCategorized = parsed.flatMap(c => c.skills);
+  const missing = skills.filter(s => !allCategorized.includes(s));
+  if (missing.length > 0) {
+    parsed.push({ category: "Other", skills: missing });
+  }
+
+  return parsed;
+}
+
 const COVER_LETTER_PROMPT = (
   resumeText: string,
   jobDescription: string,
@@ -534,8 +602,8 @@ const COVER_LETTER_PROMPT = (
 Write a professional cover letter for the following job application.
 
 ## INSTRUCTIONS
-- Write 3-4 paragraphs: engaging opening, body highlighting relevant experience, confident closing
-- Use the candidate's actual experience from their resume — do NOT invent qualifications
+- Write 3-4 paragraphs: engaging opening, body highlighting relevant experience without adding metrics(numbers), confident closing
+- Use the candidate's actual experience from their resume but leave out the metrics — do NOT invent qualifications
 - Reference specific skills and achievements that match the job description
 - Keep it concise and compelling
 - Address the letter to the hiring manager (use "Dear Hiring Manager" if no name is given)

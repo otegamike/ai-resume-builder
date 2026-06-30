@@ -45,7 +45,22 @@ const ResumeSchema: Schema = new Schema<IResume>(
           endDate: { type: String },
         },
       ],
+      projects: [
+        {
+          id: { type: String },
+          name: { type: String },
+          description: [{ type: String }],
+        },
+      ],
       skills: [{ type: String }],
+      skillCategories: [
+        {
+          id: { type: String },
+          category: { type: String },
+          skills: [{ type: String }],
+        },
+      ],
+      skillCategorized: { type: Boolean, default: false },
     },
   },
   { timestamps: true }

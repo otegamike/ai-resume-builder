@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateSummary, generateExperienceBulletPoints, improveSummary, generateSkillsSuggestions } from '@/lib/ai';
+import { generateSummary, generateExperienceBulletPoints, improveSummary, generateSkillsSuggestions, generateCategorizedSkills, categorizeExistingSkills } from '@/lib/ai';
 import { getAuthenticatedUser } from '@/lib/authUser';
 
 interface GenerateBody {
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     const body: GenerateBody = await request.json();
     const { type, data } = body;
 
-    let result: string | string[];
+    let result: any;
 
     switch (type) {
       case 'generateSummary':
@@ -40,6 +40,12 @@ export async function POST(request: NextRequest) {
         break;
       case 'generateSkills':
         result = await generateSkillsSuggestions(data.jobTitle || '');
+        break;
+      case 'generateCategorizedSkills':
+        result = await generateCategorizedSkills(data.jobTitle || '');
+        break;
+      case 'categorizeExistingSkills':
+        result = await categorizeExistingSkills(data.skills || []);
         break;
       default:
         return NextResponse.json({ error: 'Invalid generation type' }, { status: 400 });

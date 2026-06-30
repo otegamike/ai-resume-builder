@@ -288,18 +288,18 @@
     z-index: -1;
   }
 
-  .block {
+  .exp-entry, .edu-entry, .ref-entry, .contact-item, .l-block, .name-block {
     margin-bottom: 0;
     margin-top: 0;
-    padding-top: 0.4rem;
+    padding-top: 0.9rem;
     break-inside: avoid;
     page-break-inside: avoid;
   }
 
 .skill-category-name {
   font-weight: 700;
-  font-size: 0.81rem;
-  color: #1a3330;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
   margin-bottom: 0.25rem;
 }
 </style>
@@ -333,7 +333,7 @@
     <!-- LEFT -->
     <div class="left">
       <!-- Contact -->
-      <div class="block">
+      <div>
         <div class="section-label">Contact</div>
         {{?personalInfo.email}}
         <div class="contact-item">
@@ -366,7 +366,7 @@
       <div>
         <div class="section-label">Skills</div>
         {{#skillCategories}}
-        <div class="block">
+        <div>
           <div class="skill-category-name">{{category}}</div>
           <ul class="bullet-list">{{#skills}}<li>{{.}}</li>{{/skills}}</ul>
         </div>
@@ -384,7 +384,7 @@
 
       <!-- Languages -->
       {{?languages}}
-      <div class="block">
+      <div>
         <div class="section-label">Languages</div>
         <ul class="bullet-list">
           {{#languages}}<li>{{.}}</li>{{/languages}}
@@ -398,7 +398,7 @@
 
       <!-- Education -->
       {{?education}}
-      <div class="block">
+      <div>
         <div class="section-label">Education</div>
         {{#education}}
         <div class="edu-entry">
@@ -424,7 +424,7 @@
             <span>{{startDate}} - {{endDate}}</span>
           </div>
           {{#description}}
-          <p class="exp-desc block">
+          <p class="exp-desc">
             {{.}}
           </p>
           {{/description}}
@@ -432,23 +432,6 @@
         {{/experience}}
       </div>
       {{/experience}}
-
-      <!-- Projects -->
-      {{?projects}}
-      <div>
-        <div class="section-label">Projects</div>
-        {{#projects}}
-        <div class="exp-entry">
-          <div class="exp-company">{{name}}</div>
-          {{#description}}
-          <p class="exp-desc block">
-            {{.}}
-          </p>
-          {{/description}}
-        </div>
-        {{/projects}}
-      </div>
-      {{/projects}}
 
     </div>
   </div>
@@ -518,7 +501,7 @@
     cvElement.style.minHeight = '0px';
 
   
-    const avoidSelector = '.block';
+    const avoidSelector = '.exp-entry, .edu-entry, .r-section-title, .ref-entry, .contact-grid, .contact-item, .l-block, .name-block, .about-text';
     handleBreakAvoidElements(cvElement, CV_HEIGHT, avoidSelector);
   
 
