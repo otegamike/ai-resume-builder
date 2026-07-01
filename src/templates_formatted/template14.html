@@ -90,6 +90,14 @@
     color: var(--accent);
     white-space: nowrap;
     margin-bottom: 14px;
+    margin-top: 0.6rem;
+  }
+
+  .section-label::before {
+    content: '';
+    flex: 1;
+    height: 1.5px;
+    background: rgba(139, 74, 58, 0.25);
   }
 
   .section-label::after {
@@ -110,7 +118,7 @@
   .exp-entry {
     padding-top: 0.4rem;
   }
-  
+
   .exp-entry:first-of-type { padding-top: 0; }
 
   .exp-header { display: flex; justify-content: space-between; align-items: baseline; }

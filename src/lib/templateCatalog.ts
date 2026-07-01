@@ -42,6 +42,9 @@ export const templateDefinitions: TemplateDefinition[] = [
   { id: "template15", name: "Mist", description: "Sage-green two-column layout with subdued slate tones", html: "", page: TEMPLATE_PAGE },
   { id: "template16", name: "Pewter", description: "Dark charcoal geometric sidebar with light content panel", html: "", page: TEMPLATE_PAGE },
   { id: "template17", name: "Bloom", description: "Blush and sage two-column design with soft decorative shapes", html: "", page: TEMPLATE_PAGE },
+  { id: "template18", name: "Amber", description: "Geometric SVG-panel sidebar with warm amber tones and Fraunces serif", html: "", page: TEMPLATE_PAGE },
+  { id: "template19", name: "Obsidian", description: "Dark aubergine header with gold accents and Syne display type", html: "", page: TEMPLATE_PAGE },
+  { id: "template20", name: "Ivory", description: "Single-column editorial elegance with warm cream background and Gilda Display", html: "", page: TEMPLATE_PAGE },
 ];
 
 export type TemplateId = typeof templateDefinitions[number]["id"];

@@ -574,6 +574,31 @@ never interfere with machine reading:
 }
 ```
 
+**Pattern 3 — Double rule (balanced line, label centered between two rules)**
+```css
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 3.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+  white-space: nowrap;
+  margin-top: 0.6rem;
+  margin-bottom: 14px;
+}
+.section-label::before,
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1.5px;
+  background: color-mix(in srgb, var(--accent) 25%, transparent);
+}
+```
+The `::before` rule creates a rule line on the left side of the label, balancing the `::after` rule on the right.
+
 ### Experience entry (standard structure)
 ```html
 <div class="exp-entry">
@@ -595,6 +620,18 @@ never interfere with machine reading:
 .exp-company { font-size: 0.76rem; color: var(--text-muted); margin-bottom: 4px; }
 .exp-desc { font-size: 0.72rem; line-height: 1.7; color: var(--text); padding-left: 14px; position: relative; }
 .exp-desc::before { content: '–'; position: absolute; left: 0; color: var(--accent); }
+```
+
+### Skill category name (for categorized skills)
+Always define an explicit `color` — these often appear on tinted or dark backgrounds where inheritance doesn't provide sufficient contrast:
+```css
+.skill-category-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text);
+  margin-top: 0.5rem;
+  margin-bottom: 0.25rem;
+}
 ```
 
 ### Photo wrapper (circular, positioned)
@@ -687,6 +724,8 @@ For sections that have a section label followed by repeating child items (Experi
 ```
 
 The JS detects the first `.block` child inside a `block__parent` and shifts the entire parent group (label + first item) downward together.
+
+**PDF export behavior:** During PDF export, the `groupBlockParentHeaders()` function in `exportUtils.ts` wraps the section label + first `.block` child inside each `block__parent` into a `<div class="block" style="display:contents; break-inside:avoid">`. This ensures the label and first item stay together on the same page in the PDF. Design accordingly — avoid relying on the section label being a direct first-child of `block__parent` in CSS selectors (prefer `.block__parent > .block` over `.block__parent > :first-child`).
 
 Then reference `.block` in the JS `avoidSelector`:
 ```js
