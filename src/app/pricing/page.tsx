@@ -5,6 +5,7 @@ import Link from "next/link";
 import styles from "./page.module.css";
 import bgStyles from "@/app/auth/login/animated-bg.module.css";
 import { discountPrice } from "@/utils/discountPrice";
+import Footer from "@/components/sections/Footer";
 
 const discount = 20;
 
@@ -312,20 +313,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <footer className={styles.footer}>
-        <div className={styles.footerInner}>
-          <div>
-            <div className={styles.footerBrand}>Agentic CV</div>
-            <p className={styles.footerTagline}>&copy; 2024 Agentic CV. Elevate your career with AI.</p>
-          </div>
-          <nav className={styles.footerLinks} aria-label="Footer">
-            <Link className={styles.footerLink} href="#">Privacy Policy</Link>
-            <Link className={styles.footerLink} href="#">Terms of Service</Link>
-            <Link className={styles.footerLink} href="#">Cookie Policy</Link>
-            <Link className={styles.footerLink} href="#">Contact Support</Link>
-          </nav>
-        </div>
-      </footer>
+      <Footer />
     </main>
   );
 }

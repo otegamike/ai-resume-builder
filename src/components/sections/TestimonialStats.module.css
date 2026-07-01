@@ -1,0 +1,126 @@
+.section {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--bg-main);
+  padding: var(--space-24) 0;
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+.section.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.blobLeft {
+  position: absolute;
+  top: -20%;
+  left: -15%;
+  width: 40%;
+  height: 60%;
+  background: linear-gradient(135deg, var(--primary-3), transparent);
+  opacity: 0.25;
+  filter: blur(100px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.blobRight {
+  position: absolute;
+  bottom: -20%;
+  right: -15%;
+  width: 40%;
+  height: 60%;
+  background: linear-gradient(135deg, var(--ai-accent-200), transparent);
+  opacity: 0.2;
+  filter: blur(100px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 0 var(--space-6);
+  }
+}
+
+.quote {
+  font-family: var(--font-title);
+  font-size: var(--text-2xl);
+  font-style: italic;
+  color: var(--text-primary);
+  text-align: center;
+  max-width: 40rem;
+  line-height: var(--leading-relaxed);
+  margin-bottom: var(--space-6);
+}
+
+.attribution {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-style: normal;
+  margin-bottom: var(--space-16);
+}
+
+.statsGrid {
+  display: grid;
+  gap: var(--space-6);
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .statsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.statCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--space-8);
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--border-default);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px -8px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.3s, transform 0.3s;
+}
+
+.statCard:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+}
+
+.statValue {
+  font-family: var(--font-title);
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  color: var(--primary-1);
+  margin-bottom: var(--space-2);
+}
+
+@media (min-width: 768px) {
+  .statValue {
+    font-size: var(--text-4xl);
+  }
+}
+
+.statDesc {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}

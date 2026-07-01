@@ -602,14 +602,27 @@ const COVER_LETTER_PROMPT = (
 Write a professional cover letter for the following job application.
 
 ## INSTRUCTIONS
-- Write 3-4 paragraphs: engaging opening, body highlighting relevant experience without adding metrics(numbers), confident closing
-- Use the candidate's actual experience from their resume but leave out the metrics — do NOT invent qualifications
-- Reference specific skills and achievements that match the job description
-- Keep it concise and compelling
-- Address the letter to the hiring manager (use "Dear Hiring Manager" if no name is given)
-- Return ONLY the cover letter text, no subject line or salutation prefix
-- No use of em dashes, emojis, or special characters. Use standard punctuation and formatting.
-- if theres company name or role in the job description, reference it in the letter. If not specified, use generic references like "the role" or "the company".
+Write exactly 4-5 paragraphs with these distinct roles:
+
+1. **Opening**: Express genuine interest in the specific role and company. Connect the role's core purpose to the candidate's motivation in one or two sentences. Do not summarize the whole job description here.
+
+2. **Experience narrative**: Synthesize the candidate's overall professional experience into a flowing narrative, IN YOUR OWN WORDS. Do NOT copy or closely paraphrase resume bullet points line by line. Describe the shape and scope of their work (what kinds of problems they solve, how they operate, what they're known for) rather than listing what they did. Do not include metrics or numbers.
+
+3. **Project highlight**: Reference only ONE or TWO specific named projects from the resume, briefly, and explain what building them reinforced or taught the candidate. Do not list every project. Do not re-describe the projects in detail, just enough to be recognizable.
+
+4. **Technical fit**: Weave 4-6 relevant technical skills into natural sentences that connect to the job description's requirements, showing range across the stack. Avoid comma-separated tool lists; skills should read as part of what the candidate does, not an inventory.
+
+5. **Closing**: Reaffirm enthusiasm for contributing to this specific company/team and invite next steps. Keep to one or two sentences.
+
+## STYLE RULES
+- Never copy resume phrasing or bullet structure verbatim — always rewrite in new sentence structures
+- Do not restate the candidate's job title/company history as a chronology; that's already on the resume
+- No metrics or invented numbers
+- Do not invent qualifications, tools, or projects not present in the resume
+- No em dashes, emojis, or special characters — standard punctuation only
+- Reference the target company and role by name if given in the job description; otherwise use "the role" / "the company"
+- Address to the hiring manager ("Dear Hiring Manager" if no name given)
+- Return ONLY the cover letter body text — no subject line, no "Dear..." salutation line, no sign-off/signature
 
 ## TARGET
 Role: ${targetRole || "Not specified"}

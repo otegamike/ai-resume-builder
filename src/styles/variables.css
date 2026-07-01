@@ -119,6 +119,8 @@
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
   --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.06);
+  --shadow-glow-primary: 0 0 30px -5px var(--primary-300);
+  --shadow-glow-ai: 0 0 30px -5px var(--ai-accent-300);
 
   /* Typography */
   --font-sans: var(--font-geist-sans), Arial, Helvetica, sans-serif;
