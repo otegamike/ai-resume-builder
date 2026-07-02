@@ -20,6 +20,10 @@ export interface IApplication extends Document {
   resumeId?: Types.ObjectId;
   coverLetterId?: Types.ObjectId;
   jobUrl?: string;
+  optimizations?: string[];
+  matchScoreBefore?: number;
+  matchScoreAfter?: number;
+  explanation?: string;
 }
 
 const ApplicationSchema: Schema = new Schema<IApplication>(
@@ -38,6 +42,10 @@ const ApplicationSchema: Schema = new Schema<IApplication>(
     resumeId: { type: Schema.Types.ObjectId, ref: "Resume" },
     coverLetterId: { type: Schema.Types.ObjectId, ref: "CoverLetter" },
     jobUrl: { type: String, default: "" },
+    optimizations: [{ type: String }],
+    matchScoreBefore: { type: Number },
+    matchScoreAfter: { type: Number },
+    explanation: { type: String, default: "" },
   },
   { timestamps: true }
 );

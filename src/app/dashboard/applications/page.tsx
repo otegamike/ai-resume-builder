@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   ChevronDown,
   Sparkles,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import type { ResumeSelection } from "@/components/resume/ResumeSelector";
@@ -61,6 +62,8 @@ export default function ApplicationsPage() {
   const [report, setReport] = useState<TailorReport | null>(null);
   const [coverLetter, setCoverLetter] = useState("");
   const [savedResumeId, setSavedResumeId] = useState<string | null>(null);
+  const [applicationId, setApplicationId] = useState<string | null>(null);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
@@ -201,6 +204,8 @@ export default function ApplicationsPage() {
       setReport(data.report as TailorReport);
       setCoverLetter(data.coverLetter);
       setSavedResumeId(data.resumeId);
+      setApplicationId(data.applicationId);
+      setSelectedTemplateId(data.templateId || "");
       setProgress("ready");
       scrollToId("applicationResults");
     } catch (err) {
@@ -229,7 +234,7 @@ export default function ApplicationsPage() {
 
   // ── Save Application ──
   async function saveApplication() {
-    if (!report) return;
+    if (!report || !applicationId) return;
     setSaving(true);
     setError("");
 
@@ -242,8 +247,8 @@ export default function ApplicationsPage() {
         notes: "",
       };
 
-      const res = await fetch("/api/applications", {
-        method: "POST",
+      const res = await fetch(`/api/applications/${applicationId}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
@@ -253,9 +258,13 @@ export default function ApplicationsPage() {
         throw new Error(data.error || "Failed to save application");
       }
 
+      fetchApplications();
       setReport(null);
       setCoverLetter("");
       setProgress("idle");
+      setApplicationId(null);
+      setSavedResumeId(null);
+      setSelectedTemplateId("");
       setJobText("");
       setJobImage(null);
       setJobImageUrl(null);
@@ -390,6 +399,32 @@ export default function ApplicationsPage() {
     } catch { /* ignore */ }
   }
 
+  // ── History: View Full Application ──
+  async function viewApplication(id: string) {
+    try {
+      const res = await fetch(`/api/applications/${id}`);
+      if (!res.ok) return;
+      const data = await res.json();
+
+      setReport({
+        matchScoreBefore: data.matchScoreBefore ?? 0,
+        matchScoreAfter: data.matchScoreAfter ?? 0,
+        explanation: data.explanation ?? "",
+        keyChanges: data.optimizations ?? [],
+        tailoredResume: data.tailoredResume,
+      });
+      setCoverLetter(data.coverLetter ?? "");
+      setSavedResumeId(data.resumeId ?? null);
+      setApplicationId(data._id);
+      setSelectedTemplateId(data.templateId || "");
+      setProgress("ready");
+      setActiveTab("create");
+      scrollToId("applicationResults");
+    } catch {
+      setError("Failed to load application details.");
+    }
+  }
+
   // ── Auth Loading ──
   if (authStatus === "loading") {
     return (
@@ -443,6 +478,7 @@ export default function ApplicationsPage() {
             copied={copied}
             onOpenInEditor={openInEditor}
             savedResumeId={savedResumeId}
+            selectedTemplateId={selectedTemplateId}
             onSave={saveApplication}
             saving={saving}
           />
@@ -642,6 +678,9 @@ export default function ApplicationsPage() {
                           </td>
                           <td>
                             <div className={styles.rowActions}>
+                              <button className={styles.iconBtn} onClick={() => viewApplication(app._id)} title="View">
+                                <Eye />
+                              </button>
                               <button className={styles.iconBtn} onClick={() => openForm(app)} title="Edit">
                                 <Edit />
                               </button>

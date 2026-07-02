@@ -18,6 +18,8 @@ import Resume from "@/models/Resume";
 import CoverLetter from "@/models/CoverLetter";
 import Application from "@/models/Application";
 import { ResumeContent } from "@/types/ResumeData";
+import { templateDefinitions } from "@/lib/templateCatalog";
+import { getRandomTemplateId } from "@/utils/templateUtils";
 
 export const runtime = "nodejs";
 
@@ -139,13 +141,15 @@ export async function POST(request: Request) {
       ? ` - Tailored for ${jobIdentifier} at ${targetCompany}`
       : ` - Tailored for ${jobIdentifier}`;
 
+    const selectedTemplateId = getRandomTemplateId(templateDefinitions);
+
     const tailoredResumeDoc = new Resume({
       userId: authUser.legacyUserId || String(authUser.userObjectId),
       user: authUser.userObjectId,
       title: `${
         existingResume?.personalInfo?.name || report.tailoredResume.personalInfo.name || "Resume"
       }${titleSuffix}`,
-      template: "template1",
+      template: selectedTemplateId,
       content: report.tailoredResume,
     });
 
@@ -160,6 +164,10 @@ export async function POST(request: Request) {
       notes: "",
       resumeId: savedResume._id,
       coverLetterId: savedCoverLetter._id,
+      optimizations: report.keyChanges,
+      matchScoreBefore: report.matchScoreBefore,
+      matchScoreAfter: report.matchScoreAfter,
+      explanation: report.explanation,
     });
 
     const savedApplication = await application.save();
@@ -171,6 +179,7 @@ export async function POST(request: Request) {
       resumeId: savedResume._id,
       coverLetterId: savedCoverLetter._id,
       resumeTitle: tailoredResumeDoc.title,
+      templateId: selectedTemplateId,
     });
   } catch (error) {
     console.error("Quick apply error:", error);

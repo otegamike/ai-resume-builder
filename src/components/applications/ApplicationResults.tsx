@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Copy,
   Check,
@@ -8,11 +9,12 @@ import {
   Save,
   Loader2,
   ArrowRight,
+  Edit,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import ScoreCircle from "@/components/ui/score-circle/ScoreCircle";
 import ResumeIframe from "@/components/resume/ResumeIframe";
-import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
+import { buildTemplateSrcDoc } from "@/lib/templateRenderer";
 import type { TemplateDefinition } from "@/lib/templateCatalog";
 import type { TailorReport } from "@/types/TailorReport";
 import styles from "@/app/dashboard/applications/page.module.css";
@@ -26,6 +28,7 @@ interface ApplicationResultsProps {
   copied: boolean;
   onOpenInEditor: () => void;
   savedResumeId: string | null;
+  selectedTemplateId?: string;
   onSave: () => void;
   saving: boolean;
 }
@@ -37,6 +40,7 @@ export default function ApplicationResults({
   copied,
   onOpenInEditor,
   savedResumeId,
+  selectedTemplateId = "",
   onSave,
   saving,
 }: ApplicationResultsProps) {
@@ -58,8 +62,7 @@ export default function ApplicationResults({
 
         if (cancelled) return;
 
-        const templateId = normalizeTemplateId("template1");
-        const templateDef = templates.find((t) => t.id === templateId) || templates[0];
+        const templateDef = templates.find((t) => t.id === selectedTemplateId) || templates[0];
         if (templateDef?.html && report.tailoredResume) {
           const html = buildTemplateSrcDoc(templateDef.html, report.tailoredResume);
           if (!cancelled) setRenderedTemplate(html);
@@ -154,6 +157,15 @@ export default function ApplicationResults({
           <div className={styles.resultBlock}>
             <h3 className={styles.resultBlockTitle}>Resume Preview</h3>
             <div className={styles.previewBlock}>
+              {renderedTemplate && savedResumeId && (
+                <Link
+                  href={`/editor/${savedResumeId}`}
+                  className={styles.previewEditButton}
+                  title="Edit in Editor"
+                >
+                  <Edit className={styles.previewEditIcon} /> Edit
+                </Link>
+              )}
               {loadingPreview ? (
                 <div className={styles.loadingRow}>
                   <Loader2 className={styles.loadingIcon} />

@@ -16,6 +16,10 @@ export interface ApplicationItem {
   resumeId?: string;
   coverLetterId?: string;
   jobUrl?: string;
+  optimizations?: string[];
+  matchScoreBefore?: number;
+  matchScoreAfter?: number;
+  explanation?: string;
   createdAt: string;
   updatedAt: string;
 }
