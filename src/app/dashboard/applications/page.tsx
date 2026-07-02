@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
@@ -13,23 +13,15 @@ import {
   X,
   AlertTriangle,
   ChevronDown,
-  ChevronUp,
   Sparkles,
-  FileImage,
-  AlignLeft,
-  Upload,
-  CheckCircle2,
-  Copy,
-  Check,
-  Eye,
-  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import ResumeSelector, { ResumeSelection } from "@/components/resume/ResumeSelector";
-import ScoreCircle from "@/components/ui/score-circle/ScoreCircle";
+import type { ResumeSelection } from "@/components/resume/ResumeSelector";
 import { ApplicationItem, ApplicationStatus } from "@/types/ApplicationData";
 import { TailorReport } from "@/types/TailorReport";
 import scrollToId from "@/utils/scrollIntoview";
+import CreateApplicationForm from "@/components/applications/CreateApplicationForm";
+import ApplicationResults from "@/components/applications/ApplicationResults";
 import styles from "./page.module.css";
 
 type JobInputMode = "text" | "image";
@@ -47,13 +39,6 @@ const STATUS_COLORS: Record<ApplicationStatus, string> = {
   offered: "var(--success)",
   rejected: "var(--error)",
   withdrawn: "var(--gray-400)",
-};
-
-const progressCopy: Record<ProgressState, string> = {
-  idle: "Select a resume and enter job details to begin.",
-  extracting: "Reading CV and job description...",
-  generating: "Tailoring resume and writing cover letter...",
-  ready: "Application materials are ready.",
 };
 
 export default function ApplicationsPage() {
@@ -79,8 +64,6 @@ export default function ApplicationsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
-
-  const jobFileInputRef = useRef<HTMLInputElement>(null);
 
   // ── History State ──
   const [applications, setApplications] = useState<ApplicationItem[]>([]);
@@ -142,9 +125,6 @@ export default function ApplicationsPage() {
     if (jobImageUrl) {
       URL.revokeObjectURL(jobImageUrl);
       setJobImageUrl(null);
-    }
-    if (jobFileInputRef.current) {
-      jobFileInputRef.current.value = "";
     }
   }
 
@@ -455,306 +435,42 @@ export default function ApplicationsPage() {
       {/* TAB 1: CREATE APPLICATION                     */}
       {/* ───────────────────────────────────────────── */}
       {activeTab === "create" && (
-        <div className={styles.tabContent}>
-          {/* Guide Card */}
-          <section className={styles.guideCard}>
-            <h2 className={styles.guideTitle}>How it works</h2>
-            <div className={styles.guideSteps}>
-              <div className={styles.step}>
-                <span className={styles.stepNumber}>1</span>
-                <div>
-                  <h3>Select Resume</h3>
-                  <p>Pick a saved CV or upload a PDF/Image of your resume.</p>
-                </div>
-              </div>
-              <div className={styles.step}>
-                <span className={styles.stepNumber}>2</span>
-                <div>
-                  <h3>Add Job Details</h3>
-                  <p>Paste the job description or upload a screenshot. Add optional metadata.</p>
-                </div>
-              </div>
-              <div className={styles.step}>
-                <span className={styles.stepNumber}>3</span>
-                <div>
-                  <h3>Generate &amp; Apply</h3>
-                  <p>Get a tailored resume and cover letter. Copy the letter and export your resume.</p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Input Panel */}
-          <section className={styles.panel}>
-            <div className={styles.sectionHeader}>
-              <h2 className={styles.formSectionTitle}>Select your base resume</h2>
-            </div>
-            <ResumeSelector onSelectionChange={setSelection} />
-
-            <hr className={styles.divider} />
-
-            <div className={styles.sectionHeader}>
-              <h2 className={styles.formSectionTitle}>Job Description</h2>
-            </div>
-
-            {/* Job Input Tabs */}
-            <div className={styles.tabsContainer}>
-              <div className={styles.inputTabs}>
-                <button
-                  type="button"
-                  className={`${styles.inputTab} ${jobMode === "text" ? styles.activeInputTab : ""}`}
-                  onClick={() => handleJobModeChange("text")}
-                  disabled={isBusy}
-                >
-                  <AlignLeft className={styles.tabIconSmall} />
-                  Paste Description Text
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.inputTab} ${jobMode === "image" ? styles.activeInputTab : ""}`}
-                  onClick={() => handleJobModeChange("image")}
-                  disabled={isBusy}
-                >
-                  <FileImage className={styles.tabIconSmall} />
-                  Upload Post Image
-                </button>
-              </div>
-            </div>
-
-            <div className={styles.inputBody}>
-              {jobMode === "text" ? (
-                <div className={styles.field}>
-                  <textarea
-                    placeholder="Paste the responsibilities, requirements, and keywords from the job posting..."
-                    value={jobText}
-                    onChange={(e) => setJobText(e.target.value)}
-                    className={styles.textarea}
-                    disabled={isBusy}
-                    rows={8}
-                  />
-                </div>
-              ) : (
-                <div className={styles.uploadContainer}>
-                  {jobImageUrl ? (
-                    <div className={styles.jobImagePreviewBox}>
-                      <img src={jobImageUrl} alt="Job posting preview" className={styles.jobImagePreview} />
-                      <button type="button" onClick={clearJobImage} className={styles.removeImageBtn} disabled={isBusy}>
-                        Change Image
-                      </button>
-                    </div>
-                  ) : (
-                    <label className={styles.jobImageUploadLabel}>
-                      <input
-                        ref={jobFileInputRef}
-                        type="file"
-                        accept="image/png, image/jpeg, image/jpg, image/webp"
-                        onChange={handleJobImageChange}
-                        className={styles.fileInput}
-                        disabled={isBusy}
-                      />
-                      <Upload className={styles.uploadIcon} />
-                      <span className={styles.uploadTitle}>Choose a job post screenshot</span>
-                      <span className={styles.uploadHint}>Supports PNG, JPG, JPEG, WEBP files</span>
-                    </label>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Collapsible Additional Information */}
-            <div className={styles.collapsibleSection}>
-              <button
-                type="button"
-                className={styles.collapsibleToggle}
-                onClick={() => setShowAdditional(!showAdditional)}
-                disabled={isBusy}
-              >
-                <span>Additional Information</span>
-                {showAdditional ? (
-                  <ChevronUp className={styles.chevronIcon} />
-                ) : (
-                  <ChevronDown className={styles.chevronIcon} />
-                )}
-              </button>
-              {showAdditional && (
-                <div className={styles.collapsibleBody}>
-                  <div className={styles.metadataRow}>
-                    <div className={styles.field}>
-                      <label htmlFor="targetCompany" className={styles.label}>
-                        Target Company <span className={styles.optionalText}>(optional)</span>
-                      </label>
-                      <input
-                        id="targetCompany"
-                        type="text"
-                        placeholder="e.g. Google"
-                        value={targetCompany}
-                        onChange={(e) => setTargetCompany(e.target.value)}
-                        className={styles.input}
-                        disabled={isBusy}
-                      />
-                    </div>
-                    <div className={styles.field}>
-                      <label htmlFor="targetRole" className={styles.label}>
-                        Target Role <span className={styles.optionalText}>(optional)</span>
-                      </label>
-                      <input
-                        id="targetRole"
-                        type="text"
-                        placeholder="e.g. Software Engineer"
-                        value={targetRole}
-                        onChange={(e) => setTargetRole(e.target.value)}
-                        className={styles.input}
-                        disabled={isBusy}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Generate Button + Progress */}
-            <div className={styles.actions}>
-              <div className={styles.progress}>
-                {isBusy ? (
-                  <Loader2 className={styles.spinner} />
-                ) : progress === "ready" ? (
-                  <CheckCircle2 className={styles.readyIcon} />
-                ) : null}
-                <span>{progressCopy[progress]}</span>
-              </div>
-              <Button disabled={!canGenerate} onClick={handleGenerate}>
-                <Sparkles className={styles.btnIcon} />
-                Generate Application
-              </Button>
-            </div>
-          </section>
-
-          {/* Error */}
-          {error && (
-            <div className={styles.error} role="alert">
-              <AlertTriangle className={styles.errorIcon} />
-              {error}
-            </div>
-          )}
-
-          {/* ── Results ── */}
-          {(report || progress === "ready") && (
-            <div className={styles.resultsSection} id="applicationResults">
-              {/* Cover Letter Section (first) */}
-              <section className={styles.resultPanel}>
-                <div className={styles.resultPanelHeader}>
-                  <h2 className={styles.resultPanelTitle}>Cover Letter</h2>
-                  <Button
-                    variant="outline"
-                    onClick={handleCopy}
-                    disabled={!coverLetter}
-                  >
-                    {copied ? (
-                      <><Check className={styles.btnIcon} /> Copied</>
-                    ) : (
-                      <><Copy className={styles.btnIcon} /> Copy to Clipboard</>
-                    )}
-                  </Button>
-                </div>
-                <textarea
-                  className={styles.coverLetterTextarea}
-                  value={coverLetter}
-                  onChange={(e) => setCoverLetter(e.target.value)}
-                  rows={14}
-                  placeholder="Your cover letter will appear here..."
-                />
-              </section>
-
-              {/* Tailored Resume Section (second) */}
-              {report && (
-                <section className={styles.resultPanel}>
-                  <div className={styles.resultPanelHeader}>
-                    <h2 className={styles.resultPanelTitle}>Tailored Resume</h2>
-                    <Button
-                      variant="outline"
-                      onClick={openInEditor}
-                      disabled={!savedResumeId}
-                    >
-                      <Eye className={styles.btnIcon} />
-                      Open in Editor
-                    </Button>
-                  </div>
-
-                  {/* Score Comparison */}
-                  <div className={styles.scoreRow}>
-                    <div className={styles.scoreBox}>
-                      <span className={styles.scoreLabel}>Before Match</span>
-                      <ScoreCircle score={report.matchScoreBefore} />
-                    </div>
-                    <div className={styles.scoreArrow}>
-                      <ArrowRight className={styles.arrowIcon} />
-                      <span className={styles.scoreDiff}>
-                        +{report.matchScoreAfter - report.matchScoreBefore}% Improve
-                      </span>
-                    </div>
-                    <div className={styles.scoreBox}>
-                      <span className={styles.scoreLabel}>After Tailor</span>
-                      <ScoreCircle score={report.matchScoreAfter} />
-                    </div>
-                  </div>
-
-                  {/* Key Changes */}
-                  <div className={styles.resultBlock}>
-                    <h3 className={styles.resultBlockTitle}>Optimizations Performed</h3>
-                    <ul className={styles.changeList}>
-                      {report.keyChanges.map((change, index) => (
-                        <li key={index} className={styles.changeItem}>
-                          <span className={styles.bulletDot}>•</span>
-                          {change}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Resume Preview */}
-                  <div className={styles.resultBlock}>
-                    <h3 className={styles.resultBlockTitle}>Resume Preview</h3>
-                    <div className={styles.previewBlock}>
-                      <h4 className={styles.previewName}>
-                        {report.tailoredResume.personalInfo.name || "Candidate Name"}
-                      </h4>
-                      <p className={styles.previewJobTitle}>
-                        {report.tailoredResume.personalInfo.jobTitle}
-                      </p>
-                      <p className={styles.previewSummary}>
-                        {report.tailoredResume.summary}
-                      </p>
-                      <h5 className={styles.skillsHeading}>Tailored Skills</h5>
-                      <div className={styles.skillsList}>
-                        {report.tailoredResume.skills.slice(0, 12).map((skill, index) => (
-                          <span key={index} className={styles.skillTag}>
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <Button onClick={openInEditor} disabled={!savedResumeId} fullWidth>
-                    <Eye className={styles.btnIcon} />
-                    Open Tailored Resume in Editor
-                  </Button>
-                </section>
-              )}
-
-              {/* Save Application */}
-              <div className={styles.saveRow}>
-                <Button onClick={saveApplication} disabled={saving || !report} size="lg">
-                  {saving ? (
-                    <><Loader2 className={styles.btnIcon} /> Saving...</>
-                  ) : (
-                    <><Save className={styles.btnIcon} /> Save Application</>
-                  )}
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
+        progress === "ready" && report ? (
+          <ApplicationResults
+            report={report}
+            coverLetter={coverLetter}
+            onCopy={handleCopy}
+            copied={copied}
+            onOpenInEditor={openInEditor}
+            savedResumeId={savedResumeId}
+            onSave={saveApplication}
+            saving={saving}
+          />
+        ) : (
+          <CreateApplicationForm
+            selection={selection}
+            onSelectionChange={setSelection}
+            jobMode={jobMode}
+            onJobModeChange={handleJobModeChange}
+            jobText={jobText}
+            onJobTextChange={setJobText}
+            jobImage={jobImage}
+            jobImageUrl={jobImageUrl}
+            onJobImageChange={handleJobImageChange}
+            onClearJobImage={clearJobImage}
+            targetCompany={targetCompany}
+            onTargetCompanyChange={setTargetCompany}
+            targetRole={targetRole}
+            onTargetRoleChange={setTargetRole}
+            showAdditional={showAdditional}
+            onShowAdditionalChange={setShowAdditional}
+            isBusy={isBusy}
+            progress={progress}
+            canGenerate={canGenerate}
+            onGenerate={handleGenerate}
+            error={error}
+          />
+        )
       )}
 
       {/* ───────────────────────────────────────────── */}

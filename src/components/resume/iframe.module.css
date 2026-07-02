@@ -20,7 +20,7 @@
   display: block;
   overflow: hidden; 
   /* Prevent iframe from swallowing mouse and scroll events, allowing silky smooth scrolling */
-  /* pointer-events: none; */
+  pointer-events: none;
   /* Promote to a hardware-accelerated compositor layer */
   will-change: transform;
   transform: translateZ(0);

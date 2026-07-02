@@ -156,8 +156,21 @@ export function resumeContentToText(content: ResumeContent) {
       education.school,
       `${education.startDate} - ${education.endDate}`,
     ]),
-    content.skills.join(", "),
+    ...(content.projects ?? []).flatMap((project) => [
+      `Project: ${project.name}`,
+      ...project.description,
+    ]),
   ];
+
+  if (content.skillCategorized && content.skillCategories?.length) {
+    sections.push(
+      ...content.skillCategories.flatMap(
+        (cat) => `${cat.category}: ${cat.skills.join(", ")}`
+      )
+    );
+  } else {
+    sections.push(content.skills.join(", "));
+  }
 
   return sections.filter(Boolean).join("\n").trim();
 }

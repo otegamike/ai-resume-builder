@@ -38,7 +38,10 @@ const emptyResumeContent: ResumeContent = {
   summary: "",
   experience: [],
   education: [],
+  projects: [],
   skills: [],
+  skillCategories: [],
+  skillCategorized: false,
 };
 
 // ─── JSON Utilities ───────────────────────────────────────────────────────────
@@ -128,7 +131,16 @@ function normalizeResumeContent(content: Partial<ResumeContent> | undefined): Re
     summary: content?.summary ?? "",
     experience: Array.isArray(content?.experience) ? content.experience : [],
     education: Array.isArray(content?.education) ? content.education : [],
+    projects: Array.isArray(content?.projects) ? content.projects : [],
     skills: normalizeStringList(content?.skills),
+    skillCategories: Array.isArray(content?.skillCategories)
+      ? content.skillCategories.map((cat) => ({
+          id: cat.id ?? "",
+          category: cat.category ?? "",
+          skills: Array.isArray(cat.skills) ? cat.skills : [],
+        }))
+      : [],
+    skillCategorized: content?.skillCategorized ?? false,
   };
 }
 
@@ -215,10 +227,16 @@ Deduct for: missing sections, vague bullets, no metrics, missing skills.
 - low: inconsistent date formats, missing phone/website
 
 ## IMPROVEMENT RULES
-- Extract ALL skills mentioned anywhere in the resume text into skills[]
+- Extract ALL skills mentioned anywhere in the resume text into skills[] or skillCategories[]
+- Preserve projects as-is unless factual improvements are clear
 - Strengthen bullets with stronger action verbs and inferable metrics
 - Do NOT invent companies, schools, degrees, dates, or credentials
 - Keep all facts truthful — only improve clarity, impact, and keyword alignment
+
+## SKILL FORMAT RULES
+- If the resume has flat skills[], use skills[] in the output (set skillCategorized to false)
+- If the resume has categorized skills (skillCategories[]), use skillCategories[] in the output (set skillCategorized to true)
+- skills[] and skillCategories[] are mutually exclusive — only populate one
 
 ## REQUIRED JSON SCHEMA
 {
@@ -253,7 +271,12 @@ Deduct for: missing sections, vague bullets, no metrics, missing skills.
     "education": [
       { "id": "1", "school": "string", "degree": "string", "startDate": "string", "endDate": "string" }
     ],
-    "skills": ["string"]
+    "projects": [
+      { "id": "1", "name": "string", "description": ["string"] }
+    ],
+    "skills": ["string"],
+    "skillCategories": [ { "category": "string", "skills": ["string"] } ],
+    "skillCategorized": false
   },
   "improvedResume": {
     "personalInfo": {
@@ -272,7 +295,12 @@ Deduct for: missing sections, vague bullets, no metrics, missing skills.
     "education": [
       { "id": "1", "school": "string", "degree": "string", "startDate": "string", "endDate": "string" }
     ],
-    "skills": ["string"]
+    "projects": [
+      { "id": "1", "name": "string", "description": ["string"] }
+    ],
+    "skills": ["string"],
+    "skillCategories": [ { "category": "string", "skills": ["string"] } ],
+    "skillCategorized": false
   }
 }
 
@@ -404,10 +432,16 @@ Target job information (optional):
 2. **Optimize Job Title**: If the candidate's job title or desired title can be aligned closer to the target job title without lying, update it (e.g. "Software Developer" to "Full-Stack Engineer" if the job is for a Full-Stack Engineer and the candidate has experience in both frontend and backend).
 3. **Tailor Professional Summary**: Rewrite the summary to highlight key accomplishments, technologies, and alignment with the target job's primary goals. Keep it to 2-3 impactful sentences.
 4. **Tailor Experience Bullets**: Rewrite and restructure the candidate's experience description bullet points to emphasize relevant projects, results, and skills. Inject relevant keywords and action verbs. Keep the bullet points concise.
-5. **Tailor Skills**: Re-organize and filter the skills list to prioritize key terms and technologies mentioned in the job description that the candidate actually possesses or can be inferred to possess from their experience. you can also add new skills if they are relevant to the job descriptionand can be inferred from the candidate's experience or are closely related to existing skills.
-6. **Assign Compatibility Scores**: 
+5. **Tailor Skills**: Re-organize and filter the skills (whether flat or categorized) to prioritize key terms and technologies mentioned in the job description that the candidate actually possesses or can be inferred to possess from their experience. You can also add new skills if they are relevant to the job description and can be inferred from the candidate's experience or are closely related to existing skills. Preserve the original skill format — if the resume has categorized skills, return categorized skills; if flat, return flat.
+6. **Tailor Projects**: Highlight the most relevant projects that align with the target role. Update project descriptions to emphasize relevant technologies and outcomes.
+7. **Assign Compatibility Scores**: 
    - 'matchScoreBefore': compatibility score (0-100) of the original resume.
    - 'matchScoreAfter': compatibility score (0-100) of the tailored resume.
+
+## SKILL FORMAT RULES
+- If the resume has flat skills[], use skills[] in the output (set skillCategorized to false)
+- If the resume has categorized skills (skillCategories[]), use skillCategories[] in the output (set skillCategorized to true)
+- skills[] and skillCategories[] are mutually exclusive — only populate one
 
 ## REQUIRED JSON SCHEMA
 {
@@ -436,7 +470,12 @@ Target job information (optional):
     "education": [
       { "id": "1", "school": "string", "degree": "string", "startDate": "string", "endDate": "string" }
     ],
-    "skills": ["string"]
+    "projects": [
+      { "id": "1", "name": "string", "description": ["string"] }
+    ],
+    "skills": ["string"],
+    "skillCategories": [ { "category": "string", "skills": ["string"] } ],
+    "skillCategorized": false
   }
 }
 

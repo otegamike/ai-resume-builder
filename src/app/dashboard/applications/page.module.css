@@ -502,14 +502,22 @@
 
 /* Score Row */
 
-.scoreRow {
+.scoreRowContainer {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-around;
+  justify-content: center;
   background: var(--gray-50);
   padding: var(--space-4);
   border-radius: var(--radius-lg);
   border: 1px solid var(--gray-100);
+}
+
+.scoreRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
 }
 
 .scoreBox {
@@ -546,6 +554,7 @@
   border-radius: var(--radius-full);
   margin-top: var(--space-1);
   border: 1px solid var(--primary-200);
+  width: fit-content;
 }
 
 /* Result Blocks */
@@ -592,6 +601,7 @@
   border: 1px solid var(--gray-100);
   border-radius: var(--radius-lg);
   background: var(--gray-50);
+  max-width: 530px ;
 }
 
 .previewName {
@@ -1016,10 +1026,7 @@
     justify-content: center;
   }
 
-  .scoreRow {
-    flex-direction: column;
-    gap: var(--space-3);
-  }
+  
 
   .scoreArrow {
     flex-direction: row;
