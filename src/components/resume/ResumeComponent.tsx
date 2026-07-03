@@ -1,24 +1,29 @@
-import { Resume } from "@/types/ResumeData";
-import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
-import { type TemplateDefinition } from "@/lib/templateCatalog";
+import { ResumeContent } from "@/types/ResumeData";
+import { buildTemplateSrcDoc} from "@/lib/templateRenderer";
+import { type TemplateId } from "@/lib/templateCatalog";
 import ResumeIframe from "./ResumeIframe";
 import { useState } from "react";
+import { templateDefinitions } from "@/lib/templateCatalog";
+
 
 interface RendererOpts {
   editorMode?: boolean;
 }
 
 interface ResumeComponentProps {
-  resume: Resume;
-  templateDef: TemplateDefinition;
+  resumeContent: ResumeContent;
+  templateId: TemplateId;
+  templateHtml?: string;
   renderOpts?: RendererOpts;
 }
 
-function ResumeComponent({ resume, templateDef, renderOpts }: ResumeComponentProps) {
-  normalizeTemplateId(resume.template);
+function ResumeComponent({ resumeContent, templateId, templateHtml, renderOpts }: ResumeComponentProps) {
 
-  const renderedTemplate = templateDef?.html && resume.content
-    ? buildTemplateSrcDoc(templateDef.html, resume.content, renderOpts)
+  const templateDef = templateDefinitions.find((t) => t.id === templateId);
+  const html = templateHtml || templateDef?.html || "";
+
+  const renderedTemplate = html && resumeContent
+    ? buildTemplateSrcDoc(html, resumeContent, renderOpts)
     : "";
 
   const [showLoader, setShowLoader] = useState(true);
@@ -27,11 +32,11 @@ function ResumeComponent({ resume, templateDef, renderOpts }: ResumeComponentPro
     setShowLoader((prev) => toggle ?? !prev);
   };
 
+
   return (
     <ResumeIframe
       renderedTemplate={renderedTemplate}
       type="preview"
-      loaderObj={{ showLoader, toggleShowLoader }}
     />
   );
 }

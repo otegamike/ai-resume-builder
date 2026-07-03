@@ -15,6 +15,13 @@
   transition: padding-left 0.3s ease;
 }
 
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
 .title {
   color: var(--primary-900);
   font-size: var(--text-xl);
@@ -28,43 +35,27 @@
   max-width: 48rem;
 }
 
-/* ── Tab Bar ── */
-
-.tabBar {
-  display: flex;
-  gap: var(--space-2);
-  border-bottom: 1px solid var(--gray-200);
-  padding-bottom: 0;
-}
-
-.tab {
-  display: flex;
+.backButton {
+  display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-3) var(--space-5);
+  padding: var(--space-2) 0;
   border: none;
   background: none;
-  font-weight: var(--font-medium);
-  font-size: var(--text-sm);
-  color: var(--gray-500);
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  transition: color 0.2s, border-color 0.2s;
-}
-
-.tab:hover {
-  color: var(--gray-700);
-}
-
-.activeTab {
   color: var(--primary-1);
-  border-bottom-color: var(--primary-1);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  transition: opacity 0.2s;
 }
 
-.tabIcon {
-  width: 1.25rem;
-  height: 1.25rem;
+.backButton:hover {
+  opacity: 0.8;
+}
+
+.backIcon {
+  width: 1rem;
+  height: 1rem;
 }
 
 .tabContent {
@@ -155,11 +146,7 @@
   color: var(--primary-900);
 }
 
-.sectionTitle {
-  font-size: var(--text-lg);
-  font-weight: var(--font-semibold);
-  color: var(--gray-800);
-}
+
 
 .divider {
   border: 0;
@@ -477,29 +464,6 @@
   color: var(--primary-900);
 }
 
-/* Cover Letter */
-
-.coverLetterTextarea {
-  width: 100%;
-  min-height: 18rem;
-  padding: var(--space-4);
-  border: 1px solid var(--gray-300);
-  border-radius: var(--radius-lg);
-  font-size: var(--text-sm);
-  font-family: inherit;
-  line-height: 1.7;
-  color: var(--gray-900);
-  background: white;
-  resize: vertical;
-  transition: border-color 0.2s;
-}
-
-.coverLetterTextarea:focus {
-  outline: none;
-  border-color: var(--primary-1);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-}
-
 /* Score Row */
 
 .scoreRowContainer {
@@ -793,195 +757,6 @@
   gap: var(--space-4);
 }
 
-/* ── Form Panel (History) ── */
-
-.formPanel {
-  background-color: white;
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
-  overflow: hidden;
-}
-
-.formPanelHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-5) var(--space-6);
-  border-bottom: 1px solid var(--gray-200);
-}
-
-.formTitle {
-  font-size: var(--text-lg);
-  font-weight: var(--font-semibold);
-  color: var(--gray-800);
-}
-
-.closeButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border: none;
-  background: none;
-  color: var(--gray-400);
-  cursor: pointer;
-  border-radius: var(--radius-md);
-  transition: background-color 0.2s, color 0.2s;
-}
-
-.closeButton:hover {
-  background-color: var(--gray-100);
-  color: var(--gray-600);
-}
-
-.formBody {
-  padding: var(--space-6);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-}
-
-.formRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-4);
-}
-
-.select {
-  padding: var(--space-3);
-  border: 1px solid var(--gray-300);
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
-  color: var(--gray-900);
-  background-color: white;
-  cursor: pointer;
-}
-
-.select:focus {
-  outline: none;
-  border-color: var(--primary-1);
-}
-
-.formFooter {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-4);
-}
-
-.formActions {
-  display: flex;
-  gap: var(--space-2);
-}
-
-/* ── Table (History) ── */
-
-.tableWrapper {
-  overflow-x: auto;
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-xl);
-  background-color: white;
-  box-shadow: var(--shadow-sm);
-}
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--text-sm);
-}
-
-.table th {
-  text-align: left;
-  padding: var(--space-3) var(--space-5);
-  font-weight: var(--font-semibold);
-  color: var(--gray-500);
-  border-bottom: 1px solid var(--gray-200);
-  white-space: nowrap;
-}
-
-.table td {
-  padding: var(--space-3) var(--space-5);
-  border-bottom: 1px solid var(--gray-100);
-  color: var(--gray-700);
-}
-
-.table tr:last-child td {
-  border-bottom: none;
-}
-
-.table tr:hover {
-  background-color: var(--gray-50);
-}
-
-.companyCell {
-  font-weight: var(--font-medium);
-  color: var(--gray-900);
-}
-
-.dateCell {
-  white-space: nowrap;
-  color: var(--gray-500);
-}
-
-.statusSelectWrapper {
-  position: relative;
-  display: inline-block;
-}
-
-.statusSelect {
-  appearance: none;
-  padding: var(--space-1) var(--space-8) var(--space-1) var(--space-2);
-  border: 1px solid;
-  border-radius: var(--radius-full);
-  font-size: var(--text-xxs);
-  font-weight: var(--font-medium);
-  background-color: white;
-  cursor: pointer;
-  outline: none;
-}
-
-.statusChevron {
-  position: absolute;
-  right: var(--space-2);
-  top: 50%;
-  transform: translateY(-50%);
-  width: 0.75rem;
-  height: 0.75rem;
-  pointer-events: none;
-  color: var(--gray-400);
-}
-
-.rowActions {
-  display: flex;
-  gap: var(--space-1);
-}
-
-.iconBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border: none;
-  background: none;
-  color: var(--gray-400);
-  cursor: pointer;
-  border-radius: var(--radius-md);
-  transition: all 0.2s;
-}
-
-.iconBtn:hover {
-  background-color: var(--gray-100);
-  color: var(--gray-700);
-}
-
-.deleteBtn:hover {
-  background-color: #fef2f2;
-  color: var(--red-500);
-}
-
 /* ── Empty & Loading States ── */
 
 .emptyState {
@@ -1045,10 +820,6 @@
     grid-template-columns: 1fr;
   }
 
-  .formRow {
-    grid-template-columns: 1fr;
-  }
-
   .actions {
     flex-direction: column;
     align-items: stretch;
@@ -1058,8 +829,6 @@
   .progress {
     justify-content: center;
   }
-
-  
 
   .scoreArrow {
     flex-direction: row;
@@ -1071,13 +840,4 @@
     align-items: flex-start;
   }
 
-  .tab {
-    padding: var(--space-3) var(--space-3);
-    font-size: var(--text-xs);
-  }
-
-  .tabIcon {
-    width: 1rem;
-    height: 1rem;
-  }
 }

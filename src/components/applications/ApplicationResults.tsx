@@ -3,34 +3,28 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  Copy,
-  Check,
-  Eye,
-  Save,
   Loader2,
   ArrowRight,
   Edit,
 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
 import ScoreCircle from "@/components/ui/score-circle/ScoreCircle";
 import ResumeIframe from "@/components/resume/ResumeIframe";
+import CoverLetterCard from "@/components/applications/CoverLetterCard";
 import { buildTemplateSrcDoc } from "@/lib/templateRenderer";
 import type { TemplateDefinition } from "@/lib/templateCatalog";
 import type { TailorReport } from "@/types/TailorReport";
 import styles from "@/app/dashboard/applications/page.module.css";
-
-type ProgressState = "idle" | "extracting" | "generating" | "ready";
 
 interface ApplicationResultsProps {
   report: TailorReport | null;
   coverLetter: string;
   onCopy: () => void;
   copied: boolean;
-  onOpenInEditor: () => void;
   savedResumeId: string | null;
   selectedTemplateId?: string;
-  onSave: () => void;
-  saving: boolean;
+  onEditChange?: (newContent: string) => void;
+  targetRole?: string;
+  inferredRole?: string;
 }
 
 export default function ApplicationResults({
@@ -38,11 +32,11 @@ export default function ApplicationResults({
   coverLetter,
   onCopy,
   copied,
-  onOpenInEditor,
   savedResumeId,
   selectedTemplateId = "",
-  onSave,
-  saving,
+  onEditChange,
+  targetRole = "",
+  inferredRole = "",
 }: ApplicationResultsProps) {
   const [renderedTemplate, setRenderedTemplate] = useState("");
   const [loadingPreview, setLoadingPreview] = useState(true);
@@ -86,41 +80,19 @@ export default function ApplicationResults({
   return (
     <div className={styles.tabContent}>
       <div className={styles.resultsSection} id="applicationResults">
-        <section className={styles.resultPanel}>
-          <div className={styles.resultPanelHeader}>
-            <h2 className={styles.resultPanelTitle}>Cover Letter</h2>
-            <Button
-              variant="outline"
-              onClick={onCopy}
-              disabled={!coverLetter}
-            >
-              {copied ? (
-                <><Check className={styles.btnIcon} /> Copied</>
-              ) : (
-                <><Copy className={styles.btnIcon} /> Copy to Clipboard</>
-              )}
-            </Button>
-          </div>
-          <textarea
-            className={styles.coverLetterTextarea}
-            value={coverLetter}
-            onChange={() => {}}
-            rows={14}
-            placeholder="Your cover letter will appear here..."
-          />
-        </section>
+        <CoverLetterCard
+          coverLetter={coverLetter}
+          report={report}
+          targetRole={targetRole}
+          inferredRole={inferredRole}
+          onCopy={onCopy}
+          copied={copied}
+          onEditChange={onEditChange}
+        />
 
         <section className={styles.resultPanel}>
           <div className={styles.resultPanelHeader}>
             <h2 className={styles.resultPanelTitle}>Tailored Resume</h2>
-            <Button
-              variant="outline"
-              onClick={onOpenInEditor}
-              disabled={!savedResumeId}
-            >
-              <Eye className={styles.btnIcon} />
-              Open in Editor
-            </Button>
           </div>
 
           <div className={styles.scoreRowContainer}>
@@ -195,22 +167,7 @@ export default function ApplicationResults({
               )}
             </div>
           </div>
-
-          <Button onClick={onOpenInEditor} disabled={!savedResumeId} fullWidth>
-            <Eye className={styles.btnIcon} />
-            Open Tailored Resume in Editor
-          </Button>
         </section>
-
-        <div className={styles.saveRow}>
-          <Button onClick={onSave} disabled={saving || !report} size="lg">
-            {saving ? (
-              <><Loader2 className={styles.btnIcon} /> Saving...</>
-            ) : (
-              <><Save className={styles.btnIcon} /> Save Application</>
-            )}
-          </Button>
-        </div>
       </div>
     </div>
   );

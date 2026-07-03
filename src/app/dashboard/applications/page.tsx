@@ -5,29 +5,24 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
   Plus,
-  Edit,
-  Trash2,
   Loader2,
-  Save,
-  Briefcase,
-  X,
-  AlertTriangle,
-  ChevronDown,
-  Sparkles,
-  Eye,
+  Clock,
+  ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import type { ResumeSelection } from "@/components/resume/ResumeSelector";
 import { ApplicationItem, ApplicationStatus } from "@/types/ApplicationData";
+import { TemplateDefinition } from "@/lib/templateCatalog";
 import { TailorReport } from "@/types/TailorReport";
 import scrollToId from "@/utils/scrollIntoview";
 import CreateApplicationForm from "@/components/applications/CreateApplicationForm";
 import ApplicationResults from "@/components/applications/ApplicationResults";
+import HistoryView from "@/components/applications/HistoryView";
 import styles from "./page.module.css";
 
 type JobInputMode = "text" | "image";
 type ProgressState = "idle" | "extracting" | "generating" | "ready";
-type Tab = "create" | "history";
+type PageView = "form" | "result" | "history";
 
 const STATUS_OPTIONS: ApplicationStatus[] = [
   "saved", "applied", "interviewing", "offered", "rejected", "withdrawn",
@@ -46,8 +41,8 @@ export default function ApplicationsPage() {
   const router = useRouter();
   const { status: authStatus } = useSession();
 
-  // ── Tabs ──
-  const [activeTab, setActiveTab] = useState<Tab>("create");
+  // ── View state ──
+  const [pageView, setPageView] = useState<PageView>("form");
 
   // ── Create Application State ──
   const [selection, setSelection] = useState<ResumeSelection | null>(null);
@@ -62,9 +57,8 @@ export default function ApplicationsPage() {
   const [report, setReport] = useState<TailorReport | null>(null);
   const [coverLetter, setCoverLetter] = useState("");
   const [savedResumeId, setSavedResumeId] = useState<string | null>(null);
-  const [applicationId, setApplicationId] = useState<string | null>(null);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
-  const [saving, setSaving] = useState(false);
+  const [inferredRole, setInferredRole] = useState("");
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
 
@@ -204,9 +198,10 @@ export default function ApplicationsPage() {
       setReport(data.report as TailorReport);
       setCoverLetter(data.coverLetter);
       setSavedResumeId(data.resumeId);
-      setApplicationId(data.applicationId);
       setSelectedTemplateId(data.templateId || "");
+      setInferredRole(data.inferredRole || "");
       setProgress("ready");
+      setPageView("result");
       scrollToId("applicationResults");
     } catch (err) {
       setProgress("idle");
@@ -225,68 +220,54 @@ export default function ApplicationsPage() {
     }
   }
 
-  // ── Open Resume in Editor ──
-  function openInEditor() {
-    if (savedResumeId) {
-      router.push(`/editor/${savedResumeId}`);
-    }
+  function resetAllFormState() {
+    setReport(null);
+    setCoverLetter("");
+    setProgress("idle");
+    setSavedResumeId(null);
+    setSelectedTemplateId("");
+    setInferredRole("");
+    setJobText("");
+    setJobImage(null);
+    setJobImageUrl(null);
+    setTargetCompany("");
+    setTargetRole("");
+    setSelection(null);
+    setPageView("form");
   }
 
-  // ── Save Application ──
-  async function saveApplication() {
-    if (!report || !applicationId) return;
-    setSaving(true);
-    setError("");
-
-    try {
-      const body = {
-        company: targetCompany.trim() || "Unknown Company",
-        role: targetRole.trim() || "Unknown Role",
-        status: "applied" as ApplicationStatus,
-        appliedDate: new Date().toISOString(),
-        notes: "",
-      };
-
-      const res = await fetch(`/api/applications/${applicationId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to save application");
-      }
-
-      fetchApplications();
-      setReport(null);
-      setCoverLetter("");
-      setProgress("idle");
-      setApplicationId(null);
-      setSavedResumeId(null);
-      setSelectedTemplateId("");
-      setJobText("");
-      setJobImage(null);
-      setJobImageUrl(null);
-      setTargetCompany("");
-      setTargetRole("");
-      setSelection(null);
-      scrollToId("pageTop");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save application");
-    } finally {
-      setSaving(false);
-    }
+  // ── View transitions ──
+  function goToHistory() {
+    fetchApplications();
+    setPageView("history");
   }
+
+  function goToForm() {
+    setPageView("form");
+  }
+
+  function handleNewApplication() {
+    resetAllFormState();
+  }
+
+  // ── Templates ──
+  const [templates, setTemplates] = useState<TemplateDefinition[]>([]);
 
   // ── History: Fetch ──
   const fetchApplications = useCallback(async () => {
     setLoadingHistory(true);
     try {
-      const res = await fetch("/api/applications");
-      if (res.ok) {
-        const data = await res.json();
+      const [appRes, templateRes] = await Promise.all([
+        fetch("/api/applications"),
+        fetch("/api/templates"),
+      ]);
+      if (appRes.ok) {
+        const data = await appRes.json();
         setApplications(data);
+      }
+      if (templateRes.ok) {
+        const data = await templateRes.json();
+        setTemplates(data);
       }
     } catch { /* ignore */ } finally {
       setLoadingHistory(false);
@@ -324,6 +305,11 @@ export default function ApplicationsPage() {
       resetForm();
     }
     setShowForm(true);
+  }
+
+  function cancelForm() {
+    setShowForm(false);
+    resetForm();
   }
 
   async function saveHistory() {
@@ -384,21 +370,6 @@ export default function ApplicationsPage() {
     } catch { /* ignore */ }
   }
 
-  async function updateStatus(id: string, status: ApplicationStatus) {
-    try {
-      const res = await fetch(`/api/applications/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
-      if (res.ok) {
-        setApplications((prev) =>
-          prev.map((a) => (a._id === id ? { ...a, status } : a))
-        );
-      }
-    } catch { /* ignore */ }
-  }
-
   // ── History: View Full Application ──
   async function viewApplication(id: string) {
     try {
@@ -415,10 +386,9 @@ export default function ApplicationsPage() {
       });
       setCoverLetter(data.coverLetter ?? "");
       setSavedResumeId(data.resumeId ?? null);
-      setApplicationId(data._id);
       setSelectedTemplateId(data.templateId || "");
       setProgress("ready");
-      setActiveTab("create");
+      setPageView("result");
       scrollToId("applicationResults");
     } catch {
       setError("Failed to load application details.");
@@ -439,265 +409,128 @@ export default function ApplicationsPage() {
 
   return (
     <div className={styles.container} id="pageTop">
-      <header className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Applications</h1>
+      {/* ── Contextual Header ── */}
+      {pageView === "form" && (
+        <header className={styles.header}>
+          <div className={styles.headerRow}>
+            <div>
+              <h1 className={styles.title}>Applications</h1>
+            </div>
+            <Button variant="ghost" onClick={goToHistory}>
+              <Clock className={styles.btnIcon} />
+              History
+            </Button>
+          </div>
           <p className={styles.subtitle}>
             Create tailored resumes and cover letters for your job applications in one go.
           </p>
-        </div>
-      </header>
-
-      {/* ── Tab Bar ── */}
-      <div className={styles.tabBar}>
-        <button
-          className={`${styles.tab} ${activeTab === "create" ? styles.activeTab : ""}`}
-          onClick={() => setActiveTab("create")}
-        >
-          <Sparkles className={styles.tabIcon} />
-          Create Application
-        </button>
-        <button
-          className={`${styles.tab} ${activeTab === "history" ? styles.activeTab : ""}`}
-          onClick={() => setActiveTab("history")}
-        >
-          <Briefcase className={styles.tabIcon} />
-          History
-        </button>
-      </div>
-
-      {/* ───────────────────────────────────────────── */}
-      {/* TAB 1: CREATE APPLICATION                     */}
-      {/* ───────────────────────────────────────────── */}
-      {activeTab === "create" && (
-        progress === "ready" && report ? (
-          <ApplicationResults
-            report={report}
-            coverLetter={coverLetter}
-            onCopy={handleCopy}
-            copied={copied}
-            onOpenInEditor={openInEditor}
-            savedResumeId={savedResumeId}
-            selectedTemplateId={selectedTemplateId}
-            onSave={saveApplication}
-            saving={saving}
-          />
-        ) : (
-          <CreateApplicationForm
-            selection={selection}
-            onSelectionChange={setSelection}
-            jobMode={jobMode}
-            onJobModeChange={handleJobModeChange}
-            jobText={jobText}
-            onJobTextChange={setJobText}
-            jobImage={jobImage}
-            jobImageUrl={jobImageUrl}
-            onJobImageChange={handleJobImageChange}
-            onClearJobImage={clearJobImage}
-            targetCompany={targetCompany}
-            onTargetCompanyChange={setTargetCompany}
-            targetRole={targetRole}
-            onTargetRoleChange={setTargetRole}
-            showAdditional={showAdditional}
-            onShowAdditionalChange={setShowAdditional}
-            isBusy={isBusy}
-            progress={progress}
-            canGenerate={canGenerate}
-            onGenerate={handleGenerate}
-            error={error}
-          />
-        )
+        </header>
       )}
 
-      {/* ───────────────────────────────────────────── */}
-      {/* TAB 2: HISTORY                                */}
-      {/* ───────────────────────────────────────────── */}
-      {activeTab === "history" && (
-        <div className={styles.tabContent}>
-          {showForm ? (
-            <div className={styles.formPanel}>
-              <div className={styles.formPanelHeader}>
-                <h2 className={styles.formTitle}>
-                  {editingId ? "Edit Application" : "Add Application"}
-                </h2>
-                <button
-                  className={styles.closeButton}
-                  onClick={() => { setShowForm(false); resetForm(); }}
-                >
-                  <X />
-                </button>
-              </div>
+      {pageView === "result" && (
+        <header className={styles.header}>
+          <div className={styles.headerRow}>
+            <button className={styles.backButton} onClick={goToForm}>
+              <ArrowLeft className={styles.backIcon} />
+              Back to form
+            </button>
+            <Button variant="ghost" onClick={handleNewApplication}>
+              <Plus className={styles.btnIcon} />
+              New application
+            </Button>
+          </div>
+        </header>
+      )}
 
-              <div className={styles.formBody}>
-                <div className={styles.formRow}>
-                  <div className={styles.field}>
-                    <label className={styles.label}>Company *</label>
-                    <input
-                      type="text"
-                      className={styles.input}
-                      placeholder="e.g. Google"
-                      value={company}
-                      onChange={(e) => setCompany(e.target.value)}
-                    />
-                  </div>
-                  <div className={styles.field}>
-                    <label className={styles.label}>Role *</label>
-                    <input
-                      type="text"
-                      className={styles.input}
-                      placeholder="e.g. Software Engineer"
-                      value={role}
-                      onChange={(e) => setRole(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className={styles.formRow}>
-                  <div className={styles.field}>
-                    <label className={styles.label}>Status</label>
-                    <select
-                      className={styles.select}
-                      value={appStatus}
-                      onChange={(e) => setAppStatus(e.target.value as ApplicationStatus)}
-                    >
-                      {STATUS_OPTIONS.map((s) => (
-                        <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className={styles.field}>
-                    <label className={styles.label}>Applied Date</label>
-                    <input
-                      type="date"
-                      className={styles.input}
-                      value={appDate}
-                      onChange={(e) => setAppDate(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className={styles.field}>
-                  <label className={styles.label}>Job URL</label>
-                  <input
-                    type="url"
-                    className={styles.input}
-                    placeholder="https://..."
-                    value={jobUrl}
-                    onChange={(e) => setJobUrl(e.target.value)}
-                  />
-                </div>
-
-                <div className={styles.field}>
-                  <label className={styles.label}>Notes</label>
-                  <textarea
-                    className={styles.textarea}
-                    placeholder="Notes about this application..."
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    rows={4}
-                  />
-                </div>
-
-                <div className={styles.formFooter}>
-                  <div />
-                  <div className={styles.formActions}>
-                    <Button variant="ghost" onClick={() => { setShowForm(false); resetForm(); }}>
-                      Cancel
-                    </Button>
-                    <Button onClick={saveHistory} disabled={savingHistory}>
-                      {savingHistory ? (
-                        <><Loader2 className={styles.btnIcon} /> Saving...</>
-                      ) : (
-                        <><Save className={styles.btnIcon} /> Save</>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                {historyError && (
-                  <div className={styles.error} role="alert">
-                    <AlertTriangle className={styles.errorIcon} />
-                    {historyError}
-                  </div>
-                )}
-              </div>
+      {pageView === "history" && (
+        <header className={styles.header}>
+          <div className={styles.headerRow}>
+            <div>
+              <h1 className={styles.title}>Applications</h1>
             </div>
-          ) : (
-            <>
-              <div className={styles.sectionHeader}>
-                <h2 className={styles.sectionTitle}>Job Applications</h2>
-                <Button onClick={() => openForm()}>
-                  <Plus className={styles.btnIcon} />
-                  Add Application
-                </Button>
-              </div>
+            <Button variant="ghost" onClick={goToForm}>
+              <Plus className={styles.btnIcon} />
+              New application
+            </Button>
+          </div>
+          <p className={styles.subtitle}>
+            Create tailored resumes and cover letters for your job applications in one go.
+          </p>
+        </header>
+      )}
 
-              {loadingHistory ? (
-                <div className={styles.loadingRow}>
-                  <Loader2 className={styles.loadingIcon} />
-                </div>
-              ) : applications.length === 0 ? (
-                <div className={styles.emptyState}>
-                  <Briefcase className={styles.emptyIcon} />
-                  <p>No applications tracked yet. Add your first one!</p>
-                </div>
-              ) : (
-                <div className={styles.tableWrapper}>
-                  <table className={styles.table}>
-                    <thead>
-                      <tr>
-                        <th>Company</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Date</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {applications.map((app) => (
-                        <tr key={app._id}>
-                          <td className={styles.companyCell}>{app.company}</td>
-                          <td>{app.role}</td>
-                          <td>
-                            <div className={styles.statusSelectWrapper}>
-                              <select
-                                className={styles.statusSelect}
-                                value={app.status}
-                                onChange={(e) => updateStatus(app._id, e.target.value as ApplicationStatus)}
-                                style={{ borderColor: STATUS_COLORS[app.status], color: STATUS_COLORS[app.status] }}
-                              >
-                                {STATUS_OPTIONS.map((s) => (
-                                  <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-                                ))}
-                              </select>
-                              <ChevronDown className={styles.statusChevron} />
-                            </div>
-                          </td>
-                          <td className={styles.dateCell}>
-                            {app.appliedDate ? new Date(app.appliedDate).toLocaleDateString() : "-"}
-                          </td>
-                          <td>
-                            <div className={styles.rowActions}>
-                              <button className={styles.iconBtn} onClick={() => viewApplication(app._id)} title="View">
-                                <Eye />
-                              </button>
-                              <button className={styles.iconBtn} onClick={() => openForm(app)} title="Edit">
-                                <Edit />
-                              </button>
-                              <button className={`${styles.iconBtn} ${styles.deleteBtn}`} onClick={() => deleteApplication(app._id)} title="Delete">
-                                <Trash2 />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </>
-          )}
-        </div>
+      {/* ── View: Form ── */}
+      {pageView === "form" && (
+        <CreateApplicationForm
+          selection={selection}
+          onSelectionChange={setSelection}
+          jobMode={jobMode}
+          onJobModeChange={handleJobModeChange}
+          jobText={jobText}
+          onJobTextChange={setJobText}
+          jobImage={jobImage}
+          jobImageUrl={jobImageUrl}
+          onJobImageChange={handleJobImageChange}
+          onClearJobImage={clearJobImage}
+          targetCompany={targetCompany}
+          onTargetCompanyChange={setTargetCompany}
+          targetRole={targetRole}
+          onTargetRoleChange={setTargetRole}
+          showAdditional={showAdditional}
+          onShowAdditionalChange={setShowAdditional}
+          isBusy={isBusy}
+          progress={progress}
+          canGenerate={canGenerate}
+          onGenerate={handleGenerate}
+          error={error}
+        />
+      )}
+
+      {/* ── View: Result ── */}
+      {pageView === "result" && report && (
+        <ApplicationResults
+          report={report}
+          coverLetter={coverLetter}
+          onCopy={handleCopy}
+          copied={copied}
+          savedResumeId={savedResumeId}
+          selectedTemplateId={selectedTemplateId}
+          onEditChange={setCoverLetter}
+          targetRole={targetRole}
+          inferredRole={inferredRole}
+        />
+      )}
+
+      {/* ── View: History ── */}
+      {pageView === "history" && (
+        <HistoryView
+          applications={applications}
+          loading={loadingHistory}
+          templates={templates}
+          showForm={showForm}
+          editingId={editingId}
+          company={company}
+          role={role}
+          appStatus={appStatus}
+          appDate={appDate}
+          notes={notes}
+          jobUrl={jobUrl}
+          savingHistory={savingHistory}
+          historyError={historyError}
+          STATUS_OPTIONS={STATUS_OPTIONS}
+          STATUS_COLORS={STATUS_COLORS}
+          onNew={() => openForm()}
+          onView={viewApplication}
+          onDelete={deleteApplication}
+          onCompanyChange={setCompany}
+          onRoleChange={setRole}
+          onStatusChangeForm={setAppStatus}
+          onDateChange={setAppDate}
+          onNotesChange={setNotes}
+          onJobUrlChange={setJobUrl}
+          onSaveHistory={saveHistory}
+          onCancelForm={cancelForm}
+        />
       )}
 
     </div>

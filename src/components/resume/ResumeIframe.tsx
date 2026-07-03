@@ -45,7 +45,6 @@ function ResumeIframe({ renderedTemplate, iframeRef, type, editorMode = false, l
         // eslint-disable-next-line react-hooks/exhaustive-deps
       }, []);
 
-
   return (
     <div 
       className={exportFrame ? '' : `${styles.iframeCanvas} hideScrollbar`}

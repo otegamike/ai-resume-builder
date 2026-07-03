@@ -13,9 +13,29 @@ export async function GET() {
     await dbConnect();
     const applications = await Application.find({
       user: authUser.userObjectId,
-    }).sort({ updatedAt: -1 });
+    })
+      .populate("coverLetterId", "content")
+      .populate("resumeId", "content template")
+      .sort({ updatedAt: -1 });
 
-    return NextResponse.json(applications);
+    const enriched = applications.map((app) => {
+      const doc = app.toObject();
+      const resumeDoc = doc.resumeId as any;
+      const coverLetter = doc.coverLetterId as any;
+
+      console.log("resumeDoc", resumeDoc);
+      console.log("coverLetter", coverLetter);
+
+      return {
+        ...doc,
+        resumeDoc,
+        resumeId: doc.resumeId?._id?.toString() ?? doc.resumeId,
+        coverLetterId: doc.coverLetterId?._id?.toString() ?? doc.coverLetterId,
+        coverLetterContent: coverLetter?.content ?? "",
+      };
+    });
+
+    return NextResponse.json(enriched);
   } catch (error) {
     console.error("Error fetching applications:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

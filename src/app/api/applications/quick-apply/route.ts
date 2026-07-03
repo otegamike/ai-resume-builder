@@ -108,26 +108,33 @@ export async function POST(request: Request) {
     }
 
     // 3. Run AI calls in parallel
-    const [report, coverLetterContent] = await Promise.all([
+    const [report, coverLetterResult] = await Promise.all([
       tailorResume(resumeText, jobDescriptionText, targetRole, targetCompany, existingResume),
       generateCoverLetter(resumeText, jobDescriptionText, targetCompany, targetRole, existingResume),
     ]);
 
+    console.log("coverLetterResult", coverLetterResult);
+    
+    const { content: coverLetterContent, inferredRole, inferredCompany } = coverLetterResult;
+
+    const effectiveRole = targetRole || inferredRole || "Unknown Role";
+    const effectiveCompany = targetCompany || inferredCompany || "Unknown Company";
+
     // 4. Save to database
     await dbConnect();
 
-    const title = targetRole && targetCompany
-      ? `Cover Letter — ${targetRole} at ${targetCompany}`
-      : targetRole
-        ? `Cover Letter — ${targetRole}`
+    const title = effectiveRole && effectiveCompany
+      ? `Cover Letter — ${effectiveRole} at ${effectiveCompany}`
+      : effectiveRole
+        ? `Cover Letter — ${effectiveRole}`
         : "Cover Letter";
 
     const coverLetter = new CoverLetter({
       userId: authUser.legacyUserId || String(authUser.userObjectId),
       user: authUser.userObjectId,
       title,
-      targetCompany,
-      targetRole,
+      targetCompany: effectiveCompany,
+      targetRole: effectiveRole,
       content: coverLetterContent,
       jobDescription: jobDescriptionText,
       resumeId: resumeMode === "saved" ? (formData.get("resumeId") as string) : undefined,
@@ -136,9 +143,9 @@ export async function POST(request: Request) {
 
     const savedCoverLetter = await coverLetter.save();
 
-    const jobIdentifier = targetRole || report.tailoredResume.personalInfo.jobTitle || "Job";
-    const titleSuffix = targetCompany
-      ? ` - Tailored for ${jobIdentifier} at ${targetCompany}`
+    const jobIdentifier = effectiveRole || report.tailoredResume.personalInfo.jobTitle || "Job";
+    const titleSuffix = effectiveCompany
+      ? ` - Tailored for ${jobIdentifier} at ${effectiveCompany}`
       : ` - Tailored for ${jobIdentifier}`;
 
     const selectedTemplateId = getRandomTemplateId(templateDefinitions);
@@ -158,8 +165,8 @@ export async function POST(request: Request) {
     const application = new Application({
       userId: authUser.legacyUserId || String(authUser.userObjectId),
       user: authUser.userObjectId,
-      company: targetCompany || "Unknown Company",
-      role: targetRole || "Unknown Role",
+      company: effectiveCompany,
+      role: effectiveRole,
       status: "saved",
       notes: "",
       resumeId: savedResume._id,
@@ -180,6 +187,8 @@ export async function POST(request: Request) {
       coverLetterId: savedCoverLetter._id,
       resumeTitle: tailoredResumeDoc.title,
       templateId: selectedTemplateId,
+      inferredRole,
+      inferredCompany,
     });
   } catch (error) {
     console.error("Quick apply error:", error);

@@ -1,0 +1,486 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.toolbarTitle {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--gray-800);
+}
+
+.btnIcon {
+  width: 1rem;
+  height: 1rem;
+  margin-right: var(--space-2);
+}
+
+/* ── Card List ── */
+
+.cardList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.card {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transition: box-shadow 0.2s;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.cardHeader {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.cardHeaderInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.cardCompany {
+  font-size: var(--text-base);
+  font-weight: var(--font-bold);
+  color: var(--gray-900);
+}
+
+.cardRole {
+  font-size: var(--text-sm);
+  color: var(--gray-500);
+}
+
+.statusPill {
+  font-size: var(--text-xxs);
+  font-weight: var(--font-semibold);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
+  border: 1px solid;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: row;
+  gap: var(--space-3);
+  align-items: stretch;
+}
+
+.coverLetterSnippet {
+  font-family: var(--font-title);
+  font-size: var(--text-xs);
+  color: var(--gray-500);
+  line-height: 1.6;
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.miniResumePreview {
+  width: 150px;
+  height: 120px;
+  flex-shrink: 0;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--gray-50);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.miniIframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  transform: scale(0.18);
+  transform-origin: top left;
+  pointer-events: none;
+}
+
+.miniFallback {
+  padding: var(--space-2);
+  text-align: center;
+  font-size: var(--text-xxs);
+  color: var(--gray-400);
+}
+
+.miniName {
+  font-weight: var(--font-semibold);
+}
+
+.cardFooter {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--gray-100);
+}
+
+.dateText {
+  font-size: var(--text-xs);
+  color: var(--gray-400);
+}
+
+.actionButtons {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.iconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: none;
+  color: var(--gray-400);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: all 0.2s;
+}
+
+.iconBtn:hover {
+  background-color: var(--gray-100);
+  color: var(--gray-700);
+}
+
+.deleteBtn:hover {
+  background-color: #fef2f2;
+  color: var(--red-500);
+}
+
+/* ── Skeleton Loading ── */
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeletonList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.skeletonCard {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.skeletonHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.skeletonHeaderLeft {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+}
+
+.skeletonBar {
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.skeletonBarWide {
+  height: 1rem;
+  width: 60%;
+}
+
+.skeletonBarNarrow {
+  height: 0.75rem;
+  width: 35%;
+}
+
+.skeletonPill {
+  height: 1.25rem;
+  width: 4.5rem;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeletonBody {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.skeletonTextBlock {
+  height: 3.5rem;
+  flex: 1;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.skeletonSquare {
+  width: 100px;
+  height: 3.5rem;
+  flex-shrink: 0;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.skeletonFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--gray-100);
+}
+
+.skeletonDate {
+  height: 0.75rem;
+  width: 5rem;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.skeletonActions {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.skeletonDot {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: var(--radius-md);
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* ── Empty & Loading ── */
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-12);
+  color: var(--gray-400);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+.emptyIcon {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* ── Form Panel ── */
+
+.formPanel {
+  background-color: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.formPanelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.formTitle {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--gray-800);
+}
+
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: none;
+  color: var(--gray-400);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.closeButton:hover {
+  background-color: var(--gray-100);
+  color: var(--gray-600);
+}
+
+.formBody {
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.label {
+  color: var(--neutral-700);
+  font-weight: var(--font-semibold);
+  font-size: var(--text-sm);
+}
+
+.input {
+  min-height: 2.75rem;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  padding: 0 var(--space-3);
+  color: var(--neutral-700);
+  background: white;
+  font-size: var(--text-sm);
+  transition: border-color 0.2s;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: var(--primary-1);
+  outline: none;
+}
+
+.select {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--gray-900);
+  background-color: white;
+  cursor: pointer;
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--primary-1);
+}
+
+.textarea {
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  color: var(--neutral-700);
+  background: white;
+  font-size: var(--text-sm);
+  font-family: inherit;
+  resize: vertical;
+  line-height: 1.5;
+  transition: border-color 0.2s;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.error {
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--red-50);
+  color: var(--red-700);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.errorIcon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+/* ── Responsive ── */
+
+@media (width < 760px) {
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+
+  .cardHeader {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .cardBody {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .miniResumePreview {
+    width: 100%;
+    height: 100px;
+  }
+
+  .skeletonBody {
+    flex-direction: column;
+  }
+
+  .skeletonSquare {
+    width: 100%;
+    height: 3rem;
+  }
+}

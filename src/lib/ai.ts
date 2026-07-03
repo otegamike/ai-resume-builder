@@ -18,12 +18,18 @@ const WRITER_SYSTEM_INSTRUCTION =
   "You are a professional resume writer. Write concise, impactful content that is ATS-friendly and highlights achievements. Use action verbs and quantify results when possible.";
 
 const COVER_LETTER_SYSTEM_INSTRUCTION =
-  "You are a professional cover letter writer. Write tailored, concise, and compelling cover letters that highlight the candidate's relevant experience and enthusiasm for the role. Keep each letter to 3-4 paragraphs. Use a professional tone and avoid generic statements.";
+  "You are a professional cover letter writer. You ONLY output raw valid JSON. Never use markdown code fences. Never add explanations before or after the JSON object. Your entire response must be parseable by JSON.parse().";
 
 const TAILOR_SYSTEM_INSTRUCTION =
   "You are an expert recruiter and resume writer. You ONLY output raw valid JSON. Never use markdown code fences. Never add explanations before or after the JSON object. Your entire response must be parseable by JSON.parse().";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
+export interface CoverLetterResult {
+  content: string;
+  inferredRole: string;
+  inferredCompany: string;
+}
 
 const emptyResumeContent: ResumeContent = {
   personalInfo: {
@@ -638,9 +644,15 @@ const COVER_LETTER_PROMPT = (
   targetRole: string,
   knownResumeBlock: string
 ) => `
-Write a professional cover letter for the following job application.
+You are generating a cover letter and inferring job details. Return ONLY a valid JSON object with this exact schema — no markdown, no explanation:
 
-## INSTRUCTIONS
+{
+  "content": "The full cover letter text as a single string with \\n newlines...",
+  "inferredRole": "Job title inferred from the job description",
+  "inferredCompany": "Company name inferred from the job description"
+}
+
+## COVER LETTER INSTRUCTIONS
 Write exactly 4-5 paragraphs with these distinct roles:
 
 1. **Opening**: Express genuine interest in the specific role and company. Connect the role's core purpose to the candidate's motivation in one or two sentences. Do not summarize the whole job description here.
@@ -661,11 +673,18 @@ Write exactly 4-5 paragraphs with these distinct roles:
 - No em dashes, emojis, or special characters — standard punctuation only
 - Reference the target company and role by name if given in the job description; otherwise use "the role" / "the company"
 - Address to the hiring manager ("Dear Hiring Manager" if no name given)
-- Return ONLY the cover letter body text — no subject line, no "Dear..." salutation line, no sign-off/signature
+- The coverLetter field should contain ONLY the letter body — no subject line, no "Dear..." salutation line, no sign-off/signature
+
+## INFERENCE RULES FOR inferredRole AND inferredCompany
+- Carefully read the job description and extract the job title and company name if present
+- inferredRole: the most specific job title mentioned (e.g. "Senior Frontend Engineer", not just "Engineer")
+- inferredCompany: the company name if mentioned, otherwise an empty string ""
+- If the target role/company above is provided by the user, use those; otherwise infer from job description
+- Do NOT guess if unclear — use empty string for uncertain fields
 
 ## TARGET
-Role: ${targetRole || "Not specified"}
-Company: ${targetCompany || "Not specified"}
+Role: ${targetRole || "Not specified by user, infer from job description"}
+Company: ${targetCompany || "Not specified by user, infer from job description"}
 
 ## JOB DESCRIPTION
 ${jobDescription}
@@ -680,7 +699,7 @@ export async function generateCoverLetter(
   targetCompany = "",
   targetRole = "",
   existingResume?: ResumeContent
-): Promise<string> {
+): Promise<CoverLetterResult> {
   assertApiKey();
 
   const knownResumeBlock = existingResume
@@ -695,10 +714,36 @@ export async function generateCoverLetter(
     knownResumeBlock
   );
 
-  return callGroq(prompt, {
+  let raw = await callGroq(prompt, {
     model: GENERATION_MODEL,
     systemInstruction: COVER_LETTER_SYSTEM_INSTRUCTION,
     temperature: 0.3,
-    maxTokens: 1536,
+    maxTokens: 2048,
   });
+
+  console.log("raw cover letter", raw);
+
+  let parsed: Partial<CoverLetterResult>;
+  try {
+    parsed = parseJsonObject<Partial<CoverLetterResult>>(raw);
+  } catch {
+    console.warn("First cover letter parse failed, retrying...");
+    raw = await callGroq(
+      `Your previous response was not valid JSON. Return ONLY the raw JSON object, no markdown, no explanation.\n\n${prompt}`,
+      {
+        model: GENERATION_MODEL,
+        systemInstruction: COVER_LETTER_SYSTEM_INSTRUCTION,
+        temperature: 0,
+        maxTokens: 2048,
+      }
+    );
+    console.log("raw cover letter", raw);
+    parsed = parseJsonObject<Partial<CoverLetterResult>>(raw);
+  }
+
+  return {
+    content: parsed.content || "",
+    inferredRole: parsed.inferredRole || "",
+    inferredCompany: parsed.inferredCompany || "",
+  };
 }
