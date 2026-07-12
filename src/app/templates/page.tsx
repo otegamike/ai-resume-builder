@@ -6,36 +6,31 @@ import { ArrowLeft, ArrowUpRight, Heart } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import ResumeIframe from "@/components/resume/ResumeIframe";
 import { buildTemplateSrcDoc, getTemplatePreviewData } from "@/lib/templateRenderer";
-import { TEMPLATE_PAGE, type TemplateDefinition } from "@/lib/templateCatalog";
+import { TEMPLATE_PAGE } from "@/lib/templateCatalog";
 import { useSession } from "next-auth/react";
 import { getFavoriteTemplateIds, toggleFavoriteTemplate } from "@/utils/templateStorage";
+import { useTemplateStore } from "@/store/useTemplateStore";
 import styles from "./page.module.css";
 
 export default function TemplatesPage() {
   const { status } = useSession();
-  const [templates, setTemplates] = useState<TemplateDefinition[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [favorites, setFavorites] = useState<string[]>([]);
+  const templates = useTemplateStore((state) => state.templates);
+  const storeError = useTemplateStore((state) => state.error);
+  const [loaded, setLoaded] = useState(templates.length > 0);
 
-  const previewData = useMemo(() => getTemplatePreviewData(), []);
+  useEffect(() => {
+    if (templates.length > 0 || storeError) setLoaded(true);
+  }, [templates, storeError]);
 
   useEffect(() => {
     setFavorites(getFavoriteTemplateIds());
-    const loadTemplates = async () => {
-      try {
-        const response = await fetch("/api/templates");
-        if (!response.ok) throw new Error("Failed to load templates");
-        const data: TemplateDefinition[] = await response.json();
-        setTemplates(data);
-      } catch {
-        setError("Failed to load templates");
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadTemplates();
   }, []);
+
+  const loading = !loaded;
+  const error = storeError ? "Failed to load templates" : "";
+
+  const previewData = useMemo(() => getTemplatePreviewData(), []);
 
   const toggleFav = (id: string) => {
     toggleFavoriteTemplate(id);

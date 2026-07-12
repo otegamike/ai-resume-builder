@@ -23,8 +23,8 @@ import {
 } from "lucide-react";
 import ResumeIframe from "@/components/resume/ResumeIframe";
 import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
-import type { TemplateDefinition } from "@/lib/templateCatalog";
 import type { Resume } from "@/types/ResumeData";
+import { useTemplateStore } from "@/store/useTemplateStore";
 import styles from "./page.module.css";
 import LoadingComponent from "@/components/ui/LoadingComponent";
 
@@ -59,8 +59,8 @@ export default function OverviewPage() {
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
   const createDropdownRef = useRef<HTMLDivElement>(null);
   const [latestResumes, setLatestResumes] = useState<Resume[]>([]);
-  const [allTemplates, setAllTemplates] = useState<TemplateDefinition[]>([]);
   const [loadingLatestResumes, setLoadingLatestResumes] = useState(true);
+  const allTemplates = useTemplateStore((state) => state.templates);
 
   useEffect(() => {
     if (!showCreateDropdown) return;
@@ -102,17 +102,10 @@ export default function OverviewPage() {
 
     const fetchLatestResumes = async () => {
       try {
-        const [resumesRes, templatesRes] = await Promise.all([
-          fetch("/api/resumes"),
-          fetch("/api/templates"),
-        ]);
+        const resumesRes = await fetch("/api/resumes");
         if (resumesRes.ok) {
           const data = (await resumesRes.json()) as Resume[];
           setLatestResumes(data.slice(0, 4));
-        }
-        if (templatesRes.ok) {
-          const data = (await templatesRes.json()) as TemplateDefinition[];
-          setAllTemplates(data);
         }
       } catch {
         // silent fail

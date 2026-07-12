@@ -7,9 +7,9 @@ import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import ResumeIframe from "@/components/resume/ResumeIframe";
 import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
-import { type TemplateDefinition } from "@/lib/templateCatalog";
 import styles from "./page.module.css";
 import { ResumeContent } from "@/types/ResumeData";
+import { useTemplateStore } from "@/store/useTemplateStore";
 import LoadingComponent from "@/components/ui/LoadingComponent";
 
 export interface Resume {
@@ -23,9 +23,9 @@ export interface Resume {
 export default function ResumesPage() {
   const { status } = useSession();
   const [resumes, setResumes] = useState<Resume[]>([]);
-  const [templateDefinitions, setTemplateDefinitions] = useState<TemplateDefinition[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const templates = useTemplateStore((state) => state.templates);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -46,24 +46,12 @@ export default function ResumesPage() {
         }
       } catch {
         setError("Failed to load resumes");
+      } finally {
+        setLoading(false);
       }
     };
 
-    const fetchTemplates = async () => {
-      try {
-        const response = await fetch('/api/templates');
-        if (response.ok) {
-          const data = await response.json();
-          setTemplateDefinitions(data);
-        }
-      } catch (err) {
-        console.error("Failed to load templates", err);
-      }
-    };
-
-    Promise.all([fetchResumes(), fetchTemplates()]).finally(() => {
-      setLoading(false);
-    });
+    fetchResumes();
   }, [status]);
 
   const deleteResume = async (id: string) => {
@@ -125,7 +113,7 @@ export default function ResumesPage() {
 
         {resumes.map((resume) => {
           const templateId = normalizeTemplateId(resume.template);
-          const templateDef = templateDefinitions.find(t => t.id === templateId) || templateDefinitions[0];
+          const templateDef = templates.find(t => t.id === templateId) || templates[0];
           const renderedTemplate = templateDef?.html && resume.content 
             ? buildTemplateSrcDoc(templateDef.html, resume.content) 
             : '';

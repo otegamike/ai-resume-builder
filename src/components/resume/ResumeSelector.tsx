@@ -8,10 +8,10 @@ import {
   Loader2,
   Sparkles,
 } from "lucide-react";
-import ResumeIframe from "./ResumeIframe";
-import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
-import { type TemplateDefinition } from "@/lib/templateCatalog";
+import ResumeComponent from "./ResumeComponent";
+import { normalizeTemplateId } from "@/lib/templateRenderer";
 import { ResumeContent } from "@/types/ResumeData";
+import { useTemplateStore } from "@/store/useTemplateStore";
 import styles from "./ResumeSelector.module.css";
 
 export interface SavedResume {
@@ -37,20 +37,11 @@ interface ResumeSelectorProps {
   className?: string;
 }
 
-function buildResumePreview(resume: SavedResume, templates: TemplateDefinition[]): string {
-  const templateId = normalizeTemplateId(resume.template);
-  const templateDef = templates.find((t) => t.id === templateId) || templates[0];
-  if (templateDef?.html && resume.content) {
-    return buildTemplateSrcDoc(templateDef.html, resume.content);
-  }
-  return "";
-}
-
 export default function ResumeSelector({ onSelectionChange, className }: ResumeSelectorProps) {
   const [mode, setMode] = useState<Mode>("saved");
   const [resumes, setResumes] = useState<SavedResume[]>([]);
-  const [templateDefinitions, setTemplateDefinitions] = useState<TemplateDefinition[]>([]);
   const [loadingResumes, setLoadingResumes] = useState(true);
+  const templates = useTemplateStore((state) => state.templates);
   const [error, setError] = useState("");
 
   const [selectedResumeId, setSelectedResumeId] = useState("");
@@ -64,21 +55,14 @@ export default function ResumeSelector({ onSelectionChange, className }: ResumeS
   const pdfCanvasRefs = useRef<HTMLCanvasElement[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch resumes and templates
+  // Fetch resumes
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [resumesRes, templatesRes] = await Promise.all([
-          fetch("/api/resumes"),
-          fetch("/api/templates"),
-        ]);
+        const resumesRes = await fetch("/api/resumes");
         if (resumesRes.ok) {
           const data = (await resumesRes.json()) as SavedResume[];
           setResumes(data);
-        }
-        if (templatesRes.ok) {
-          const data = (await templatesRes.json()) as TemplateDefinition[];
-          setTemplateDefinitions(data);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load resume options");
@@ -232,12 +216,14 @@ export default function ResumeSelector({ onSelectionChange, className }: ResumeS
     }
 
     if (selectedSavedResume) {
-      const renderedTemplate = buildResumePreview(selectedSavedResume, templateDefinitions);
       return (
         <div className={`${styles.previewBox} ${styles.previewBoxActive}`}>
-          {renderedTemplate ? (
+          {templates.length > 0 ? (
             <div className={styles.selectedPreviewFrame}>
-              <ResumeIframe renderedTemplate={renderedTemplate} type="preview" />
+              <ResumeComponent
+                resumeContent={selectedSavedResume.content}
+                templateId={normalizeTemplateId(selectedSavedResume.template)}
+              />
             </div>
           ) : (
             <span className={styles.uploadTitle}>{selectedSavedResume.title}</span>
@@ -255,7 +241,7 @@ export default function ResumeSelector({ onSelectionChange, className }: ResumeS
     return (
       <div className={styles.horizontalScroll}>
         {resumes.map((resume) => {
-          const renderedTemplate = buildResumePreview(resume, templateDefinitions);
+          const templateId = normalizeTemplateId(resume.template);
           return (
             <div
               key={resume._id}
@@ -263,8 +249,11 @@ export default function ResumeSelector({ onSelectionChange, className }: ResumeS
               onClick={() => selectSavedResume(resume)}
             >
               <div className={styles.cardPreview}>
-                {renderedTemplate ? (
-                  <ResumeIframe renderedTemplate={renderedTemplate} type="preview" />
+                {templates.length > 0 ? (
+                  <ResumeComponent
+                    resumeContent={resume.content}
+                    templateId={templateId}
+                  />
                 ) : (
                   <div
                     style={{

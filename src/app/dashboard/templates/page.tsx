@@ -8,29 +8,26 @@ import ResumeIframe from "@/components/resume/ResumeIframe";
 import { buildTemplateSrcDoc, getTemplatePreviewData } from "@/lib/templateRenderer";
 import type { TemplateDefinition } from "@/lib/templateCatalog";
 import { getFavoriteTemplateIds, toggleFavoriteTemplate, getRecentlyUsedTemplates } from "@/utils/templateStorage";
+import { useTemplateStore } from "@/store/useTemplateStore";
 import styles from "./page.module.css";
 
 export default function DashboardTemplatesPage() {
-  const [templates, setTemplates] = useState<TemplateDefinition[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const templates = useTemplateStore((state) => state.templates);
+  const storeError = useTemplateStore((state) => state.error);
+  const [loaded, setLoaded] = useState(templates.length > 0);
+
+  useEffect(() => {
+    if (templates.length > 0 || storeError) setLoaded(true);
+  }, [templates, storeError]);
+
+  const loading = !loaded;
 
   const previewData = useMemo(() => getTemplatePreviewData(), []);
   const recentFromStorage = useMemo(() => getRecentlyUsedTemplates(), []);
 
   useEffect(() => {
     setFavorites(getFavoriteTemplateIds());
-    const load = async () => {
-      try {
-        const res = await fetch("/api/templates");
-        if (res.ok) setTemplates(await res.json());
-      } catch {
-        // ignore
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
   }, []);
 
   const toggleFav = (id: string) => {
