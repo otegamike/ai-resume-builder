@@ -23,8 +23,6 @@ export async function GET() {
       const resumeDoc = doc.resumeId as any;
       const coverLetter = doc.coverLetterId as any;
 
-      console.log("resumeDoc", resumeDoc);
-      console.log("coverLetter", coverLetter);
 
       return {
         ...doc,

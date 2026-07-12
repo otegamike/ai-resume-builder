@@ -25,7 +25,7 @@
   width: 100%;
   position: relative;
   z-index: 1;
-  background-color: hsl(69 20% 93%/ 0.5);
+  background-color: hsl(69 20% 93%/ 0.7);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-default);
 }
@@ -48,7 +48,7 @@
 .logo {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-1);
   color: var(--primary-1);
 }
 

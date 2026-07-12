@@ -50,9 +50,9 @@ export default function Header() {
       
         <div className={styles.header__content}>
           <Link className={styles.logo} onClick={closeMenu} href="/">
-            <Logo size={20} color='var(--primary-1)' />
+            <Logo size={25} color='var(--primary-1)' />
             <span className={styles.logoText}>
-              Agentic CV
+              AgenticApp.cv
             </span>
           </Link>
           <nav className={styles.nav}>

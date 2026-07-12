@@ -7,6 +7,7 @@ import Header from "@/components/header/header";
 import AppSessionProvider from "@/components/auth/SessionProvider";
 import PageBody from "@/components/page-body/PageBody";
 import PageViewTracker from "@/components/PageViewTracker";
+import TemplateInitializer from "@/components/TemplateInitializer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -59,6 +60,7 @@ export default function RootLayout({
             <PageBody>
               <AppSessionProvider>
                 <PageViewTracker />
+                <TemplateInitializer />
                 <Header />
                 {children}
               </AppSessionProvider>

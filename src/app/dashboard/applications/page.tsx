@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/Button";
 import type { ResumeSelection } from "@/components/resume/ResumeSelector";
 import { ApplicationItem, ApplicationStatus } from "@/types/ApplicationData";
-import { TemplateDefinition } from "@/lib/templateCatalog";
 import { TailorReport } from "@/types/TailorReport";
 import scrollToId from "@/utils/scrollIntoview";
 import CreateApplicationForm from "@/components/applications/CreateApplicationForm";
@@ -65,7 +64,6 @@ export default function ApplicationsPage() {
   // ── History State ──
   const [applications, setApplications] = useState<ApplicationItem[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
-  const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
@@ -73,8 +71,6 @@ export default function ApplicationsPage() {
   const [appDate, setAppDate] = useState("");
   const [notes, setNotes] = useState("");
   const [jobUrl, setJobUrl] = useState("");
-  const [savingHistory, setSavingHistory] = useState(false);
-  const [historyError, setHistoryError] = useState("");
 
   // ── Auth guard ──
   useEffect(() => {
@@ -250,115 +246,20 @@ export default function ApplicationsPage() {
     resetAllFormState();
   }
 
-  // ── Templates ──
-  const [templates, setTemplates] = useState<TemplateDefinition[]>([]);
-
   // ── History: Fetch ──
   const fetchApplications = useCallback(async () => {
     setLoadingHistory(true);
     try {
-      const [appRes, templateRes] = await Promise.all([
-        fetch("/api/applications"),
-        fetch("/api/templates"),
-      ]);
+      const appRes = await fetch("/api/applications");
       if (appRes.ok) {
         const data = await appRes.json();
         setApplications(data);
-      }
-      if (templateRes.ok) {
-        const data = await templateRes.json();
-        setTemplates(data);
       }
     } catch { /* ignore */ } finally {
       setLoadingHistory(false);
     }
   }, []);
 
-  useEffect(() => {
-    if (authStatus === "loading") return;
-    if (authStatus !== "authenticated") return;
-    fetchApplications();
-  }, [authStatus, fetchApplications]);
-
-  // ── History: Form ──
-  function resetForm() {
-    setCompany("");
-    setRole("");
-    setAppStatus("saved");
-    setAppDate("");
-    setNotes("");
-    setJobUrl("");
-    setHistoryError("");
-    setEditingId(null);
-  }
-
-  function openForm(app?: ApplicationItem) {
-    if (app) {
-      setCompany(app.company);
-      setRole(app.role);
-      setAppStatus(app.status);
-      setAppDate(app.appliedDate ? new Date(app.appliedDate).toISOString().slice(0, 10) : "");
-      setNotes(app.notes);
-      setJobUrl(app.jobUrl || "");
-      setEditingId(app._id);
-    } else {
-      resetForm();
-    }
-    setShowForm(true);
-  }
-
-  function cancelForm() {
-    setShowForm(false);
-    resetForm();
-  }
-
-  async function saveHistory() {
-    if (!company.trim() || !role.trim()) {
-      setHistoryError("Company and role are required.");
-      return;
-    }
-    setSavingHistory(true);
-    setHistoryError("");
-
-    try {
-      const body = {
-        company: company.trim(),
-        role: role.trim(),
-        status: appStatus,
-        appliedDate: appDate || undefined,
-        notes,
-        jobUrl,
-      };
-
-      let res: Response;
-      if (editingId) {
-        res = await fetch(`/api/applications/${editingId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-      } else {
-        res = await fetch("/api/applications", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-      }
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to save");
-      }
-
-      setShowForm(false);
-      resetForm();
-      fetchApplications();
-    } catch (err) {
-      setHistoryError(err instanceof Error ? err.message : "Failed to save application");
-    } finally {
-      setSavingHistory(false);
-    }
-  }
 
   async function deleteApplication(id: string) {
     if (!confirm("Delete this application?")) return;
@@ -506,30 +407,10 @@ export default function ApplicationsPage() {
         <HistoryView
           applications={applications}
           loading={loadingHistory}
-          templates={templates}
-          showForm={showForm}
-          editingId={editingId}
-          company={company}
-          role={role}
-          appStatus={appStatus}
-          appDate={appDate}
-          notes={notes}
-          jobUrl={jobUrl}
-          savingHistory={savingHistory}
-          historyError={historyError}
-          STATUS_OPTIONS={STATUS_OPTIONS}
           STATUS_COLORS={STATUS_COLORS}
-          onNew={() => openForm()}
+          onNew={goToForm}
           onView={viewApplication}
           onDelete={deleteApplication}
-          onCompanyChange={setCompany}
-          onRoleChange={setRole}
-          onStatusChangeForm={setAppStatus}
-          onDateChange={setAppDate}
-          onNotesChange={setNotes}
-          onJobUrlChange={setJobUrl}
-          onSaveHistory={saveHistory}
-          onCancelForm={cancelForm}
         />
       )}
 

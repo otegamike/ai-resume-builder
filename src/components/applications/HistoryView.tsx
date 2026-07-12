@@ -3,66 +3,25 @@
 import { Plus, Edit, Trash2, Loader2, Save, X, AlertTriangle, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import type { ApplicationItem, ApplicationStatus } from "@/types/ApplicationData";
-import { TemplateDefinition } from "@/lib/templateCatalog";
 import styles from "./HistoryView.module.css";
 import ResumeComponent from "../resume/ResumeComponent";
 
 interface HistoryViewProps {
   applications: ApplicationItem[];
   loading: boolean;
-  templates: TemplateDefinition[];
-  showForm: boolean;
-  editingId: string | null;
-  company: string;
-  role: string;
-  appStatus: ApplicationStatus;
-  appDate: string;
-  notes: string;
-  jobUrl: string;
-  savingHistory: boolean;
-  historyError: string;
-  STATUS_OPTIONS: ApplicationStatus[];
   STATUS_COLORS: Record<ApplicationStatus, string>;
   onNew: () => void;
   onView: (id: string) => void;
   onDelete: (id: string) => void;
-  onCompanyChange: (value: string) => void;
-  onRoleChange: (value: string) => void;
-  onStatusChangeForm: (value: ApplicationStatus) => void;
-  onDateChange: (value: string) => void;
-  onNotesChange: (value: string) => void;
-  onJobUrlChange: (value: string) => void;
-  onSaveHistory: () => void;
-  onCancelForm: () => void;
 }
 
 export default function HistoryView({
   applications,
   loading,
-  templates,
-  showForm,
-  editingId,
-  company,
-  role,
-  appStatus,
-  appDate,
-  notes,
-  jobUrl,
-  savingHistory,
-  historyError,
-  STATUS_OPTIONS,
   STATUS_COLORS,
   onNew,
   onView,
   onDelete,
-  onCompanyChange,
-  onRoleChange,
-  onStatusChangeForm,
-  onDateChange,
-  onNotesChange,
-  onJobUrlChange,
-  onSaveHistory,
-  onCancelForm,
 }: HistoryViewProps) {
   return (
     <div className={styles.container}>
@@ -113,7 +72,6 @@ export default function HistoryView({
                       <ResumeComponent
                         resumeContent={app.resumeDoc.content}
                         templateId={app.resumeDoc.template}
-                        templateHtml={templates.find((t) => t.id === app.resumeDoc!.template)?.html}
                       />
                     ) : (
                       <div className={styles.miniFallback}>
