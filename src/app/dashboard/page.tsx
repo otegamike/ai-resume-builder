@@ -15,7 +15,6 @@ import {
   WandSparkles,
   Settings,
   Clock,
-  BarChart3,
   Plus,
   ChevronDown,
   ChevronUp,
@@ -23,10 +22,10 @@ import {
 } from "lucide-react";
 import ResumeIframe from "@/components/resume/ResumeIframe";
 import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
-import type { ResumeDocument } from "@/types/ResumeData";
+
 import { useTemplateStore } from "@/store/useTemplateStore";
+import { useResumeStore } from "@/store/useResumeStore";
 import styles from "./page.module.css";
-import LoadingComponent from "@/components/ui/LoadingComponent";
 
 interface DashboardStats {
   counts: {
@@ -58,9 +57,10 @@ export default function OverviewPage() {
   const [loading, setLoading] = useState(true);
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
   const createDropdownRef = useRef<HTMLDivElement>(null);
-  const [latestResumes, setLatestResumes] = useState<ResumeDocument[]>([]);
-  const [loadingLatestResumes, setLoadingLatestResumes] = useState(true);
   const allTemplates = useTemplateStore((state) => state.templates);
+  const storeResumes = useResumeStore((state) => state.resumes);
+  const storeLoading = useResumeStore((state) => state.isLoading);
+  const storeFetchResumes = useResumeStore((state) => state.fetchResumes);
 
   useEffect(() => {
     if (!showCreateDropdown) return;
@@ -99,23 +99,8 @@ export default function OverviewPage() {
 
   useEffect(() => {
     if (status !== "authenticated") return;
-
-    const fetchLatestResumes = async () => {
-      try {
-        const resumesRes = await fetch("/api/resumes");
-        if (resumesRes.ok) {
-          const data = (await resumesRes.json()) as ResumeDocument[];
-          setLatestResumes(data.slice(0, 4));
-        }
-      } catch {
-        // silent fail
-      } finally {
-        setLoadingLatestResumes(false);
-      }
-    };
-
-    fetchLatestResumes();
-  }, [status]);
+    storeFetchResumes();
+  }, [status, storeFetchResumes]);
 
   const activeApplications = stats?.counts.applicationsByStatus
     ? Object.entries(stats.counts.applicationsByStatus)
@@ -300,12 +285,12 @@ export default function OverviewPage() {
           <FileText className={styles.sectionTitleIcon} />
           My Resumes
         </h2>
-        {loadingLatestResumes ? (
+        {storeLoading ? (
           <div className={styles.myResumesLoading}>
             <Loader2 className={styles.myResumesSpinner} />
             <span>Loading your resumes...</span>
           </div>
-        ) : latestResumes.length === 0 ? (
+        ) : storeResumes.length === 0 ? (
           <div className={styles.myResumesEmpty}>
             <FileText size={32} />
             <span>No resumes yet.</span>
@@ -315,7 +300,7 @@ export default function OverviewPage() {
           </div>
         ) : (
           <div className={styles.myResumesScroll}>
-            {latestResumes.map((resume) => {
+            {storeResumes.slice(0, 4).map((resume) => {
               const templateId = normalizeTemplateId(resume.template);
               const templateDef = allTemplates.find((t) => t.id === templateId) || allTemplates[0];
               const renderedTemplate = templateDef?.html && resume.content

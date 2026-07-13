@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import dbConnect from '@/lib/db';
 import Resume from '@/models/Resume';
 import { getAuthenticatedUser, buildResumeOwnerQuery } from '@/lib/authUser';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const authUser = await getAuthenticatedUser();
     if (!authUser) {
@@ -14,7 +15,20 @@ export async function GET() {
     const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId, authUser.legacyUserId);
     const resumes = await Resume.find(ownerQuery).sort({ updatedAt: -1 });
     await Resume.updateMany({ ...ownerQuery, user: { $exists: false } }, { $set: { user: authUser.userObjectId } });
-    return NextResponse.json(resumes);
+
+    const eTag = crypto.createHash('md5').update(JSON.stringify(resumes)).digest('hex');
+    const clientETag = request.headers.get('if-none-match');
+
+    if (clientETag === `"${eTag}"`) {
+      return new NextResponse(null, { status: 304 });
+    }
+
+    return NextResponse.json(resumes, {
+      headers: {
+        'ETag': `"${eTag}"`,
+        'Cache-Control': 'no-cache',
+      },
+    });
   } catch (error) {
     console.error('Error fetching resumes:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -45,7 +59,8 @@ export async function POST(request: NextRequest) {
     });
 
     const savedResume = await resume.save();
-    return NextResponse.json({id: savedResume._id, content: savedResume.content, status: 201 });
+    const savedResumeObj = savedResume.toObject();
+    return NextResponse.json(savedResumeObj, { status: 201 });
   } catch (error) {
     console.error('Error creating resume:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

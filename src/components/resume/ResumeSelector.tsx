@@ -12,6 +12,7 @@ import ResumeComponent from "./ResumeComponent";
 import { normalizeTemplateId } from "@/lib/templateRenderer";
 import { ResumeContent } from "@/types/ResumeData";
 import { useTemplateStore } from "@/store/useTemplateStore";
+import { useResumeStore } from "@/store/useResumeStore";
 import styles from "./ResumeSelector.module.css";
 
 export interface SavedResume {
@@ -39,9 +40,10 @@ interface ResumeSelectorProps {
 
 export default function ResumeSelector({ onSelectionChange, className }: ResumeSelectorProps) {
   const [mode, setMode] = useState<Mode>("saved");
-  const [resumes, setResumes] = useState<SavedResume[]>([]);
-  const [loadingResumes, setLoadingResumes] = useState(true);
   const templates = useTemplateStore((state) => state.templates);
+  const resumes = useResumeStore((state) => state.resumes);
+  const loadingResumes = useResumeStore((state) => state.isLoading);
+  const storeFetchResumes = useResumeStore((state) => state.fetchResumes);
   const [error, setError] = useState("");
 
   const [selectedResumeId, setSelectedResumeId] = useState("");
@@ -55,24 +57,11 @@ export default function ResumeSelector({ onSelectionChange, className }: ResumeS
   const pdfCanvasRefs = useRef<HTMLCanvasElement[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch resumes
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const resumesRes = await fetch("/api/resumes");
-        if (resumesRes.ok) {
-          const data = (await resumesRes.json()) as SavedResume[];
-          setResumes(data);
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load resume options");
-      } finally {
-        setLoadingResumes(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+    storeFetchResumes().catch((err) => {
+      setError(err instanceof Error ? err.message : "Failed to load resume options");
+    });
+  }, [storeFetchResumes]);
 
   // Update parent when selection changes
   useEffect(() => {

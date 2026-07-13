@@ -1,22 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import ResumeIframe from "@/components/resume/ResumeIframe";
 import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
 import styles from "./page.module.css";
-import { ResumeDocument, ResumeContent } from "@/types/ResumeData";
 import { useTemplateStore } from "@/store/useTemplateStore";
-import LoadingComponent from "@/components/ui/LoadingComponent";
+import { useResumeStore } from "@/store/useResumeStore";
 
 export default function ResumesPage() {
   const { status } = useSession();
-  const [resumes, setResumes] = useState<ResumeDocument[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const resumes = useResumeStore((state) => state.resumes);
+  const loading = useResumeStore((state) => state.isLoading);
+  const error = useResumeStore((state) => state.error);
+  const fetchResumes = useResumeStore((state) => state.fetchResumes);
+  const deleteResumeFromStore = useResumeStore((state) => state.deleteResume);
   const templates = useTemplateStore((state) => state.templates);
 
   useEffect(() => {
@@ -27,35 +28,13 @@ export default function ResumesPage() {
       return;
     }
 
-    const fetchResumes = async () => {
-      try {
-        const response = await fetch('/api/resumes');
-        if (response.ok) {
-          const data: ResumeDocument[] = await response.json();
-          setResumes(data);
-        } else {
-          setError("Failed to load resumes");
-        }
-      } catch {
-        setError("Failed to load resumes");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchResumes();
-  }, [status]);
+  }, [status, fetchResumes]);
 
   const deleteResume = async (id: string) => {
     if (!confirm("Are you sure you want to delete this resume?")) return;
-
     try {
-      const response = await fetch(`/api/resumes/${id}`, { method: 'DELETE' });
-      if (response.ok) {
-        setResumes(resumes.filter((r) => r._id !== id));
-      } else {
-        alert("Failed to delete resume");
-      }
+      await deleteResumeFromStore(id);
     } catch {
       alert("Failed to delete resume");
     }

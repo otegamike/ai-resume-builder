@@ -207,7 +207,12 @@ async function callGroq(
     ],
   });
 
-  return completion.choices[0]?.message?.content?.trim() || "";
+  const choice = completion.choices[0];
+  if (choice?.finish_reason === "length") {
+    console.warn("Groq response truncated by max_completion_tokens");
+  }
+
+  return choice?.message?.content?.trim() || "";
 }
 
 // ─── ATS Analysis ─────────────────────────────────────────────────────────────
@@ -718,7 +723,7 @@ export async function generateCoverLetter(
     model: GENERATION_MODEL,
     systemInstruction: COVER_LETTER_SYSTEM_INSTRUCTION,
     temperature: 0.3,
-    maxTokens: 2048,
+    maxTokens: 3072,
   });
 
   console.log("raw cover letter", raw);
@@ -734,7 +739,7 @@ export async function generateCoverLetter(
         model: GENERATION_MODEL,
         systemInstruction: COVER_LETTER_SYSTEM_INSTRUCTION,
         temperature: 0,
-        maxTokens: 2048,
+        maxTokens: 3072,
       }
     );
     console.log("raw cover letter", raw);

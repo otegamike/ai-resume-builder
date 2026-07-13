@@ -20,14 +20,10 @@ import {
 import { Button } from "@/components/ui/Button";
 import ResumeSelector, { ResumeSelection } from "@/components/resume/ResumeSelector";
 import { CoverLetterItem } from "@/types/CoverLetterData";
+import { useResumeStore } from "@/store/useResumeStore";
 import styles from "./page.module.css";
 
 type JobInputMode = "text" | "image";
-
-interface SavedResume {
-  _id: string;
-  title: string;
-}
 
 function buildTitle(role: string, company: string) {
   if (role && company) return `Cover Letter — ${role} at ${company}`;
@@ -59,7 +55,7 @@ export default function WriterPage() {
   const [clSaving, setClSaving] = useState(false);
   const [clError, setClError] = useState("");
   const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
-  const [resumes, setResumes] = useState<SavedResume[]>([]);
+  const storeFetchResumes = useResumeStore((state) => state.fetchResumes);
   const clJobFileRef = useRef<HTMLInputElement>(null);
 
   const fetchCoverLetters = useCallback(async () => {
@@ -75,15 +71,9 @@ export default function WriterPage() {
     }
   }, []);
 
-  const fetchResumes = useCallback(async () => {
-    try {
-      const res = await fetch("/api/resumes");
-      if (res.ok) {
-        const data = await res.json();
-        setResumes(data.map((r: SavedResume & { _id: string; title: string }) => ({ _id: r._id, title: r.title })));
-      }
-    } catch { /* ignore */ }
-  }, []);
+  useEffect(() => {
+    storeFetchResumes();
+  }, [storeFetchResumes]);
 
   useEffect(() => {
     if (authStatus === "loading") return;
@@ -92,8 +82,7 @@ export default function WriterPage() {
       return;
     }
     fetchCoverLetters();
-    fetchResumes();
-  }, [authStatus, router, fetchCoverLetters, fetchResumes]);
+  }, [authStatus, router, fetchCoverLetters]);
 
   function resetClForm() {
     setClTitle("");

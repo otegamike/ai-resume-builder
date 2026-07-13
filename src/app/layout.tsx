@@ -8,6 +8,7 @@ import AppSessionProvider from "@/components/auth/SessionProvider";
 import PageBody from "@/components/page-body/PageBody";
 import PageViewTracker from "@/components/PageViewTracker";
 import TemplateInitializer from "@/components/TemplateInitializer";
+import AlertToast from "@/components/ui/AlertToast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -63,6 +64,7 @@ export default function RootLayout({
                 <TemplateInitializer />
                 <Header />
                 {children}
+                <AlertToast />
               </AppSessionProvider>
             </PageBody>
       </html>
