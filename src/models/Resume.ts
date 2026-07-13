@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { TemplateData } from "@/lib/templateCatalog";
 
-export interface IResume extends Document {
+export interface IResume {
   userId?: string;
   user?: mongoose.Types.ObjectId;
   title: string;

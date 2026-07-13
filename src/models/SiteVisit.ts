@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
 
-export interface ISiteVisit extends Document {
+export interface ISiteVisit {
   _id: Types.ObjectId;
   path: string;
   userId?: Types.ObjectId;

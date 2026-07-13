@@ -49,7 +49,7 @@ export interface ResumeContent {
   skillCategorized?: boolean;
 }
 
-export interface Resume {
+export interface ResumeDocument {
   _id: string;
   title: string;
   updatedAt: string;

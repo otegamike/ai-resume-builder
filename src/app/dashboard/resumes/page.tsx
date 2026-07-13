@@ -8,21 +8,13 @@ import { Button } from "@/components/ui/Button";
 import ResumeIframe from "@/components/resume/ResumeIframe";
 import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
 import styles from "./page.module.css";
-import { ResumeContent } from "@/types/ResumeData";
+import { ResumeDocument, ResumeContent } from "@/types/ResumeData";
 import { useTemplateStore } from "@/store/useTemplateStore";
 import LoadingComponent from "@/components/ui/LoadingComponent";
 
-export interface Resume {
-  _id: string;
-  title: string;
-  updatedAt: string;
-  template: string;
-  content: ResumeContent;
-}
-
 export default function ResumesPage() {
   const { status } = useSession();
-  const [resumes, setResumes] = useState<Resume[]>([]);
+  const [resumes, setResumes] = useState<ResumeDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const templates = useTemplateStore((state) => state.templates);
@@ -39,7 +31,7 @@ export default function ResumesPage() {
       try {
         const response = await fetch('/api/resumes');
         if (response.ok) {
-          const data: Resume[] = await response.json();
+          const data: ResumeDocument[] = await response.json();
           setResumes(data);
         } else {
           setError("Failed to load resumes");

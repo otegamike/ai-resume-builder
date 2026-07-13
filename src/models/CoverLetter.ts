@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
 
-export interface ICoverLetter extends Document {
+export interface ICoverLetter {
   _id: Types.ObjectId;
   userId: string;
   user: Types.ObjectId;

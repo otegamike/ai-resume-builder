@@ -8,7 +8,7 @@ export type ApplicationStatus =
   | "rejected"
   | "withdrawn";
 
-export interface IApplication extends Document {
+export interface IApplication {
   _id: Types.ObjectId;
   userId: string;
   user: Types.ObjectId;

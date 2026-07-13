@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import ResumeIframe from "@/components/resume/ResumeIframe";
 import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
-import type { Resume } from "@/types/ResumeData";
+import type { ResumeDocument } from "@/types/ResumeData";
 import { useTemplateStore } from "@/store/useTemplateStore";
 import styles from "./page.module.css";
 import LoadingComponent from "@/components/ui/LoadingComponent";
@@ -58,7 +58,7 @@ export default function OverviewPage() {
   const [loading, setLoading] = useState(true);
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
   const createDropdownRef = useRef<HTMLDivElement>(null);
-  const [latestResumes, setLatestResumes] = useState<Resume[]>([]);
+  const [latestResumes, setLatestResumes] = useState<ResumeDocument[]>([]);
   const [loadingLatestResumes, setLoadingLatestResumes] = useState(true);
   const allTemplates = useTemplateStore((state) => state.templates);
 
@@ -104,7 +104,7 @@ export default function OverviewPage() {
       try {
         const resumesRes = await fetch("/api/resumes");
         if (resumesRes.ok) {
-          const data = (await resumesRes.json()) as Resume[];
+          const data = (await resumesRes.json()) as ResumeDocument[];
           setLatestResumes(data.slice(0, 4));
         }
       } catch {
