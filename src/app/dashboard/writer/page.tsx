@@ -5,25 +5,28 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
   Plus,
-  Edit,
-  Trash2,
   Loader2,
   Sparkles,
   Save,
-  FileText,
   Upload,
   AlignLeft,
-  X,
+  FileImage,
   ChevronDown,
+  ChevronUp,
   AlertTriangle,
+  ArrowLeft,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import ResumeSelector, { ResumeSelection } from "@/components/resume/ResumeSelector";
+import CoverLetterResultCard from "@/components/cover-letter/CoverLetterResultCard";
+import CoverLetterHistory from "@/components/cover-letter/CoverLetterHistory";
 import { CoverLetterItem } from "@/types/CoverLetterData";
 import { useResumeStore } from "@/store/useResumeStore";
 import styles from "./page.module.css";
 
 type JobInputMode = "text" | "image";
+type PageView = "form" | "result" | "history";
 
 function buildTitle(role: string, company: string) {
   if (role && company) return `Cover Letter — ${role} at ${company}`;
@@ -36,16 +39,19 @@ export default function WriterPage() {
   const router = useRouter();
   const { status: authStatus } = useSession();
 
+  // ── View state ──
+  const [pageView, setPageView] = useState<PageView>("form");
+
+  // ── Letter list state ──
   const [coverLetters, setCoverLetters] = useState<CoverLetterItem[]>([]);
   const [clLoading, setClLoading] = useState(true);
-  const [showClForm, setShowClForm] = useState(false);
-  const [editingClId, setEditingClId] = useState<string | null>(null);
 
+  // ── Form state ──
+  const [editingClId, setEditingClId] = useState<string | null>(null);
   const [clTitle, setClTitle] = useState("");
   const [clCompany, setClCompany] = useState("");
   const [clRole, setClRole] = useState("");
   const [clContent, setClContent] = useState("");
-  const [clStatus, setClStatus] = useState<"draft" | "final">("draft");
   const [resumeSelection, setResumeSelection] = useState<ResumeSelection | null>(null);
   const [clJobMode, setClJobMode] = useState<JobInputMode>("text");
   const [clJobText, setClJobText] = useState("");
@@ -56,8 +62,20 @@ export default function WriterPage() {
   const [clError, setClError] = useState("");
   const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
   const storeFetchResumes = useResumeStore((state) => state.fetchResumes);
+  const getResumeById = useResumeStore((state) => state.getResumeById);
   const clJobFileRef = useRef<HTMLInputElement>(null);
 
+  // ── Result view state ──
+  const [inferredRole, setInferredRole] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [senderInfo, setSenderInfo] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    location: "",
+  });
+
+  // ── Data fetching ──
   const fetchCoverLetters = useCallback(async () => {
     setClLoading(true);
     try {
@@ -76,6 +94,12 @@ export default function WriterPage() {
   }, [storeFetchResumes]);
 
   useEffect(() => {
+    return () => {
+      if (clJobImageUrl) URL.revokeObjectURL(clJobImageUrl);
+    };
+  }, [clJobImageUrl]);
+
+  useEffect(() => {
     if (authStatus === "loading") return;
     if (authStatus !== "authenticated") {
       router.push("/");
@@ -84,12 +108,30 @@ export default function WriterPage() {
     fetchCoverLetters();
   }, [authStatus, router, fetchCoverLetters]);
 
+  // ── Helper: populate sender info from resume ──
+  function populateSenderInfo(resumeId?: string) {
+    if (!resumeId) {
+      setSenderInfo({ name: "", email: "", phone: "", location: "" });
+      return;
+    }
+    const resume = getResumeById(resumeId);
+    if (resume?.content?.personalInfo) {
+      const pi = resume.content.personalInfo;
+      setSenderInfo({
+        name: pi.name || "",
+        email: pi.email || "",
+        phone: pi.phone || "",
+        location: pi.location || "",
+      });
+    }
+  }
+
+  // ── Form reset ──
   function resetClForm() {
     setClTitle("");
     setClCompany("");
     setClRole("");
     setClContent("");
-    setClStatus("draft");
     setResumeSelection(null);
     setClJobMode("text");
     setClJobText("");
@@ -97,22 +139,25 @@ export default function WriterPage() {
     setClJobImageUrl(null);
     setClError("");
     setEditingClId(null);
+    setInferredRole("");
+    setCopied(false);
+    setSenderInfo({ name: "", email: "", phone: "", location: "" });
   }
 
-  function openClForm(letter?: CoverLetterItem) {
-    if (letter) {
-      setClTitle(letter.title);
-      setClCompany(letter.targetCompany);
-      setClRole(letter.targetRole);
-      setClContent(letter.content);
-      setClStatus(letter.status);
-      setEditingClId(letter._id);
-    } else {
-      resetClForm();
-    }
-    setShowClForm(true);
+  // ── Navigate to result view from history ──
+  function viewLetter(letter: CoverLetterItem) {
+    setClTitle(letter.title);
+    setClCompany(letter.targetCompany);
+    setClRole(letter.targetRole);
+    setClContent(letter.content);
+    setEditingClId(letter._id);
+    populateSenderInfo(letter.resumeId);
+    setInferredRole("");
+    setCopied(false);
+    setPageView("result");
   }
 
+  // ── Job image handlers ──
   function handleClJobImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
     if (clJobImageUrl) URL.revokeObjectURL(clJobImageUrl);
@@ -132,6 +177,7 @@ export default function WriterPage() {
     if (clJobFileRef.current) clJobFileRef.current.value = "";
   }
 
+  // ── Generate cover letter ──
   async function generateCoverLetter() {
     if (!resumeSelection) {
       setClError("Please select a resume.");
@@ -192,9 +238,17 @@ export default function WriterPage() {
       if (!res.ok) throw new Error(data.error || "Generation failed");
 
       setClContent(data.content);
+      setEditingClId(data.id);
+      setInferredRole(data.inferredRole || "");
       if (!clTitle) {
         setClTitle(data.title || buildTitle(clRole, clCompany));
       }
+
+      if (resumeSelection.mode === "saved") {
+        populateSenderInfo(resumeSelection.selectedResumeId);
+      }
+
+      setPageView("result");
     } catch (err) {
       setClError(err instanceof Error ? err.message : "Failed to generate cover letter");
     } finally {
@@ -202,6 +256,18 @@ export default function WriterPage() {
     }
   }
 
+  // ── Copy handler ──
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(clContent);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setClError("Failed to copy to clipboard.");
+    }
+  }
+
+  // ── Save cover letter ──
   async function saveCoverLetter() {
     if (!clContent.trim()) {
       setClError("Cover letter content is empty.");
@@ -217,7 +283,6 @@ export default function WriterPage() {
         targetCompany: clCompany,
         targetRole: clRole,
         content: clContent,
-        status: clStatus,
         resumeId: resumeSelection?.selectedResumeId || undefined,
         jobDescription: clJobText,
       };
@@ -242,8 +307,6 @@ export default function WriterPage() {
         throw new Error(data.error || "Failed to save");
       }
 
-      setShowClForm(false);
-      resetClForm();
       fetchCoverLetters();
     } catch (err) {
       setClError(err instanceof Error ? err.message : "Failed to save cover letter");
@@ -252,6 +315,7 @@ export default function WriterPage() {
     }
   }
 
+  // ── Delete ──
   async function deleteCoverLetter(id: string) {
     if (!confirm("Delete this cover letter?")) return;
     try {
@@ -262,6 +326,22 @@ export default function WriterPage() {
     } catch { /* ignore */ }
   }
 
+  // ── View transitions ──
+  function goToHistory() {
+    fetchCoverLetters();
+    setPageView("history");
+  }
+
+  function goToForm() {
+    setPageView("form");
+  }
+
+  function handleNewLetter() {
+    resetClForm();
+    setPageView("form");
+  }
+
+  // ── Auth loading ──
   if (authStatus === "loading") {
     return (
       <div className={styles.loadingContainer}>
@@ -270,37 +350,80 @@ export default function WriterPage() {
     );
   }
 
+  // Update sender info when resume selection changes
+  function handleResumeChange(selection: ResumeSelection | null) {
+    setResumeSelection(selection);
+    if (selection?.mode === "saved" && selection.selectedResumeId) {
+      populateSenderInfo(selection.selectedResumeId);
+    }
+  }
+
+  const canGenerate = !!resumeSelection && (clJobMode === "text" ? !!clJobText.trim() : !!clJobImage) && !clGenerating;
+
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Writer Studio</h1>
-          <p className={styles.subtitle}>Create cover letters and application letters from your resumes.</p>
-        </div>
-      </header>
-
-      {showClForm ? (
-        <div className={styles.formPanel}>
-          <div className={styles.formPanelHeader}>
-            <h2 className={styles.formTitle}>
-              {editingClId ? "Edit Letter" : "Create New Letter"}
-            </h2>
-            <button
-              className={styles.closeButton}
-              onClick={() => { setShowClForm(false); resetClForm(); }}
-            >
-              <X />
-            </button>
+      {/* ── Contextual Header ── */}
+      {pageView === "form" && (
+        <header className={styles.header}>
+          <div className={styles.headerRow}>
+            <div>
+              <h1 className={styles.title}>Writer Studio</h1>
+            </div>
+            <Button variant="ghost" onClick={goToHistory}>
+              <Clock className={styles.btnIcon} />
+              History
+            </Button>
           </div>
+          <p className={styles.subtitle}>Create cover letters and application letters from your resumes.</p>
+        </header>
+      )}
 
-          <div className={styles.formBody}>
-            <div className={styles.field}>
-              <label className={styles.label}>Select Resume</label>
-              <ResumeSelector onSelectionChange={setResumeSelection} />
+      {pageView === "result" && (
+        <header className={styles.header}>
+          <div className={styles.headerRow}>
+            <button className={styles.backButton} onClick={goToForm}>
+              <ArrowLeft className={styles.backIcon} />
+              Back to form
+            </button>
+            <Button variant="ghost" onClick={handleNewLetter}>
+              <Plus className={styles.btnIcon} />
+              New letter
+            </Button>
+          </div>
+        </header>
+      )}
+
+      {pageView === "history" && (
+        <header className={styles.header}>
+          <div className={styles.headerRow}>
+            <div>
+              <h1 className={styles.title}>Your Letters</h1>
+            </div>
+            <Button variant="ghost" onClick={handleNewLetter}>
+              <Plus className={styles.btnIcon} />
+              New letter
+            </Button>
+          </div>
+          <p className={styles.subtitle}>View and manage your generated cover letters.</p>
+        </header>
+      )}
+
+      {/* ── View: Form ── */}
+      {pageView === "form" && (
+        <div className={styles.tabContent}>
+          <section className={styles.panel}>
+            <div className={styles.sectionHeader}>
+              <h2 className={styles.formSectionTitle}>Select your base resume</h2>
+            </div>
+            <ResumeSelector onSelectionChange={handleResumeChange} />
+
+            <hr className={styles.divider} />
+
+            <div className={styles.sectionHeader}>
+              <h2 className={styles.formSectionTitle}>Job Description</h2>
             </div>
 
-            <div className={styles.field}>
-              <label className={styles.label}>Job Description</label>
+            <div className={styles.tabsContainer}>
               <div className={styles.inputTabs}>
                 <button
                   type="button"
@@ -308,45 +431,51 @@ export default function WriterPage() {
                   onClick={() => setClJobMode("text")}
                 >
                   <AlignLeft className={styles.tabIconSmall} />
-                  Paste Text
+                  Paste Description Text
                 </button>
                 <button
                   type="button"
                   className={`${styles.inputTab} ${clJobMode === "image" ? styles.activeInputTab : ""}`}
                   onClick={() => setClJobMode("image")}
                 >
-                  <Upload className={styles.tabIconSmall} />
-                  Upload Image
+                  <FileImage className={styles.tabIconSmall} />
+                  Upload Post Image
                 </button>
               </div>
+            </div>
+
+            <div className={styles.inputBody}>
               {clJobMode === "text" ? (
-                <textarea
-                  className={styles.textarea}
-                  placeholder="Paste job description here..."
-                  value={clJobText}
-                  onChange={(e) => setClJobText(e.target.value)}
-                  rows={6}
-                />
+                <div className={styles.field}>
+                  <textarea
+                    placeholder="Paste the responsibilities, requirements, and keywords from the job posting..."
+                    value={clJobText}
+                    onChange={(e) => setClJobText(e.target.value)}
+                    className={styles.textarea}
+                    rows={8}
+                  />
+                </div>
               ) : (
-                <div className={styles.uploadArea}>
+                <div className={styles.uploadContainer}>
                   {clJobImageUrl ? (
-                    <div className={styles.uploadPreview}>
-                      <img src={clJobImageUrl} alt="Job description" className={styles.uploadImage} />
-                      <button type="button" className={styles.uploadChangeBtn} onClick={clearClJobImage}>
-                        Change
+                    <div className={styles.jobImagePreviewBox}>
+                      <img src={clJobImageUrl} alt="Job posting preview" className={styles.jobImagePreview} />
+                      <button type="button" onClick={clearClJobImage} className={styles.removeImageBtn}>
+                        Change Image
                       </button>
                     </div>
                   ) : (
-                    <label className={styles.uploadLabel}>
+                    <label className={styles.jobImageUploadLabel}>
                       <input
                         ref={clJobFileRef}
                         type="file"
-                        accept="image/png,image/jpeg,image/webp"
-                        className={styles.fileInput}
+                        accept="image/png, image/jpeg, image/jpg, image/webp"
                         onChange={handleClJobImageChange}
+                        className={styles.fileInput}
                       />
                       <Upload className={styles.uploadIcon} />
-                      <span>Upload job posting screenshot</span>
+                      <span className={styles.uploadTitle}>Choose a job post screenshot</span>
+                      <span className={styles.uploadHint}>Supports PNG, JPG, JPEG, WEBP files</span>
                     </label>
                   )}
                 </div>
@@ -356,39 +485,43 @@ export default function WriterPage() {
             <div className={styles.collapsibleSection}>
               <button
                 type="button"
-                className={styles.collapsibleHeader}
+                className={styles.collapsibleToggle}
                 onClick={() => setShowAdditionalInfo(!showAdditionalInfo)}
               >
-                <span>Additional Information (Optional)</span>
-                <ChevronDown
-                  className={`${styles.collapsibleIcon} ${showAdditionalInfo ? styles.collapsibleIconOpen : ""}`}
-                />
+                <span>Additional Information</span>
+                {showAdditionalInfo ? (
+                  <ChevronUp className={styles.chevronIcon} />
+                ) : (
+                  <ChevronDown className={styles.chevronIcon} />
+                )}
               </button>
               {showAdditionalInfo && (
                 <div className={styles.collapsibleBody}>
-                  <div className={styles.formRow}>
+                  <div className={styles.metadataRow}>
                     <div className={styles.field}>
-                      <label className={styles.label}>
-                        Target Company <span className={styles.optionalLabel}>(Optional)</span>
+                      <label htmlFor="targetCompany" className={styles.label}>
+                        Target Company <span className={styles.optionalText}>(optional)</span>
                       </label>
                       <input
+                        id="targetCompany"
                         type="text"
-                        className={styles.input}
                         placeholder="e.g. Google"
                         value={clCompany}
                         onChange={(e) => setClCompany(e.target.value)}
+                        className={styles.input}
                       />
                     </div>
                     <div className={styles.field}>
-                      <label className={styles.label}>
-                        Target Role <span className={styles.optionalLabel}>(Optional)</span>
+                      <label htmlFor="targetRole" className={styles.label}>
+                        Target Role <span className={styles.optionalText}>(optional)</span>
                       </label>
                       <input
+                        id="targetRole"
                         type="text"
-                        className={styles.input}
                         placeholder="e.g. Software Engineer"
                         value={clRole}
                         onChange={(e) => setClRole(e.target.value)}
+                        className={styles.input}
                       />
                     </div>
                   </div>
@@ -396,64 +529,54 @@ export default function WriterPage() {
               )}
             </div>
 
-            <Button
-              onClick={generateCoverLetter}
-              disabled={clGenerating}
-              className={styles.generateBtn}
-            >
-              {clGenerating ? (
-                <><Loader2 className={styles.btnIcon} /> Generating...</>
-              ) : (
-                <><Sparkles className={styles.btnIcon} /> Generate with AI</>
-              )}
-            </Button>
-
-            <div className={styles.field}>
-              <label className={styles.label}>Letter Content</label>
-              <textarea
-                className={styles.textarea}
-                placeholder="Generated letter will appear here. You can edit it manually."
-                value={clContent}
-                onChange={(e) => setClContent(e.target.value)}
-                rows={12}
-              />
+            <div className={styles.actions}>
+              <div className={styles.progress}>
+                {clGenerating && <Loader2 className={styles.spinner} />}
+                <span>
+                  {clGenerating
+                    ? "Generating cover letter..."
+                    : "Select a resume and enter job details to begin."}
+                </span>
+              </div>
+              <Button disabled={!canGenerate} onClick={generateCoverLetter}>
+                <Sparkles className={styles.btnIcon} />
+                Generate Cover Letter
+              </Button>
             </div>
+          </section>
 
-            <div className={styles.formFooter}>
-              <div className={styles.statusToggle}>
-                <label className={styles.radioLabel}>
-                  <input
-                    type="radio"
-                    name="clStatus"
-                    value="draft"
-                    checked={clStatus === "draft"}
-                    onChange={() => setClStatus("draft")}
-                  />
-                  Draft
-                </label>
-                <label className={styles.radioLabel}>
-                  <input
-                    type="radio"
-                    name="clStatus"
-                    value="final"
-                    checked={clStatus === "final"}
-                    onChange={() => setClStatus("final")}
-                  />
-                  Final
-                </label>
-              </div>
-              <div className={styles.formActions}>
-                <Button variant="ghost" onClick={() => { setShowClForm(false); resetClForm(); }}>
-                  Cancel
-                </Button>
-                <Button onClick={saveCoverLetter} disabled={clSaving}>
-                  {clSaving ? (
-                    <><Loader2 className={styles.btnIcon} /> Saving...</>
-                  ) : (
-                    <><Save className={styles.btnIcon} /> Save</>
-                  )}
-                </Button>
-              </div>
+          {clError && (
+            <div className={styles.error} role="alert">
+              <AlertTriangle className={styles.errorIcon} />
+              {clError}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── View: Result ── */}
+      {pageView === "result" && (
+        <div className={styles.tabContent}>
+          <div className={styles.resultsSection}>
+            <CoverLetterResultCard
+              key={editingClId || "new"}
+              coverLetter={clContent}
+              senderInfo={senderInfo}
+              targetRole={clRole}
+              inferredRole={inferredRole}
+              onCopy={handleCopy}
+              copied={copied}
+              onEditChange={setClContent}
+            />
+
+            <div className={styles.saveRow}>
+              <Button onClick={saveCoverLetter} disabled={clSaving}>
+                {clSaving ? (
+                  <><Loader2 className={styles.btnIcon} /> Saving...</>
+                ) : (
+                  <><Save className={styles.btnIcon} /> Save</>
+                )}
+              </Button>
             </div>
 
             {clError && (
@@ -464,57 +587,17 @@ export default function WriterPage() {
             )}
           </div>
         </div>
-      ) : (
-        <>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Your Letters</h2>
-            <Button onClick={() => openClForm()}>
-              <Plus className={styles.btnIcon} />
-              Create New Letter
-            </Button>
-          </div>
+      )}
 
-          {clLoading ? (
-            <div className={styles.loadingRow}>
-              <Loader2 className={styles.loadingIcon} />
-            </div>
-          ) : coverLetters.length === 0 ? (
-            <div className={styles.emptyState}>
-              <FileText className={styles.emptyIcon} />
-              <p>No letters yet. Create your first cover letter or application letter!</p>
-            </div>
-          ) : (
-            <div className={styles.grid}>
-              {coverLetters.map((letter) => (
-                <div key={letter._id} className={styles.card}>
-                  <div className={styles.cardBody}>
-                    <h3 className={styles.cardTitle}>{letter.title}</h3>
-                    <div className={styles.cardMeta}>
-                      {letter.targetCompany && <span>{letter.targetCompany}</span>}
-                      {letter.targetRole && <span>{letter.targetRole}</span>}
-                    </div>
-                    <span className={`${styles.statusBadge} ${letter.status === "final" ? styles.finalBadge : styles.draftBadge}`}>
-                      {letter.status}
-                    </span>
-                  </div>
-                  <div className={styles.cardFooter}>
-                    <span className={styles.cardDate}>
-                      {new Date(letter.updatedAt).toLocaleDateString()}
-                    </span>
-                    <div className={styles.cardActions}>
-                      <button className={styles.iconBtn} onClick={() => openClForm(letter)} title="Edit">
-                        <Edit />
-                      </button>
-                      <button className={`${styles.iconBtn} ${styles.deleteBtn}`} onClick={() => deleteCoverLetter(letter._id)} title="Delete">
-                        <Trash2 />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </>
+      {/* ── View: History ── */}
+      {pageView === "history" && (
+        <CoverLetterHistory
+          letters={coverLetters}
+          loading={clLoading}
+          onNew={handleNewLetter}
+          onView={viewLetter}
+          onDelete={deleteCoverLetter}
+        />
       )}
     </div>
   );

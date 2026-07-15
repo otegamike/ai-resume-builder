@@ -1,8 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
   WandSparkles,
   Sparkles,
+  FileCheck,
   PenLine,
   CheckCircle2,
   FileText,
@@ -55,27 +57,172 @@ function ATSVisual() {
   );
 }
 
-function TypingVisual() {
+const TAILOR_SETS = [
+  {
+    old: [
+      "Responsible for developing new features",
+      "Worked with team on various projects",
+      "Managed social media accounts",
+    ],
+    new: [
+      "Led React dashboard development, boosting engagement 35%",
+      "Collaborated cross-functionally to ship 12 features on time",
+      "Grew LinkedIn following 200% through targeted content strategy",
+    ],
+  },
+  {
+    old: [
+      "Assisted in creating marketing materials",
+      "Participated in weekly team meetings",
+      "Helped with data entry tasks",
+    ],
+    new: [
+      "Designed multi-channel campaigns driving 50K impressions",
+      "Facilitated cross-team strategy sessions, reducing sprint cycles 20%",
+      "Built automated data pipelines reducing manual entry by 90%",
+    ],
+  },
+];
+
+function TailorVisual() {
+  const [step, setStep] = useState(-1);
+  const [setIdx, setSetIdx] = useState(0);
+  const [typed, setTyped] = useState(["", "", ""]);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const set = TAILOR_SETS[setIdx];
+
+    if (step === -1) {
+      const t = setTimeout(() => {
+        setSetIdx((prev) => (prev + 1) % TAILOR_SETS.length);
+        setTyped(["", "", ""]);
+        setStep(0);
+      }, 200);
+      return () => clearTimeout(t);
+    }
+
+    if (step === 0) {
+      setVisible(true);
+      const t = setTimeout(() => setStep(1), 500);
+      return () => clearTimeout(t);
+    }
+
+    if (step === 1) {
+      const t = setTimeout(() => setStep(2), 1500);
+      return () => clearTimeout(t);
+    }
+
+    if (step === 2 || step === 4 || step === 6) {
+      const t = setTimeout(() => setStep(step + 1), 600);
+      return () => clearTimeout(t);
+    }
+
+    if (step === 3 || step === 5 || step === 7) {
+      const bulletIdx = (step - 3) / 2;
+      if (typed[bulletIdx].length < set.new[bulletIdx].length) {
+        const target = set.new[bulletIdx];
+        const t = setTimeout(() => {
+          setTyped((prev) => {
+            const next = [...prev];
+            next[bulletIdx] = target.slice(0, next[bulletIdx].length + 1);
+            return next;
+          });
+        }, 30);
+        return () => clearTimeout(t);
+      }
+      setStep(step + 1);
+      return;
+    }
+
+    if (step === 8) {
+      setVisible(false);
+      const t = setTimeout(() => setStep(-1), 500);
+      return () => clearTimeout(t);
+    }
+  }, [step, typed, setIdx]);
+
   return (
-    <div className={styles.typingVisual}>
-      <div className={styles.typingLine} />
-      <div className={styles.typingLine} />
-      <div className={styles.typingLine} />
-      <div className={styles.typingCursor} />
+    <div className={styles.tailorVisual}>
+      <div className={`${styles.tailorDoc} ${visible ? styles.tailorDocVisible : ""}`}>
+        <div className={styles.tailorLabel}>Experience</div>
+        {TAILOR_SETS[setIdx].old.map((oldBullet, i) => {
+          const bulletStep = 2 + i * 2;
+          const showStrike = step >= bulletStep;
+          const showNew = step >= bulletStep + 1;
+          const isTyping = step === bulletStep + 1;
+
+          return (
+            <div key={i}>
+              <div className={styles.tailorLine}>
+                <span className={`${styles.tailorMarker} ${!showStrike ? styles.tailorMarkerBullet : ""}`}>
+                  {showStrike ? "✕" : "•"}
+                </span>
+                <span
+                  className={`${styles.tailorOld} ${showStrike ? styles.tailorStruck : ""}`}
+                >
+                  {oldBullet}
+                </span>
+              </div>
+              {showNew && (
+                <div className={styles.tailorLine}>
+                  <span className={`${styles.tailorMarker} ${styles.tailorMarkerCheck}`}>✓</span>
+                  <span className={styles.tailorNew}>
+                    {typed[i]}
+                    {isTyping && <span className={styles.tailorCursor} />}
+                  </span>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
+const COVER_LETTER_TEXTS = [
+  "Dear Hiring Team,\n\nI am excited to apply for the Software Engineer position. With 5+ years building scalable web applications, I am confident I can deliver immediate value to your engineering team.",
+  "Dear Hiring Manager,\n\nYour mission to transform the industry deeply resonates with me. My background in product design and user research makes me an ideal fit for this role.",
+  "To the Hiring Committee,\n\nI have followed your company's innovative trajectory with admiration. My experience leading cross-functional teams aligns perfectly with the challenges of this position.",
+  "Dear [Company] Team,\n\nI am writing to express strong interest in the Data Scientist role. My expertise in machine learning and statistical modeling can help drive data-informed decisions.",
+];
+
 function CoverLetterVisual() {
+  const [displayText, setDisplayText] = useState("");
+  const [textIndex, setTextIndex] = useState(0);
+  const [phase, setPhase] = useState<"typing" | "paused">("typing");
+
+  const currentText = COVER_LETTER_TEXTS[textIndex];
+
+  useEffect(() => {
+    if (phase === "paused") {
+      const timer = setTimeout(() => {
+        setTextIndex((prev) => (prev + 1) % COVER_LETTER_TEXTS.length);
+        setDisplayText("");
+        setPhase("typing");
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+
+    if (displayText.length < currentText.length) {
+      const timer = setTimeout(() => {
+        setDisplayText(currentText.slice(0, displayText.length + 1));
+      }, 35);
+      return () => clearTimeout(timer);
+    }
+
+    setPhase("paused");
+  }, [displayText, phase, textIndex, currentText]);
+
   return (
     <div className={styles.stackVisual}>
-      {[1, 2, 3].map((i) => (
-        <div key={i} className={styles.stackPage}>
-          <div className={styles.stackPageLine} />
-          <div className={styles.stackPageLine} />
-          <div className={styles.stackPageLine} />
+      <div className={styles.typewriterPaper}>
+        <div className={styles.typewriterText}>
+          {displayText}
+          <span className={styles.cursor} />
         </div>
-      ))}
+      </div>
     </div>
   );
 }
@@ -161,13 +308,13 @@ const features: Feature[] = [
     visual: ATSVisual,
   },
   {
-    icon: Sparkles,
-    title: "AI Content Writer",
+    icon: FileCheck,
+    title: "Tailor Resume to Job Description",
     description:
-      "Stuck staring at a blank page? Let our AI suggest bullet points, rewrite summaries, and improve your phrasing.",
+      "Paste a job description and instantly rewrite your resume to match — highlighting relevant skills, rephrasing bullets, and optimizing keywords.",
     accent: "ai",
     span: "medium",
-    visual: TypingVisual,
+    visual: TailorVisual,
   },
   {
     icon: PenLine,

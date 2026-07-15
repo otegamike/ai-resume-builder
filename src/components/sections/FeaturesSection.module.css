@@ -388,118 +388,135 @@
   color: var(--warning);
 }
 
-/* -- AI Writer / Typing Cursor -- */
-.typingVisual {
+/* -- Cover Letter Typewriter -- */
+.stackVisual {
   width: 100%;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  justify-content: flex-end;
 }
 
-.typingLine {
-  height: 10px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.06);
+.typewriterPaper {
+  width: 100%;
+  max-width: 280px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+  border-radius: 8px;
+  padding: 12px 14px;
+  min-height: 76px;
   position: relative;
   overflow: hidden;
 }
 
-.typingLine::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, var(--ai-accent-500), var(--ai-accent-400));
-  animation: typing 2.5s ease-in-out infinite;
+.typewriterText {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.75);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
-.typingLine:nth-child(1) { width: 100%; }
-.typingLine:nth-child(1)::after { animation-delay: 0s; }
-.typingLine:nth-child(2) { width: 85%; }
-.typingLine:nth-child(2)::after { animation-delay: 0.3s; }
-.typingLine:nth-child(3) { width: 60%; }
-.typingLine:nth-child(3)::after { animation-delay: 0.6s; }
-
-@keyframes typing {
-  0% { width: 0%; }
-  50% { width: 100%; }
-  100% { width: 100%; opacity: 0.3; }
-}
-
-.typingCursor {
-  width: 2px;
-  height: 16px;
+.cursor {
+  display: inline-block;
+  width: 1.5px;
+  height: 11px;
   background: var(--ai-accent-400);
-  border-radius: 1px;
-  margin-top: 4px;
-  animation: blink 1s step-end infinite;
+  margin-left: 1px;
+  animation: cursorBlink 0.8s step-end infinite;
+  vertical-align: text-bottom;
 }
 
-@keyframes blink {
+@keyframes cursorBlink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
 }
 
-/* -- Cover Letter Stack -- */
-.stackVisual {
-  position: relative;
-  width: 140px;
-  height: 100px;
+/* -- Tailor Resume Visual -- */
+.tailorVisual {
+  width: 100%;
 }
 
-.stackPage {
-  position: absolute;
-  width: 100px;
-  height: 72px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+.tailorDoc {
+  width: 100%;
+  max-width: 280px;
   background: rgba(255, 255, 255, 0.04);
-  transition: transform 0.4s ease;
+  border: 1px solid rgba(139, 92, 246, 0.15);
+  border-radius: 8px;
+  padding: 10px 12px;
+  min-height: 64px;
+  opacity: 0;
+  transition: opacity 0.5s ease;
 }
 
-.stackPage:nth-child(1) {
-  transform: rotate(-4deg) translate(0, 8px);
-  z-index: 1;
+.tailorDocVisible {
+  opacity: 1;
 }
 
-.stackPage:nth-child(2) {
-  transform: rotate(0deg) translate(10px, 0);
-  z-index: 2;
+.tailorLabel {
+  font-size: 8px;
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.stackPage:nth-child(3) {
-  transform: rotate(3deg) translate(20px, -6px);
-  z-index: 3;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(255, 255, 255, 0.06));
-  border-color: rgba(139, 92, 246, 0.2);
+.tailorLine {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  margin-top: 4px;
 }
 
-.stackPageLine {
-  width: 60%;
-  height: 4px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.08);
-  margin: 10px auto 0;
+.tailorMarker {
+  width: 14px;
+  flex-shrink: 0;
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--error);
 }
 
-.stackPageLine:nth-child(2) {
-  width: 45%;
-  margin-top: 6px;
+.tailorMarkerCheck {
+  color: var(--primary-400);
 }
 
-.stackPageLine:nth-child(3) {
-  width: 50%;
-  margin-top: 6px;
+.tailorMarkerBullet {
+  color: rgba(255, 255, 255, 0.25);
 }
 
-.card:hover .stackPage:nth-child(1) {
-  transform: rotate(-6deg) translate(-4px, 10px);
+.tailorOld {
+  font-size: 9px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.6);
+  transition: color 0.3s ease;
 }
 
-.card:hover .stackPage:nth-child(3) {
-  transform: rotate(5deg) translate(24px, -10px);
+.tailorStruck {
+  text-decoration: line-through;
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.tailorNew {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  line-height: 1.4;
+  color: var(--primary-400);
+}
+
+.tailorCursor {
+  display: inline-block;
+  width: 1.5px;
+  height: 10px;
+  background: var(--primary-400);
+  animation: tailorBlink 0.8s step-end infinite;
+  vertical-align: text-bottom;
+}
+
+@keyframes tailorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
 /* -- Live Preview Split -- */

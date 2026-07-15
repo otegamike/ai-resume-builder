@@ -94,13 +94,15 @@ export async function POST(request: Request) {
     }
 
     // 3. Generate cover letter via AI
-    const coverLetterContent = await generateCoverLetter(
+    const coverLetterResult = await generateCoverLetter(
       resumeText,
       jobDescriptionText,
       targetCompany,
       targetRole,
       existingResume
     );
+    const coverLetterContent = coverLetterResult.content;
+    const inferredRole = coverLetterResult.inferredRole;
 
     // 4. Save to database
     await dbConnect();
@@ -130,6 +132,7 @@ export async function POST(request: Request) {
       content: coverLetterContent,
       targetCompany,
       targetRole,
+      inferredRole,
     });
   } catch (error) {
     console.error("Cover letter generation error:", error);
