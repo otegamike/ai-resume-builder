@@ -6,6 +6,7 @@ import dbConnect from "@/lib/db";
 import Resume from "@/models/Resume";
 import CoverLetter from "@/models/CoverLetter";
 import { ResumeContent } from "@/types/ResumeData";
+import { deductCredits, InsufficientCreditsError } from "@/lib/creditUtils";
 
 export const runtime = "nodejs";
 
@@ -15,6 +16,8 @@ export async function POST(request: Request) {
     if (!authUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const newAiCredits = await deductCredits(String(authUser.userObjectId), "coverLetterGenerate");
 
     const formData = await request.formData();
     const resumeMode = formData.get("resumeMode") as string;
@@ -133,8 +136,15 @@ export async function POST(request: Request) {
       targetCompany,
       targetRole,
       inferredRole,
+      newAiCredits,
     });
   } catch (error) {
+    if (error instanceof InsufficientCreditsError) {
+      return NextResponse.json(
+        { error: error.message, creditsRemaining: error.creditsRemaining, cost: error.cost },
+        { status: 402 }
+      );
+    }
     console.error("Cover letter generation error:", error);
     const message = error instanceof Error ? error.message : "Failed to generate cover letter";
     return NextResponse.json({ error: message }, { status: 500 });

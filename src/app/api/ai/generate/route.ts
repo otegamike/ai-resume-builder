@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateSummary, generateExperienceBulletPoints, improveSummary, generateSkillsSuggestions, generateCategorizedSkills, categorizeExistingSkills } from '@/lib/ai';
 import { getAuthenticatedUser } from '@/lib/authUser';
+import { deductCredits, InsufficientCreditsError } from '@/lib/creditUtils';
+import type { AiFeature } from '@/lib/creditCosts';
 
 interface GenerateBody {
   type: string;
@@ -16,6 +18,15 @@ interface GenerateBody {
   };
 }
 
+const FEATURE_MAP: Record<string, AiFeature> = {
+  generateSummary: 'generateSummary',
+  generateBulletPoints: 'generateBulletPoints',
+  improveSummary: 'improveSummary',
+  generateSkills: 'generateSkills',
+  generateCategorizedSkills: 'generateCategorizedSkills',
+  categorizeExistingSkills: 'categorizeExistingSkills',
+};
+
 export async function POST(request: NextRequest) {
   try {
     const authUser = await getAuthenticatedUser();
@@ -25,6 +36,13 @@ export async function POST(request: NextRequest) {
 
     const body: GenerateBody = await request.json();
     const { type, data } = body;
+
+    const feature = FEATURE_MAP[type];
+    if (!feature) {
+      return NextResponse.json({ error: 'Invalid generation type' }, { status: 400 });
+    }
+
+    const newAiCredits = await deductCredits(String(authUser.userObjectId), feature);
 
     let result: any;
 
@@ -47,16 +65,20 @@ export async function POST(request: NextRequest) {
       case 'categorizeExistingSkills':
         result = await categorizeExistingSkills(data.skills || []);
         break;
-      default:
-        return NextResponse.json({ error: 'Invalid generation type' }, { status: 400 });
     }
 
     if (result==="error") {
       return NextResponse.json({ error: 'AI generation failed' }, { status: 500 });
     }
     
-    return NextResponse.json({ result });
+    return NextResponse.json({ result, newAiCredits });
   } catch (error) {
+    if (error instanceof InsufficientCreditsError) {
+      return NextResponse.json(
+        { error: error.message, creditsRemaining: error.creditsRemaining, cost: error.cost },
+        { status: 402 }
+      );
+    }
     console.error('AI Generation error:', error);
     return NextResponse.json({ error: 'AI generation failed' }, { status: 500 });
   }

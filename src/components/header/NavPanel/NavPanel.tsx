@@ -12,21 +12,14 @@ import { getDistanceFromRight } from '@/utils/elementPosition'
 import NavBarCTA from '../NavBarCTA'
 import { getHeaderHeight } from '@/utils/headerSize'
 import AiCredits from '@/components/ui/ai-credit/AiCredits'
+import { useAiCreditStore } from '@/store/useAiCreditStore'
+import { formatPlan, MAX_CREDITS_PER_PLAN } from '@/lib/creditCosts'
 
 interface NavPanelProps {
   session: Session | null
   isOpen: boolean
   toggleMenu: (menuState?: boolean) => void
   status: "authenticated" | "loading" | "unauthenticated"
-}
-
-function formatPlan(plan: string | null | undefined): string {
-  switch (plan) {
-    case "proPlus": return "Pro+"
-    case "pro": return "Pro"
-    case "free": return "Free"
-    default: return "Free"
-  }
 }
 
 const primaryLinks = [
@@ -47,6 +40,7 @@ function NavPanel({ session, isOpen, toggleMenu, status }: NavPanelProps) {
   const pathname = usePathname();
   const [panelRight, setPanelRight] = useState(0);
   const [panelTop, setPanelTop] = useState(0);
+  const storeCredits = useAiCreditStore((s) => s.credits);
 
   const updatePanelPosition = useCallback(() => {
     setPanelRight(getDistanceFromRight('hamburger-container'))
@@ -63,6 +57,7 @@ function NavPanel({ session, isOpen, toggleMenu, status }: NavPanelProps) {
   const userName = session?.user?.name || "Guest"
   const userImage = session?.user?.image
   const subscriptionPlan = isSignedIn ? session?.user?.subscriptionPlan : null
+  const plan = (subscriptionPlan ?? "free") as keyof typeof MAX_CREDITS_PER_PLAN
 
   const handleLinkClick = () => {
     toggleMenu(false)
@@ -102,7 +97,7 @@ function NavPanel({ session, isOpen, toggleMenu, status }: NavPanelProps) {
               )}
             </div>
             {isSignedIn && (
-              <AiCredits aiCredit={session?.user?.AiCredits ?? null} small full />
+              <AiCredits aiCredit={storeCredits ?? session?.user?.AiCredits ?? null} plan={plan} small full />
             )}
           </div>
 

@@ -20,6 +20,7 @@ import Application from "@/models/Application";
 import { ResumeContent } from "@/types/ResumeData";
 import { templateDefinitions } from "@/lib/templateCatalog";
 import { getRandomTemplateId } from "@/utils/templateUtils";
+import { deductCredits, InsufficientCreditsError } from "@/lib/creditUtils";
 
 export const runtime = "nodejs";
 
@@ -29,6 +30,8 @@ export async function POST(request: Request) {
     if (!authUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const newAiCredits = await deductCredits(String(authUser.userObjectId), "quickApply");
 
     const formData = await request.formData();
     const resumeMode = formData.get("resumeMode") as string;
@@ -189,8 +192,15 @@ export async function POST(request: Request) {
       templateId: selectedTemplateId,
       inferredRole,
       inferredCompany,
+      newAiCredits,
     });
   } catch (error) {
+    if (error instanceof InsufficientCreditsError) {
+      return NextResponse.json(
+        { error: error.message, creditsRemaining: error.creditsRemaining, cost: error.cost },
+        { status: 402 }
+      );
+    }
     console.error("Quick apply error:", error);
     const message = error instanceof Error ? error.message : "Failed to generate application";
     return NextResponse.json({ error: message }, { status: 500 });

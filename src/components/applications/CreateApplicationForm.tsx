@@ -11,8 +11,10 @@ import {
   Loader2,
   CheckCircle2,
   AlertTriangle,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { CREDIT_COST } from "@/lib/creditCosts";
 import ResumeSelector, { ResumeSelection } from "@/components/resume/ResumeSelector";
 import styles from "@/app/dashboard/applications/page.module.css";
 
@@ -247,7 +249,7 @@ export default function CreateApplicationForm({
           </div>
           <Button disabled={!canGenerate} onClick={onGenerate}>
             <Sparkles className={styles.btnIcon} />
-            Generate Application
+            Generate Application <Zap size={16} />{CREDIT_COST.quickApply}
           </Button>
         </div>
       </section>

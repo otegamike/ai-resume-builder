@@ -16,12 +16,16 @@ import {
   AlertTriangle,
   ArrowLeft,
   Clock,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import ResumeSelector, { ResumeSelection } from "@/components/resume/ResumeSelector";
 import CoverLetterResultCard from "@/components/cover-letter/CoverLetterResultCard";
 import CoverLetterHistory from "@/components/cover-letter/CoverLetterHistory";
 import { CoverLetterItem } from "@/types/CoverLetterData";
+import { CREDIT_COST } from "@/lib/creditCosts";
+import { useAiCreditStore } from "@/store/useAiCreditStore";
+import { useAlertStore } from "@/store/useAlertStore";
 import { useResumeStore } from "@/store/useResumeStore";
 import styles from "./page.module.css";
 
@@ -235,7 +239,19 @@ export default function WriterPage() {
       });
 
       const data = await res.json();
+
+      if (res.status === 402) {
+        useAlertStore.getState().addAlert("error", data.error);
+        setClError(data.error);
+        setClGenerating(false);
+        return;
+      }
+
       if (!res.ok) throw new Error(data.error || "Generation failed");
+
+      if (typeof data.newAiCredits === "number") {
+        useAiCreditStore.getState().setCredits(data.newAiCredits);
+      }
 
       setClContent(data.content);
       setEditingClId(data.id);
@@ -540,7 +556,7 @@ export default function WriterPage() {
               </div>
               <Button disabled={!canGenerate} onClick={generateCoverLetter}>
                 <Sparkles className={styles.btnIcon} />
-                Generate Cover Letter
+                Generate Cover Letter <Zap size={16} />{CREDIT_COST.coverLetterGenerate}
               </Button>
             </div>
           </section>

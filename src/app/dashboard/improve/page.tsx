@@ -7,9 +7,13 @@ import {
   AlertTriangle,
   CheckCircle2,
   Loader2,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { AtsIssue, AtsReport } from "@/types/AtsReport";
+import { CREDIT_COST } from "@/lib/creditCosts";
+import { useAiCreditStore } from "@/store/useAiCreditStore";
+import { useAlertStore } from "@/store/useAlertStore";
 import styles from "./page.module.css";
 import ScoreCircle from "@/components/ui/score-circle/ScoreCircle";
 import { CircleCheck } from "lucide-react";
@@ -91,8 +95,20 @@ export default function ImproveResumePage() {
 
       setProgress("analyzing");
       const data = await response.json();
+
+      if (response.status === 402) {
+        useAlertStore.getState().addAlert("error", data.error);
+        setProgress("idle");
+        setError(data.error);
+        return;
+      }
+
       if (!response.ok) {
         throw new Error(data.error || "Failed to analyze resume");
+      }
+
+      if (typeof data.newAiCredits === "number") {
+        useAiCreditStore.getState().setCredits(data.newAiCredits);
       }
 
       setProgress("improving");
@@ -165,7 +181,7 @@ export default function ImproveResumePage() {
               <span>{progressCopy[progress]}</span>
             </div>
             <Button disabled={!canSubmit} type="submit">
-              Run ATS review
+              <Zap size={16} />{selection?.mode === "upload" ? CREDIT_COST.atsAnalysisUpload : CREDIT_COST.atsAnalysisSaved} Run ATS review
             </Button>
           </div>
         </form>

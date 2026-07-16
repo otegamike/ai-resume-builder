@@ -1,15 +1,33 @@
 
 /* AI Credits Badge */
-.creditsBadge {
+.creditsBadge, .creditsBadge::before {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-1) var(--space-2);
-  background: linear-gradient(135deg, var(--ai-accent-300), var(--ai-accent-100));
-  border-radius: var(--radius-full);
-  border: 1px solid var(--ai-accent-200);
+  background-color: var(--ai-accent-100);
+  border-radius: 20px;
+  border: 1px solid var(--ai-accent-700);
   flex-shrink: 0;
+  overflow: clip;
+  isolation: isolate;
  
+}
+
+.creditsBadge::before {
+
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -1px;
+  width: var(--credits-left);
+  height: 85%;
+  z-index: -1;
+  border: none;
+  background: linear-gradient(135deg, var(--ai-accent-300), var(--ai-accent-300));
+
+  transition: width 0.3s ease-in-out;
 }
 
 .creditsIcon {

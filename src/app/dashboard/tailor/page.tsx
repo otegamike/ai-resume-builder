@@ -12,11 +12,15 @@ import {
   AlignLeft,
   Sparkles,
   ArrowRight,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import ResumeSelector, { ResumeSelection } from "@/components/resume/ResumeSelector";
 import ScoreCircle from "@/components/ui/score-circle/ScoreCircle";
 import { TailorReport } from "@/types/TailorReport";
+import { CREDIT_COST } from "@/lib/creditCosts";
+import { useAiCreditStore } from "@/store/useAiCreditStore";
+import { useAlertStore } from "@/store/useAlertStore";
 import styles from "./page.module.css";
 import scrollToId from "@/utils/scrollIntoview";
 
@@ -172,8 +176,20 @@ export default function TailorResumePage() {
 
       setProgress("finishing");
       const data = await response.json();
+
+      if (response.status === 402) {
+        useAlertStore.getState().addAlert("error", data.error);
+        setProgress("idle");
+        setError(data.error);
+        return;
+      }
+
       if (!response.ok) {
         throw new Error(data.error || "Failed to tailor resume");
+      }
+
+      if (typeof data.newAiCredits === "number") {
+        useAiCreditStore.getState().setCredits(data.newAiCredits);
       }
 
       setReport(data as TailorReport);
@@ -386,7 +402,7 @@ export default function TailorResumePage() {
               </div>
               <Button disabled={!canSubmit} type="submit">
                 <Sparkles className={styles.btnIcon} />
-                Optimize Resume
+                Optimize Resume <Zap size={16} />{CREDIT_COST.resumeTailor}
               </Button>
             </div>
           </form>

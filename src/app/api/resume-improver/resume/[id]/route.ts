@@ -4,6 +4,7 @@ import { buildResumeOwnerQuery, getAuthenticatedUser } from "@/lib/authUser";
 import dbConnect from "@/lib/db";
 import { resumeContentToText } from "@/lib/resumeImprover";
 import Resume from "@/models/Resume";
+import { deductCredits, InsufficientCreditsError } from "@/lib/creditUtils";
 
 export const runtime = "nodejs";
 
@@ -18,6 +19,8 @@ export async function POST(
     if (!authUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const newAiCredits = await deductCredits(String(authUser.userObjectId), "atsAnalysisSaved");
 
     await dbConnect();
     const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId, authUser.legacyUserId);
@@ -36,8 +39,14 @@ export async function POST(
     }
 
     const report = await analyzeResumeForAts(extractedText, resume.content);
-    return NextResponse.json(report);
+    return NextResponse.json({ ...report, newAiCredits });
   } catch (error) {
+    if (error instanceof InsufficientCreditsError) {
+      return NextResponse.json(
+        { error: error.message, creditsRemaining: error.creditsRemaining, cost: error.cost },
+        { status: 402 }
+      );
+    }
     console.error("Saved resume ATS analysis error:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to analyze resume" },

@@ -195,7 +195,7 @@
 .mainWorkspace {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(20rem, 1fr) 3fr;
+  grid-template-columns: minmax(22rem, 1fr) 3fr;
   height: 94vh;
   overflow: hidden;
 }

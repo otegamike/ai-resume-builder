@@ -5,6 +5,8 @@ import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import AiCredits from "@/components/ui/ai-credit/AiCredits";
+import { useAiCreditStore } from "@/store/useAiCreditStore";
+import { MAX_CREDITS_PER_PLAN } from "@/lib/creditCosts";
 import {
   FileText,
   PenLine,
@@ -61,6 +63,9 @@ export default function OverviewPage() {
   const storeResumes = useResumeStore((state) => state.resumes);
   const storeLoading = useResumeStore((state) => state.isLoading);
   const storeFetchResumes = useResumeStore((state) => state.fetchResumes);
+  const storeCredits = useAiCreditStore((s) => s.credits);
+  const fetchCredits = useAiCreditStore((s) => s.fetchCredits);
+  const plan = (session?.user?.subscriptionPlan ?? "free") as keyof typeof MAX_CREDITS_PER_PLAN
 
   useEffect(() => {
     if (!showCreateDropdown) return;
@@ -95,7 +100,8 @@ export default function OverviewPage() {
     };
 
     fetchStats();
-  }, [status, router]);
+    fetchCredits();
+  }, [status, router, fetchCredits]);
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -205,7 +211,7 @@ export default function OverviewPage() {
           </h1>
           <div className={styles.welcomeSubtitle}>
             Your career hub. manage resumes, cover letters, applications, and more.
-            <AiCredits aiCredit={session?.user?.AiCredits ?? null} />
+            <AiCredits aiCredit={storeCredits ?? session?.user?.AiCredits ?? null} plan={plan} />
           </div>
       </section>
 

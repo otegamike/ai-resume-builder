@@ -1,6 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/Button";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, Zap } from "lucide-react";
+import { CREDIT_COST } from "@/lib/creditCosts";
 import styles from "../page.module.css";
 
 interface SummaryTabProps {
@@ -35,9 +36,10 @@ export default function SummaryTab({
             {aiGeneratingFor === "summary" ? (
               <Loader2 className={`${styles.aiButtonIcon} ${styles.loadingIcon}`} />
             ) : (
-              <Sparkles className={styles.aiButtonIcon} />
+              <></>
             )}
-            {aiGeneratingFor === "summary" ? "Generating..." : "Generate with AI"}
+            {aiGeneratingFor === "summary" ? "Generating..." : "Generate "}
+            <Zap size={12} />{CREDIT_COST.generateSummary}
           </Button>
           {summary && (
             <Button
@@ -50,9 +52,10 @@ export default function SummaryTab({
               {aiGeneratingFor === "improveSummary" ? (
                 <Loader2 className={`${styles.aiButtonIcon} ${styles.loadingIcon}`} />
               ) : (
-                <Sparkles className={styles.aiButtonIcon} />
+                <></>
               )}
               {aiGeneratingFor === "improveSummary" ? "Improving..." : "Improve"}
+              <Zap size={12} />{CREDIT_COST.improveSummary}
             </Button>
           )}
         </div>

@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/Button";
 import type { ResumeSelection } from "@/components/resume/ResumeSelector";
 import { ApplicationItem, ApplicationStatus } from "@/types/ApplicationData";
 import { TailorReport } from "@/types/TailorReport";
+import { useAiCreditStore } from "@/store/useAiCreditStore";
+import { useAlertStore } from "@/store/useAlertStore";
 import scrollToId from "@/utils/scrollIntoview";
 import CreateApplicationForm from "@/components/applications/CreateApplicationForm";
 import ApplicationResults from "@/components/applications/ApplicationResults";
@@ -187,8 +189,20 @@ export default function ApplicationsPage() {
       });
 
       const data = await response.json();
+
+      if (response.status === 402) {
+        useAlertStore.getState().addAlert("error", data.error);
+        setProgress("idle");
+        setError(data.error);
+        return;
+      }
+
       if (!response.ok) {
         throw new Error(data.error || "Failed to generate application");
+      }
+
+      if (typeof data.newAiCredits === "number") {
+        useAiCreditStore.getState().setCredits(data.newAiCredits);
       }
 
       setReport(data.report as TailorReport);

@@ -8,6 +8,7 @@ import {
   isPdfUpload,
 } from "@/lib/resumeImprover";
 import { AtsIssue } from "@/types/AtsReport";
+import { deductCredits, InsufficientCreditsError } from "@/lib/creditUtils";
 
 export const runtime = "nodejs";
 
@@ -27,6 +28,8 @@ export async function POST(request: Request) {
     if (!authUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const newAiCredits = await deductCredits(String(authUser.userObjectId), "atsAnalysisUpload");
 
     const formData = await request.formData();
     const entries = formData.getAll("file");
@@ -64,8 +67,14 @@ export async function POST(request: Request) {
       report.issues = [scannedPdfIssue, ...report.issues];
     }
 
-    return NextResponse.json(report);
+    return NextResponse.json({ ...report, newAiCredits });
   } catch (error) {
+    if (error instanceof InsufficientCreditsError) {
+      return NextResponse.json(
+        { error: error.message, creditsRemaining: error.creditsRemaining, cost: error.cost },
+        { status: 402 }
+      );
+    }
     const message =
       error instanceof Error ? error.message : "Failed to analyze uploaded resume";
     const status = message.includes("not supported") || message.includes("Upload")

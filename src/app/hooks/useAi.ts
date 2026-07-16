@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { ResumeContent, Experience } from "@/types/ResumeData";
+import { useAiCreditStore } from "@/store/useAiCreditStore";
+import { useAlertStore } from "@/store/useAlertStore";
 
 interface AiResult {
     text: string;
@@ -24,9 +26,20 @@ export function useAi() {
             body: JSON.stringify({ type, data }),
         });
         
+        const json = await response.json();
+        
+        if (response.status === 402) {
+            useAlertStore.getState().addAlert('error', json.error);
+            throw new Error(json.error);
+        }
+        
         if (!response.ok) throw new Error('AI generation failed');
-        const result = await response.json();
-        return result.result;
+        
+        if (typeof json.newAiCredits === 'number') {
+            useAiCreditStore.getState().setCredits(json.newAiCredits);
+        }
+        
+        return json.result;
     };
 
     const AiWrapper = async (logic: () => Promise<any>, type: string): Promise<AiResult | AiErrorResponse> =>{

@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Plus, Trash2, Sparkles, Loader2, X } from "lucide-react";
+import { Plus, Trash2, Sparkles, Loader2, X, Zap } from "lucide-react";
+import { CREDIT_COST } from "@/lib/creditCosts";
 import styles from "../page.module.css";
 import type { Experience } from "@/types/ResumeData";
 import { useState } from "react";
@@ -112,7 +113,7 @@ export default function ExperienceTab({
                           </>
                         ) : (
                           <>
-                            <Sparkles size={16} /> Improve with AI
+                            <Sparkles size={16} /> Improve with AI <Zap size={12} />{CREDIT_COST.generateBulletPoints}
                           </>
                         )}
                     </Button>

@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Loader2, Sparkles, CircleX, Plus, AlertCircle, GripVertical, Trash2, Info } from "lucide-react";
+import { Loader2, Sparkles, CircleX, Plus, AlertCircle, GripVertical, Trash2, Info, Zap } from "lucide-react";
 import { maxSkillCount } from "@/constants/ResumeConstants";
+import { CREDIT_COST } from "@/lib/creditCosts";
 import styles from "../page.module.css";
 import type { SkillCategory } from "@/types/ResumeData";
 
@@ -149,6 +150,7 @@ export default function SkillsTab({
               <Sparkles className={styles.aiButtonIcon} />
             )}
             {aiGeneratingFor === "generateSkills" || aiGeneratingFor === "generateCategorizedSkills" ? "Generating..." : (isCategorizedMode ? "Generate Categories" : "AI Suggestions")}
+            <Zap size={12} />{CREDIT_COST.generateSkills}
           </Button>
         </div>
       </div>
@@ -172,6 +174,7 @@ export default function SkillsTab({
                 <Loader2 className={`${styles.aiButtonIcon} ${styles.loadingIcon}`} />
               )}
               {aiGeneratingFor === "categorizeExistingSkills" ? "Categorizing..." : (isCategorizedMode ? "Uncategorize Skills" : "Categorize Skills")}
+              {!isCategorizedMode && aiGeneratingFor !== "categorizeExistingSkills" && <><Zap size={12} />{CREDIT_COST.categorizeExistingSkills}</>}
             </Button>
           </div>
         </div>
