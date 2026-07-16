@@ -4,7 +4,7 @@ import { useScrollReveal } from "@/hooks/useScrollReveal";
 import styles from "./TestimonialStats.module.css";
 
 const placeholderQuote =
-  '"Agentic CV transformed my job search. The AI-powered resume optimizer helped me land interviews at top tech companies I never thought I\'d hear back from."';
+  '"AgenticApp.cv transformed my job search. The AI-powered resume optimizer helped me land interviews at top tech companies I never thought I\'d hear back from."';
 
 const placeholderAttribution = "— Sarah Chen, Software Engineer at Google";
 

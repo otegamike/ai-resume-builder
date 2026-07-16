@@ -5,27 +5,44 @@
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-1) var(--space-2);
-  background: linear-gradient(135deg, var(--primary-4), var(--primary-3));
+  background: linear-gradient(135deg, var(--ai-accent-300), var(--ai-accent-100));
   border-radius: var(--radius-full);
-  border: 1px solid var(--primary-2);
+  border: 1px solid var(--ai-accent-200);
   flex-shrink: 0;
+ 
 }
 
 .creditsIcon {
   width: 1.25rem;
   height: 1.25rem;
-  color: var(--primary-1);
+  color: var(--ai-accent-500);
 }
 
 .creditsValue {
   font-size: var(--text-sm);
   font-weight: var(--font-bold);
-  color: var(--primary-900);
+  color: var(--ai-accent-900);
   line-height: 1;
 }
 
 .creditsLabel {
   font-size: var(--text-xxs);
-  color: var(--primary-700);
+  color: var(--ai-accent-700);
   font-weight: var(--font-medium);
 }
+
+.full {
+   width: 100%;
+}
+
+.small {
+  .creditsValue {
+    font-size: var(--text-xs);
+  }
+
+  .creditsIcon {
+    width: 0.85rem;
+    height: 0.85rem;
+  }
+}
+

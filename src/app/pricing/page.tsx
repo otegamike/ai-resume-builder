@@ -88,7 +88,7 @@ const FAQS = [
     a: "Absolutely. Pro and Enterprise users can export their resumes in both high-fidelity PDF and fully editable DOCX formats to suit any job application requirement.",
   },
   {
-    q: "Is my data secure with Agentic CV?",
+    q: "Is my data secure with AgenticApp.cv?",
     a: "We prioritize your privacy. All your personal data and resumes are encrypted at rest and in transit. We never sell your data to third parties, and our AI processing is strictly for enhancing your content.",
   },
   {
@@ -300,7 +300,7 @@ export default function PricingPage() {
         <div className={styles.ctaBanner}>
           <h2 className={styles.ctaTitle}>Ready to land your dream job?</h2>
           <p className={styles.ctaSubtitle}>
-            Join over 50,000 professionals who used Agentic CV to accelerate their career growth.
+            Join over 50,000 professionals who used AgenticApp.cv to accelerate their career growth.
           </p>
           <div className={styles.ctaActions}>
             <Link id="cta-get-started" href="/auth/login" className={styles.ctaActionPrimary}>

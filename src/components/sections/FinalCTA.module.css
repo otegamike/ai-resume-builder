@@ -1,104 +1,87 @@
 .section {
+  padding: var(--space-24) var(--space-6);
+}
+
+.banner {
+  max-width: 56rem;
+  margin: 0 auto;
+  background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-500) 60%, var(--primary-400) 100%);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-16) var(--space-12);
+  text-align: center;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, var(--primary-600), var(--ai-accent-600));
-  padding: var(--space-24) var(--space-4);
-  margin: var(--space-16)  var(--space-8);
-  border-radius: var(--radius-2xl);
-  opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  box-shadow: var(--shadow-xl);
 }
 
-.section.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.glowLeft {
+.banner::before {
+  content: "";
   position: absolute;
-  top: -30%;
-  left: -10%;
-  width: 35%;
-  height: 80%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.15), transparent);
-  filter: blur(80px);
+  inset: 0;
+  background-image: radial-gradient(circle at 2px 2px, hsl(0 0% 100% / 0.12) 1px, transparent 0);
+  background-size: 24px 24px;
   pointer-events: none;
-  z-index: 0;
 }
 
-.glowRight {
+.banner::after {
+  content: "";
   position: absolute;
-  bottom: -30%;
-  right: -10%;
-  width: 35%;
-  height: 80%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.1), transparent);
-  filter: blur(80px);
+  bottom: -4rem;
+  right: -4rem;
+  width: 16rem;
+  height: 16rem;
+  background: radial-gradient(circle, var(--ai-accent-400) 0%, transparent 70%);
+  opacity: 0.25;
+  border-radius: 50%;
   pointer-events: none;
-  z-index: 0;
-}
-
-.container {
-  position: relative;
-  z-index: 1;
-  max-width: var(--container-max-width);
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
 }
 
 .title {
   font-family: var(--font-title);
   font-size: var(--text-4xl);
   font-weight: var(--font-bold);
-  color: white;
+  color: #ffffff;
+  line-height: var(--leading-tight);
+  letter-spacing: -0.025em;
   margin-bottom: var(--space-4);
-  letter-spacing: -0.02em;
-}
-
-@media (min-width: 768px) {
-  .title {
-    font-size: var(--text-5xl);
-  }
+  position: relative;
+  z-index: 1;
 }
 
 .subtitle {
   font-size: var(--text-lg);
-  color: rgba(255, 255, 255, 0.8);
-  max-width: 32rem;
+  color: hsl(0 0% 100% / 0.8);
   margin-bottom: var(--space-10);
-  line-height: var(--leading-relaxed);
+  position: relative;
+  z-index: 1;
 }
 
 .actions {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: var(--space-4);
-}
-
-@media (min-width: 640px) {
-  .actions {
-    flex-direction: row;
-  }
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
 }
 
 .buttonPrimary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-4) var(--space-8);
-  font-size: var(--text-lg);
-  font-weight: var(--font-semibold);
-  border-radius: var(--radius-full);
-  background: white;
+  padding: var(--space-4) var(--space-10);
+  background: #ffffff;
   color: var(--primary-700);
-  text-decoration: none;
-  transition: transform 0.2s, box-shadow 0.2s;
+  font-weight: var(--font-bold);
+  font-size: var(--text-base);
+  border-radius: var(--radius-xl);
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
   box-shadow: var(--shadow-lg);
-  white-space: nowrap;
+  transition: transform 0.2s, box-shadow 0.2s;
+  text-decoration: none;
 }
 
 .buttonPrimary:hover {
@@ -110,19 +93,21 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-4) var(--space-8);
-  font-size: var(--text-lg);
+  padding: var(--space-4) var(--space-10);
+  background: hsl(0 0% 100% / 0.15);
+  color: #ffffff;
   font-weight: var(--font-semibold);
-  border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.15);
-  color: white;
-  text-decoration: none;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-size: var(--text-base);
+  border-radius: var(--radius-xl);
+  border: 1px solid hsl(0 0% 100% / 0.3);
+  cursor: pointer;
+  font-family: inherit;
+  backdrop-filter: blur(8px);
   transition: background 0.2s, transform 0.2s;
-  white-space: nowrap;
+  text-decoration: none;
 }
 
 .buttonSecondary:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: hsl(0 0% 100% / 0.25);
   transform: translateY(-2px);
 }

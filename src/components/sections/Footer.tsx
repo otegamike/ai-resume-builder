@@ -7,7 +7,7 @@ export default function Footer() {
       <div className={styles.inner}>
         <div className={styles.top}>
           <div className={styles.brandCol}>
-            <span className={styles.brand}>Agentic CV</span>
+            <span className={styles.brand}>AgenticApp.cv</span>
             <p className={styles.tagline}>
               Elevate your career with AI-powered resumes.
             </p>
@@ -30,7 +30,7 @@ export default function Footer() {
 
         <div className={styles.bottom}>
           <p className={styles.copyright}>
-            &copy; {new Date().getFullYear()} Agentic CV. All rights reserved.
+            &copy; {new Date().getFullYear()} AgenticApp.cv. All rights reserved.
           </p>
         </div>
       </div>

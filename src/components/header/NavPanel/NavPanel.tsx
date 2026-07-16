@@ -11,6 +11,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { getDistanceFromRight } from '@/utils/elementPosition'
 import NavBarCTA from '../NavBarCTA'
 import { getHeaderHeight } from '@/utils/headerSize'
+import AiCredits from '@/components/ui/ai-credit/AiCredits'
 
 interface NavPanelProps {
   session: Session | null
@@ -27,6 +28,20 @@ function formatPlan(plan: string | null | undefined): string {
     default: return "Free"
   }
 }
+
+const primaryLinks = [
+  { href: "/templates", label: "Template Gallery" },
+  { href: "/#features", label: "Features" },
+  { href: "/pricing", label: "Pricing" }
+];
+
+const secondaryLinks = [
+  { href: "/dashboard/applications", label: "Applications" },
+  { href: "/dashboard/tailor", label: "Tailor" },
+  { href: "/dashboard/improve", label: "Improve" }
+];
+
+
 
 function NavPanel({ session, isOpen, toggleMenu, status }: NavPanelProps) {
   const pathname = usePathname();
@@ -47,9 +62,7 @@ function NavPanel({ session, isOpen, toggleMenu, status }: NavPanelProps) {
   const isSignedIn = status === "authenticated"
   const userName = session?.user?.name || "Guest"
   const userImage = session?.user?.image
-  const userEmail = session?.user?.email
   const subscriptionPlan = isSignedIn ? session?.user?.subscriptionPlan : null
-  const aiCredits = isSignedIn ? session?.user?.AiCredits : null
 
   const handleLinkClick = () => {
     toggleMenu(false)
@@ -89,10 +102,7 @@ function NavPanel({ session, isOpen, toggleMenu, status }: NavPanelProps) {
               )}
             </div>
             {isSignedIn && (
-              <div className={styles.creditsRow}>
-                <span className={styles.creditsLabel}>AI Credits : </span>
-                <span className={styles.creditsValue}>{aiCredits ?? "—"}</span>
-              </div>
+              <AiCredits aiCredit={session?.user?.AiCredits ?? null} small full />
             )}
           </div>
 
@@ -102,46 +112,31 @@ function NavPanel({ session, isOpen, toggleMenu, status }: NavPanelProps) {
 
             {isSignedIn && (
               <div className={styles.secondaryLinks}>
-                <Link
-                  href="/dashboard/tailor"
-                  className={styles.secondaryLink}
-                  onClick={handleLinkClick}
-                >
-                  Tailor
-                </Link>
-                <Link
-                  href="/dashboard/improve"
-                  className={styles.secondaryLink}
-                  onClick={handleLinkClick}
-                >
-                  Improve
-                </Link>
+                {secondaryLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={styles.secondaryLink}
+                    onClick={handleLinkClick}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
               </div>
             )}
           </div>
 
           <nav className={styles.navLinks}>
-            <Link
-              href="/templates"
-              className={`${styles.navLink} ${pathname === "/templates" ? styles.navLinkActive : ''}`}
-              onClick={handleLinkClick}
-            >
-              Template Gallery
-            </Link>
-            <Link
-              href="/#features"
-              className={styles.navLink}
-              onClick={handleLinkClick}
-            >
-              Features
-            </Link>
-            <Link
-              href="/pricing"
-              className={`${styles.navLink} ${pathname === "/pricing" ? styles.navLinkActive : ''}`}
-              onClick={handleLinkClick}
-            >
-              Pricing
-            </Link>
+            {primaryLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`${styles.navLink} ${pathname === link.href ? styles.navLinkActive : ''}`}
+                onClick={handleLinkClick}
+              >
+                {link.label}
+              </Link>
+            ))}
           </nav>
 
           {isSignedIn && (

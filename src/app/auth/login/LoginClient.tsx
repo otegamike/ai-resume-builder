@@ -181,7 +181,7 @@ export default function LoginClient({ callbackUrl }: { callbackUrl: string }) {
             <p className={styles.subtitle}>
               {isSignUp
                 ? "Start building AI-powered resumes in minutes."
-                : "Continue building your career story with Agentic CV."}
+                : "Continue building your career story with AgenticApp.cv."}
             </p>
           </div>
 

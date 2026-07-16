@@ -129,11 +129,8 @@
   padding: var(--space-8);
   border-radius: var(--radius-2xl);
   background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  overflow: hidden;
-  transition: border-color 0.4s ease, transform 0.4s ease, box-shadow 0.4s ease;
+  transition: border-color 0.4s ease, transform 0.4s ease;
 
   /* Entrance animation — hidden by default */
   opacity: 0;
@@ -300,6 +297,17 @@
   min-height: 100px;
   margin-top: var(--space-6);
   position: relative;
+}
+
+/* Fixed heights for animated cards to prevent layout shifts */
+.bento > :nth-child(2) .visual {
+  flex: none;
+  height: 160px;
+}
+
+.bento > :nth-child(3) .visual {
+  flex: none;
+  height: 120px;
 }
 
 /* ===================================================================
