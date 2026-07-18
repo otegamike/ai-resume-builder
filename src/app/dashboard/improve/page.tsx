@@ -113,11 +113,14 @@ export default function ImproveResumePage() {
       setProgress("improving");
       setReport(data as AtsReport);
       setProgress("ready");
-      scrollToId("resultPanel");
+      
     } catch (err) {
       setProgress("idle");
       useAlertStore.getState().addAlert("error", err instanceof Error ? err.message : "Failed to analyze resume");
+    } finally {
+      scrollToId("resultPanel");
     }
+
   }
 
   async function createImprovedResume() {

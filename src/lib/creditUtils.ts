@@ -75,15 +75,20 @@ export async function deductCredits(userId: string, feature: AiFeature): Promise
     [
       {
         $set: {
-          SubscriptionPlan: { $ifNull: ["$subscriptionPlan", "free"] },
+          subscriptionPlan: { $ifNull: ["$subscriptionPlan", "free"] },
           AiCredits: {
             $max: [
               0,
               {
                 $cond: {
-                  if: { $setEquals: [{ $ifNull: ["$subscriptionPlan", null] }, []] }, 
+                  if: { $eq: [{ $ifNull: ["$subscriptionPlan", null] }, null] },
                   then: { $subtract: [MAX_CREDITS_PER_PLAN.free, cost] },
-                  else: { $subtract: ["$AiCredits", cost] }
+                  else: {
+                    $subtract: [
+                      { $ifNull: ["$AiCredits", MAX_CREDITS_PER_PLAN.free] },
+                      cost
+                    ]
+                  }
                 }
               }
             ]
@@ -91,8 +96,8 @@ export async function deductCredits(userId: string, feature: AiFeature): Promise
         }
       }
     ],
-    { new: true, select: "AiCredits" }
- );
+    { new: true, select: "AiCredits", updatePipeline: true }
+  );
 
   return updated!.AiCredits;
 }
