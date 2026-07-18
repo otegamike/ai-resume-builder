@@ -99,7 +99,6 @@ export default function ImproveResumePage() {
       if (response.status === 402) {
         useAlertStore.getState().addAlert("error", data.error);
         setProgress("idle");
-        setError(data.error);
         return;
       }
 
@@ -117,7 +116,7 @@ export default function ImproveResumePage() {
       scrollToId("resultPanel");
     } catch (err) {
       setProgress("idle");
-      setError(err instanceof Error ? err.message : "Failed to analyze resume");
+      useAlertStore.getState().addAlert("error", err instanceof Error ? err.message : "Failed to analyze resume");
     }
   }
 
@@ -145,7 +144,7 @@ export default function ImproveResumePage() {
 
       router.push(`/editor/${String(data.id)}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create improved CV");
+      useAlertStore.getState().addAlert("error", err instanceof Error ? err.message : "Failed to create improved CV");
     } finally {
       setCreating(false);
     }

@@ -135,24 +135,19 @@ export const useResumeStore = create<ResumeState>((set, get) => ({
   },
 
   deleteResume: async (id: string) => {
-    set({ isLoading: true, error: null });
+    const previous = get().resumes;
+    set((state) => ({
+      resumes: state.resumes.filter((r) => r._id !== id),
+    }));
     try {
       const response = await fetch(`/api/resumes/${id}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete resume');
-
-      set((state) => ({
-        resumes: state.resumes.filter((r) => r._id !== id),
-        isLoading: false,
-      }));
-
       useAlertStore.getState().addAlert('success', 'Resume deleted.');
     } catch (err) {
-      const error = getErrorMessage(err);
-      set({ error, isLoading: false });
+      set({ resumes: previous });
       useAlertStore.getState().addAlert('error', 'Failed to delete resume. Please try again.');
-      throw err;
     }
   },
 }));

@@ -241,7 +241,6 @@ export default function WriterPage() {
 
       if (res.status === 402) {
         useAlertStore.getState().addAlert("error", data.error);
-        setClError(data.error);
         setClGenerating(false);
         return;
       }
@@ -265,7 +264,7 @@ export default function WriterPage() {
 
       setPageView("result");
     } catch (err) {
-      setClError(err instanceof Error ? err.message : "Failed to generate cover letter");
+      useAlertStore.getState().addAlert("error", err instanceof Error ? err.message : "Failed to generate cover letter");
     } finally {
       setClGenerating(false);
     }
@@ -278,7 +277,7 @@ export default function WriterPage() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      setClError("Failed to copy to clipboard.");
+      useAlertStore.getState().addAlert("error", "Failed to copy to clipboard.");
     }
   }
 
@@ -319,12 +318,12 @@ export default function WriterPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Failed to save");
+        useAlertStore.getState().addAlert("error", data.error || "Failed to save");
+      } else {
+        fetchCoverLetters();
       }
-
-      fetchCoverLetters();
     } catch (err) {
-      setClError(err instanceof Error ? err.message : "Failed to save cover letter");
+      useAlertStore.getState().addAlert("error", err instanceof Error ? err.message : "Failed to save cover letter");
     } finally {
       setClSaving(false);
     }
@@ -332,13 +331,19 @@ export default function WriterPage() {
 
   // ── Delete ──
   async function deleteCoverLetter(id: string) {
-    if (!confirm("Delete this cover letter?")) return;
+    const confirmed = await useAlertStore.getState().showConfirmDialog("Delete this cover letter?");
+    if (!confirmed) return;
     try {
       const res = await fetch(`/api/cover-letters/${id}`, { method: "DELETE" });
       if (res.ok) {
         setCoverLetters((prev) => prev.filter((c) => c._id !== id));
+      } else {
+        const data = await res.json();
+        useAlertStore.getState().addAlert("error", data.error || "Failed to delete cover letter");
       }
-    } catch { /* ignore */ }
+    } catch {
+      useAlertStore.getState().addAlert("error", "Failed to delete cover letter");
+    }
   }
 
   // ── View transitions ──

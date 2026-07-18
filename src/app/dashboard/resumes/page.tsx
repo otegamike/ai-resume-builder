@@ -10,6 +10,7 @@ import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer
 import styles from "./page.module.css";
 import { useTemplateStore } from "@/store/useTemplateStore";
 import { useResumeStore } from "@/store/useResumeStore";
+import { useAlertStore } from "@/store/useAlertStore";
 
 export default function ResumesPage() {
   const { status } = useSession();
@@ -32,12 +33,9 @@ export default function ResumesPage() {
   }, [status, fetchResumes]);
 
   const deleteResume = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this resume?")) return;
-    try {
-      await deleteResumeFromStore(id);
-    } catch {
-      alert("Failed to delete resume");
-    }
+    const confirmed = await useAlertStore.getState().showConfirmDialog("Are you sure you want to delete this resume?");
+    if (!confirmed) return;
+    await deleteResumeFromStore(id);
   };
 
   if (status === "loading" || loading) {

@@ -45,7 +45,7 @@ export default function Header() {
   
 
   return (
-    <header className={`${styles.header} ${isEditorPage || !showDashboardLink ? styles.fixed : ""}`}>
+    <header className={`${styles.header} ${isEditorPage  ? styles.fixed : ""}`}>
       <div className={styles.header__boundary}>
       
         <div className={styles.header__content}>

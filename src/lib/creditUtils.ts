@@ -26,10 +26,8 @@ export async function resetCreditsIfNeeded(
   const result = await User.findOneAndUpdate(
     {
       _id: userId,
-      $or: [
-        { "creditResetMeta.lastResetCycle": { $lt: currentCycle } },
-        { "creditResetMeta.lastResetCycle": { $exists: false } },
-      ],
+      // Target anyone whose last cycle doesn't match today's cycle string
+      "creditResetMeta.lastResetCycle": { $ne: currentCycle }
     },
     {
       $set: {
@@ -43,6 +41,7 @@ export async function resetCreditsIfNeeded(
 
   return { reset: result !== null };
 }
+
 
 export class InsufficientCreditsError extends Error {
   public creditsRemaining: number;

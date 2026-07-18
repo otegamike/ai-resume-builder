@@ -7,6 +7,35 @@ import styles from "./alert-toast.module.css";
 const DURATION = 5000;
 const EXIT_DURATION = 300;
 
+function ConfirmDialog() {
+  const dialog = useAlertStore((s) => s.confirmDialog);
+  const respond = useAlertStore((s) => s.confirmDialogResponse);
+
+  if (!dialog) return null;
+
+  return (
+    <div className={styles.overlay}>
+      <div className={styles.confirmBox}>
+        <p className={styles.confirmMessage}>{dialog.message}</p>
+        <div className={styles.confirmActions}>
+          <button
+            className={styles.confirmCancelBtn}
+            onClick={() => respond(false)}
+          >
+            Cancel
+          </button>
+          <button
+            className={styles.confirmDeleteBtn}
+            onClick={() => respond(true)}
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const icons: Record<string, React.ReactNode> = {
   success: (
     <svg className={styles.icon} viewBox="0 0 20 20" fill="currentColor">
@@ -72,13 +101,16 @@ export default function AlertToast() {
   const alerts = useAlertStore((state) => state.alerts);
   const removeAlert = useAlertStore((state) => state.removeAlert);
 
-  if (alerts.length === 0) return null;
-
   return (
-    <div className={styles.container}>
-      {alerts.map((alert) => (
-        <ToastItem key={alert.id} alert={alert} onClose={removeAlert} />
-      ))}
-    </div>
+    <>
+      {alerts.length > 0 && (
+        <div className={styles.container}>
+          {alerts.map((alert) => (
+            <ToastItem key={alert.id} alert={alert} onClose={removeAlert} />
+          ))}
+        </div>
+      )}
+      <ConfirmDialog />
+    </>
   );
 }

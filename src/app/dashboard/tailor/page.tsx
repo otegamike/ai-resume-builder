@@ -180,7 +180,6 @@ export default function TailorResumePage() {
       if (response.status === 402) {
         useAlertStore.getState().addAlert("error", data.error);
         setProgress("idle");
-        setError(data.error);
         return;
       }
 
@@ -197,7 +196,7 @@ export default function TailorResumePage() {
       scrollToId("resultPanel");
     } catch (err) {
       setProgress("idle");
-      setError(err instanceof Error ? err.message : "An unexpected error occurred during tailoring.");
+      useAlertStore.getState().addAlert("error", err instanceof Error ? err.message : "An unexpected error occurred during tailoring.");
     }
   }
 
@@ -228,7 +227,7 @@ export default function TailorResumePage() {
 
       router.push(`/editor/${String(data.id)}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create tailored CV");
+      useAlertStore.getState().addAlert("error", err instanceof Error ? err.message : "Failed to create tailored CV");
     } finally {
       setCreating(false);
     }

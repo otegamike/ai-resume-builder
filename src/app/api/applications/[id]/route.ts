@@ -126,6 +126,13 @@ export async function DELETE(
       return NextResponse.json({ error: "Application not found" }, { status: 404 });
     }
 
+    if (application.resumeId) {
+      Resume.findByIdAndDelete(application.resumeId).catch(() => {});
+    }
+    if (application.coverLetterId) {
+      CoverLetter.findByIdAndDelete(application.coverLetterId).catch(() => {});
+    }
+
     return NextResponse.json({ message: "Application deleted successfully" });
   } catch (error) {
     console.error("Error deleting application:", error);

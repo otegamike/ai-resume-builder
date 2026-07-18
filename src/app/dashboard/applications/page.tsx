@@ -193,7 +193,6 @@ export default function ApplicationsPage() {
       if (response.status === 402) {
         useAlertStore.getState().addAlert("error", data.error);
         setProgress("idle");
-        setError(data.error);
         return;
       }
 
@@ -215,7 +214,7 @@ export default function ApplicationsPage() {
       scrollToId("applicationResults");
     } catch (err) {
       setProgress("idle");
-      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
+      useAlertStore.getState().addAlert("error", err instanceof Error ? err.message : "An unexpected error occurred.");
     }
   }
 
@@ -226,7 +225,7 @@ export default function ApplicationsPage() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      setError("Failed to copy to clipboard.");
+      useAlertStore.getState().addAlert("error", "Failed to copy to clipboard.");
     }
   }
 
@@ -276,13 +275,19 @@ export default function ApplicationsPage() {
 
 
   async function deleteApplication(id: string) {
-    if (!confirm("Delete this application?")) return;
+    const confirmed = await useAlertStore.getState().showConfirmDialog("Delete this application? The associated resume and cover letter will also be deleted.");
+    if (!confirmed) return;
     try {
       const res = await fetch(`/api/applications/${id}`, { method: "DELETE" });
       if (res.ok) {
         setApplications((prev) => prev.filter((a) => a._id !== id));
+      } else {
+        const data = await res.json();
+        useAlertStore.getState().addAlert("error", data.error || "Failed to delete application");
       }
-    } catch { /* ignore */ }
+    } catch {
+      useAlertStore.getState().addAlert("error", "Failed to delete application");
+    }
   }
 
   // ── History: View Full Application ──
@@ -306,7 +311,7 @@ export default function ApplicationsPage() {
       setPageView("result");
       scrollToId("applicationResults");
     } catch {
-      setError("Failed to load application details.");
+      useAlertStore.getState().addAlert("error", "Failed to load application details.");
     }
   }
 
