@@ -90,24 +90,31 @@
   font-size: var(--text-lg);
 }
 
-.fullWidth {
-  width: 100%;
-}
+
 
 .ai {
-  --color: var(--ai-accent-500);
+  --ai-text: var(--ai-accent-500);
+  --ai-grad-0: var(--ai-accent-500);
+  --ai-grad-50: var(--ai-accent-400);
+  --ai-grad-53: var(--ai-accent-300);
+  --ai-grad-55: var(--ai-accent-200);
+  --ai-grad-58: var(--ai-accent-300);
+  --ai-grad-60: var(--ai-accent-400);
+  --ai-grad-100: var(--ai-accent-500);
+  --ai-content-bg: hsl(251 91% 95% / 0.5);
+  --ai-content-padding: 0.5rem;
+  --ai-content-fs: var(--text-xs);
 
-  background-color: var(--color);
   height: fit-content;
   background: linear-gradient(
     45deg,
-    var(--ai-accent-500) 0%,
-    var(--ai-accent-400) 50%,
-    var(--ai-accent-300) 53%,
-    var(--ai-accent-200) 55%,
-    var(--ai-accent-300) 58%,
-    var(--ai-accent-400) 60%,
-    var(--ai-accent-500) 100%
+    var(--ai-grad-0) 0%,
+    var(--ai-grad-50) 50%,
+    var(--ai-grad-53) 53%,
+    var(--ai-grad-55) 55%,
+    var(--ai-grad-58) 58%,
+    var(--ai-grad-60) 60%,
+    var(--ai-grad-100) 100%
   );
 
   background-size: 200% 100%;
@@ -119,23 +126,27 @@
   padding: 1px 2px ;
   
   .aiButtonContent {
-    padding: 0.5rem;
-    background-color: hsl(251 91% 95% / 0.5) ;
+    padding: var(--ai-content-padding);
+    background-color: var(--ai-content-bg) ;
     border-radius: 5px;
     text-wrap: balance;
     backdrop-filter: blur(10px) brightness(1.5);
-    color: var(--color);
+    color: var(--ai-text);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: var(--text-xs);
+    font-size: var(--ai-content-fs);
     gap: 0.5rem;
 
     svg {
-      stroke: var(--color);
+      stroke: var(--ai-text);
     }
     
   }
+}
+
+.fullWidth {
+  width: 100%;
 }
 
 @keyframes shimmer {

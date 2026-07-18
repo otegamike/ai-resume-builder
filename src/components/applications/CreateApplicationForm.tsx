@@ -4,16 +4,14 @@ import { useRef } from "react";
 import {
   ChevronDown,
   ChevronUp,
-  Sparkles,
   FileImage,
   AlignLeft,
   Upload,
   Loader2,
   CheckCircle2,
   AlertTriangle,
-  Zap,
 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { AiButton } from "@/components/ui/AiButton";
 import { CREDIT_COST } from "@/lib/creditCosts";
 import ResumeSelector, { ResumeSelection } from "@/components/resume/ResumeSelector";
 import styles from "@/app/dashboard/applications/page.module.css";
@@ -247,10 +245,9 @@ export default function CreateApplicationForm({
             ) : null}
             <span>{progressCopy[progress]}</span>
           </div>
-          <Button disabled={!canGenerate} onClick={onGenerate}>
-            <Sparkles className={styles.btnIcon} />
-            Generate Application <Zap size={16} />{CREDIT_COST.quickApply}
-          </Button>
+          <AiButton fullWidth variant="primary" disabled={!canGenerate} onClick={onGenerate} cost={CREDIT_COST.quickApply}>
+            Generate Application
+          </AiButton>
         </div>
       </section>
 

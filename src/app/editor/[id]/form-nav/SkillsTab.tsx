@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { AiButton } from "@/components/ui/AiButton";
 import { Input } from "@/components/ui/Input";
-import { Loader2, Sparkles, CircleX, Plus, AlertCircle, GripVertical, Trash2, Info, Zap } from "lucide-react";
+import { Sparkles, CircleX, Plus, AlertCircle, GripVertical, Trash2, Info } from "lucide-react";
 import { maxSkillCount } from "@/constants/ResumeConstants";
 import { CREDIT_COST } from "@/lib/creditCosts";
 import styles from "../page.module.css";
@@ -136,22 +137,17 @@ export default function SkillsTab({
       <div className={styles.formSectionHeader}>
         <h2 className={styles.formSectionTitle}>Technical Skills</h2>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <Button
-            variant="ai"
+          <AiButton
             size="sm"
             onClick={isCategorizedMode ? generateCategorizedSkills : generateAISkills}
             disabled={aiGenerating || !jobTitle}
             className={styles.aiButton}
             title={!jobTitle ? "Enter a job title first" : "Generate skills based on your job title"}
+            cost={CREDIT_COST.generateSkills}
+            loading={aiGeneratingFor === "generateSkills" || aiGeneratingFor === "generateCategorizedSkills"}
           >
-            {aiGeneratingFor === "generateSkills" || aiGeneratingFor === "generateCategorizedSkills" ? (
-              <Loader2 className={`${styles.aiButtonIcon} ${styles.loadingIcon}`} />
-            ) : (
-              <Sparkles className={styles.aiButtonIcon} />
-            )}
-            {aiGeneratingFor === "generateSkills" || aiGeneratingFor === "generateCategorizedSkills" ? "Generating..." : (isCategorizedMode ? "Generate Categories" : "AI Suggestions")}
-            <Zap size={12} />{CREDIT_COST.generateSkills}
-          </Button>
+            {isCategorizedMode ? "Generate Categories" : "AI Suggestions"}
+          </AiButton>
         </div>
       </div>
 
@@ -164,18 +160,28 @@ export default function SkillsTab({
           <div className={styles.categorizeBannerText}>
             <strong>Organize skills into categories</strong>
             <p>Group related skills into labeled sections to make your resume more structured. Each category appears as a separate section in the resume.</p>
-            <Button
-              size="sm"
-              variant={isCategorizedMode ? "outline" : "primary"}
-              onClick={isCategorizedMode ? onUncategorizeSkills : onCategorizeSkills}
-              disabled={aiGenerating}
-            >
-              {aiGeneratingFor === "categorizeExistingSkills" && (
-                <Loader2 className={`${styles.aiButtonIcon} ${styles.loadingIcon}`} />
-              )}
-              {aiGeneratingFor === "categorizeExistingSkills" ? "Categorizing..." : (isCategorizedMode ? "Uncategorize Skills" : "Categorize Skills")}
-              {!isCategorizedMode && aiGeneratingFor !== "categorizeExistingSkills" && <><Zap size={12} />{CREDIT_COST.categorizeExistingSkills}</>}
-            </Button>
+            {isCategorizedMode ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onUncategorizeSkills}
+                disabled={aiGenerating}
+              >
+                Uncategorize Skills
+              </Button>
+            ) : (
+              <AiButton
+                size="sm"
+                onClick={onCategorizeSkills}
+                disabled={aiGenerating}
+                cost={CREDIT_COST.categorizeExistingSkills}
+                loading={aiGeneratingFor === "categorizeExistingSkills"}
+                loadingText="Categorizing..."
+                fullWidth
+              >
+                Categorize Skills
+              </AiButton>
+            )}
           </div>
         </div>
         

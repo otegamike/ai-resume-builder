@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import {
   Plus,
   Loader2,
-  Sparkles,
   Save,
   Upload,
   AlignLeft,
@@ -16,9 +15,9 @@ import {
   AlertTriangle,
   ArrowLeft,
   Clock,
-  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { AiButton } from "@/components/ui/AiButton";
 import ResumeSelector, { ResumeSelection } from "@/components/resume/ResumeSelector";
 import CoverLetterResultCard from "@/components/cover-letter/CoverLetterResultCard";
 import CoverLetterHistory from "@/components/cover-letter/CoverLetterHistory";
@@ -554,10 +553,9 @@ export default function WriterPage() {
                     : "Select a resume and enter job details to begin."}
                 </span>
               </div>
-              <Button disabled={!canGenerate} onClick={generateCoverLetter}>
-                <Sparkles className={styles.btnIcon} />
-                Generate Cover Letter <Zap size={16} />{CREDIT_COST.coverLetterGenerate}
-              </Button>
+              <AiButton fullWidth variant="primary" disabled={!canGenerate} onClick={generateCoverLetter} cost={CREDIT_COST.coverLetterGenerate}>
+                Generate Cover Letter
+              </AiButton>
             </div>
           </section>
 

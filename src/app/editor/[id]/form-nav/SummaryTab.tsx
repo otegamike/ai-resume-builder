@@ -1,6 +1,5 @@
 import React from "react";
-import { Button } from "@/components/ui/Button";
-import { Loader2, Sparkles, Zap } from "lucide-react";
+import { AiButton } from "@/components/ui/AiButton";
 import { CREDIT_COST } from "@/lib/creditCosts";
 import styles from "../page.module.css";
 
@@ -26,37 +25,28 @@ export default function SummaryTab({
       <div className={styles.formSectionHeader}>
         <h2 className={styles.formSectionTitle}>About Me</h2>
         <div className={styles.aiButtons}>
-          <Button
-            variant="ai"
+          <AiButton
             size="sm"
             onClick={generateAISummary}
             disabled={aiGenerating}
             className={styles.aiButton}
+            cost={CREDIT_COST.generateSummary}
+            loading={aiGeneratingFor === "summary"}
           >
-            {aiGeneratingFor === "summary" ? (
-              <Loader2 className={`${styles.aiButtonIcon} ${styles.loadingIcon}`} />
-            ) : (
-              <></>
-            )}
-            {aiGeneratingFor === "summary" ? "Generating..." : "Generate "}
-            <Zap size={12} />{CREDIT_COST.generateSummary}
-          </Button>
+            Generate
+          </AiButton>
           {summary && (
-            <Button
-              variant="ai"
+            <AiButton
               size="sm"
               onClick={improveSummary}
               disabled={aiGenerating}
               className={styles.aiButton}
+              cost={CREDIT_COST.improveSummary}
+              loading={aiGeneratingFor === "improveSummary"}
+              loadingText="Improving..."
             >
-              {aiGeneratingFor === "improveSummary" ? (
-                <Loader2 className={`${styles.aiButtonIcon} ${styles.loadingIcon}`} />
-              ) : (
-                <></>
-              )}
-              {aiGeneratingFor === "improveSummary" ? "Improving..." : "Improve"}
-              <Zap size={12} />{CREDIT_COST.improveSummary}
-            </Button>
+              Improve
+            </AiButton>
           )}
         </div>
       </div>

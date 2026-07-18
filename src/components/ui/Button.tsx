@@ -23,7 +23,7 @@ export const Button: React.FC<ButtonProps> = ({
       className={`${styles.button} ${variantClass} ${sizeClass} ${fullWidth ? styles.fullWidth : ""} ${className}`}
       {...props}
     >
-      {variant === "ai" ? <div className={styles.aiButtonContent}>{children}</div> : children}
+      {variant === "ai" ? <div className={`${styles.aiButtonContent} ${fullWidth ? styles.fullWidth : ""}`}>{children}</div> : children}
     </button>
   );
 };

@@ -1,0 +1,22 @@
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.primary {
+  --ai-grad-0: var(--ai-accent-600);
+  --ai-grad-50: var(--ai-accent-500);
+  --ai-grad-53: var(--ai-accent-500);
+  --ai-grad-55: var(--ai-accent-400);
+  --ai-grad-58: var(--ai-accent-500);
+  --ai-grad-60: var(--ai-accent-500);
+  --ai-grad-100: var(--ai-accent-600);
+  --ai-content-bg: hsl(251 91% 95% / 0.1);
+  --ai-text: var(--neutral-100);
+  --ai-content-padding: 0.75rem 1rem;
+  --ai-content-fs: var(--text-sm);
+}

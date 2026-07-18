@@ -10,11 +10,11 @@ import {
   FileImage,
   Upload,
   AlignLeft,
-  Sparkles,
   ArrowRight,
-  Zap,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { AiButton } from "@/components/ui/AiButton";
 import ResumeSelector, { ResumeSelection } from "@/components/resume/ResumeSelector";
 import ScoreCircle from "@/components/ui/score-circle/ScoreCircle";
 import { TailorReport } from "@/types/TailorReport";
@@ -400,10 +400,9 @@ export default function TailorResumePage() {
                 )}
                 <span>{progressCopy[progress]}</span>
               </div>
-              <Button disabled={!canSubmit} type="submit">
-                <Sparkles className={styles.btnIcon} />
-                Optimize Resume <Zap size={16} />{CREDIT_COST.resumeTailor}
-              </Button>
+              <AiButton fullWidth variant="primary" disabled={!canSubmit} type="submit" cost={CREDIT_COST.resumeTailor}>
+                Optimize Resume
+              </AiButton>
             </div>
           </form>
 

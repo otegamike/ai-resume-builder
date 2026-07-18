@@ -7,9 +7,9 @@ import {
   AlertTriangle,
   CheckCircle2,
   Loader2,
-  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { AiButton } from "@/components/ui/AiButton";
 import { AtsIssue, AtsReport } from "@/types/AtsReport";
 import { CREDIT_COST } from "@/lib/creditCosts";
 import { useAiCreditStore } from "@/store/useAiCreditStore";
@@ -180,9 +180,9 @@ export default function ImproveResumePage() {
               )}
               <span>{progressCopy[progress]}</span>
             </div>
-            <Button disabled={!canSubmit} type="submit">
-              <Zap size={16} />{selection?.mode === "upload" ? CREDIT_COST.atsAnalysisUpload : CREDIT_COST.atsAnalysisSaved} Run ATS review
-            </Button>
+            <AiButton fullWidth variant="primary" disabled={!canSubmit} type="submit" cost={selection?.mode === "upload" ? CREDIT_COST.atsAnalysisUpload : CREDIT_COST.atsAnalysisSaved}>
+              Run ATS review
+            </AiButton>
           </div>
         </form>
 

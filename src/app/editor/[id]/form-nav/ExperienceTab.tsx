@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/Button";
+import { AiButton } from "@/components/ui/AiButton";
 import { Input } from "@/components/ui/Input";
-import { Plus, Trash2, Sparkles, Loader2, X, Zap } from "lucide-react";
+import { Plus, Trash2, X } from "lucide-react";
 import { CREDIT_COST } from "@/lib/creditCosts";
 import styles from "../page.module.css";
 import type { Experience } from "@/types/ResumeData";
@@ -106,17 +107,9 @@ export default function ExperienceTab({
                   <label className={styles.formLabelSmall}>Description</label>
                   
                   {exp.description?.length > 0 && (
-                    <Button variant="ai" size="sm" onClick={() => generateBulletPoints(index)} disabled={aiGeneratingFor === `generateBulletPoints_${index}`}>
-                      {aiGeneratingFor === `generateBulletPoints_${index}` ? (
-                          <>
-                            <Loader2 size={16} className={styles.spinner} /> Generating...
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles size={16} /> Improve with AI <Zap size={12} />{CREDIT_COST.generateBulletPoints}
-                          </>
-                        )}
-                    </Button>
+                    <AiButton size="sm" onClick={() => generateBulletPoints(index)} cost={CREDIT_COST.generateBulletPoints} loading={aiGeneratingFor === `generateBulletPoints_${index}`}>
+                      Improve with AI
+                    </AiButton>
                   )}
 
                 </div>
