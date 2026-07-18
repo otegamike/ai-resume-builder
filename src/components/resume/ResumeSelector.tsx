@@ -36,9 +36,10 @@ export interface ResumeSelection {
 interface ResumeSelectorProps {
   onSelectionChange: (selection: ResumeSelection | null) => void;
   className?: string;
+  uploadOnly?: boolean;
 }
 
-export default function ResumeSelector({ onSelectionChange, className }: ResumeSelectorProps) {
+export default function ResumeSelector({ onSelectionChange, className, uploadOnly }: ResumeSelectorProps) {
   const [mode, setMode] = useState<Mode>("saved");
   const templates = useTemplateStore((state) => state.templates);
   const resumes = useResumeStore((state) => state.resumes);
@@ -58,6 +59,7 @@ export default function ResumeSelector({ onSelectionChange, className }: ResumeS
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    if (uploadOnly) return;
     storeFetchResumes().catch((err) => {
       setError(err instanceof Error ? err.message : "Failed to load resume options");
     });
@@ -335,28 +337,28 @@ export default function ResumeSelector({ onSelectionChange, className }: ResumeS
 
   return (
     <div className={`${styles.selectorWrapper} ${className || ""}`}>
-      <div className={styles.tabs}>
-        
-        <button
-          className={`${styles.tab} ${mode === "saved" ? styles.activeTab : ""}`}
-          onClick={() => switchMode("saved")}
-          type="button"
-        >
-          <Sparkles className={styles.tabIcon} />
-          My Resumes
-        </button>
-        <button
-          className={`${styles.tab} ${mode === "upload" ? styles.activeTab : ""}`}
-          onClick={() => switchMode("upload")}
-          type="button"
-        >
-          <FileUp className={styles.tabIcon} />
-          Upload resume
-        </button>
-      </div>
+        {!uploadOnly && <div className={styles.tabs}>
+          <button
+            className={`${styles.tab} ${mode === "saved" ? styles.activeTab : ""}`}
+            onClick={() => switchMode("saved")}
+            type="button"
+          >
+            <Sparkles className={styles.tabIcon} />
+            My Resumes
+          </button>
+          <button
+            className={`${styles.tab} ${mode === "upload" ? styles.activeTab : ""}`}
+            onClick={() => switchMode("upload")}
+            type="button"
+          >
+            <FileUp className={styles.tabIcon} />
+            Upload resume
+          </button>
+        </div> 
+      }
 
       <div className={styles.selectorContent}>
-        {mode === "upload" ? renderUploadContent() : renderSavedModeContent()}
+        { uploadOnly? renderUploadContent() :  mode === "upload" ? renderUploadContent() : renderSavedModeContent()}
       </div>
 
       {error && (

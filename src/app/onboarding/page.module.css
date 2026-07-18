@@ -1,0 +1,546 @@
+/* ── Page wrapper (fullscreen, animated bg) ── */
+.pageWrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem var(--space-4) var(--space-8);
+  position: relative;
+  isolation: isolate;
+  z-index: 0;
+}
+
+/* ── Centered card container ── */
+.onboardingContainer {
+  width: 100%;
+  max-width: 600px;
+  position: relative;
+  z-index: 2;
+}
+
+/* ── Glassmorphism card ── */
+.onboardingCard {
+  background: hsl(0 0% 100% / 0.55);
+  backdrop-filter: blur(16px) brightness(1.1);
+  -webkit-backdrop-filter: blur(16px) brightness(1.1);
+  border: 1px solid hsl(0 0% 100% / 0.7);
+  border-radius: 24px;
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.06),
+    0 12px 40px -4px rgb(0 0 0 / 0.1),
+    0 0 0 1px rgb(255 255 255 / 0.5) inset;
+  padding: var(--space-8) var(--space-6);
+  width: 100%;
+  transition: box-shadow 0.3s;
+}
+
+/* ── Step indicator ── */
+.stepIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-8);
+}
+
+.stepDot {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  border: 2px solid var(--neutral-300);
+  color: var(--neutral-400);
+  background: transparent;
+  transition: all 0.25s ease;
+}
+
+.stepDotActive {
+  border-color: var(--primary-500);
+  background: var(--primary-500);
+  color: #fff;
+  box-shadow: 0 0 0 4px var(--primary-200);
+}
+
+.stepDotDone {
+  border-color: var(--primary-500);
+  background: var(--primary-500);
+  color: #fff;
+}
+
+.stepDotIcon {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+/* ── Step wrapper ── */
+.stepsWrapper {
+  position: relative;
+  min-height: 320px;
+}
+
+.stepContent {
+  opacity: 0;
+  transform: translateX(16px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+  position: absolute;
+  width: 100%;
+  top: 0;
+  left: 0;
+}
+
+.stepActive {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+  position: relative;
+}
+
+/* ── Step header ── */
+.stepHeader {
+  margin-bottom: var(--space-6);
+}
+
+.stepBadge {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--text-xxs);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--primary-700);
+  background: var(--primary-4);
+  border: 1px solid var(--primary-3);
+  border-radius: var(--radius-full);
+  padding: 0.2rem 0.65rem;
+  margin-bottom: var(--space-3);
+}
+
+.stepTitle {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--neutral-900);
+  line-height: var(--leading-tight);
+  margin-bottom: var(--space-2);
+}
+
+.stepSubtitle {
+  font-size: var(--text-sm);
+  color: var(--neutral-500);
+  line-height: var(--leading-relaxed);
+}
+
+/* ── Form fields ── */
+.formFields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.fieldLabel {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--neutral-700);
+  letter-spacing: 0.01em;
+}
+
+.fieldInput {
+  height: 2.75rem;
+  border-radius: 10px;
+  border: 1.5px solid var(--neutral-200);
+  padding: 0 0.875rem;
+  font-size: var(--text-sm);
+  background: hsl(0 0% 100% / 0.8);
+  color: var(--neutral-900);
+  transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+  outline: none;
+  width: 100%;
+  font-family: inherit;
+}
+
+.fieldInput:focus {
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgb(132 177 121 / 0.15);
+  background: #fff;
+}
+
+.fieldInput::placeholder {
+  color: var(--neutral-400);
+}
+
+/* ── Goals grid ── */
+.goalsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.goalCard {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1.5px solid var(--neutral-200);
+  border-radius: 12px;
+  background: hsl(0 0% 100% / 0.6);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  font-family: inherit;
+  width: 100%;
+  position: relative;
+}
+
+.goalCard:hover {
+  border-color: var(--primary-300);
+  background: hsl(0 0% 100% / 0.85);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.goalCardSelected {
+  border-color: var(--primary-500);
+  background: var(--primary-50);
+  box-shadow: 0 0 0 3px rgb(132 177 121 / 0.12);
+}
+
+.goalCardCheck {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  border: 2px solid var(--neutral-300);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.goalCardSelected .goalCardCheck {
+  background: var(--primary-500);
+  border-color: var(--primary-500);
+}
+
+.goalCardCheckIcon {
+  width: 0.75rem;
+  height: 0.75rem;
+  color: #fff;
+}
+
+.goalCardIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--primary-600);
+  flex-shrink: 0;
+}
+
+.goalCardText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.goalCardLabel {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--neutral-800);
+}
+
+.goalCardDesc {
+  font-size: var(--text-xs);
+  color: var(--neutral-500);
+}
+
+/* ── Resume options (step 4) ── */
+.resumeOptions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.resumeOptionCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-5) var(--space-4);
+  border: 1.5px solid var(--neutral-200);
+  border-radius: 14px;
+  background: hsl(0 0% 100% / 0.6);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  font-family: inherit;
+  width: 100%;
+  position: relative;
+}
+
+.resumeOptionCard:hover {
+  border-color: var(--primary-300);
+  background: hsl(0 0% 100% / 0.85);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.resumeOptionIconWrapper {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 12px;
+  background: var(--primary-50);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.resumeOptionIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--primary-600);
+}
+
+.resumeOptionLabel {
+  font-size: var(--text-base);
+  font-weight: var(--font-bold);
+  color: var(--neutral-900);
+}
+
+.resumeOptionDesc {
+  font-size: var(--text-xs);
+  color: var(--neutral-500);
+  line-height: var(--leading-relaxed);
+}
+
+.resumeOptionArrow {
+  position: absolute;
+  right: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--neutral-300);
+  transition: color 0.2s, transform 0.2s;
+}
+
+.resumeOptionCard:hover .resumeOptionArrow {
+  color: var(--primary-500);
+  transform: translateY(-50%) translateX(2px);
+}
+
+/* ── Upload section ── */
+.uploadSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.changeModeBtn {
+  background: none;
+  border: none;
+  color: var(--neutral-500);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  align-self: center;
+  font-family: inherit;
+  transition: color 0.15s;
+}
+
+.changeModeBtn:hover {
+  color: var(--primary-600);
+}
+
+/* ── Scratch confirm ── */
+.scratchConfirm {
+  padding: var(--space-4) 0;
+}
+
+.scratchText {
+  font-size: var(--text-sm);
+  color: var(--neutral-600);
+  line-height: var(--leading-relaxed);
+  text-align: center;
+}
+
+/* ── Navigation buttons ── */
+.navButtons {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--neutral-200);
+}
+
+.navSpacer {
+  flex: 1;
+}
+
+.btnBack {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-4);
+  border: 1.5px solid var(--neutral-200);
+  border-radius: 10px;
+  background: hsl(0 0% 100% / 0.8);
+  color: var(--neutral-600);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.btnBack:hover:not(:disabled) {
+  border-color: var(--neutral-300);
+  background: #fff;
+  color: var(--neutral-800);
+}
+
+.btnBack:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-6);
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--primary-600), var(--primary-500));
+  color: #fff;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+  box-shadow: 0 4px 14px rgb(119 159 109 / 0.35);
+  white-space: nowrap;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgb(119 159 109 / 0.45);
+}
+
+.btnPrimary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btnDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btnDisabled:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.btnIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.btnSpinner {
+  width: 1rem;
+  height: 1rem;
+  animation: spin 0.7s linear infinite;
+}
+
+/* ── Skip row ── */
+.skipRow {
+  text-align: center;
+  margin-top: var(--space-3);
+}
+
+.btnSkip {
+  background: none;
+  border: none;
+  color: var(--neutral-400);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.15s;
+  padding: var(--space-1) var(--space-2);
+}
+
+.btnSkip:hover {
+  color: var(--neutral-600);
+}
+
+/* ── Error message ── */
+.errorMsg {
+  margin-top: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: 10px;
+  background: var(--red-50);
+  border: 1px solid var(--red-100);
+  color: var(--red-700);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+}
+
+/* ── Keyframes ── */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .pageWrapper {
+    padding: 4.5rem var(--space-3) var(--space-6);
+    align-items: flex-start;
+  }
+
+  .onboardingCard {
+    padding: var(--space-6) var(--space-4);
+    border-radius: 20px;
+  }
+
+  .stepTitle {
+    font-size: var(--text-xl);
+  }
+
+  .fieldRow {
+    grid-template-columns: 1fr;
+  }
+
+  .stepIndicator {
+    gap: var(--space-2);
+  }
+
+  .stepDot {
+    width: 2rem;
+    height: 2rem;
+    font-size: var(--text-xxs);
+  }
+
+  .resumeOptionArrow {
+    display: none;
+  }
+}

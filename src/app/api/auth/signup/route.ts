@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
       passwordHash: createPasswordHash(password),
       authProviders: ["credentials"],
       oauthAccounts: [],
+      hasCompletedOnboarding: false,
     });
 
     return NextResponse.json({ ok: true });

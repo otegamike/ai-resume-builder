@@ -4,6 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import crypto from "crypto";
 import dbConnect from "@/lib/db";
 import User from "@/models/User";
+import { resetCreditsIfNeeded } from "@/lib/creditUtils";
 
 function hashPassword(password: string, salt: string) {
   return crypto.scryptSync(password, salt, 64).toString("hex");
@@ -54,8 +55,11 @@ export const authOptions: NextAuthOptions = {
       if (!user.email) return false;
       await dbConnect();
 
+      const existing = await User.findOne({ email: user.email });
+      const isNewUser = !existing;
+
       const provider = account?.provider ?? "google";
-      await User.findOneAndUpdate(
+      const dbUser = await User.findOneAndUpdate(
         { email: user.email },
         {
           name: user.name ?? "",
@@ -71,12 +75,18 @@ export const authOptions: NextAuthOptions = {
         },
         { upsert: true, new: true, setDefaultsOnInsert: true }
       );
+
+      if (isNewUser) {
+        await User.updateOne({ email: user.email }, { $set: { hasCompletedOnboarding: false } });
+      }
+
+      await resetCreditsIfNeeded(String(dbUser!._id), dbUser!.subscriptionPlan);
       return true;
     },
     async jwt({ token }) {
       if (!token.email) return token;
       await dbConnect();
-      const dbUser = await User.findOne({ email: token.email }).select("_id email name image isAdmin subscriptionPlan AiCredits gmailAccessToken");
+      const dbUser = await User.findOne({ email: token.email }).select("_id email name image isAdmin subscriptionPlan AiCredits gmailAccessToken hasCompletedOnboarding");
       if (dbUser) {
         token.userId = String(dbUser._id);
         token.name = dbUser.name;
@@ -85,6 +95,7 @@ export const authOptions: NextAuthOptions = {
         token.subscriptionPlan = dbUser.subscriptionPlan ?? "free";
         token.AiCredits = dbUser.AiCredits ?? 0;
         token.hasGmailConnected = !!dbUser.gmailAccessToken;
+        token.hasCompletedOnboarding = dbUser.hasCompletedOnboarding ?? true;
       }
       return token;
     },
@@ -95,6 +106,7 @@ export const authOptions: NextAuthOptions = {
         session.user.subscriptionPlan = (token.subscriptionPlan as string | undefined) ?? "free";
         session.user.AiCredits = (token.AiCredits as number | undefined) ?? 0;
         (session.user as any).hasGmailConnected = (token.hasGmailConnected as boolean | undefined) ?? false;
+        session.user.hasCompletedOnboarding = (token.hasCompletedOnboarding as boolean | undefined) ?? true;
       }
       return session;
     },

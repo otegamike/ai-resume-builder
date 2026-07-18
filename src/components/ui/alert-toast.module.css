@@ -21,7 +21,7 @@
   font-family: var(--font-body);
   font-size: var(--text-sm);
   line-height: 1.4;
-  max-width: 28rem;
+  max-width: min(30rem, 90vw);
   color: #fff;
   animation: slideIn 0.3s ease-out forwards;
 }
@@ -58,19 +58,19 @@
 }
 
 .success {
-  background-color: var(--success);
+  background-color: var(--translucent-success);
 }
 
 .error {
-  background-color: var(--error);
+  background-color: var(--translucent-error);
 }
 
 .warning {
-  background-color: var(--warning);
+  background-color: var(--translucent-warning);
 }
 
 .info {
-  background-color: var(--info);
+  background-color: var(--translucent-info);
 }
 
 @keyframes slideIn {

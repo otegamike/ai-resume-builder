@@ -11,6 +11,7 @@ declare module "next-auth" {
       isAdmin?: boolean;
       subscriptionPlan?: string | null;
       AiCredits?: number | null;
+      hasCompletedOnboarding?: boolean;
     };
   }
 }
@@ -21,5 +22,6 @@ declare module "next-auth/jwt" {
     isAdmin?: boolean;
     subscriptionPlan?: string;
     AiCredits?: number;
+    hasCompletedOnboarding?: boolean;
   }
 }

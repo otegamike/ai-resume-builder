@@ -104,6 +104,12 @@
   --warning: #f59e0b;
   --info: #3b82f6;
 
+/* Translucent & Vibrant (60% Opacity) */
+  --translucent-success: hsl(142 75% 55% / 0.6);
+  --translucent-error:   hsl(0 85% 65% / 0.6);
+  --translucent-warning: hsl(38 95% 55% / 0.6);
+  --translucent-info:    hsl(217 90% 65% / 0.6);
+
   /* Semantic Variables */
   --bg-main: var(--neutral-50);
   --surface: #ffffff;

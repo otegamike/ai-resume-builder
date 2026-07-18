@@ -20,6 +20,13 @@ export interface IUser {
   gmailAccessToken?: string;
   gmailRefreshToken?: string;
   gmailTokenExpiresAt?: Date;
+  hasCompletedOnboarding: boolean;
+  jobTitle: string;
+  location: string;
+  phone: string;
+  primaryGoal: string[];
+  targetField: string;
+  hasExistingResume: boolean;
 }
 
 const UserSchema: Schema = new Schema<IUser>(
@@ -44,6 +51,13 @@ const UserSchema: Schema = new Schema<IUser>(
     gmailAccessToken: { type: String },
     gmailRefreshToken: { type: String },
     gmailTokenExpiresAt: { type: Date },
+    hasCompletedOnboarding: { type: Boolean, default: true },
+    jobTitle: { type: String, default: "" },
+    location: { type: String, default: "" },
+    phone: { type: String, default: "" },
+    primaryGoal: [{ type: String }],
+    targetField: { type: String, default: "" },
+    hasExistingResume: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

@@ -85,6 +85,11 @@ export default function OverviewPage() {
       return;
     }
 
+    if (!session?.user?.isAdmin && session?.user?.hasCompletedOnboarding === false) {
+      router.push("/onboarding");
+      return;
+    }
+
     const fetchStats = async () => {
       try {
         const res = await fetch("/api/dashboard/stats");
@@ -101,7 +106,7 @@ export default function OverviewPage() {
 
     fetchStats();
     fetchCredits();
-  }, [status, router, fetchCredits]);
+  }, [status, router, fetchCredits, session]);
 
   useEffect(() => {
     if (status !== "authenticated") return;
