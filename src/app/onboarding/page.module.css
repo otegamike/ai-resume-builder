@@ -4,7 +4,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 5rem var(--space-4) var(--space-8);
+  padding: var(--space-2) var(--space-8);
   position: relative;
   isolation: isolate;
   z-index: 0;
