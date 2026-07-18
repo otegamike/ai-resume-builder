@@ -36,6 +36,12 @@ input, textarea, select {
   color: var(--ring)
 }
 
+input:focus,
+textarea:focus,
+select:focus {
+  font-size: 16px;
+}
+
 .hideScrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;

@@ -158,7 +158,7 @@ export default function ImproveResumePage() {
     <div className={styles.container}>
       <header className={styles.header}>
         <div>
-          <h1 className={styles.title}>Improve ATS compliance an existing resume</h1>
+          <h1 className={styles.title}>ATS Improve </h1>
           <p className={styles.subtitle}>
             Upload a CV or review one already created here. We will flag ATS
             issues and prepare an improved editable version.
