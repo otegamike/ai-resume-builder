@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { Zap } from "lucide-react";
 import styles from "./page.module.css";
 import bgStyles from "@/app/auth/login/animated-bg.module.css";
-import { discountPrice } from "@/utils/discountPrice";
 import Footer from "@/components/sections/Footer";
-
-const discount = 20;
+import { NGN_PRICING, detectCurrency, CURRENCIES, type CurrencyConfig } from "@/utils/pricing";
 
 const PLANS = [
   {
@@ -21,10 +20,11 @@ const PLANS = [
     cta: "Get Started",
     ctaHref: "/auth/login",
     features: [
-      { label: "4 Resume", icon: "check", muted: false },
-      { label: "4 Cover letters", icon: "check", muted: false },
-      { label: "Basic Templates", icon: "check", muted: false },
-      { label: "AI Content Analysis (Limited)", icon: "check", muted: false },
+      { label: "1000 AI Credits/month", icon: "check", muted: false, isAiCredit: true },
+      { label: "10 Resumes/CV", icon: "check", muted: false },
+      { label: "10 Cover letters", icon: "check", muted: false },
+      { label: "Over 20+ Unique Templates", icon: "check", muted: false },
+      { label: "Unlimited Application Tracking", icon: "check", muted: false },
     ],
   },
   {
@@ -32,43 +32,47 @@ const PLANS = [
     name: "Pro",
     tagline: "Best for active job seekers.",
     monthlyPrice: 7,
-    annualPrice: discountPrice(7, discount),
+    annualPrice: 5,
     isPro: true,
     badge: null,
+    savePercent: 20,
     cta: "Start Free Trial",
     ctaHref: "/auth/login",
     features: [
+      { label: "50000 AI credits/month", icon: "check", muted: false, isAiCredit: true },
       { label: "Unlimited Resumes", icon: "check", muted: false },
-      { label: "Premium Templates", icon: "check", muted: false },
       { label: "Unlimited AI Assistant", icon: "check", muted: false },
-      { label: "PDF & DOCX Export", icon: "check", muted: false },
+      { label: "High Definition PDF Export", icon: "check", muted: false },
       { label: "Job Application Tracker", icon: "check", muted: false },
+      { label: "Premium Professional Templates", icon: "check", muted: false },
     ],
   },
   {
-    id: "enterprise",
+    id: "proPlus",
     name: "Pro+",
     tagline: "For recruitment teams.",
     monthlyPrice: 15,
-    annualPrice: discountPrice(15, discount),
+    annualPrice: 12,
     isPro: false,
     badge: null,
+    savePercent: 20,
     cta: "Get started",
     ctaHref: "mailto:sales@agenticcv.com",
     features: [
-      { label: "Team Collaboration", icon: "check", muted: false },
+      { label: "Unlimited AI credits", icon: "check", muted: false, isAiCredit: true },
       { label: "Custom Brand Templates", icon: "check", muted: false },
       { label: "Bulk Export Options", icon: "check", muted: false },
       { label: "Priority Support", icon: "check", muted: false },
+      { label: "All Pro features", icon: "check", muted: false },
     ],
   },
 ];
 
 const COMPARE_ROWS = [
-  { feature: "Resume Limit",              free: "1 active",        pro: "Unlimited",   enterprise: "Unlimited" },
-  { feature: "AI Bullet Optimization",    free: "5 per resume",    pro: true,          enterprise: true },
-  { feature: "Job Description Matching",  free: false,             pro: true,          enterprise: true },
-  { feature: "Custom Domain Portfolio",   free: false,             pro: true,          enterprise: true },
+  { feature: "Resume Limit",              free: "10",        pro: "50",   enterprise: "Unlimited" },
+  { feature: "AI credits/month",    free: "1000",    pro: '50,000',          enterprise: 'Unlimited'},
+  { feature: "High Definition Export",  free: false,             pro: true,          enterprise: true },
+  { feature: "Premium Proffesional Templates",   free: false,             pro: true,          enterprise: true },
   { feature: "Branding Removal",          free: false,             pro: true,          enterprise: true },
   { feature: "Team Members",             free: "1",               pro: "1",           enterprise: "Unlimited" },
   { feature: "Priority Support",          free: false,             pro: false,         enterprise: true },
@@ -132,11 +136,37 @@ function ChevronIcon({ className }: { className?: string }) {
 export default function PricingPage() {
   const [isAnnual, setIsAnnual] = useState(true);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [currency, setCurrency] = useState<CurrencyConfig>(CURRENCIES.USD);
+  const [isNigerian, setIsNigerian] = useState(false);
+
+  useEffect(() => {
+    const { currency: detectedCurrency, isNigerian: detected } = detectCurrency();
+    setCurrency(detectedCurrency);
+    setIsNigerian(detected);
+  }, []);
+
+  const getPlanPrice = (plan: typeof PLANS[0]) => {
+    if (plan.monthlyPrice === null) return null;
+    if (plan.monthlyPrice === 0) return 0;
+    if (isNigerian && plan.id !== "free") {
+      const p = NGN_PRICING[plan.id as keyof typeof NGN_PRICING];
+      return isAnnual ? p.annual : p.monthly;
+    }
+    return isAnnual ? plan.annualPrice : plan.monthlyPrice;
+  };
+
+  const getSavePercent = (plan: typeof PLANS[0]) => {
+    if (isNigerian && plan.id !== "free") {
+      return NGN_PRICING[plan.id as keyof typeof NGN_PRICING].savePercent;
+    }
+    return plan.savePercent;
+  };
 
   const displayPrice = (plan: typeof PLANS[0]) => {
-    if (plan.monthlyPrice === null) return "Custom";
-    if (plan.monthlyPrice === 0) return "$0";
-    return isAnnual ? `$${plan.annualPrice}` : `$${plan.monthlyPrice}`;
+    const price = getPlanPrice(plan);
+    if (price === null) return "Custom";
+    if (price === 0) return `${currency.symbol}0`;
+    return `${currency.symbol}${price.toLocaleString()}`;
   };
 
   return (
@@ -166,7 +196,7 @@ export default function PricingPage() {
             <span className={`${styles.billingLabel} ${isAnnual ? styles.active : ""}`}>
               Annual
             </span>
-            <span className={styles.saveBadge}>Save 20%</span>
+            <span className={styles.saveBadge}>Save</span>
           </div>
         </div>
 
@@ -196,19 +226,24 @@ export default function PricingPage() {
                 )}
               </div>
               <p className={styles.billingNote}>
-                {plan.isPro && isAnnual && "Billed annually — save 20%"}
-                {plan.isPro && !isAnnual && "Billed monthly"}
+                {plan.monthlyPrice > 0 && isAnnual && `Billed annually — save ${getSavePercent(plan)}%`}
+                {plan.monthlyPrice > 0 && !isAnnual && "Billed monthly"}
               </p>
 
               <ul className={styles.featureList}>
                 {plan.features.map((f) => (
                   <li key={f.label} className={`${styles.featureItem} ${f.muted ? styles.muted : ""}`}>
-                    {f.icon === "sparkle" ? (
+                    {(f as any).isAiCredit ? (
+                      <>
+                        <Zap className={styles.creditIcon} />
+                        <span className={styles.creditValue}>{f.label}</span>
+                      </>
+                    ) : f.icon === "sparkle" ? (
                       <SparkleIcon className={styles.sparkleIcon} />
                     ) : (
                       <CheckIcon className={`${styles.checkIcon} ${plan.isPro ? styles.proCheck : ""}`} />
                     )}
-                    {f.label}
+                    {!(f as any).isAiCredit && f.label}
                   </li>
                 ))}
               </ul>
@@ -234,7 +269,7 @@ export default function PricingPage() {
                 <th>Features</th>
                 <th>Free</th>
                 <th className={styles.thPro}>Pro</th>
-                <th>Enterprise</th>
+                <th>Pro+</th>
               </tr>
             </thead>
             <tbody className={styles.tableBody}>

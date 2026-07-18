@@ -211,7 +211,7 @@ export default function OverviewPage() {
           </h1>
           <div className={styles.welcomeSubtitle}>
             Your career hub. manage resumes, cover letters, applications, and more.
-            <AiCredits aiCredit={storeCredits ?? session?.user?.AiCredits ?? null} plan={plan} />
+            <AiCredits aiCredit={storeCredits ?? session?.user?.AiCredits ?? null} plan={plan} full />
           </div>
       </section>
 

@@ -35,10 +35,14 @@
   gap: var(--space-2);
 }
 
+.brandLogo {
+  margin: var(--space-1) var(--space-2);
+}
+
 .brand {
   font-family: var(--font-uncial);
   font-size: var(--text-xl);
-  color: var(--primary-300);
+  color: var(--primary-200);
 }
 
 .tagline {

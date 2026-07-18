@@ -97,7 +97,7 @@ function NavPanel({ session, isOpen, toggleMenu, status }: NavPanelProps) {
               )}
             </div>
             {isSignedIn && (
-              <AiCredits aiCredit={storeCredits ?? session?.user?.AiCredits ?? null} plan={plan} small full />
+              <AiCredits aiCredit={storeCredits ?? session?.user?.AiCredits ?? null} plan={plan} wrapperClassName={styles.creditsWrapper} small full />
             )}
           </div>
 

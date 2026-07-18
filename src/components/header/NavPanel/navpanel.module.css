@@ -74,21 +74,8 @@
   text-transform: capitalize;
 }
 
-.creditsRow {
-  display: flex;
+.creditsWrapper {
   align-items: center;
-  gap: var(--space-2);
-}
-
-.creditsLabel {
-  font-size: var(--text-sm);
-  color: var(--ai);
-}
-
-.creditsValue {
-  font-size: var(--text-sm);
-  font-weight: var(--font-semibold);
-  color: var(--ai-accent-300);
 }
 
 .actionsSection {

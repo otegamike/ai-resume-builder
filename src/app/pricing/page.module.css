@@ -113,7 +113,7 @@
 
 .cardsGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: var(--space-8);
   max-width: var(--container-max-width);
   margin: 0 auto;
@@ -121,17 +121,7 @@
   align-items: center;
 }
 
-@media (max-width: 1024px) {
-  .cardsGrid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
 
-@media (max-width: 640px) {
-  .cardsGrid {
-    grid-template-columns: 1fr;
-  }
-}
 
 @property --gradient-1 {
   syntax: '<color>';
@@ -323,6 +313,19 @@
 
 .featureItem.muted {
   opacity: 0.55;
+}
+
+.creditIcon {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+  color: var(--ai-accent-500);
+}
+
+.creditValue {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--ai-accent-900);
 }
 
 .checkIcon {

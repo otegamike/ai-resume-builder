@@ -1,5 +1,6 @@
 import Link from "next/link";
 import styles from "./Footer.module.css";
+import Logo from "../svgs/logo";
 
 export default function Footer() {
   return (
@@ -7,6 +8,7 @@ export default function Footer() {
       <div className={styles.inner}>
         <div className={styles.top}>
           <div className={styles.brandCol}>
+            <Logo className={styles.brandLogo} color='var(--primary-200)' size={40}/>
             <span className={styles.brand}>AgenticApp.cv</span>
             <p className={styles.tagline}>
               Elevate your career with AI-powered resumes.
