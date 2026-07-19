@@ -3,6 +3,8 @@ import { getAuthenticatedUser } from "@/lib/authUser";
 import dbConnect from "@/lib/db";
 import Resume from "@/models/Resume";
 import { ResumeContent } from "@/types/ResumeData";
+import { templateDefinitions } from "@/lib/templateCatalog";
+import { getRandomTemplateId } from "@/utils/templateUtils";
 
 export const runtime = "nodejs";
 
@@ -32,7 +34,7 @@ export async function POST(request: NextRequest) {
       userId: authUser.legacyUserId || String(authUser.userObjectId),
       user: authUser.userObjectId,
       title: body.title || "Improved Resume",
-      template: body.template || "template1",
+      template: body.template || getRandomTemplateId(templateDefinitions),
       content: body.improvedResume,
     });
 

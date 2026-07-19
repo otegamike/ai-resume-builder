@@ -17,6 +17,10 @@ export interface IUser {
   subscriptionId: string;
   AiCredits: number;
   AiCreditRateLimit: number;
+  creditResetMeta: {
+    lastResetCycle: string | null;
+    nextResetAt: Date | null;
+  };
   gmailAccessToken?: string;
   gmailRefreshToken?: string;
   gmailTokenExpiresAt?: Date;
@@ -48,6 +52,10 @@ const UserSchema: Schema = new Schema<IUser>(
     subscriptionId: { type: String, default: "" },
     AiCredits: { type: Number, default: 1000 },
     AiCreditRateLimit: { type: Number, default: 10 },
+    creditResetMeta: {
+      lastResetCycle: { type: String, default: null },
+      nextResetAt: { type: Date, default: null },
+    },
     gmailAccessToken: { type: String },
     gmailRefreshToken: { type: String },
     gmailTokenExpiresAt: { type: Date },

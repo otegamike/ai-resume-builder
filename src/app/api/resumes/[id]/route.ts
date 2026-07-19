@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Resume from '@/models/Resume';
 import { getAuthenticatedUser, buildResumeOwnerQuery } from '@/lib/authUser';
+import { templateDefinitions } from "@/lib/templateCatalog";
+import { getRandomTemplateId } from "@/utils/templateUtils";
 
 export async function GET(
   _request: NextRequest,
@@ -64,7 +66,7 @@ export async function PUT(
       {
         title,
         content,
-        template: template || "template1",
+        template: template || getRandomTemplateId(templateDefinitions),
         user: authUser.userObjectId,
         userId: authUser.legacyUserId || String(authUser.userObjectId),
         updatedAt: new Date()

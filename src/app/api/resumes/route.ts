@@ -3,6 +3,8 @@ import crypto from 'crypto';
 import dbConnect from '@/lib/db';
 import Resume from '@/models/Resume';
 import { getAuthenticatedUser, buildResumeOwnerQuery } from '@/lib/authUser';
+import { templateDefinitions } from "@/lib/templateCatalog";
+import { getRandomTemplateId } from "@/utils/templateUtils";
 
 export async function GET(request: NextRequest) {
   try {
@@ -54,7 +56,7 @@ export async function POST(request: NextRequest) {
       userId: authUser.legacyUserId || String(authUser.userObjectId),
       user: authUser.userObjectId,
       title,
-      template: template || 'template1',
+      template: template || getRandomTemplateId(templateDefinitions),
       content,
     });
 

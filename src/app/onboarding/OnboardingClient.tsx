@@ -126,7 +126,7 @@ export default function OnboardingClient() {
       });
       if (!res.ok) throw new Error("Failed to save");
       await updateSession();
-      router.push("/dashboard");
+      router.push("/editor/new");
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -135,7 +135,7 @@ export default function OnboardingClient() {
   };
 
   const handleUploadResume = async () => {
-    if (!resumeSelection?.selectedFile) {
+    if (!resumeSelection) {
       setUploadError("Please select a resume file to upload.");
       return;
     }
@@ -144,7 +144,21 @@ export default function OnboardingClient() {
     setError("");
     try {
       const formData = new FormData();
-      formData.append("file", resumeSelection.selectedFile);
+
+      if (resumeSelection.selectedFile && resumeSelection.selectedFile.type.startsWith("image/")) {
+        formData.append("file", resumeSelection.selectedFile);
+      } else if (resumeSelection.pdfCanvasRefs.length > 0) {
+        for (const canvas of resumeSelection.pdfCanvasRefs) {
+          const blob = await new Promise<Blob | null>((resolve) =>
+            canvas.toBlob((b) => resolve(b), "image/png")
+          );
+          if (blob) {
+            formData.append("file", blob, "page.png");
+          }
+        }
+      } else {
+        throw new Error("Choose a PDF or image resume first.");
+      }
 
       const res = await fetch("/api/onboarding/upload-resume", {
         method: "POST",

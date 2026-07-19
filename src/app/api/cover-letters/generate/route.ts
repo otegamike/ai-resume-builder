@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser, buildResumeOwnerQuery } from "@/lib/authUser";
 import { generateCoverLetter, extractTextFromJobImage, extractResumeTextFromImages } from "@/lib/ai";
-import { resumeContentToText, fileToDataUrl, isPdfUpload, extractTextFromPdf, assertSupportedUpload } from "@/lib/resumeImprover";
+import { resumeContentToText, fileToDataUrl, assertSupportedUpload } from "@/lib/resumeImprover";
 import dbConnect from "@/lib/db";
 import Resume from "@/models/Resume";
 import CoverLetter from "@/models/CoverLetter";
@@ -52,13 +52,8 @@ export async function POST(request: Request) {
       }
       assertSupportedUpload(resumeFile);
 
-      if (isPdfUpload(resumeFile)) {
-        const pdfExtraction = await extractTextFromPdf(resumeFile);
-        resumeText = pdfExtraction.text;
-      } else {
-        const dataUrl = await fileToDataUrl(resumeFile);
-        resumeText = await extractResumeTextFromImages([dataUrl]);
-      }
+      const dataUrl = await fileToDataUrl(resumeFile);
+      resumeText = await extractResumeTextFromImages([dataUrl]);
     } else {
       return NextResponse.json({ error: "Invalid resume mode" }, { status: 400 });
     }

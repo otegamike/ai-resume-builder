@@ -5,9 +5,7 @@ import dbConnect from "@/lib/db";
 import Resume from "@/models/Resume";
 import {
   assertSupportedUpload,
-  extractTextFromPdf,
   fileToDataUrl,
-  isPdfUpload,
   resumeContentToText,
 } from "@/lib/resumeImprover";
 import { ResumeContent } from "@/types/ResumeData";
@@ -58,13 +56,8 @@ export async function POST(request: Request) {
       }
       assertSupportedUpload(resumeFile);
 
-      if (isPdfUpload(resumeFile)) {
-        const pdfExtraction = await extractTextFromPdf(resumeFile);
-        resumeText = pdfExtraction.text;
-      } else {
-        const dataUrl = await fileToDataUrl(resumeFile);
-        resumeText = await extractResumeTextFromImages([dataUrl]);
-      }
+      const dataUrl = await fileToDataUrl(resumeFile);
+      resumeText = await extractResumeTextFromImages([dataUrl]);
     } else {
       return NextResponse.json({ error: "Invalid resume mode specified" }, { status: 400 });
     }

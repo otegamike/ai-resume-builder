@@ -215,7 +215,7 @@ export default function TailorResumePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: `${sourceResume?.title || report.tailoredResume.personalInfo.name || "Resume"}${titleSuffix}`,
-          template: sourceResume?.template || "template1",
+          template: sourceResume?.template,
           improvedResume: report.tailoredResume,
         }),
       });

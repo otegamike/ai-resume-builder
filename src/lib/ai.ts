@@ -6,8 +6,8 @@ import { TailorReport } from "@/types/TailorReport";
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 // Use a capable model for structured JSON output
-const ATS_MODEL = "llama-3.3-70b-versatile";
-const VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
+const ATS_MODEL = "openai/gpt-oss-120b";
+const VISION_MODEL = "qwen/qwen3.6-27b";
 const GENERATION_MODEL = "openai/gpt-oss-20b"; // fine for simple text gen
 
 

@@ -135,7 +135,7 @@ export default function ImproveResumePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: `${sourceResume?.title || report.improvedResume.personalInfo.name || "Resume"} - Improved`,
-          template: sourceResume?.template || "template1",
+          template: sourceResume?.template,
           improvedResume: report.improvedResume,
         }),
       });

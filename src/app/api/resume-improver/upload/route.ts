@@ -3,24 +3,11 @@ import { analyzeResumeForAts, extractResumeTextFromImages } from "@/lib/ai";
 import { getAuthenticatedUser } from "@/lib/authUser";
 import {
   assertSupportedUpload,
-  extractTextFromPdf,
   fileToDataUrl,
-  isPdfUpload,
 } from "@/lib/resumeImprover";
-import { AtsIssue } from "@/types/AtsReport";
 import { deductCredits, InsufficientCreditsError } from "@/lib/creditUtils";
 
 export const runtime = "nodejs";
-
-const scannedPdfIssue: AtsIssue = {
-  severity: "high",
-  section: "formatting",
-  title: "Resume text is not selectable",
-  detail:
-    "Your resume does not have enough selectable text. ATS systems may miss most or all of the information because the content appears to be image-based.",
-  suggestion:
-    "Use a text-based PDF export instead of a scanned or image-only PDF so ATS systems can reliably read your resume.",
-};
 
 export async function POST(request: Request) {
   try {
@@ -43,17 +30,8 @@ export async function POST(request: Request) {
       assertSupportedUpload(f);
     }
 
-    let extractedText = "";
-    let hasScannedPdfWarning = false;
-
-    if (files.length === 1 && isPdfUpload(files[0])) {
-      const pdfExtraction = await extractTextFromPdf(files[0]);
-      extractedText = pdfExtraction.text;
-      hasScannedPdfWarning = pdfExtraction.source === "pdf-vision";
-    } else {
-      const dataUrls = await Promise.all(files.map(fileToDataUrl));
-      extractedText = await extractResumeTextFromImages(dataUrls);
-    }
+    const dataUrls = await Promise.all(files.map(fileToDataUrl));
+    const extractedText = await extractResumeTextFromImages(dataUrls);
 
     if (!extractedText.trim()) {
       return NextResponse.json(
@@ -63,9 +41,6 @@ export async function POST(request: Request) {
     }
 
     const report = await analyzeResumeForAts(extractedText);
-    if (hasScannedPdfWarning) {
-      report.issues = [scannedPdfIssue, ...report.issues];
-    }
 
     return NextResponse.json({ ...report, newAiCredits });
   } catch (error) {
@@ -79,9 +54,7 @@ export async function POST(request: Request) {
       error instanceof Error ? error.message : "Failed to analyze uploaded resume";
     const status = message.includes("not supported") || message.includes("Upload")
       ? 400
-      : message.includes("selectable text")
-        ? 422
-        : 500;
+      : 500;
 
     console.error("Resume upload analysis error:", error);
     return NextResponse.json({ error: message }, { status });

@@ -11,7 +11,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
-import { TEMPLATE_PAGE, type TemplateDefinition, type TemplateId } from "@/lib/templateCatalog";
+import { TEMPLATE_PAGE, templateDefinitions, type TemplateDefinition, type TemplateId } from "@/lib/templateCatalog";
+import { getRandomTemplateId } from "@/utils/templateUtils";
 import TemplateSelector from "./TemplateSelector";
 import PersonalDetailsTab from "./form-nav/PersonalDetailsTab";
 import HeadshotTab from "./form-nav/HeadshotTab";
@@ -62,7 +63,7 @@ export default function ResumeEditor() {
   const {
     resumeId, templateId, saving, autoSaveStatus,
     debouncedAutoSave, saveResume, updateTemplateId, setAutoSaveStatus,
-  } = useAutoSave(initialResumeId, "template1", 5000);
+  } = useAutoSave(initialResumeId, initialResumeId === "new" ? getRandomTemplateId(templateDefinitions) : "template1", 5000);
 
   const { activeTab, changeTab, getTabIndex } = useTabNavigation();
 

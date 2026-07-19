@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/authUser";
-import { parseResumeContent } from "@/lib/ai";
-import { assertSupportedUpload, extractTextFromPdf, fileToDataUrl, isPdfUpload, isImageUpload } from "@/lib/resumeImprover";
-import { extractResumeTextFromImages } from "@/lib/ai";
+import { parseResumeContent, extractResumeTextFromImages } from "@/lib/ai";
+import { assertSupportedUpload, fileToDataUrl } from "@/lib/resumeImprover";
 import dbConnect from "@/lib/db";
 import Resume from "@/models/Resume";
 import User from "@/models/User";
+import { templateDefinitions } from "@/lib/templateCatalog";
+import { getRandomTemplateId } from "@/utils/templateUtils";
 
 export const runtime = "nodejs";
 
@@ -17,22 +18,19 @@ export async function POST(request: Request) {
     }
 
     const formData = await request.formData();
-    const file = formData.get("file") as File | null;
-    if (!file) {
+    const entries = formData.getAll("file");
+    const files = entries.filter((f): f is File => f instanceof File);
+
+    if (files.length === 0) {
       return NextResponse.json({ error: "No resume file provided" }, { status: 400 });
     }
 
-    assertSupportedUpload(file);
-
-    let extractedText = "";
-
-    if (isPdfUpload(file)) {
-      const result = await extractTextFromPdf(file);
-      extractedText = result.text;
-    } else if (isImageUpload(file)) {
-      const dataUrl = await fileToDataUrl(file);
-      extractedText = await extractResumeTextFromImages([dataUrl]);
+    for (const f of files) {
+      assertSupportedUpload(f);
     }
+
+    const dataUrls = await Promise.all(files.map(fileToDataUrl));
+    const extractedText = await extractResumeTextFromImages(dataUrls);
 
     if (!extractedText.trim()) {
       return NextResponse.json(
@@ -55,7 +53,7 @@ export async function POST(request: Request) {
       userId: authUser.legacyUserId || String(authUser.userObjectId),
       user: authUser.userObjectId,
       title,
-      template: "template1",
+      template: getRandomTemplateId(templateDefinitions),
       content: parsedContent ?? {
         personalInfo: {
           name: "",
