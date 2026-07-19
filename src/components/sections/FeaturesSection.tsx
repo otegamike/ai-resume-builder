@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   WandSparkles,
-  Sparkles,
   FileCheck,
   PenLine,
   CheckCircle2,
@@ -14,7 +13,7 @@ import {
   FileDown,
   Image as ImageIcon,
 } from "lucide-react";
-import { useScrollReveal } from "@/hooks/useScrollReveal";
+import { useCardReveal } from "@/hooks/useCardReveal";
 import styles from "./FeaturesSection.module.css";
 
 /* ------------------------------------------------------------------ */
@@ -84,13 +83,14 @@ const TAILOR_SETS = [
   },
 ];
 
-function TailorVisual() {
+function TailorVisual({ isActive = false }: { isActive?: boolean }) {
   const [step, setStep] = useState(-1);
   const [setIdx, setSetIdx] = useState(0);
   const [typed, setTyped] = useState(["", "", ""]);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    if (!isActive) return;
     const set = TAILOR_SETS[setIdx];
 
     if (step === -1) {
@@ -103,7 +103,7 @@ function TailorVisual() {
     }
 
     if (step === 0) {
-      setVisible(true);
+      queueMicrotask(() => setVisible(true));
       const t = setTimeout(() => setStep(1), 500);
       return () => clearTimeout(t);
     }
@@ -131,16 +131,16 @@ function TailorVisual() {
         }, 30);
         return () => clearTimeout(t);
       }
-      setStep(step + 1);
+      queueMicrotask(() => setStep(step + 1));
       return;
     }
 
     if (step === 8) {
-      setVisible(false);
+      queueMicrotask(() => setVisible(false));
       const t = setTimeout(() => setStep(-1), 500);
       return () => clearTimeout(t);
     }
-  }, [step, typed, setIdx]);
+  }, [step, typed, setIdx, isActive]);
 
   return (
     <div className={styles.tailorVisual}>
@@ -188,7 +188,7 @@ const COVER_LETTER_TEXTS = [
   "Dear [Company] Team,\n\nI am writing to express strong interest in the Data Scientist role. My expertise in machine learning and statistical modeling can help drive data-informed decisions.",
 ];
 
-function CoverLetterVisual() {
+function CoverLetterVisual({ isActive = false }: { isActive?: boolean }) {
   const [displayText, setDisplayText] = useState("");
   const [textIndex, setTextIndex] = useState(0);
   const [phase, setPhase] = useState<"typing" | "paused">("typing");
@@ -196,6 +196,8 @@ function CoverLetterVisual() {
   const currentText = COVER_LETTER_TEXTS[textIndex];
 
   useEffect(() => {
+    if (!isActive) return;
+
     if (phase === "paused") {
       const timer = setTimeout(() => {
         setTextIndex((prev) => (prev + 1) % COVER_LETTER_TEXTS.length);
@@ -212,8 +214,8 @@ function CoverLetterVisual() {
       return () => clearTimeout(timer);
     }
 
-    setPhase("paused");
-  }, [displayText, phase, textIndex, currentText]);
+    queueMicrotask(() => setPhase("paused"));
+  }, [displayText, phase, textIndex, currentText, isActive]);
 
   return (
     <div className={styles.stackVisual}>
@@ -294,7 +296,7 @@ interface Feature {
   description: string;
   accent: "ai" | "primary";
   span: "hero" | "medium" | "third";
-  visual: () => React.JSX.Element;
+  visual: React.ComponentType<{ isActive?: boolean }>;
 }
 
 const features: Feature[] = [
@@ -355,7 +357,7 @@ const features: Feature[] = [
 ];
 
 /* ------------------------------------------------------------------ */
-/*  Component                                                          */
+/*  Sub-components                                                     */
 /* ------------------------------------------------------------------ */
 
 const spanClass: Record<Feature["span"], string> = {
@@ -364,13 +366,66 @@ const spanClass: Record<Feature["span"], string> = {
   third: styles.spanThird,
 };
 
+function FeatureCard({ feature, index, sequenceIndex }: { feature: Feature; index: number; sequenceIndex: number }) {
+  const { ref, isInView } = useCardReveal({ threshold: 0.15 });
+  const Visual = feature.visual;
+  const isVisualActive = isInView && index <= sequenceIndex;
+
+  return (
+    <div
+      ref={ref}
+      className={[
+        styles.card,
+        feature.accent === "ai" ? styles.cardAi : styles.cardPrimary,
+        spanClass[feature.span],
+        isInView ? styles.cardInView : "",
+        isVisualActive ? styles.visualActive : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      {feature.accent === "ai" && (
+        <span className={styles.badge}>AI Powered</span>
+      )}
+
+      <div className={styles.cardContent}>
+        <h3 className={styles.cardTitle}>{feature.title}</h3>
+        <p className={styles.cardDescription}>
+          {feature.description}
+        </p>
+      </div>
+
+      <div className={styles.visual}>
+        <Visual isActive={isVisualActive} />
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Component                                                          */
+/* ------------------------------------------------------------------ */
+
 export default function FeaturesSection() {
-  const { ref, isVisible } = useScrollReveal({ threshold: 0.05 });
+  const [sequenceIndex, setSequenceIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSequenceIndex((prev) => {
+        if (prev >= features.length - 1) {
+          clearInterval(timer);
+          return prev;
+        }
+        return prev + 1;
+      });
+    }, 3000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <section id="features" className={styles.section}>
       <div className={styles.container}>
-        {/* Header */}
         <div className={styles.header}>
           <span className={styles.eyebrow}>Everything you need</span>
           <h2 className={styles.title}>Unlock your career potential</h2>
@@ -380,42 +435,15 @@ export default function FeaturesSection() {
           </p>
         </div>
 
-        {/* Bento Grid */}
-        <div ref={ref} className={styles.bento}>
-          {features.map((feature) => {
-            const Visual = feature.visual;
-            return (
-              <div
-                key={feature.title}
-                className={[
-                  styles.card,
-                  feature.accent === "ai" ? styles.cardAi : styles.cardPrimary,
-                  spanClass[feature.span],
-                  isVisible ? styles.visible : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-              >
-                {/* AI badge */}
-                {feature.accent === "ai" && (
-                  <span className={styles.badge}>AI Powered</span>
-                )}
-
-                {/* Text content */}
-                <div className={styles.cardContent}>
-                  <h3 className={styles.cardTitle}>{feature.title}</h3>
-                  <p className={styles.cardDescription}>
-                    {feature.description}
-                  </p>
-                </div>
-
-                {/* Illustration */}
-                <div className={styles.visual}>
-                  <Visual />
-                </div>
-              </div>
-            );
-          })}
+        <div className={styles.bento}>
+          {features.map((feature, index) => (
+            <FeatureCard
+              key={feature.title}
+              feature={feature}
+              index={index}
+              sequenceIndex={sequenceIndex}
+            />
+          ))}
         </div>
       </div>
     </section>

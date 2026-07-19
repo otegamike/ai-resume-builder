@@ -1,10 +1,14 @@
+import dynamic from "next/dynamic";
 import styles from "./page.module.css";
 import Hero from "@/components/hero/Hero";
-import FeaturesSection from "@/components/sections/FeaturesSection";
 import TestimonialStats from "@/components/sections/TestimonialStats";
 import FinalCTA from "@/components/sections/FinalCTA";
 import Footer from "@/components/sections/Footer";
 import SectionDivider from "@/components/ui/SectionDivider";
+
+const FeaturesSection = dynamic(
+  () => import("@/components/sections/FeaturesSection")
+);
 
 export default function Home() {
   return (

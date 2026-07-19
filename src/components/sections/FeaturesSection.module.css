@@ -8,6 +8,34 @@
   padding: var(--space-20) 0 var(--space-24);
   position: relative;
   overflow: hidden;
+  content-visibility: auto;
+  contain-intrinsic-size: 800px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section {
+    content-visibility: visible;
+  }
+
+  .card {
+    opacity: 1;
+    transform: translateY(0);
+    animation: none !important;
+  }
+
+  .cardInView {
+    animation: none !important;
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .card:not(.visualActive) .scoreCircle {
+    stroke-dashoffset: 28;
+  }
+
+  .badge::before {
+    animation: none;
+  }
 }
 
 /* Ambient glow blobs */
@@ -137,17 +165,17 @@
   transform: translateY(32px);
 }
 
-.card.visible {
+.cardInView {
   animation: slideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Stagger delays */
-.card:nth-child(1).visible { animation-delay: 0ms; }
-.card:nth-child(2).visible { animation-delay: 80ms; }
-.card:nth-child(3).visible { animation-delay: 160ms; }
-.card:nth-child(4).visible { animation-delay: 240ms; }
-.card:nth-child(5).visible { animation-delay: 320ms; }
-.card:nth-child(6).visible { animation-delay: 400ms; }
+.card:nth-child(1).cardInView { animation-delay: 0ms; }
+.card:nth-child(2).cardInView { animation-delay: 80ms; }
+.card:nth-child(3).cardInView { animation-delay: 160ms; }
+.card:nth-child(4).cardInView { animation-delay: 240ms; }
+.card:nth-child(5).cardInView { animation-delay: 320ms; }
+.card:nth-child(6).cardInView { animation-delay: 400ms; }
 
 @keyframes slideUp {
   from {
@@ -351,7 +379,7 @@
   transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.card:not(.visible) .scoreCircle {
+.card:not(.visualActive) .scoreCircle {
   stroke-dashoffset: 283;
 }
 

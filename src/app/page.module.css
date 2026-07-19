@@ -19,7 +19,8 @@
   height: 100%;
   background: linear-gradient(to right, var(--ai-accent-400), transparent);
   opacity: 0.5;
-  filter: blur(120px);
+  filter: blur(80px);
+  will-change: transform;
   z-index: -10;
 }
 
@@ -31,6 +32,14 @@
   height: 100%;
   background: linear-gradient(to left, var(--primary-3), transparent);
   opacity: 0.3;
-  filter: blur(120px);
+  filter: blur(80px);
+  will-change: transform;
   z-index: -10;
+}
+
+@media (max-width: 768px) {
+  .heroGradientLeft,
+  .heroGradientRight {
+    display: none;
+  }
 }

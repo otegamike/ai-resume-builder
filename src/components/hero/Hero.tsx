@@ -40,6 +40,7 @@ export default function Hero() {
                     height={600}
                     className={styles.heroImage}
                     priority
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 1200px"
                 />
                 </div>
 
