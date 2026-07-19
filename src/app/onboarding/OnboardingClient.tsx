@@ -341,6 +341,14 @@ export default function OnboardingClient() {
                   <p className={styles.scratchText}>
                     No problem! You&apos;ll be able to create a beautiful resume using our templates and AI tools.
                   </p>
+
+                  <button
+                    type="button"
+                    className={styles.changeModeBtn}
+                    onClick={() => { setMode(null); setResumeSelection(null); setUploadError(""); }}
+                  >
+                    Go back to options
+                  </button>
                 </div>
               )}
             </div>

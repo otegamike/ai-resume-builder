@@ -40,7 +40,7 @@ interface ResumeSelectorProps {
 }
 
 export default function ResumeSelector({ onSelectionChange, className, uploadOnly }: ResumeSelectorProps) {
-  const [mode, setMode] = useState<Mode>("saved");
+  const [mode, setMode] = useState<Mode>(uploadOnly ? "upload" : "saved");
   const templates = useTemplateStore((state) => state.templates);
   const resumes = useResumeStore((state) => state.resumes);
   const loadingResumes = useResumeStore((state) => state.isLoading);
