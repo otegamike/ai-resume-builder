@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -13,17 +14,18 @@ import { Input } from "@/components/ui/Input";
 import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
 import { TEMPLATE_PAGE, templateDefinitions, type TemplateDefinition, type TemplateId } from "@/lib/templateCatalog";
 import { getRandomTemplateId } from "@/utils/templateUtils";
-import TemplateSelector from "./TemplateSelector";
-import PersonalDetailsTab from "./form-nav/PersonalDetailsTab";
-import HeadshotTab from "./form-nav/HeadshotTab";
-import SummaryTab from "./form-nav/SummaryTab";
-import ExperienceTab from "./form-nav/ExperienceTab";
-import EducationTab from "./form-nav/EducationTab";
-import ProjectsTab from "./form-nav/ProjectsTab";
-import SkillsTab from "./form-nav/SkillsTab";
-import FinishTab from "./form-nav/FinishTab";
 import styles from "./page.module.css";
 import { calculateEditorHeight, editorSectionHeight } from "@/utils/headerSize";
+
+const PersonalDetailsTab = dynamic(() => import("./form-nav/PersonalDetailsTab"), { ssr: false });
+const HeadshotTab = dynamic(() => import("./form-nav/HeadshotTab"), { ssr: false });
+const SummaryTab = dynamic(() => import("./form-nav/SummaryTab"), { ssr: false });
+const ExperienceTab = dynamic(() => import("./form-nav/ExperienceTab"), { ssr: false });
+const EducationTab = dynamic(() => import("./form-nav/EducationTab"), { ssr: false });
+const ProjectsTab = dynamic(() => import("./form-nav/ProjectsTab"), { ssr: false });
+const SkillsTab = dynamic(() => import("./form-nav/SkillsTab"), { ssr: false });
+const FinishTab = dynamic(() => import("./form-nav/FinishTab"), { ssr: false });
+const TemplateSelector = dynamic(() => import("./TemplateSelector"), { ssr: false });
 
 import { useAi } from "@/app/hooks/useAi";
 import { useAutoSave } from "@/app/hooks/useAutosave";

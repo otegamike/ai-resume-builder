@@ -1,4 +1,3 @@
-import html2pdf from "html2pdf.js";
 import { getNearestPageHeight } from "@/utils/pageDimension";
 
 function replaceImagesWithDivs(clonedDoc: Document) {
@@ -72,6 +71,7 @@ export async function exportResumeAsPdf(
   pageWidth: number,
   pageHeight: number,
 ): Promise<void> {
+  const { default: html2pdf } = await import("html2pdf.js");
   const element = getExportElement(exportIframeRef);
   const iframeWindow = exportIframeRef.current?.contentWindow;
   if (!element || !iframeWindow) return;
@@ -113,6 +113,7 @@ export async function exportResumeAsImage(
   exportIframeRef: React.RefObject<HTMLIFrameElement | null>,
   title: string,
 ): Promise<void> {
+  const { default: html2pdf } = await import("html2pdf.js");
   const element = getExportElement(exportIframeRef);
   const iframeWindow = exportIframeRef.current?.contentWindow;
   if (!element || !iframeWindow) return;
@@ -150,6 +151,7 @@ export async function exportResumeAsPdfBase64(
   pageWidth: number,
   pageHeight: number,
 ): Promise<string | null> {
+  const { default: html2pdf } = await import("html2pdf.js");
   const element = getExportElement(exportIframeRef);
   const iframeWindow = exportIframeRef.current?.contentWindow;
   if (!element || !iframeWindow) return null;
