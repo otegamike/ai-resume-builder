@@ -39,6 +39,8 @@ interface ResumeSelectorProps {
   uploadOnly?: boolean;
 }
 
+const MAX_PDF_PAGES = 3;
+
 export default function ResumeSelector({ onSelectionChange, className, uploadOnly }: ResumeSelectorProps) {
   const [mode, setMode] = useState<Mode>(uploadOnly ? "upload" : "saved");
   const templates = useTemplateStore((state) => state.templates);
@@ -142,9 +144,9 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
     const data = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data }).promise;
 
-    if (pdf.numPages > 2) {
+    if (pdf.numPages > MAX_PDF_PAGES) {
       throw new Error(
-        `PDF has ${pdf.numPages} pages. Maximum of 2 pages is supported.`
+        `PDF has ${pdf.numPages} pages. Maximum of ${MAX_PDF_PAGES} pages is supported.`
       );
     }
 

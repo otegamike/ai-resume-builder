@@ -75,7 +75,7 @@ const extractedText = await extractResumeTextFromImages(dataUrls);
 
 ## Important Notes
 
-- **Page limit:** `ResumeSelector` enforces a max of 2 pages per PDF
+- **Page limit:** `ResumeSelector` enforces a max of 3 pages per PDF
 - **Scale:** Canvas rendering uses 2x scale for high-quality OCR
 - **File format:** PNG is used for canvas exports (lossless, good for OCR)
 - **Server-side validation:** `assertSupportedUpload` now only accepts image types (`image/png`, `image/jpeg`, `image/webp`). PDFs must be rendered client-side before upload.
