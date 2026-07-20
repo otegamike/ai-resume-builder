@@ -56,6 +56,7 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
   const [pdfPreviewUrls, setPdfPreviewUrls] = useState<string[]>([]);
   const [pdfFileError, setPdfFileError] = useState("");
   const [isRenderingPdf, setIsRenderingPdf] = useState(false);
+  const [pdfRenderProgress, setPdfRenderProgress] = useState(0);
   
   const pdfCanvasRefs = useRef<HTMLCanvasElement[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -94,6 +95,7 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
     setPdfPreviewUrls([]);
     setPdfFileError("");
     setIsRenderingPdf(false);
+    setPdfRenderProgress(0);
     pdfCanvasRefs.current = [];
     if (newMode === "upload") {
       setSelectedSavedResume(null);
@@ -106,6 +108,7 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
     setPdfPreviewUrls([]);
     setPdfFileError("");
     setIsRenderingPdf(false);
+    setPdfRenderProgress(0);
     pdfCanvasRefs.current = [];
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -122,6 +125,7 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
 
     if (file && file.type === "application/pdf") {
       setIsRenderingPdf(true);
+      setPdfRenderProgress(0);
       renderPdfPreview(file)
         .catch((err) => {
           setPdfFileError(err.message);
@@ -153,6 +157,8 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
     const urls: string[] = [];
 
     for (let i = 1; i <= pdf.numPages; i++) {
+      setPdfRenderProgress(i);
+      await new Promise(resolve => setTimeout(resolve, 0));
       const page = await pdf.getPage(i);
       const viewport = page.getViewport({ scale: 2 });
       const canvas = document.createElement("canvas");
@@ -306,9 +312,16 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
     if (isRenderingPdf) {
       return (
         <div className={styles.uploadBox}>
-          <Loader2 className={styles.spinner} style={{ width: "2rem", height: "2rem" }} />
-          <span className={styles.uploadTitle}>Processing PDF...</span>
-          <span className={styles.uploadHint}>Rendering pages locally</span>
+          <span className={styles.uploadTitle}>
+            {pdfRenderProgress === 0 ? "Preparing your PDF…" : `Processing page ${pdfRenderProgress} of ${MAX_PDF_PAGES}…`}
+          </span>
+          <div className={styles.progressBar}>
+            <div
+              className={pdfRenderProgress === 0 ? styles.progressIndeterminate : styles.progressFill}
+              style={pdfRenderProgress > 0 ? { width: `${(pdfRenderProgress / MAX_PDF_PAGES) * 100}%` } : undefined}
+            />
+          </div>
+          <span className={styles.uploadHint}>Your file stays on your device</span>
         </div>
       );
     }
@@ -327,7 +340,7 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
           Choose a PDF or image resume
         </span>
         <span className={styles.uploadHint}>
-          PDFs are extracted locally. Images are read with vision AI.
+          Upload your resume to get started
         </span>
         {pdfFileError && (
           <span className={styles.pageLimitError}>{pdfFileError}</span>

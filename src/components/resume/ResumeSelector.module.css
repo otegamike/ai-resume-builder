@@ -242,6 +242,39 @@
   box-shadow: var(--shadow-sm);
 }
 
+.progressBar {
+  width: 100%;
+  max-width: 280px;
+  height: 8px;
+  background: var(--gray-200);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--primary-1);
+  border-radius: var(--radius-full);
+  transition: width 0.3s ease;
+}
+
+.progressIndeterminate {
+  width: 40%;
+  height: 100%;
+  background: var(--primary-1);
+  border-radius: var(--radius-full);
+  animation: progressSlide 1.2s ease-in-out infinite;
+}
+
+@keyframes progressSlide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(350%);
+  }
+}
+
 .pageLimitError {
   color: var(--red-700);
   font-size: var(--text-sm);
