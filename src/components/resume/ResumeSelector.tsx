@@ -137,8 +137,7 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
   async function renderPdfPreview(file: File) {
     const pdfjsLib = await import("pdfjs-dist");
     if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc =
-        `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
     }
 
     const data = await file.arrayBuffer();
