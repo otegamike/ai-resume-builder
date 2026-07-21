@@ -106,6 +106,36 @@
   box-shadow: var(--shadow-lg);
 }
 
+@media (max-width: 800px) {
+  .mainWorkspace {
+    grid-template-columns: 1fr;
+  }
+
+  .leftPanel {
+    display: none;
+  }
+
+  .titleBar {
+    padding: 0.5rem var(--space-2);
+  }
+
+  .titleBarLeft {
+    gap: var(--space-2);
+  }
+
+  .titleBarRight {
+    gap: var(--space-2);
+  }
+
+  .rightPanel {
+    padding: var(--space-2);
+  }
+
+  .preview {
+    width: 100%;
+  }
+}
+
 @keyframes pulse {
   0%, 100% {
     opacity: 1;

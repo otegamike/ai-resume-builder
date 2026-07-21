@@ -1,0 +1,129 @@
+.section {
+  background: var(--neutral-800);
+  padding: var(--space-20) 0 var(--space-24);
+  position: relative;
+  overflow: hidden;
+}
+
+.container {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 0 var(--space-6);
+  }
+}
+
+.pulse {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-md);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: var(--space-16);
+  gap: var(--space-4);
+}
+
+.eyebrow {
+  width: 10rem;
+  height: 1.5rem;
+  border-radius: var(--radius-full);
+}
+
+.title {
+  width: 22rem;
+  height: 2.5rem;
+}
+
+.subtitle {
+  width: 28rem;
+  max-width: 100%;
+  height: 1.25rem;
+}
+
+.bento {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+
+@media (min-width: 640px) {
+  .bento {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .bento {
+    grid-template-columns: repeat(12, 1fr);
+    gap: var(--space-5);
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-8);
+  border-radius: var(--radius-2xl);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  gap: var(--space-3);
+  min-height: 200px;
+}
+
+@media (min-width: 1024px) {
+  .spanHero {
+    grid-column: span 7;
+  }
+  .spanMedium {
+    grid-column: span 5;
+  }
+  .spanThird {
+    grid-column: span 4;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .spanHero {
+    grid-column: span 2;
+  }
+}
+
+.badge {
+  width: 6rem;
+  height: 1.5rem;
+  border-radius: var(--radius-full);
+  margin-bottom: var(--space-1);
+}
+
+.cardTitle {
+  width: 75%;
+  height: 1.25rem;
+}
+
+.cardDescription {
+  width: 90%;
+  height: 2.5rem;
+}
+
+.cardVisual {
+  flex: 1;
+  min-height: 80px;
+  margin-top: var(--space-2);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.08; }
+}

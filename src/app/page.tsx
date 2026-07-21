@@ -5,9 +5,11 @@ import TestimonialStats from "@/components/sections/TestimonialStats";
 import FinalCTA from "@/components/sections/FinalCTA";
 import Footer from "@/components/sections/Footer";
 import SectionDivider from "@/components/ui/SectionDivider";
+import FeaturesSectionSkeleton from "@/components/sections/FeaturesSectionSkeleton";
 
 const FeaturesSection = dynamic(
-  () => import("@/components/sections/FeaturesSection")
+  () => import("@/components/sections/FeaturesSection"),
+  { loading: () => <FeaturesSectionSkeleton /> }
 );
 
 export default function Home() {

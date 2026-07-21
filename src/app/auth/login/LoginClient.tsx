@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { Loader2 } from "lucide-react";
 import styles from "./page.module.css";
 import bgStyles from "./animated-bg.module.css";
 import { calculateEditorHeight } from "@/utils/headerSize";
@@ -67,6 +68,7 @@ export default function LoginClient({ callbackUrl }: { callbackUrl: string }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
   const [containerHeight, setContainerHeight] = useState("100vh");
 
@@ -79,6 +81,7 @@ export default function LoginClient({ callbackUrl }: { callbackUrl: string }) {
   }
 
   const onGoogle = async () => {
+    setGoogleLoading(true);
     await signIn("google", { callbackUrl });
   };
 
@@ -200,9 +203,13 @@ export default function LoginClient({ callbackUrl }: { callbackUrl: string }) {
               type="button"
               className={styles.oauthBtn}
               onClick={onGoogle}
+              disabled={googleLoading}
             >
-              <GoogleLogo />
-              Continue with Google
+              {googleLoading ? (
+                <><Loader2 className={styles.oauthBtnSpinner} /> Connecting to Google&hellip;</>
+              ) : (
+                <><GoogleLogo /> Continue with Google</>
+              )}
             </button>
           </div>
 

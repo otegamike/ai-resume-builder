@@ -129,7 +129,6 @@ export default function OnboardingClient() {
       router.push("/editor/new");
     } catch {
       setError("Something went wrong. Please try again.");
-    } finally {
       setSubmitting(false);
     }
   };
@@ -173,7 +172,6 @@ export default function OnboardingClient() {
       router.push(`/editor/${data.resumeId}`);
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "Upload failed. Please try again.");
-    } finally {
       setSubmitting(false);
     }
   };

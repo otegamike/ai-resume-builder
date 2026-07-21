@@ -264,6 +264,37 @@
   
 }
 
+.tabSkeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.tabSkeletonField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.tabSkeletonLabel {
+  height: 0.75rem;
+  width: 5rem;
+  background-color: var(--gray-200);
+  border-radius: 0.125rem;
+}
+
+.tabSkeletonInput {
+  height: 2.5rem;
+  width: 100%;
+  background-color: var(--gray-200);
+  border-radius: var(--radius-md);
+}
+
+.tabSkeletonInputShort {
+  width: 75%;
+}
+
 .formSection {
   display: flex;
   flex-direction: column;
@@ -1358,6 +1389,11 @@
   color: var(--neutral-700);
 }
 
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
 
 @keyframes spin {
   from {

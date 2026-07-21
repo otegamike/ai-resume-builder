@@ -17,14 +17,37 @@ import { getRandomTemplateId } from "@/utils/templateUtils";
 import styles from "./page.module.css";
 import { calculateEditorHeight, editorSectionHeight } from "@/utils/headerSize";
 
-const PersonalDetailsTab = dynamic(() => import("./form-nav/PersonalDetailsTab"), { ssr: false });
-const HeadshotTab = dynamic(() => import("./form-nav/HeadshotTab"), { ssr: false });
-const SummaryTab = dynamic(() => import("./form-nav/SummaryTab"), { ssr: false });
-const ExperienceTab = dynamic(() => import("./form-nav/ExperienceTab"), { ssr: false });
-const EducationTab = dynamic(() => import("./form-nav/EducationTab"), { ssr: false });
-const ProjectsTab = dynamic(() => import("./form-nav/ProjectsTab"), { ssr: false });
-const SkillsTab = dynamic(() => import("./form-nav/SkillsTab"), { ssr: false });
-const FinishTab = dynamic(() => import("./form-nav/FinishTab"), { ssr: false });
+function FormTabSkeleton() {
+  return (
+    <div className={styles.tabSkeleton}>
+      <div className={styles.tabSkeletonField}>
+        <div className={styles.tabSkeletonLabel} />
+        <div className={styles.tabSkeletonInput} />
+      </div>
+      <div className={styles.tabSkeletonField}>
+        <div className={styles.tabSkeletonLabel} />
+        <div className={styles.tabSkeletonInput} />
+      </div>
+      <div className={styles.tabSkeletonField}>
+        <div className={styles.tabSkeletonLabel} />
+        <div className={styles.tabSkeletonInput} />
+      </div>
+      <div className={styles.tabSkeletonField}>
+        <div className={styles.tabSkeletonLabel} />
+        <div className={`${styles.tabSkeletonInput} ${styles.tabSkeletonInputShort}`} />
+      </div>
+    </div>
+  );
+}
+
+const PersonalDetailsTab = dynamic(() => import("./form-nav/PersonalDetailsTab"), { ssr: false, loading: () => <FormTabSkeleton /> });
+const HeadshotTab = dynamic(() => import("./form-nav/HeadshotTab"), { ssr: false, loading: () => <FormTabSkeleton /> });
+const SummaryTab = dynamic(() => import("./form-nav/SummaryTab"), { ssr: false, loading: () => <FormTabSkeleton /> });
+const ExperienceTab = dynamic(() => import("./form-nav/ExperienceTab"), { ssr: false, loading: () => <FormTabSkeleton /> });
+const EducationTab = dynamic(() => import("./form-nav/EducationTab"), { ssr: false, loading: () => <FormTabSkeleton /> });
+const ProjectsTab = dynamic(() => import("./form-nav/ProjectsTab"), { ssr: false, loading: () => <FormTabSkeleton /> });
+const SkillsTab = dynamic(() => import("./form-nav/SkillsTab"), { ssr: false, loading: () => <FormTabSkeleton /> });
+const FinishTab = dynamic(() => import("./form-nav/FinishTab"), { ssr: false, loading: () => <FormTabSkeleton /> });
 const TemplateSelector = dynamic(() => import("./TemplateSelector"), { ssr: false });
 
 import { useAi } from "@/app/hooks/useAi";
