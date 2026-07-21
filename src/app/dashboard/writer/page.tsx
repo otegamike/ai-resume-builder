@@ -112,7 +112,7 @@ export default function WriterPage() {
   }, [authStatus, router, fetchCoverLetters]);
 
   // ── Helper: populate sender info from resume ──
-  function populateSenderInfo(resumeId?: string) {
+  const populateSenderInfo = useCallback((resumeId?: string) => {
     if (!resumeId) {
       setSenderInfo({ name: "", email: "", phone: "", location: "" });
       return;
@@ -127,7 +127,7 @@ export default function WriterPage() {
         location: pi.location || "",
       });
     }
-  }
+  }, [getResumeById]);
 
   // ── Form reset ──
   function resetClForm() {
@@ -371,12 +371,12 @@ export default function WriterPage() {
   }
 
   // Update sender info when resume selection changes
-  function handleResumeChange(selection: ResumeSelection | null) {
+  const handleResumeChange = useCallback((selection: ResumeSelection | null) => {
     setResumeSelection(selection);
     if (selection?.mode === "saved" && selection.selectedResumeId) {
       populateSenderInfo(selection.selectedResumeId);
     }
-  }
+  }, [populateSenderInfo]);
 
   const canGenerate = !!resumeSelection && (clJobMode === "text" ? !!clJobText.trim() : !!clJobImage) && !clGenerating;
 

@@ -9,12 +9,12 @@
 
 .primary {
   --ai-grad-0: var(--ai-accent-600);
-  --ai-grad-50: var(--ai-accent-500);
-  --ai-grad-53: var(--ai-accent-500);
+  --ai-grad-50: var(--ai-accent-600);
+  --ai-grad-53: var(--ai-accent-600);
   --ai-grad-55: var(--ai-accent-400);
-  --ai-grad-58: var(--ai-accent-500);
-  --ai-grad-60: var(--ai-accent-500);
-  --ai-grad-100: var(--ai-accent-600);
+  --ai-grad-58: var(--ai-accent-600);
+  --ai-grad-60: var(--ai-accent-600);
+  --ai-grad-100: var(--ai-accent-700);
   --ai-content-bg: transparent;
   --ai-text: var(--neutral-100);
   --ai-content-padding: 0.75rem 1rem;

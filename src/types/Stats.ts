@@ -24,3 +24,26 @@ export interface Stats {
   visitsThisMonth: number;
   activeUsers: number;
 }
+
+export interface AiUsageByFeature {
+  feature: string;
+  requests: number;
+  tokens: number;
+}
+
+export interface AiUsageDaily {
+  date: string;
+  totalRequests: number;
+  totalTokens: number;
+  byFeature: { feature: string; requests: number }[];
+}
+
+export interface AiUsageStats {
+  today: {
+    totalRequests: number;
+    totalTokens: number;
+    truncatedCount: number;
+    byFeature: AiUsageByFeature[];
+  };
+  daily: AiUsageDaily[];
+}

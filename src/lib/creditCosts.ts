@@ -21,7 +21,7 @@ export const MAX_CREDITS_PER_PLAN = {
 };
 
 export const MAX_PDF_PAGES_PER_PLAN: Record<string, number> = {
-  free: 3,
+  free: 2,
   pro: 4,
   proPlus: 4,
 };

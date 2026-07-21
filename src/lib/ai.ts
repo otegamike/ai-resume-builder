@@ -2,11 +2,12 @@ import Groq from "groq-sdk";
 import { AtsReport } from "@/types/AtsReport";
 import { ResumeContent } from "@/types/ResumeData";
 import { TailorReport } from "@/types/TailorReport";
+import { logAiUsage } from "@/lib/logAiUsage";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 // Use a capable model for structured JSON output
-const ATS_MODEL = "openai/gpt-oss-120b";
+const ATS_MODEL = "llama-3.3-70b-versatile";
 const VISION_MODEL = "qwen/qwen3.6-27b";
 const GENERATION_MODEL = "openai/gpt-oss-20b"; // fine for simple text gen
 
@@ -191,15 +192,18 @@ async function callGroq(
     systemInstruction?: string;
     temperature?: number;
     maxTokens?: number;
+    feature?: string;
   } = {}
-): Promise<string> {
+): Promise<{ content: string; truncated: boolean }> {
   const {
     model = GENERATION_MODEL,
     systemInstruction = WRITER_SYSTEM_INSTRUCTION,
     temperature = 0.3,
     maxTokens = 1024,
+    feature = "unspecified",
   } = options;
 
+  const start = Date.now();
   const completion = await groq.chat.completions.create({
     model,
     temperature,
@@ -209,11 +213,62 @@ async function callGroq(
       { role: "user", content: prompt },
     ],
   });
+  const latencyMs = Date.now() - start;
 
   const choice = completion.choices[0];
-  if (choice?.finish_reason === "length") {
-    console.warn("Groq response truncated by max_completion_tokens");
-  }
+  const truncated = choice?.finish_reason === "length";
+  if (truncated) console.warn("Groq response truncated by max_completion_tokens");
+
+  logAiUsage({
+    feature,
+    model,
+    promptTokens: completion.usage?.prompt_tokens ?? 0,
+    completionTokens: completion.usage?.completion_tokens ?? 0,
+    totalTokens: completion.usage?.total_tokens ?? 0,
+    queueTimeMs: completion.usage?.queue_time ? Math.round(completion.usage.queue_time * 1000) : undefined,
+    latencyMs,
+    truncated,
+    finishReason: choice?.finish_reason ?? "unknown",
+  });
+
+  return { content: choice?.message?.content?.trim() || "", truncated };
+}
+
+async function callGroqVision(
+  prompt: string,
+  dataUrl: string,
+  feature: string
+): Promise<string> {
+  const start = Date.now();
+  const completion = await groq.chat.completions.create({
+    model: VISION_MODEL,
+    temperature: 0.1,
+    max_completion_tokens: 4096,
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: prompt },
+          { type: "image_url", image_url: { url: dataUrl } },
+        ],
+      },
+    ],
+  });
+  const latencyMs = Date.now() - start;
+
+  const choice = completion.choices[0];
+
+  logAiUsage({
+    feature,
+    model: VISION_MODEL,
+    promptTokens: completion.usage?.prompt_tokens ?? 0,
+    completionTokens: completion.usage?.completion_tokens ?? 0,
+    totalTokens: completion.usage?.total_tokens ?? 0,
+    queueTimeMs: completion.usage?.queue_time ? Math.round(completion.usage.queue_time * 1000) : undefined,
+    latencyMs,
+    truncated: choice?.finish_reason === "length",
+    finishReason: choice?.finish_reason ?? "unknown",
+  });
 
   return choice?.message?.content?.trim() || "";
 }
@@ -267,7 +322,6 @@ Deduct for: missing sections, vague bullets, no metrics, missing skills.
     }
   ],
   "recommendedKeywords": ["string"],
-  "extractedText": "lowercase raw resume text",
   "parsedResume": {
     "personalInfo": {
       "name": "string",
@@ -334,29 +388,40 @@ export async function analyzeResumeForAts(
 
   const prompt = ATS_PROMPT(extractedText, knownResumeBlock);
 
-  // Attempt 1
-  let raw = await callGroq(prompt, {
+  let { content: raw, truncated } = await callGroq(prompt, {
     model: ATS_MODEL,
     systemInstruction: ATS_SYSTEM_INSTRUCTION,
-    temperature: 0.1,   // near-deterministic for structured output
+    temperature: 0.1,
     maxTokens: 4096,
+    feature: "ats_analysis",
   });
 
-  // Retry once on parse failure with a stern nudge
   let parsed: Partial<AtsReport>;
   try {
     parsed = parseJsonObject<Partial<AtsReport>>(raw);
   } catch {
-    console.warn("First ATS parse failed, retrying...");
-    raw = await callGroq(
-      `Your previous response was not valid JSON. Return ONLY the raw JSON object, no markdown, no explanation.\n\n${prompt}`,
-      {
+    if (truncated) {
+      console.warn("First ATS response truncated, retrying with larger budget...");
+      ({ content: raw } = await callGroq(prompt, {
         model: ATS_MODEL,
         systemInstruction: ATS_SYSTEM_INSTRUCTION,
         temperature: 0,
-        maxTokens: 4096,
-      }
-    );
+        maxTokens: 8000,
+        feature: "ats_analysis",
+      }));
+    } else {
+      console.warn("First ATS parse failed, retrying with stern nudge...");
+      ({ content: raw } = await callGroq(
+        `Your previous response was not valid JSON. Return ONLY the raw JSON object, no markdown, no explanation.\n\n${prompt}`,
+        {
+          model: ATS_MODEL,
+          systemInstruction: ATS_SYSTEM_INSTRUCTION,
+          temperature: 0,
+          maxTokens: 4096,
+          feature: "ats_analysis",
+        }
+      ));
+    }
     parsed = parseJsonObject<Partial<AtsReport>>(raw);
   }
 
@@ -367,25 +432,11 @@ export async function analyzeResumeForAts(
 
 export async function extractTextFromSingleImage(dataUrl: string): Promise<string> {
   assertApiKey();
-  const completion = await groq.chat.completions.create({
-    model: VISION_MODEL,
-    temperature: 0.1,
-    max_completion_tokens: 4096,
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: "Extract all readable resume/CV text from this image. Preserve section headings, dates, contact details, skills, and bullet points. Return only the extracted text.",
-          },
-          { type: "image_url", image_url: { url: dataUrl } },
-        ],
-      },
-    ],
-  });
-
-  return completion.choices[0]?.message?.content?.trim() || "";
+  return callGroqVision(
+    "Extract all readable resume/CV text from this image. Preserve section headings, dates, contact details, skills, and bullet points. Return only the extracted text.",
+    dataUrl,
+    "vision_extract_resume"
+  );
 }
 
 export async function extractResumeTextFromImages(dataUrls: string[]): Promise<string> {
@@ -411,28 +462,11 @@ export async function extractResumeTextFromImage(dataUrl: string): Promise<strin
 
 export async function extractTextFromJobImage(dataUrl: string): Promise<string> {
   assertApiKey();
-  const completion = await groq.chat.completions.create({
-    model: VISION_MODEL,
-    temperature: 0.1,
-    max_completion_tokens: 4096,
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: "Extract all readable text from this job description / job posting image. Preserve job title, responsibilities, requirements, and keywords. Return only the extracted text.",
-          },
-          {
-            type: "image_url" as const,
-            image_url: { url: dataUrl },
-          },
-        ],
-      },
-    ],
-  });
-
-  return completion.choices[0]?.message?.content?.trim() || "";
+  return callGroqVision(
+    "Extract all readable text from this job description / job posting image. Preserve job title, responsibilities, requirements, and keywords. Return only the extracted text.",
+    dataUrl,
+    "vision_extract_job"
+  );
 }
 
 // ─── AI Tailoring ─────────────────────────────────────────────────────────────
@@ -533,28 +567,40 @@ export async function tailorResume(
     targetCompany
   );
 
-  // Attempt 1
-  let raw = await callGroq(prompt, {
+  let { content: raw, truncated } = await callGroq(prompt, {
     model: ATS_MODEL,
     systemInstruction: TAILOR_SYSTEM_INSTRUCTION,
     temperature: 0.1,
     maxTokens: 4096,
+    feature: "tailor",
   });
 
   let parsed: Partial<TailorReport>;
   try {
     parsed = parseJsonObject<Partial<TailorReport>>(raw);
   } catch {
-    console.warn("First tailor parse failed, retrying...");
-    raw = await callGroq(
-      `Your previous response was not valid JSON. Return ONLY the raw JSON object, no markdown, no explanation.\n\n${prompt}`,
-      {
+    if (truncated) {
+      console.warn("First tailor response truncated, retrying with larger budget...");
+      ({ content: raw } = await callGroq(prompt, {
         model: ATS_MODEL,
         systemInstruction: TAILOR_SYSTEM_INSTRUCTION,
         temperature: 0,
-        maxTokens: 4096,
-      }
-    );
+        maxTokens: 8000,
+        feature: "tailor",
+      }));
+    } else {
+      console.warn("First tailor parse failed, retrying with stern nudge...");
+      ({ content: raw } = await callGroq(
+        `Your previous response was not valid JSON. Return ONLY the raw JSON object, no markdown, no explanation.\n\n${prompt}`,
+        {
+          model: ATS_MODEL,
+          systemInstruction: TAILOR_SYSTEM_INSTRUCTION,
+          temperature: 0,
+          maxTokens: 4096,
+          feature: "tailor",
+        }
+      ));
+    }
     parsed = parseJsonObject<Partial<TailorReport>>(raw);
   }
 
@@ -565,7 +611,8 @@ export async function tailorResume(
 
 export async function generateWithAI(prompt: string): Promise<string> {
   assertApiKey();
-  return callGroq(prompt);
+  const { content } = await callGroq(prompt, { feature: "generate_with_ai" });
+  return content;
 }
 
 export async function generateSummary(
@@ -574,9 +621,11 @@ export async function generateSummary(
   skills: string[],
   achievements: string[]
 ): Promise<string> {
-  return callGroq(
-    `Write a one-sentence professional summary for a ${jobTitle} with ${experience} years of experience. Skills: ${skills.join(", ")}. Key achievements:\n- ${achievements.join("\n- ")}\n\nReturn only the summary sentence.`
+  const { content } = await callGroq(
+    `Write a one-sentence professional summary for a ${jobTitle} with ${experience} years of experience. Skills: ${skills.join(", ")}. Key achievements:\n- ${achievements.join("\n- ")}\n\nReturn only the summary sentence.`,
+    { feature: "generate_summary" }
   );
+  return content;
 }
 
 export async function generateExperienceBulletPoints(
@@ -584,10 +633,11 @@ export async function generateExperienceBulletPoints(
   role: string,
   description: string
 ): Promise<string[]> {
-  const result = await callGroq(
-    `Transform this job description into 3 impactful ATS-friendly bullet points.\nCompany: ${company}\nRole: ${role}\nDescription: ${description}\n\nUse action verbs and quantify achievements. Return only the 3 bullet points, one per line, no dashes or bullets prefix.`
+  const { content } = await callGroq(
+    `Transform this job description into 3 impactful ATS-friendly bullet points.\nCompany: ${company}\nRole: ${role}\nDescription: ${description}\n\nUse action verbs and quantify achievements. Return only the 3 bullet points, one per line, no dashes or bullets prefix.`,
+    { feature: "generate_bullet_points" }
   );
-  return result
+  return content
     .split("\n")
     .map((s) => s.trim().replace(/^[-•–—*]\s*/, ""))
     .filter((s) => s.length > 0)
@@ -595,23 +645,26 @@ export async function generateExperienceBulletPoints(
 }
 
 export async function improveSummary(existingSummary: string): Promise<string> {
-  return callGroq(
-    `Improve this professional summary to be more impactful and ATS-friendly. Keep it one sentence.\n\n${existingSummary}\n\nReturn only the improved summary.`
+  const { content } = await callGroq(
+    `Improve this professional summary to be more impactful and ATS-friendly. Keep it one sentence.\n\n${existingSummary}\n\nReturn only the improved summary.`,
+    { feature: "improve_summary" }
   );
+  return content;
 }
 
 export async function generateSkillsSuggestions(jobTitle: string): Promise<string[]> {
-  const result = await callGroq(
-    `List 8-10 relevant technical and soft skills for a ${jobTitle}. Return only a comma-separated list, no explanations.`
+  const { content } = await callGroq(
+    `List 8-10 relevant technical and soft skills for a ${jobTitle}. Return only a comma-separated list, no explanations.`,
+    { feature: "generate_skills" }
   );
-  return result
+  return content
     .split(",")
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
 }
 
 export async function generateCategorizedSkills(jobTitle: string): Promise<any[]> {
-  const result = await callGroq(
+  const { content } = await callGroq(
     `Generate 3-5 categories of skills for a ${jobTitle} with 3-5 skills each.
      Return ONLY a valid JSON array of objects with keys "category" and "skills" (array of strings).
      No markdown, no explanation.`,
@@ -619,15 +672,16 @@ export async function generateCategorizedSkills(jobTitle: string): Promise<any[]
       temperature: 0.1,
       maxTokens: 2048,
       systemInstruction: ATS_SYSTEM_INSTRUCTION,
+      feature: "generate_categorized_skills",
     }
   );
-  return parseJsonArray<{ category: string; skills: string[] }>(result);
+  return parseJsonArray<{ category: string; skills: string[] }>(content);
 }
 
 export async function categorizeExistingSkills(skills: string[]): Promise<{ category: string; skills: string[] }[]> {
   if (skills.length === 0) return [];
 
-  const result = await callGroq(
+  const { content } = await callGroq(
     `Group these skills into 2-4 logical categories:
      ${skills.join(", ")}
 
@@ -643,10 +697,11 @@ export async function categorizeExistingSkills(skills: string[]): Promise<{ cate
       temperature: 0.1,
       maxTokens: 2048,
       systemInstruction: ATS_SYSTEM_INSTRUCTION,
+      feature: "categorize_skills",
     }
   );
 
-  const parsed = parseJsonArray<{ category: string; skills: string[] }>(result);
+  const parsed = parseJsonArray<{ category: string; skills: string[] }>(content);
 
   const allCategorized = parsed.flatMap(c => c.skills);
   const missing = skills.filter(s => !allCategorized.includes(s));
@@ -734,11 +789,12 @@ export async function generateCoverLetter(
     knownResumeBlock
   );
 
-  let raw = await callGroq(prompt, {
+  let { content: raw, truncated } = await callGroq(prompt, {
     model: GENERATION_MODEL,
     systemInstruction: COVER_LETTER_SYSTEM_INSTRUCTION,
     temperature: 0.3,
     maxTokens: 3072,
+    feature: "cover_letter",
   });
 
   console.log("raw cover letter", raw);
@@ -747,16 +803,28 @@ export async function generateCoverLetter(
   try {
     parsed = parseJsonObject<Partial<CoverLetterResult>>(raw);
   } catch {
-    console.warn("First cover letter parse failed, retrying...");
-    raw = await callGroq(
-      `Your previous response was not valid JSON. Return ONLY the raw JSON object, no markdown, no explanation.\n\n${prompt}`,
-      {
+    if (truncated) {
+      console.warn("First cover letter response truncated, retrying with larger budget...");
+      ({ content: raw } = await callGroq(prompt, {
         model: GENERATION_MODEL,
         systemInstruction: COVER_LETTER_SYSTEM_INSTRUCTION,
         temperature: 0,
-        maxTokens: 3072,
-      }
-    );
+        maxTokens: 6000,
+        feature: "cover_letter",
+      }));
+    } else {
+      console.warn("First cover letter parse failed, retrying with stern nudge...");
+      ({ content: raw } = await callGroq(
+        `Your previous response was not valid JSON. Return ONLY the raw JSON object, no markdown, no explanation.\n\n${prompt}`,
+        {
+          model: GENERATION_MODEL,
+          systemInstruction: COVER_LETTER_SYSTEM_INSTRUCTION,
+          temperature: 0,
+          maxTokens: 3072,
+          feature: "cover_letter",
+        }
+      ));
+    }
     console.log("raw cover letter", raw);
     parsed = parseJsonObject<Partial<CoverLetterResult>>(raw);
   }
@@ -822,27 +890,40 @@ export async function parseResumeContent(extractedText: string): Promise<ResumeC
   assertApiKey();
   if (!extractedText.trim()) return { ...emptyResumeContent };
 
-  let raw = await callGroq(RESUME_PARSE_PROMPT(extractedText), {
+  let { content: raw, truncated } = await callGroq(RESUME_PARSE_PROMPT(extractedText), {
     model: ATS_MODEL,
     systemInstruction: PARSER_SYSTEM_INSTRUCTION,
     temperature: 0.1,
     maxTokens: 4096,
+    feature: "resume_parse",
   });
 
   let parsed: Partial<ResumeContent>;
   try {
     parsed = parseJsonObject<Partial<ResumeContent>>(raw);
   } catch {
-    console.warn("First parseResumeContent attempt failed, retrying...");
-    raw = await callGroq(
-      `Your previous response was not valid JSON. Return ONLY the raw JSON object, no markdown, no explanation.\n\n${RESUME_PARSE_PROMPT(extractedText)}`,
-      {
+    if (truncated) {
+      console.warn("First parse response truncated, retrying with larger budget...");
+      ({ content: raw } = await callGroq(RESUME_PARSE_PROMPT(extractedText), {
         model: ATS_MODEL,
         systemInstruction: PARSER_SYSTEM_INSTRUCTION,
         temperature: 0,
-        maxTokens: 4096,
-      }
-    );
+        maxTokens: 8000,
+        feature: "resume_parse",
+      }));
+    } else {
+      console.warn("First parseResumeContent attempt failed, retrying...");
+      ({ content: raw } = await callGroq(
+        `Your previous response was not valid JSON. Return ONLY the raw JSON object, no markdown, no explanation.\n\n${RESUME_PARSE_PROMPT(extractedText)}`,
+        {
+          model: ATS_MODEL,
+          systemInstruction: PARSER_SYSTEM_INSTRUCTION,
+          temperature: 0,
+          maxTokens: 4096,
+          feature: "resume_parse",
+        }
+      ));
+    }
     parsed = parseJsonObject<Partial<ResumeContent>>(raw);
   }
 
