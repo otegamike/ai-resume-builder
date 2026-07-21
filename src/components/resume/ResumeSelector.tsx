@@ -2,6 +2,7 @@
 
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import {
   FileUp,
   FileText,
@@ -11,6 +12,7 @@ import {
 import ResumeComponent from "./ResumeComponent";
 import { normalizeTemplateId } from "@/lib/templateRenderer";
 import { ResumeContent } from "@/types/ResumeData";
+import { MAX_PDF_PAGES_PER_PLAN } from "@/lib/creditCosts";
 import { useTemplateStore } from "@/store/useTemplateStore";
 import { useResumeStore } from "@/store/useResumeStore";
 import styles from "./ResumeSelector.module.css";
@@ -39,9 +41,10 @@ interface ResumeSelectorProps {
   uploadOnly?: boolean;
 }
 
-const MAX_PDF_PAGES = 2;
-
 export default function ResumeSelector({ onSelectionChange, className, uploadOnly }: ResumeSelectorProps) {
+  const { data: session } = useSession();
+  const plan = session?.user?.subscriptionPlan || "free";
+  const maxPdfPages = MAX_PDF_PAGES_PER_PLAN[plan] ?? 2;
   const [mode, setMode] = useState<Mode>(uploadOnly ? "upload" : "saved");
   const templates = useTemplateStore((state) => state.templates);
   const resumes = useResumeStore((state) => state.resumes);
@@ -147,9 +150,9 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
     const data = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data }).promise;
 
-    if (pdf.numPages > MAX_PDF_PAGES) {
+    if (pdf.numPages > maxPdfPages) {
       throw new Error(
-        `PDF has ${pdf.numPages} pages. Maximum of ${MAX_PDF_PAGES} pages is supported.`
+        `PDF has ${pdf.numPages} pages. Maximum of ${maxPdfPages} pages is supported.`
       );
     }
 
@@ -313,12 +316,12 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
       return (
         <div className={styles.uploadBox}>
           <span className={styles.uploadTitle}>
-            {pdfRenderProgress === 0 ? "Preparing your PDF…" : `Processing page ${pdfRenderProgress} of ${MAX_PDF_PAGES}…`}
+            {pdfRenderProgress === 0 ? "Preparing your PDF…" : `Processing page ${pdfRenderProgress} of ${maxPdfPages}…`}
           </span>
           <div className={styles.progressBar}>
             <div
               className={pdfRenderProgress === 0 ? styles.progressIndeterminate : styles.progressFill}
-              style={pdfRenderProgress > 0 ? { width: `${(pdfRenderProgress / MAX_PDF_PAGES) * 100}%` } : undefined}
+              style={pdfRenderProgress > 0 ? { width: `${(pdfRenderProgress / maxPdfPages) * 100}%` } : undefined}
             />
           </div>
           <span className={styles.uploadHint}>Your file stays on your device</span>

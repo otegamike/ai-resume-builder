@@ -46,14 +46,16 @@ export async function POST(request: Request) {
       existingResume = resume.content;
       resumeText = resumeContentToText(resume.content);
     } else if (resumeMode === "upload") {
-      const resumeFile = formData.get("resumeFile") as File | null;
-      if (!resumeFile) {
+      const resumeFiles = formData.getAll("resumeFile").filter((f): f is File => f instanceof File);
+      if (resumeFiles.length === 0) {
         return NextResponse.json({ error: "No resume file uploaded" }, { status: 400 });
       }
-      assertSupportedUpload(resumeFile);
+      for (const f of resumeFiles) {
+        assertSupportedUpload(f);
+      }
 
-      const dataUrl = await fileToDataUrl(resumeFile);
-      resumeText = await extractResumeTextFromImages([dataUrl]);
+      const dataUrls = await Promise.all(resumeFiles.map(fileToDataUrl));
+      resumeText = await extractResumeTextFromImages(dataUrls);
     } else {
       return NextResponse.json({ error: "Invalid resume mode" }, { status: 400 });
     }

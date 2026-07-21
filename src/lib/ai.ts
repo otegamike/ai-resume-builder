@@ -365,10 +365,8 @@ export async function analyzeResumeForAts(
 
 // ─── Image Extraction ─────────────────────────────────────────────────────────
 
-export async function extractResumeTextFromImages(dataUrls: string[]): Promise<string> {
+export async function extractTextFromSingleImage(dataUrl: string): Promise<string> {
   assertApiKey();
-  if (dataUrls.length === 0) return "";
-
   const completion = await groq.chat.completions.create({
     model: VISION_MODEL,
     temperature: 0.1,
@@ -379,12 +377,9 @@ export async function extractResumeTextFromImages(dataUrls: string[]): Promise<s
         content: [
           {
             type: "text",
-            text: "Extract all readable resume/CV text from these image page(s). Preserve section headings, dates, contact details, skills, and bullet points in page order. Return only the extracted text.",
+            text: "Extract all readable resume/CV text from this image. Preserve section headings, dates, contact details, skills, and bullet points. Return only the extracted text.",
           },
-          ...dataUrls.map((url) => ({
-            type: "image_url" as const,
-            image_url: { url },
-          })),
+          { type: "image_url", image_url: { url: dataUrl } },
         ],
       },
     ],
@@ -393,8 +388,25 @@ export async function extractResumeTextFromImages(dataUrls: string[]): Promise<s
   return completion.choices[0]?.message?.content?.trim() || "";
 }
 
+export async function extractResumeTextFromImages(dataUrls: string[]): Promise<string> {
+  assertApiKey();
+  if (dataUrls.length === 0) return "";
+
+  // Process images 2 at a time — the vision model extracts best from ≤2 images per call
+  const chunkSize = 2;
+  const results: string[] = [];
+
+  for (let i = 0; i < dataUrls.length; i += chunkSize) {
+    const chunk = dataUrls.slice(i, i + chunkSize);
+    const texts = await Promise.all(chunk.map(extractTextFromSingleImage));
+    results.push(...texts);
+  }
+
+  return results.filter(Boolean).join("\n\n");
+}
+
 export async function extractResumeTextFromImage(dataUrl: string): Promise<string> {
-  return extractResumeTextFromImages([dataUrl]);
+  return extractTextFromSingleImage(dataUrl);
 }
 
 export async function extractTextFromJobImage(dataUrl: string): Promise<string> {
