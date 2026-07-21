@@ -39,7 +39,7 @@ interface ResumeSelectorProps {
   uploadOnly?: boolean;
 }
 
-const MAX_PDF_PAGES = 3;
+const MAX_PDF_PAGES = 2;
 
 export default function ResumeSelector({ onSelectionChange, className, uploadOnly }: ResumeSelectorProps) {
   const [mode, setMode] = useState<Mode>(uploadOnly ? "upload" : "saved");

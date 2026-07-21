@@ -4,7 +4,8 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import crypto from "crypto";
 import dbConnect from "@/lib/db";
 import User from "@/models/User";
-import { resetCreditsIfNeeded } from "@/lib/creditUtils";
+import { resetCreditsIfNeeded, getCurrentCycleString } from "@/lib/creditUtils";
+import { MAX_CREDITS_PER_PLAN } from "@/lib/creditCosts";
 
 function hashPassword(password: string, salt: string) {
   return crypto.scryptSync(password, salt, 64).toString("hex");
@@ -86,7 +87,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token }) {
       if (!token.email) return token;
       await dbConnect();
-      const dbUser = await User.findOne({ email: token.email }).select("_id email name image isAdmin subscriptionPlan AiCredits gmailAccessToken hasCompletedOnboarding");
+      const dbUser = await User.findOne({ email: token.email }).select("_id email name image isAdmin subscriptionPlan AiCredits gmailAccessToken hasCompletedOnboarding creditResetMeta");
       if (dbUser) {
         token.userId = String(dbUser._id);
         token.name = dbUser.name;
@@ -96,6 +97,13 @@ export const authOptions: NextAuthOptions = {
         token.AiCredits = dbUser.AiCredits ?? 0;
         token.hasGmailConnected = !!dbUser.gmailAccessToken;
         token.hasCompletedOnboarding = dbUser.hasCompletedOnboarding ?? true;
+
+        const currentCycle = getCurrentCycleString();
+        if (dbUser.creditResetMeta?.lastResetCycle !== currentCycle) {
+          await resetCreditsIfNeeded(String(dbUser._id), dbUser.subscriptionPlan);
+          const plan = dbUser.subscriptionPlan || "free";
+          token.AiCredits = MAX_CREDITS_PER_PLAN[plan as keyof typeof MAX_CREDITS_PER_PLAN] ?? MAX_CREDITS_PER_PLAN.free;
+        }
       }
       return token;
     },
