@@ -65,7 +65,7 @@ export default function ResumeEditor() {
   const {
     resumeId, templateId, saving, autoSaveStatus,
     debouncedAutoSave, saveResume, updateTemplateId, setAutoSaveStatus,
-  } = useAutoSave(initialResumeId, initialResumeId === "new" ? getRandomTemplateId(templateDefinitions) : "template1", 5000);
+  } = useAutoSave(initialResumeId, initialResumeId === "new" ? "template1" : "template1", 5000);
 
   const { activeTab, changeTab, getTabIndex } = useTabNavigation();
 
@@ -242,6 +242,8 @@ export default function ResumeEditor() {
         if (templateParams) {
           const found = data.find((entry) => entry.id === templateParams);
           if (found) updateTemplateId(found.id);
+        } else if (initialResumeId === "new") {
+          updateTemplateId(getRandomTemplateId(data));
         }
       } catch {
         setError("Failed to load templates");
