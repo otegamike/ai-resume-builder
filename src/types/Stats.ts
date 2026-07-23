@@ -47,3 +47,12 @@ export interface AiUsageStats {
   };
   daily: AiUsageDaily[];
 }
+
+export interface PrimaryGoalEntry {
+  goal: string;
+  count: number;
+}
+
+export interface PrimaryGoalStats {
+  goals: PrimaryGoalEntry[];
+}

@@ -16,13 +16,14 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import styles from "./page.module.css";
-import type { Stats, Timeline, AiUsageStats } from "@/types/Stats";
+import type { Stats, Timeline, AiUsageStats, PrimaryGoalStats } from "@/types/Stats";
 
 export default function AdminDashboardPage() {
   const { data: session, status } = useSession();
   const [stats, setStats] = useState<Stats | null>(null);
   const [timeline, setTimeline] = useState<Timeline | null>(null);
   const [aiUsage, setAiUsage] = useState<AiUsageStats | null>(null);
+  const [primaryGoals, setPrimaryGoals] = useState<PrimaryGoalStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -36,10 +37,11 @@ export default function AdminDashboardPage() {
 
     const fetchData = async () => {
       try {
-        const [statsRes, timelineRes, aiUsageRes] = await Promise.all([
+        const [statsRes, timelineRes, aiUsageRes, primaryGoalsRes] = await Promise.all([
           fetch("/api/admin/stats"),
           fetch("/api/admin/stats/timeline"),
           fetch("/api/admin/stats/ai-usage"),
+          fetch("/api/admin/stats/primary-goals"),
         ]);
 
         if (!statsRes.ok || !timelineRes.ok) {
@@ -64,6 +66,10 @@ export default function AdminDashboardPage() {
 
         if (aiUsageRes.ok) {
           setAiUsage(await aiUsageRes.json());
+        }
+
+        if (primaryGoalsRes.ok) {
+          setPrimaryGoals(await primaryGoalsRes.json());
         }
       } catch {
         setError("Failed to load admin data");
@@ -104,6 +110,25 @@ export default function AdminDashboardPage() {
       tokens: day.totalTokens,
     }));
   }, [aiUsage]);
+
+  const GOAL_LABELS: Record<string, string> = {
+    build: "Build a resume",
+    improve: "Improve existing resume",
+    tailor: "Tailor for jobs",
+    "cover-letter": "Write cover letters",
+    track: "Track applications",
+  };
+
+  const GOAL_COLORS = ["#84b179", "#6a8e61", "#a78bfa", "#f59e0b", "#ec4899"];
+
+  const goalChartData = useMemo(() => {
+    if (!primaryGoals?.goals?.length) return [];
+    return primaryGoals.goals
+      .map((g) => ({
+        name: GOAL_LABELS[g.goal] ?? g.goal,
+        count: g.count,
+      }));
+  }, [primaryGoals]);
 
   if (status === "loading" || loading) {
     return (
@@ -195,6 +220,50 @@ export default function AdminDashboardPage() {
           )}
         </div>
       </div>
+
+      {primaryGoals && (
+        <div className={styles.chartSection}>
+          <h2 className={styles.chartTitle}>What Brings You Here — User Goals</h2>
+          <div className={styles.chartWrapper}>
+            {goalChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={320}>
+                <BarChart data={goalChartData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-200)" />
+                  <XAxis
+                    type="number"
+                    tick={{ fontSize: 11, fill: "var(--gray-500)" }}
+                    allowDecimals={false}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    tick={{ fontSize: 11, fill: "var(--gray-500)" }}
+                    width={160}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: "var(--radius-md)",
+                      border: "1px solid var(--gray-200)",
+                      fontSize: "var(--text-sm)",
+                    }}
+                  />
+                  <Legend
+                    wrapperStyle={{ fontSize: "var(--text-sm)", paddingTop: "var(--space-4)" }}
+                  />
+                  <Bar
+                    dataKey="count"
+                    fill={GOAL_COLORS[0]}
+                    name="Users"
+                    radius={[0, 4, 4, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className={styles.noData}>No goal data yet.</p>
+            )}
+          </div>
+        </div>
+      )}
 
       {aiUsage && (
         <>
