@@ -1,10 +1,13 @@
-import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import Application from "@/models/Application";
 import CoverLetter from "@/models/CoverLetter";
 import Resume from "@/models/Resume";
 import { getAuthenticatedUser } from "@/lib/authUser";
+
+// Keep imports — used by .populate() refs in Application schema
+void CoverLetter;
+void Resume;
 
 export async function GET() {
   try {
@@ -14,10 +17,6 @@ export async function GET() {
     }
 
     await dbConnect();
-
-    console.log("mongoose models at runtime:", Object.keys(mongoose.models));
-    console.log("CoverLetter import identity:", CoverLetter === mongoose.models.CoverLetter);
-
     const applications = await Application.find({
       user: authUser.userObjectId,
     })
