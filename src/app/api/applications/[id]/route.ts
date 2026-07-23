@@ -91,7 +91,7 @@ export async function PUT(
         ...(explanation !== undefined && { explanation }),
         updatedAt: new Date(),
       },
-      { new: true }
+      { returnDocument: "after" }
     );
 
     if (!application) {

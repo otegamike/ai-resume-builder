@@ -36,9 +36,9 @@ export async function resetCreditsIfNeeded(
         "creditResetMeta.nextResetAt": getNextMonthFirstDay(),
       },
     },
-    { new: true }
+    { returnDocument: "after" }
   );
-
+ 
   return { reset: result !== null };
 }
 
@@ -96,7 +96,7 @@ export async function deductCredits(userId: string, feature: AiFeature): Promise
         }
       }
     ],
-    { new: true, select: "AiCredits", updatePipeline: true }
+    { returnDocument: "after", select: "AiCredits", updatePipeline: true }
   );
 
   return updated!.AiCredits;

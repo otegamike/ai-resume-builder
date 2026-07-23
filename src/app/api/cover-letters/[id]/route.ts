@@ -58,7 +58,7 @@ export async function PUT(
         ...(status !== undefined && { status }),
         updatedAt: new Date(),
       },
-      { new: true }
+      { returnDocument: "after" }
     );
 
     if (!coverLetter) {

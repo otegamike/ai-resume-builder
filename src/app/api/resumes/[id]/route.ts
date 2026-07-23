@@ -71,7 +71,7 @@ export async function PUT(
         userId: authUser.legacyUserId || String(authUser.userObjectId),
         updatedAt: new Date()
       },
-      { new: true }
+      { returnDocument: "after" }
     );
 
     if (!resume) {

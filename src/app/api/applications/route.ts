@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import Application from "@/models/Application";
+import CoverLetter from "@/models/CoverLetter";
+import Resume from "@/models/Resume";
 import { getAuthenticatedUser } from "@/lib/authUser";
 
 export async function GET() {

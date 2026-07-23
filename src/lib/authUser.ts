@@ -17,7 +17,7 @@ export async function getAuthenticatedUser() {
       image: session.user.image ?? "",
       email,
     },
-    { new: true, upsert: true, setDefaultsOnInsert: true }
+    { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
   );
 
   return {
