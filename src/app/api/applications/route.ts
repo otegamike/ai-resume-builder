@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import Application from "@/models/Application";
@@ -13,6 +14,10 @@ export async function GET() {
     }
 
     await dbConnect();
+
+    console.log("mongoose models at runtime:", Object.keys(mongoose.models));
+    console.log("CoverLetter import identity:", CoverLetter === mongoose.models.CoverLetter);
+
     const applications = await Application.find({
       user: authUser.userObjectId,
     })
