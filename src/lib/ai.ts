@@ -10,6 +10,7 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const ATS_MODEL = "llama-3.3-70b-versatile";
 const VISION_MODEL = "qwen/qwen3.6-27b";
 const GENERATION_MODEL = "openai/gpt-oss-20b"; // fine for simple text gen
+const LONG_CONTEXT_MODEL = "groq/compound"; // for long cover letters, etc.
 
 
 const ATS_SYSTEM_INSTRUCTION =
@@ -736,7 +737,10 @@ Write exactly 4-5 paragraphs with these distinct roles:
 
 3. **Project highlight**: Reference only ONE or TWO specific named projects from the resume, briefly, and explain what building them reinforced or taught the candidate. Do not list every project. Do not re-describe the projects in detail, just enough to be recognizable.
 
-4. **Technical fit**: Weave 4-6 relevant technical skills into natural sentences that connect to the job description's requirements, showing range across the stack. Avoid comma-separated tool lists; skills should read as part of what the candidate does, not an inventory.
+4. **Technical fit**: Weave 4-6 relevant technical skills into 2-3 sentences that connect to the job description's requirements, showing range across the stack.
+   - Use high-ownership, architectural verbs: architect, engineer, craft, scale, enforce, drive, build out — never "leverage," "utilize," "routinely build," or "I use."
+   - Frame the stack as how the candidate operates, not what they've touched: e.g. "core stack centers on X and Y for Z" or "I architect end-to-end apps, building A with X, enforcing B with Y."
+   - Absolutely no comma-separated tool inventories and no "I routinely build / use / leverage" constructions.
 
 5. **Closing**: Reaffirm enthusiasm for contributing to this specific company/team and invite next steps. Keep to one or two sentences.
 
@@ -806,7 +810,7 @@ export async function generateCoverLetter(
     if (truncated) {
       console.warn("First cover letter response truncated, retrying with larger budget...");
       ({ content: raw } = await callGroq(prompt, {
-        model: GENERATION_MODEL,
+        model: LONG_CONTEXT_MODEL,
         systemInstruction: COVER_LETTER_SYSTEM_INSTRUCTION,
         temperature: 0,
         maxTokens: 6000,
