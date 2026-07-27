@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 20px; overflow: hidden; }
+  body { margin: 0; background: transparent; font-family: Arial, Helvetica, sans-serif; }
+
+  .cv-viewport { width: 100%; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
+  .cv-scaler { display: flex; flex-direction: column; align-items: center; transform-origin: top center; will-change: transform; }
+
+  .cv {
+    width: 794px;
+    height: 1123px;
+    background: #fff;
+    border: 1px solid rgb(216, 216, 216);
+    overflow: hidden;
+    padding: 48px 56px;
+  }
+
+  .page-indicator::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 0;
+    width: 100%;
+    height: 15px;
+    background: #fff;
+    border-top: 1px solid rgb(216, 216, 216);
+    border-bottom: 1px solid rgb(216, 216, 216);
+    z-index: -1;
+  }
+
+  .name {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    text-align: center;
+  }
+
+  .job-title {
+    font-size: 0.78rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #555;
+    text-align: center;
+    margin-top: 6px;
+    font-weight: 400;
+  }
+
+  .contact-line {
+    text-align: center;
+    margin-top: 12px;
+    font-size: 0.74rem;
+    color: #333;
+  }
+
+  .contact-line span:not(:last-child)::after {
+    content: '  |  ';
+    color: #2c5f8a;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 18px 0 14px 0;
+  }
+
+  .section-label {
+    font-size: 0.72rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #2c5f8a;
+    font-weight: 700;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #c8d6e5;
+    padding-bottom: 5px;
+  }
+
+  .summary-text {
+    font-size: 0.74rem;
+    line-height: 1.7;
+    color: #2a2a2a;
+  }
+
+  .block {
+    margin-bottom: 0;
+    margin-top: 0;
+    padding-top: 0.4rem;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .exp-entry {
+    padding-top: 0.3rem;
+  }
+
+  .exp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .exp-role {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+
+  .exp-dates {
+    font-size: 0.72rem;
+    color: #666;
+    white-space: nowrap;
+  }
+
+  .exp-company {
+    font-size: 0.76rem;
+    color: #444;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .exp-desc {
+    font-size: 0.74rem;
+    line-height: 1.7;
+    color: #2a2a2a;
+    padding-left: 14px;
+    position: relative;
+    margin-top: 2px;
+  }
+
+  .exp-desc::before {
+    content: '\2022';
+    position: absolute;
+    left: 0;
+    color: #2c5f8a;
+    font-weight: 700;
+  }
+
+  .edu-entry {
+    padding-top: 0.3rem;
+  }
+
+  .edu-degree {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+
+  .edu-detail {
+    font-size: 0.74rem;
+    color: #555;
+    margin-top: 2px;
+  }
+
+  .skill-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+  }
+
+  .skill-item {
+    font-size: 0.74rem;
+    color: #2a2a2a;
+  }
+
+  .project-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+
+  .project-desc {
+    font-size: 0.74rem;
+    line-height: 1.7;
+    color: #2a2a2a;
+    padding-left: 14px;
+    position: relative;
+    margin-top: 2px;
+  }
+
+  .project-desc::before {
+    content: '\2022';
+    position: absolute;
+    left: 0;
+    color: #2c5f8a;
+    font-weight: 700;
+  }
+
+  .skill-category-name {
+    font-weight: 700;
+    font-size: 0.78rem;
+    color: #1a1a1a;
+    margin-top: 0.3rem;
+    margin-bottom: 0.2rem;
+  }
+</style>
+</head>
+<body>
+<div class="cv-viewport">
+  <div class="cv-scaler">
+    <div class="cv">
+
+      <div class="name">{{personalInfo.name}}</div>
+      <div class="job-title">{{personalInfo.jobTitle}}</div>
+
+      <div class="contact-line">
+        {{?personalInfo.email}}<span>{{personalInfo.email}}</span>{{/personalInfo.email}}
+        {{?personalInfo.phone}}<span>{{personalInfo.phone}}</span>{{/personalInfo.phone}}
+        {{?personalInfo.location}}<span>{{personalInfo.location}}</span>{{/personalInfo.location}}
+        {{?personalInfo.website}}<span>{{personalInfo.website}}</span>{{/personalInfo.website}}
+      </div>
+
+      {{?skillCategories}}
+      <hr class="divider"/>
+      <div class="block__parent">
+        <div class="section-label">Skills</div>
+        {{#skillCategories}}
+        <div class="block">
+          <div class="skill-category-name">{{category}}</div>
+          <div class="skill-list">{{#skills}}<span class="skill-item">{{.}}</span>{{/skills}}</div>
+        </div>
+        {{/skillCategories}}
+      </div>
+      {{/skillCategories}}
+      {{?skills}}
+      <hr class="divider"/>
+      <div class="block">
+        <div class="section-label">Skills</div>
+        <div class="skill-list">{{#skills}}<span class="skill-item">{{.}}</span>{{/skills}}</div>
+      </div>
+      {{/skills}}
+
+      {{?education}}
+      <hr class="divider"/>
+      <div class="block__parent">
+        <div class="section-label">Education</div>
+        {{#education}}
+        <div class="edu-entry block">
+          <div class="edu-degree">{{degree}}</div>
+          <div class="edu-detail">{{school}} — {{startDate}} – {{endDate}}</div>
+        </div>
+        {{/education}}
+      </div>
+      {{/education}}
+
+      {{?experience}}
+      <hr class="divider"/>
+      <div class="block__parent">
+        <div class="section-label">Experience</div>
+        {{#experience}}
+        <div class="exp-entry block">
+          <div class="exp-header">
+            <span class="exp-role">{{role}}</span>
+            <span class="exp-dates">{{startDate}} – {{endDate}}</span>
+          </div>
+          <div class="exp-company">{{company}}</div>
+          {{#description}}<p class="exp-desc">{{.}}</p>{{/description}}
+        </div>
+        {{/experience}}
+      </div>
+      {{/experience}}
+
+      {{?projects}}
+      <hr class="divider"/>
+      <div class="block__parent">
+        <div class="section-label">Projects</div>
+        {{#projects}}
+        <div class="exp-entry block">
+          <div class="project-name">{{name}}</div>
+          {{#description}}<p class="project-desc">{{.}}</p>{{/description}}
+        </div>
+        {{/projects}}
+      </div>
+      {{/projects}}
+
+      {{?summary}}
+      <hr class="divider"/>
+      <div class="block">
+        <div class="section-label">Summary</div>
+        <p class="summary-text">{{summary}}</p>
+      </div>
+      {{/summary}}
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const CV_WIDTH  = 794;
+  const CV_HEIGHT = 1123;
+  const MULTIPAGE = "{{multipage}}";
+  const isMultipage = MULTIPAGE === "true";
+
+  const scaler = document.querySelector('.cv-scaler');
+
+  function createPageIndicators(cvElement, cvHeight, pages) {
+    document.querySelectorAll('.page-indicator').forEach(el => el.remove());
+    for (let i = 1; i < pages; i++) {
+      const indicator = document.createElement('div');
+      indicator.className = 'page-indicator';
+      indicator.style.position = 'absolute';
+      indicator.style.top = (i * cvHeight) + 'px';
+      indicator.style.left = '0';
+      indicator.style.width = '100%';
+      indicator.style.borderTop = '2px dashed rgba(255, 0, 0, 0.6)';
+      indicator.style.zIndex = '9999';
+      cvElement.appendChild(indicator);
+    }
+  }
+
+  function handleBreakAvoidElements(cvElement, cvHeight, avoidSelector) {
+    const avoids = Array.from(cvElement.querySelectorAll(avoidSelector));
+    let maxIter = 20;
+    while (maxIter-- > 0) {
+      let shifted = false;
+      const height = cvElement.scrollHeight;
+      const pages = Math.ceil(height / cvHeight);
+      for (let p = 1; p < pages; p++) {
+        const boundary = p * cvHeight;
+        for (const el of avoids) {
+          let groupTop = el.offsetTop;
+          let groupBottom = groupTop + el.offsetHeight;
+          let target = el;
+          let isGroupShift = false;
+
+          const parent = el.closest('.block__parent');
+          if (parent) {
+            const firstBlockChild = parent.querySelector(avoidSelector);
+            if (firstBlockChild === el) {
+              const firstChild = parent.firstElementChild;
+              if (firstChild) {
+                groupTop = firstChild.offsetTop;
+                target = firstChild;
+                isGroupShift = true;
+              }
+            }
+          }
+
+          if (groupTop < boundary && groupBottom > boundary) {
+            const pushDown = boundary - groupTop;
+            const currentMT = parseFloat(target.style.marginTop) || 0;
+            target.style.marginTop = (currentMT + pushDown + 15) + 'px';
+
+            if (isGroupShift) {
+              target.style.paddingTop = '0.4rem';
+            }
+
+            shifted = true;
+            break;
+          }
+        }
+        if (shifted) break;
+      }
+      if (!shifted) break;
+    }
+  }
+
+  function scaleCv() {
+    const available = document.documentElement.clientWidth;
+    const scale = available / CV_WIDTH;
+
+    scaler.style.transform = `scale(${scale})`;
+
+    const cvElement = document.querySelector('.cv');
+    cvElement.style.height = 'auto';
+    cvElement.style.minHeight = '0px';
+
+    const avoidSelector = '.block';
+    handleBreakAvoidElements(cvElement, CV_HEIGHT, avoidSelector);
+
+    const contentHeight = cvElement.scrollHeight;
+    const pages = isMultipage ? Math.max(1, Math.ceil(contentHeight / CV_HEIGHT)) : 1;
+    const newHeight = pages * CV_HEIGHT;
+
+    cvElement.style.height = newHeight + 'px';
+    cvElement.style.minHeight = newHeight + 'px';
+    cvElement.style.position = 'relative';
+
+    const scaledHeight = newHeight * scale;
+    scaler.style.marginBottom = (scaledHeight - newHeight) + 'px';
+
+    createPageIndicators(cvElement, CV_HEIGHT, pages);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.parent.postMessage({ type: 'RESIZE_IFRAME', pages: pages }, '*');
+      });
+    });
+  }
+
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(scaleCv, 60);
+  });
+
+  document.fonts.ready.then(scaleCv);
+</script>
+</body>
+</html>

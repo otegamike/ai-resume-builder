@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
+import { Plus, Edit, Trash2, Loader2, Crown } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import ResumeIframe from "@/components/resume/ResumeIframe";
 import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
+import { isProTemplate } from "@/lib/templateCatalog";
 import styles from "./page.module.css";
 import { useTemplateStore } from "@/store/useTemplateStore";
 import { useResumeStore } from "@/store/useResumeStore";
@@ -82,20 +83,21 @@ export default function ResumesPage() {
 
         {resumes.map((resume) => {
           const templateId = normalizeTemplateId(resume.template);
-          const isAtsTemplate = resume.template?.startsWith("ats-");
-          const templateDef = !isAtsTemplate ? (templates.find(t => t.id === templateId) || templates[0]) : undefined;
+          const templateDef = templates.find(t => t.id === templateId) || templates[0];
+          const isPro = isProTemplate(templateId);
           const renderedTemplate = templateDef?.html && resume.content 
             ? buildTemplateSrcDoc(templateDef.html, resume.content) 
             : '';
 
           return (
             <div key={resume._id} className={styles.resumeCard}>
+              {isPro && (
+                <span className={styles.proBadge}>
+                  <Crown size={11} /> Pro
+                </span>
+              )}
               <div className={styles.previewArea}>
-                {isAtsTemplate ? (
-                  <div className={styles.previewPlaceholder}>
-                    <div className={styles.atsLabel}>ATS Template</div>
-                  </div>
-                ) : renderedTemplate ? (
+                {renderedTemplate ? (
                   <ResumeIframe
                     renderedTemplate={renderedTemplate}
                     type="preview"

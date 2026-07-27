@@ -92,9 +92,6 @@ export default function WriterPage() {
     }
   }, []);
 
-  useEffect(() => {
-    storeFetchResumes();
-  }, [storeFetchResumes]);
 
   useEffect(() => {
     return () => {

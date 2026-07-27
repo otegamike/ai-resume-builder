@@ -152,15 +152,21 @@
   width: 75%;
 }
 
-.atsLabel {
-  display: flex;
+.proBadge {
+  position: absolute;
+  top: calc(var(--space-2) + 12px);
+  left: calc(var(--space-2) + 12px);
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  height: 100%;
-  font-size: var(--text-sm);
+  gap: 2px;
+  font-size: 10px;
   font-weight: var(--font-semibold);
-  color: var(--primary-600);
-  text-align: center;
+  color: #fff;
+  background: var(--primary-600);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  z-index: 1;
+  line-height: 1;
 }
 
 .cardFooter {

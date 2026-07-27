@@ -48,7 +48,16 @@ export const templateDefinitions: TemplateDefinition[] = [
   { id: "template19", name: "Obsidian", description: "Dark aubergine header with gold accents and Syne display type", html: "", kind: "html", tier: "free", page: TEMPLATE_PAGE },
   { id: "template20", name: "Ivory", description: "Single-column editorial elegance with warm cream background and Gilda Display", html: "", kind: "html", tier: "free", page: TEMPLATE_PAGE },
   { id: "ats-classic", name: "ATS Classic", description: "Clean single-column ATS-optimized layout with real text", html: "", kind: "html", tier: "pro", page: TEMPLATE_PAGE },
+  { id: "ats-modern", name: "ATS Modern", description: "Refined single-column ATS with generous spacing and bullet descriptions", html: "", kind: "html", tier: "pro", page: TEMPLATE_PAGE },
+  { id: "ats-compact", name: "ATS Compact", description: "Dense ATS layout for experienced candidates with inline comma-separated skills", html: "", kind: "html", tier: "pro", page: TEMPLATE_PAGE },
+  { id: "ats-executive", name: "ATS Executive", description: "Formal executive ATS with professional summary emphasis and references section", html: "", kind: "html", tier: "pro", page: TEMPLATE_PAGE },
+  { id: "ats-minimal", name: "ATS Minimal", description: "Ultra-minimal ATS with maximum white space and restrained typography", html: "", kind: "html", tier: "pro", page: TEMPLATE_PAGE },
+  { id: "ats-dark", name: "ATS Dark", description: "Dark-themed single-column ATS with teal accents and high-contrast light text", html: "", kind: "html", tier: "pro", page: TEMPLATE_PAGE },
 ];
+
+export function isProTemplate(templateId: string): boolean {
+  return templateDefinitions.some((t) => t.id === templateId && t.tier === "pro");
+}
 
 export type TemplateId = typeof templateDefinitions[number]["id"];
 

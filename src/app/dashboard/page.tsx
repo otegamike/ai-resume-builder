@@ -21,9 +21,11 @@ import {
   ChevronDown,
   ChevronUp,
   ArrowRight,
+  Crown,
 } from "lucide-react";
 import ResumeIframe from "@/components/resume/ResumeIframe";
 import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
+import { isProTemplate } from "@/lib/templateCatalog";
 
 import { useTemplateStore } from "@/store/useTemplateStore";
 import { useResumeStore } from "@/store/useResumeStore";
@@ -314,6 +316,7 @@ export default function OverviewPage() {
             {storeResumes.slice(0, 4).map((resume) => {
               const templateId = normalizeTemplateId(resume.template);
               const templateDef = allTemplates.find((t) => t.id === templateId) || allTemplates[0];
+              const isPro = isProTemplate(templateId);
               const renderedTemplate = templateDef?.html && resume.content
                 ? buildTemplateSrcDoc(templateDef.html, resume.content)
                 : "";
@@ -323,6 +326,11 @@ export default function OverviewPage() {
                   href={`/editor/${resume._id}`}
                   className={styles.myResumesCard}
                 >
+                  {isPro && (
+                    <span className={styles.proBadge}>
+                      <Crown size={10} /> Pro
+                    </span>
+                  )}
                   <div className={styles.myResumesCardPreview}>
                     {renderedTemplate ? (
                       <ResumeIframe renderedTemplate={renderedTemplate} type="preview" />

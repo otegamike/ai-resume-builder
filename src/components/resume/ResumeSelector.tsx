@@ -8,10 +8,12 @@ import {
   FileText,
   Loader2,
   Sparkles,
+  Crown,
 } from "lucide-react";
 import ResumeComponent from "./ResumeComponent";
 import { normalizeTemplateId } from "@/lib/templateRenderer";
 import { ResumeContent } from "@/types/ResumeData";
+import { isProTemplate } from "@/lib/templateCatalog";
 import { MAX_PDF_PAGES_PER_PLAN } from "@/lib/creditCosts";
 import { useTemplateStore } from "@/store/useTemplateStore";
 import { useResumeStore } from "@/store/useResumeStore";
@@ -243,12 +245,18 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
       <div className={styles.horizontalScroll}>
         {resumes.map((resume) => {
           const templateId = normalizeTemplateId(resume.template);
+          const isPro = isProTemplate(templateId);
           return (
             <div
               key={resume._id}
               className={styles.resumeCard}
               onClick={() => selectSavedResume(resume)}
             >
+              {isPro && (
+                <span className={styles.proBadge}>
+                  <Crown size={10} /> Pro
+                </span>
+              )}
               <div className={styles.cardPreview}>
                 {templates.length > 0 ? (
                   <ResumeComponent
