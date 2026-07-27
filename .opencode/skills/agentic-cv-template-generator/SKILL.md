@@ -19,7 +19,9 @@ Skipping any section produces broken templates.
 
 ## 1. What a Template Is
 
-A template is a **single self-contained HTML file** stored at:
+A template is one of two types:
+
+**Free templates** — a single self-contained HTML file stored at:
 
 ```
 src/templates_formatted/templateN.html
@@ -28,6 +30,15 @@ src/templates_formatted/templateN.html
 It is loaded by `templateServer.ts`, rendered by `templateRenderer.ts` (custom Mustache-like
 engine), and injected into an iframe via `srcDoc`. The iframe has no parent CSS; the template
 is fully responsible for its own styling and scaling.
+
+**Pro (ATS) templates** — two coordinated files:
+
+1. `src/templates_formatted/ats-<name>.html` — HTML preview (same rendering pipeline as free templates)
+2. `src/templates_pdf/ats-<name>.tsx` — React-PDF component for high-fidelity PDF export
+
+Both files must match visually (same spacing, sizing, color palette). The React-PDF component
+consumes the `AtsResumeView` interface (see `src/lib/atsResumeMapper.ts`) rather than the
+renderer token syntax.
 
 ---
 
@@ -55,7 +66,7 @@ Replace only the content between the `<!-- DESIGN STARTS HERE -->` comments.
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<!-- Google Fonts import goes here -->
+<!-- Google Fonts import goes here (free templates) — omit for pro/ATS templates -->
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { font-size: 20px; overflow: hidden; }
@@ -231,6 +242,8 @@ Replace only the content between the `<!-- DESIGN STARTS HERE -->` comments.
 </body>
 </html>
 ```
+
+> **Pro/ATS templates:** Omit the Google Fonts `<link>` tag entirely. Use `font-family: Arial, Helvetica, sans-serif;` on the `body` element. See Section 7 for pro typography rules.
 
 **Critical JS rules:**
 - Copy the script block **verbatim**. Do not rename functions, change constants, or remove the
@@ -415,6 +428,27 @@ Left panel uses a dark or colored SVG polygon background.
 Right panel is white/near-white for clean text rendering.
 Photo floats at top-left, overlapping the panel boundary.
 
+### Pattern E — ATS Single-Column (Pro Templates Only)
+
+```css
+.cv { display: flex; flex-direction: column; padding: 48px 56px; }
+```
+
+Used exclusively for pro-tier ATS templates. Rules:
+
+- **Single column only** — no sidebar, no grid, no multi-column layout
+- **No decorative elements** — no SVG polygons, no clip-path shapes, no images, no icons
+- **No background colors in content area** — pure white `#fff` background only
+- **No photo/avatar** — omit the `{{?personalInfo.photo}}` block entirely
+- **Contact info** rendered as a single centered text line with `|` separators (no icon SVGs)
+- **Section dividers** use `<hr class="divider">` or equivalent horizontal rule
+- **Section labels** use simple bottom-border underline (no inline rules, no double rules)
+- **All text must be real HTML** — no text inside SVG or pseudo-elements
+- **Color palette** restricted to grays: `#1a1a1a` (headings), `#2a2a2a`/`#333`/`#444`/`#555`/`#666` (body/muted), `#ccc`/`#ddd` (borders)
+- **No CSS custom properties** — use hardcoded color values
+
+See `src/templates_formatted/ats-classic.html` for a reference implementation.
+
 ---
 
 ## 7. Typography Rules
@@ -443,8 +477,9 @@ font for all other text. Import both in a single `<link>` tag.
 - `Mulish` — clean, modern
 - `DM Sans` — geometric, pairs with DM Serif
 
-**Never use**: Arial, Helvetica, Times New Roman, Comic Sans, Courier, Impact, or any font
-not available on Google Fonts. Avoid Inter and Roboto — they produce a generic AI look.
+**Never use (free templates)**: Arial, Helvetica, Times New Roman, Comic Sans, Courier, Impact,
+or any font not available on Google Fonts. Avoid Inter and Roboto — they produce a generic AI look.
+Pro (ATS) templates must use Arial/Helvetica (see below).
 
 ### Type Scale (all in rem, base 20px = 1rem)
 ```
@@ -458,6 +493,15 @@ Contact items:      0.72rem – 0.78rem
 ```
 
 Never go below `0.68rem` — text becomes illegible when scaled for A4 export.
+
+### Pro (ATS) Templates — System Fonts Only
+
+Pro-tier ATS templates must **not** use Google Fonts. Use the system font stack:
+
+- **HTML:** `font-family: Arial, Helvetica, sans-serif;`
+- **React-PDF:** `fontFamily: "Helvetica"`
+
+No display/body font pairing is needed. A single system font is used for all text.
 
 ---
 
@@ -856,6 +900,19 @@ Run through every item before producing the final template HTML.
 - [ ] Section label margin-bottom ≥ 10px
 - [ ] Minimum contrast: accent color vs white ≥ 4.5:1
 
+**Pro-tier ATS templates only**
+- [ ] HTML file saved to `src/templates_formatted/ats-<name>.html`
+- [ ] React-PDF file saved to `src/templates_pdf/ats-<name>.tsx`
+- [ ] React-PDF component registered in `src/templates_pdf/index.ts`
+- [ ] Catalog entry has `tier: "pro"` and `kind: "html"`
+- [ ] No Google Fonts import in HTML or React-PDF
+- [ ] No decorative elements (SVG, clip-path, images, icons)
+- [ ] Single-column layout only
+- [ ] HTML and React-PDF versions match visually (same colors, spacing, sizing)
+- [ ] React-PDF component uses `Helvetica` font family
+- [ ] No photo block in template
+- [ ] Contact info uses text-only centered line (no icon SVGs)
+
 ---
 
 ## 13. Design Differentiation — Make It Memorable
@@ -880,7 +937,9 @@ Vary the accent color family, font pairing, layout pattern, and decorative techn
 
 ## 14. Template Catalog Registration
 
-After generating the HTML file, remind the developer to:
+After generating the template files, register in the catalog:
+
+### Free Templates (`src/templates_formatted/templateN.html`)
 
 1. Save file to `src/templates_formatted/templateN.html`
 2. Add entry to `src/lib/templateCatalog.ts`:
@@ -890,291 +949,134 @@ After generating the HTML file, remind the developer to:
   name: 'YourTemplateName',        // one evocative word e.g. 'Slate', 'Ember'
   description: 'One line description of the visual style',
   html: '',                        // populated at runtime by templateServer.ts
+  kind: 'html',
+  tier: 'free',
   page: { widthPx: 794, heightPx: 1123, aspectRatio: 794 / 1123 }
 }
 ```
 3. Verify at `/templates`, `/editor/new?template=templateN`, and `/dashboard`
 4. Test PDF export from the editor
 
+### Pro (ATS) Templates (`src/templates_formatted/ats-<name>.html` + `src/templates_pdf/ats-<name>.tsx`)
+
+1. Save HTML preview to `src/templates_formatted/ats-<name>.html`
+2. Create React-PDF export component at `src/templates_pdf/ats-<name>.tsx` (see Section 16)
+3. Register the React-PDF component in `src/templates_pdf/index.ts`:
+```typescript
+import YourComponent from "./ats-<name>";
+
+export const atsTemplateComponents: Record<string, FC<{ data: AtsResumeView }>> = {
+  "ats-classic": AtsClassicPdf,
+  "ats-<name>": YourComponent,
+};
+```
+4. Add entry to `src/lib/templateCatalog.ts`:
+```typescript
+{
+  id: 'ats-<name>',
+  name: 'Your ATS Name',            // e.g. 'ATS Modern', 'ATS Compact'
+  description: 'One line description',
+  html: '',
+  kind: 'html',                     // always 'html' — the preview is HTML-based
+  tier: 'pro',
+  page: { widthPx: 794, heightPx: 1123, aspectRatio: 794 / 1123 }
+}
+```
+5. Verify at `/templates`, `/editor/new?template=ats-<name>`, and `/dashboard`
+6. Test PDF export from the editor — the React-PDF component renders the PDF
+
 ---
 
 ## 15. Minimal Working Example
 
-The following is the smallest valid template skeleton. Expand with your design:
+For free templates, see `src/templates_formatted/template1.html` for the smallest valid template skeleton.  
+For pro (ATS) templates, see `src/templates_formatted/ats-classic.html` for a canonical reference (no Google Fonts, single-column, system font stack, text-only contact line).
 
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Mulish:wght@300;400;600&display=swap" rel="stylesheet"/>
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { font-size: 20px; overflow: hidden; }
-  body { margin: 0; background: transparent; font-family: 'Mulish', sans-serif; }
+---
 
-  .cv-viewport { width: 100%; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
-  .cv-scaler { display: flex; flex-direction: column; align-items: center; transform-origin: top center; will-change: transform; }
+## 16. React-PDF Component Rules (Pro Templates)
 
-  .cv {
-    width: 794px;
-    height: 1123px;
-    background: #fff;
-    border: 1px solid rgb(216,216,216);
-    overflow: hidden;
-    display: grid;
-    grid-template-columns: 240px 1fr;
-  }
+Each pro (ATS) template needs a React-PDF component at `src/templates_pdf/ats-<name>.tsx`
+that mirrors the HTML preview for high-fidelity PDF export.
 
-  .page-indicator::before {
-    content: '';
-    position: absolute;
-    top: -10px;
-    left: 0;
-    width: 100%;
-    height: 15px;
-    background: #fff;
-    border-top: 1px solid rgb(216, 216, 216);
-    border-bottom: 1px solid rgb(216, 216, 216);
-    z-index: -1;
-  }
+### Imports
 
-  :root {
-    --accent: #1e3a5f;
-    --surface: #eaeff6;
-    --text: #1a1a2e;
-    --text-muted: #5a6a80;
-  }
-
-  /* Left panel */
-  .left { background: var(--surface); padding: 40px 24px; display: flex; flex-direction: column; gap: 28px; }
-  /* Right panel */
-  .right { background: #fff; padding: 40px 36px; display: flex; flex-direction: column; gap: 24px; }
-
-  .name { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; font-weight: 700; color: var(--text); }
-  .job-title { font-size: 0.78rem; letter-spacing: 4px; text-transform: uppercase; color: var(--text-muted); margin-top: 6px; }
-
-  .section-label {
-    font-size: 0.68rem; letter-spacing: 4px; text-transform: uppercase;
-    color: var(--accent); font-weight: 700;
-    border-bottom: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
-    padding-bottom: 5px; margin-bottom: 12px;
-  }
-
-  .contact-item { display: flex; gap: 8px; align-items: center; font-size: 0.73rem; color: var(--text); margin-bottom: 8px; }
-  .contact-item svg { flex-shrink: 0; stroke: var(--accent); }
-
-  .bullet-list { list-style: none; }
-  .bullet-list li { font-size: 0.75rem; color: var(--text); padding-left: 14px; margin-bottom: 6px; position: relative; }
-  .bullet-list li::before { content: '•'; position: absolute; left: 0; color: var(--accent); }
-
-  .block {
-    margin-bottom: 0; margin-top: 0; padding-top: 0.4rem; break-inside: avoid; page-break-inside: avoid;
-  }
-  .skill-category-name {
-    font-weight: 700; font-size: 0.81rem; color: var(--text); margin-bottom: 0.25rem;
-  }
-  .exp-header { display: flex; justify-content: space-between; align-items: baseline; }
-  .exp-role { font-size: 0.82rem; font-weight: 600; color: var(--text); }
-  .exp-dates { font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; }
-  .exp-company { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; }
-  .exp-desc { font-size: 0.72rem; line-height: 1.7; color: var(--text); padding-left: 14px; position: relative; }
-  .exp-desc::before { content: '–'; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
-  .edu-degree { font-size: 0.8rem; font-weight: 600; color: var(--text); }
-  .edu-detail { font-size: 0.73rem; color: var(--text-muted); }
-  .summary-text { font-size: 0.75rem; line-height: 1.8; color: var(--text); }
-</style>
-</head>
-<body>
-<div class="cv-viewport">
-  <div class="cv-scaler">
-    <div class="cv">
-
-      <div class="left">
-        {{?personalInfo.photo}}
-        <div style="width:140px;height:140px;border-radius:50%;border:4px solid #fff;overflow:hidden;background:#ccc;box-shadow:0 2px 12px rgba(0,0,0,0.12)">
-          <img src="{{personalInfo.photo}}" alt="Profile photo" style="width:100%;height:100%;object-fit:cover;display:block"/>
-        </div>
-        {{/personalInfo.photo}}
-
-        <div class="block">
-          <div class="section-label">Contact</div>
-          {{?personalInfo.email}}
-          <div class="contact-item">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
-            {{personalInfo.email}}
-          </div>
-          {{/personalInfo.email}}
-          {{?personalInfo.phone}}
-          <div class="contact-item">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 11.39 19a19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.9-8.39A2 2 0 0 1 3.48 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.66 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6 6l.77-.77a2 2 0 0 1 2.11-.45c.91.3 1.85.53 2.81.66A2 2 0 0 1 22 16.92z"/></svg>
-            {{personalInfo.phone}}
-          </div>
-          {{/personalInfo.phone}}
-          {{?personalInfo.location}}
-          <div class="contact-item">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            {{personalInfo.location}}
-          </div>
-          {{/personalInfo.location}}
-          {{?personalInfo.website}}
-          <div class="contact-item">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-            {{personalInfo.website}}
-          </div>
-          {{/personalInfo.website}}
-        </div>
-
-        {{?skillCategories}}
-        <div class="block">
-          <div class="section-label">Skills</div>
-          {{#skillCategories}}
-          <div class="block">
-            <div class="skill-category-name">{{category}}</div>
-            <ul class="bullet-list">{{#skills}}<li>{{.}}</li>{{/skills}}</ul>
-          </div>
-          {{/skillCategories}}
-        </div>
-        {{/skillCategories}}
-        {{?skills}}
-        <div class="block">
-          <div class="section-label">Skills</div>
-          <ul class="bullet-list">{{#skills}}<li>{{.}}</li>{{/skills}}</ul>
-        </div>
-        {{/skills}}
-
-        {{?languages}}
-        <div class="block">
-          <div class="section-label">Languages</div>
-          <ul class="bullet-list">{{#languages}}<li>{{.}}</li>{{/languages}}</ul>
-        </div>
-        {{/languages}}
-      </div>
-
-      <div class="right">
-        <div class="name-block">
-          <div class="name">{{personalInfo.name}}</div>
-          <div class="job-title">{{personalInfo.jobTitle}}</div>
-        </div>
-
-        {{?summary}}
-        <div>
-          <div class="section-label">Profile</div>
-          <p class="summary-text about-text">{{summary}}</p>
-        </div>
-        {{/summary}}
-
-        {{?experience}}
-        <div>
-          <div class="section-label">Experience</div>
-          {{#experience}}
-          <div class="exp-entry">
-            <div class="exp-header">
-              <span class="exp-role">{{role}}</span>
-              <span class="exp-dates">{{startDate}} – {{endDate}}</span>
-            </div>
-            <div class="exp-company">{{company}}</div>
-            {{#description}}<p class="exp-desc">{{.}}</p>{{/description}}
-          </div>
-          {{/experience}}
-        </div>
-        {{/experience}}
-
-        {{?education}}
-        <div class="block">
-          <div class="section-label">Education</div>
-          {{#education}}
-          <div class="edu-entry">
-            <div class="edu-degree">{{degree}}</div>
-            <div class="edu-detail">{{school}} · {{startDate}} – {{endDate}}</div>
-          </div>
-          {{/education}}
-        </div>
-        {{/education}}
-
-        {{?projects}}
-        <div class="block">
-          <div class="section-label">Projects</div>
-          {{#projects}}
-          <div class="exp-entry">
-            <div class="exp-role">{{name}}</div>
-            {{#description}}<p class="exp-desc">{{.}}</p>{{/description}}
-          </div>
-          {{/projects}}
-        </div>
-        {{/projects}}
-      </div>
-
-    </div>
-  </div>
-</div>
-<script>
-  const CV_WIDTH  = 794;
-  const CV_HEIGHT = 1123;
-  const MULTIPAGE = "{{multipage}}";
-  const isMultipage = MULTIPAGE === "true";
-  const scaler = document.querySelector('.cv-scaler');
-  function createPageIndicators(cvElement, cvHeight, pages) {
-    document.querySelectorAll('.page-indicator').forEach(el => el.remove());
-    for (let i = 1; i < pages; i++) {
-      const indicator = document.createElement('div');
-      indicator.className = 'page-indicator';
-      indicator.style.position = 'absolute';
-      indicator.style.top = (i * cvHeight) + 'px';
-      indicator.style.left = '0';
-      indicator.style.width = '100%';
-      indicator.style.borderTop = '2px dashed rgba(255,0,0,0.6)';
-      indicator.style.zIndex = '9999';
-      cvElement.appendChild(indicator);
-    }
-  }
-  function handleBreakAvoidElements(cvElement, cvHeight, avoidSelector) {
-    const avoids = Array.from(cvElement.querySelectorAll(avoidSelector));
-    let maxIter = 20;
-    while (maxIter-- > 0) {
-      let shifted = false;
-      const pages = Math.ceil(cvElement.scrollHeight / cvHeight);
-      for (let p = 1; p < pages; p++) {
-        const boundary = p * cvHeight;
-        for (const el of avoids) {
-          const top = el.offsetTop;
-          const bottom = top + el.offsetHeight;
-          if (top < boundary && bottom > boundary) {
-            el.style.marginTop = (parseFloat(el.style.marginTop)||0) + (boundary - top) + 15 + 'px';
-            shifted = true; break;
-          }
-        }
-        if (shifted) break;
-      }
-      if (!shifted) break;
-    }
-  }
-  function scaleCv() {
-    const scale = document.documentElement.clientWidth / CV_WIDTH;
-    scaler.style.transform = `scale(${scale})`;
-    const cvElement = document.querySelector('.cv');
-    cvElement.style.height = 'auto';
-    cvElement.style.minHeight = '0px';
-    const avoidSelector = '.block';
-    handleBreakAvoidElements(cvElement, CV_HEIGHT, avoidSelector);
-    const pages = isMultipage ? Math.max(1, Math.ceil(cvElement.scrollHeight / CV_HEIGHT)) : 1;
-    const newHeight = pages * CV_HEIGHT;
-    cvElement.style.height = newHeight + 'px';
-    cvElement.style.minHeight = newHeight + 'px';
-    cvElement.style.position = 'relative';
-    scaler.style.marginBottom = (newHeight * scale - newHeight) + 'px';
-    createPageIndicators(cvElement, CV_HEIGHT, pages);
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        window.parent.postMessage({ type: 'RESIZE_IFRAME', pages }, '*');
-      });
-    });
-  }
-  let resizeTimer;
-  window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(scaleCv, 60); });
-  document.fonts.ready.then(scaleCv);
-</script>
-</body>
-</html>
+```tsx
+import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import type { AtsResumeView } from "@/lib/atsResumeMapper";
 ```
+
+Only these imports are allowed. Do not import images, icons, or external assets.
+
+### StyleSheet Rules
+
+- Use `StyleSheet.create({...})` for all styles
+- `page` style: `{ padding: 48, fontFamily: "Helvetica", fontSize: 10, color: "#1a1a1a", lineHeight: 1.4 }`
+- Sizing convention: 1rem in HTML ≈ 12.5pt in React-PDF (e.g., 0.72rem HTML = 9pt PDF, 0.82rem = 11pt)
+- Use matching color values between HTML and React-PDF
+- No `letterSpacing` values above 3 (React-PDF renders wide letter-spacing poorly)
+- All style values are plain numbers/strings — no dynamic computed values
+
+### Component Structure
+
+```tsx
+interface AtsNamePdfProps {
+  data: AtsResumeView;
+}
+
+function AtsNamePdf({ data }: AtsNamePdfProps) {
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        {/* content using data.name, data.jobTitle, etc. */}
+      </Page>
+    </Document>
+  );
+}
+
+export default AtsNamePdf;
+```
+
+### Visual Matching Rules
+
+The React-PDF component must visually match the HTML preview:
+
+| Aspect              | HTML                          | React-PDF                        |
+|---------------------|-------------------------------|----------------------------------|
+| Font family         | `Arial, Helvetica, sans-serif`| `"Helvetica"`                    |
+| Base font size      | 20px html, 0.72rem body       | `fontSize: 10`                   |
+| Name font size      | 1.8rem (36px)                 | `fontSize: 22`                   |
+| Job title size      | 0.78rem                       | `fontSize: 10` + `letterSpacing: 3` |
+| Section label size  | 0.72rem                       | `fontSize: 9`                    |
+| Body line-height    | 1.6–1.7                       | `lineHeight: 1.5–1.6`            |
+| Padding             | 48px 56px                     | `padding: 48`                    |
+| Divider             | `<hr>` with border-top        | `<View>` with `borderBottomWidth`|
+| Colors              | Hardcoded gray values         | Same hardcoded values            |
+
+### Prohibited Elements
+
+- No `<Image>` or `<img>` tags — ATS templates don't include photos
+- No `<Link>` or anchor elements
+- No custom fonts or `@font-face` — use system `"Helvetica"` only
+- No SVG, no icons, no decorative shapes
+- No conditional hooks or React state — the component is pure render
+- No `wrap={false}` on long text blocks (causes rendering artifacts)
+
+### Conditionals
+
+Use conditional rendering with `.length > 0` for arrays and truthy checks for strings:
+
+```tsx
+{data.experience.length > 0 ? (
+  <>
+    <View style={styles.divider} />
+    <Text style={styles.sectionLabel}>Experience</Text>
+    ...
+  </>
+) : null}
+```
+
+### Registration
+
+After creating the component, register it in `src/templates_pdf/index.ts` and add the catalog
+entry (see Section 14).
