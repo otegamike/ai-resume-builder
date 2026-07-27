@@ -13,6 +13,7 @@
   "dependencies": {
     "@google/genai": "^1.51.0",
     "@napi-rs/canvas": "^1.0.0",
+    "@react-pdf/renderer": "^4.5.1",
     "cloudinary": "^2.10.0",
     "googleapis": "^173.0.0",
     "groq-sdk": "^1.1.2",

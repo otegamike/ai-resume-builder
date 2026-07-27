@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import dynamic from "next/dynamic";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
@@ -6,7 +6,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
   ArrowLeft, ArrowRight, ChevronDown, ChevronsUp, ChevronUp,
-  Download, Image as ImageIcon, Save, Loader2, Check,
+  Download, Eye, Image as ImageIcon, Save, Loader2, Check,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
@@ -49,12 +49,15 @@ const ProjectsTab = dynamic(() => import("./form-nav/ProjectsTab"), { ssr: false
 const SkillsTab = dynamic(() => import("./form-nav/SkillsTab"), { ssr: false, loading: () => <FormTabSkeleton /> });
 const FinishTab = dynamic(() => import("./form-nav/FinishTab"), { ssr: false, loading: () => <FormTabSkeleton /> });
 const TemplateSelector = dynamic(() => import("./TemplateSelector"), { ssr: false });
+const AdminPdfViewer = dynamic(() => import("@/components/resume/AdminPdfViewer"), { ssr: false });
 
 import { useAi } from "@/app/hooks/useAi";
 import { useAutoSave } from "@/app/hooks/useAutosave";
 import { useResumeForm } from "@/app/hooks/useResumeForm";
 import { useTabNavigation, TAB_ARRAY, type Tab } from "@/app/hooks/useTabNavigation";
 import { exportResumeAsPdf, exportResumeAsImage } from "@/utils/exportUtils";
+import { exportResumeAsAtsPdf } from "@/utils/atsExportUtils";
+import { mapResumeToAtsView } from "@/lib/atsResumeMapper";
 import { addRecentlyUsedTemplate } from "@/utils/templateStorage";
 import type { ResumeContent } from "@/types/ResumeData";
 import ResumeIframe from "@/components/resume/ResumeIframe";
@@ -64,7 +67,7 @@ export default function ResumeEditor() {
   const params = useParams();
   const searchParams = useSearchParams();
   const templateParams = searchParams.get("template");
-  const { status } = useSession();
+  const { data: session, status } = useSession();
 
   const initialResumeId = params.id as string;
   const [title, setTitle] = useState("");
@@ -73,6 +76,7 @@ export default function ResumeEditor() {
   const [templateDefinitions, setTemplateDefinitions] = useState<TemplateDefinition[]>([]);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [showExportOption, setShowExportOption] = useState(false);
+  const [adminMode, setAdminMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -141,6 +145,11 @@ export default function ResumeEditor() {
     if (!selectedTemplate?.html) return "";
     return buildTemplateSrcDoc(selectedTemplate.html, resume, { editorMode: true });
   }, [resume, selectedTemplate]);
+
+  const atsViewData = useMemo(() => {
+    if (!adminMode || !templateId.startsWith("ats-")) return null;
+    return mapResumeToAtsView(resume);
+  }, [adminMode, templateId, resume]);
 
   useEffect(() => {
     const iframe = exportIframeRef.current;
@@ -316,13 +325,17 @@ export default function ResumeEditor() {
   const exportPDF = useCallback(async () => {
     setIsExporting(true);
     try {
-      await exportResumeAsPdf(exportIframeRef, title, TEMPLATE_PAGE.widthPx, TEMPLATE_PAGE.heightPx);
+      if (templateId.startsWith("ats-")) {
+        await exportResumeAsAtsPdf(title, resume, templateId);
+      } else {
+        await exportResumeAsPdf(exportIframeRef, title, TEMPLATE_PAGE.widthPx, TEMPLATE_PAGE.heightPx);
+      }
     } catch (error) {
       console.error("Failed to export PDF:", error);
     } finally {
       setIsExporting(false);
     }
-  }, [title]);
+  }, [title, templateId, resume]);
 
   const exportImage = useCallback(async () => {
     setIsExporting(true);
@@ -388,6 +401,7 @@ export default function ResumeEditor() {
             changeTemplate={changeTemplate}
             showTemplatePicker={showTemplatePicker}
             toggleTemplatePicker={toggleTemplatePicker}
+            userPlan={session?.user?.subscriptionPlan}
           />
         </div>
 
@@ -420,6 +434,18 @@ export default function ResumeEditor() {
             <Save color="var(--neutral-100)" className={styles.saveIcon} />
             <div className={styles.buttonText}>{saving ? "Saving..." : "Save Draft"}</div>
           </Button>
+
+          {session?.user?.isAdmin && (
+            <Button
+              variant={adminMode ? "primary" : "light_outline"}
+              size="sm"
+              className={styles.adminBtn}
+              onClick={() => setAdminMode((prev) => !prev)}
+            >
+              <Eye color={adminMode ? "var(--neutral-100)" : "var(--neutral-100)"} size={14} />
+              <div className={styles.buttonText}>Admin</div>
+            </Button>
+          )}
 
           <div className={styles.relative} onMouseEnter={() => setShowExportOption(true)} onMouseLeave={() => setShowExportOption(false)}>
             <Button className={styles.exportButton}>
@@ -568,13 +594,24 @@ export default function ResumeEditor() {
           </section>
 
           <section className={styles.previewSection}>
-            <ResumeIframe
-              iframeRef={previewIframeRef}
-              type="preview"
-              renderedTemplate={renderedTemplate}
-              editorMode={true}
-              loaderObj={{ showLoader, toggleShowLoader }}
-            />
+            <div className={adminMode ? styles.adminSplit : styles.previewCanvas}>
+              <div className={adminMode ? styles.adminPanel : ""}>
+                {adminMode && <div className={styles.adminPanelLabel}>HTML Preview</div>}
+                <ResumeIframe
+                  iframeRef={previewIframeRef}
+                  type="preview"
+                  renderedTemplate={renderedTemplate}
+                  editorMode={true}
+                  loaderObj={{ showLoader, toggleShowLoader }}
+                />
+              </div>
+              {adminMode && templateId.startsWith("ats-") && atsViewData && (
+                <div className={styles.adminPanel}>
+                  <div className={styles.adminPanelLabel}>React-PDF Output</div>
+                  <AdminPdfViewer data={atsViewData} templateId={templateId} />
+                </div>
+              )}
+            </div>
             <iframe
               ref={exportIframeRef}
               title="Resume export"

@@ -82,7 +82,8 @@ export default function ResumesPage() {
 
         {resumes.map((resume) => {
           const templateId = normalizeTemplateId(resume.template);
-          const templateDef = templates.find(t => t.id === templateId) || templates[0];
+          const isAtsTemplate = resume.template?.startsWith("ats-");
+          const templateDef = !isAtsTemplate ? (templates.find(t => t.id === templateId) || templates[0]) : undefined;
           const renderedTemplate = templateDef?.html && resume.content 
             ? buildTemplateSrcDoc(templateDef.html, resume.content) 
             : '';
@@ -90,7 +91,11 @@ export default function ResumesPage() {
           return (
             <div key={resume._id} className={styles.resumeCard}>
               <div className={styles.previewArea}>
-                {renderedTemplate ? (
+                {isAtsTemplate ? (
+                  <div className={styles.previewPlaceholder}>
+                    <div className={styles.atsLabel}>ATS Template</div>
+                  </div>
+                ) : renderedTemplate ? (
                   <ResumeIframe
                     renderedTemplate={renderedTemplate}
                     type="preview"

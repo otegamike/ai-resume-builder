@@ -19,6 +19,8 @@ export default function TemplatesPage() {
   const storeError = useTemplateStore((state) => state.error);
   const [loaded, setLoaded] = useState(templates.length > 0);
 
+  const freeTemplates = useMemo(() => templates.filter((t) => t.tier === "free"), [templates]);
+
   useEffect(() => {
     if (templates.length > 0 || storeError) setLoaded(true);
   }, [templates, storeError]);
@@ -61,7 +63,7 @@ export default function TemplatesPage() {
       </div>
 
       <section className={styles.grid}>
-        {templates.map((template) => {
+        {freeTemplates.map((template) => {
           const isFav = favorites.includes(template.id);
           return (
             <article key={template.id} className={styles.card}>

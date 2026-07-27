@@ -932,14 +932,10 @@
   position: relative;
   z-index: 1;
 }
+
 /* marked for delete */
 .previewCanvas {
   width: min(100%, 54rem);
-  aspect-ratio: 794 / 1123;
-  background: white;
-  border: 1px solid var(--gray-200);
-  box-shadow: var(--shadow-lg);
-  overflow: hidden;
 }
 
 .previewFrame {
@@ -1618,5 +1614,33 @@
   transform: translateY(-150%);
 }
 
+.adminBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.adminSplit {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.adminPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.adminPanelLabel {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding-bottom: var(--space-1);
+  border-bottom: 1px solid var(--gray-300);
+}
 
 

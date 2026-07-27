@@ -17,6 +17,8 @@ export default function DashboardTemplatesPage() {
   const storeError = useTemplateStore((state) => state.error);
   const [loaded, setLoaded] = useState(templates.length > 0);
 
+  const freeTemplates = useMemo(() => templates.filter((t) => t.tier === "free"), [templates]);
+
   useEffect(() => {
     if (templates.length > 0 || storeError) setLoaded(true);
   }, [templates, storeError]);
@@ -35,11 +37,11 @@ export default function DashboardTemplatesPage() {
     setFavorites(getFavoriteTemplateIds());
   };
 
-  const favoriteTemplates = templates.filter((t) => favorites.includes(t.id));
+  const favoriteTemplates = freeTemplates.filter((t) => favorites.includes(t.id));
   const recentTemplates = recentFromStorage
-    .map((r) => templates.find((t) => t.id === r.id))
+    .map((r) => freeTemplates.find((t) => t.id === r.id))
     .filter((t): t is TemplateDefinition => !!t);
-  const suggestTemplates = templates.filter(
+  const suggestTemplates = freeTemplates.filter(
     (t) => !favorites.includes(t.id) && !recentFromStorage.some((r) => r.id === t.id)
   );
 

@@ -1,4 +1,4 @@
-import type { TemplateData, TemplateId } from "@/lib/templateCatalog";
+import { templateDefinitions, type TemplateData, type TemplateId } from "@/lib/templateCatalog";
 import { formatName } from "@/utils/nameFormatter";
 
 
@@ -143,6 +143,11 @@ export function normalizeTemplateId(templateId: string): TemplateId {
   if (templateId.startsWith("template")) {
     const casted = templateId as TemplateId;
     return casted;
+  }
+  if (templateId.startsWith("ats-")) {
+    const casted = templateId as TemplateId;
+    if (templateDefinitions.some((t) => t.id === casted)) return casted;
+    return "template1";
   }
 
   return "template1";
