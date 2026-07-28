@@ -58,7 +58,7 @@ Replace only the content between the `<!-- DESIGN STARTS HERE -->` comments.
 <!-- Google Fonts import goes here -->
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { font-size: 20px; overflow: hidden; }
+  html { font-size: 20px; overflow: hidden; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   body { margin: 0; background: transparent; font-family: 'YourFont', sans-serif; }
 
   .cv-viewport {
@@ -911,7 +911,7 @@ The following is the smallest valid template skeleton. Expand with your design:
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Mulish:wght@300;400;600&display=swap" rel="stylesheet"/>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { font-size: 20px; overflow: hidden; }
+  html { font-size: 20px; overflow: hidden; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   body { margin: 0; background: transparent; font-family: 'Mulish', sans-serif; }
 
   .cv-viewport { width: 100%; min-height: 100vh; display: flex; justify-content: center; align-items: center; }

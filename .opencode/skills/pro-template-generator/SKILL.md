@@ -55,7 +55,7 @@ Same as Section 3 in `agentic-cv-template-generator`, with these differences:
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { font-size: 20px; overflow: hidden; }
+  html { font-size: 20px; overflow: hidden; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   body { margin: 0; background: transparent; font-family: Arial, Helvetica, sans-serif; }
   /* ... rest identical to Section 3 shell ... */
 </style>

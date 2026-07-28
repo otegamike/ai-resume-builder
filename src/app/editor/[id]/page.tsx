@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import dynamic from "next/dynamic";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
@@ -391,7 +391,7 @@ export default function ResumeEditor() {
           <Input
             value={title}
             onChange={(e) => handleTitleChange(e.target.value)}
-            className={`${styles.input} ${styles.titleInput}`}
+            className={styles.titleInput}
             placeholder="Resume Title"
           />
           <TemplateSelector
@@ -434,18 +434,6 @@ export default function ResumeEditor() {
             <Save color="var(--neutral-100)" className={styles.saveIcon} />
             <div className={styles.buttonText}>{saving ? "Saving..." : "Save Draft"}</div>
           </Button>
-
-          {session?.user?.isAdmin && (
-            <Button
-              variant={adminMode ? "primary" : "light_outline"}
-              size="sm"
-              className={styles.adminBtn}
-              onClick={() => setAdminMode((prev) => !prev)}
-            >
-              <Eye color={adminMode ? "var(--neutral-100)" : "var(--neutral-100)"} size={14} />
-              <div className={styles.buttonText}>Admin</div>
-            </Button>
-          )}
 
           <div className={styles.relative} onMouseEnter={() => setShowExportOption(true)} onMouseLeave={() => setShowExportOption(false)}>
             <Button className={styles.exportButton}>
@@ -594,6 +582,19 @@ export default function ResumeEditor() {
           </section>
 
           <section className={styles.previewSection}>
+            {session?.user?.isAdmin && (
+              <div className={styles.adminToolbar}>
+                <Button
+                  variant={adminMode ? "primary" : "light_outline"}
+                  size="sm"
+                  className={styles.adminBtn}
+                  onClick={() => setAdminMode((prev) => !prev)}
+                >
+                  <Eye size={14} />
+                  <div className={styles.buttonText}>Admin</div>
+                </Button>
+              </div>
+            )}
             <div className={adminMode ? styles.adminSplit : styles.previewCanvas}>
               <div className={adminMode ? styles.adminPanel : ""}>
                 {adminMode && <div className={styles.adminPanelLabel}>HTML Preview</div>}
