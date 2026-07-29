@@ -6,9 +6,19 @@ export const CURRENCIES = {
 export type CurrencyConfig = (typeof CURRENCIES)[keyof typeof CURRENCIES];
 
 export const NGN_PRICING = {
-  pro: { monthly: 5_000, annual: 4_500, savePercent: 10 },
-  proPlus: { monthly: 12_000, annual: 10_000, savePercent: 17 },
+  pro_monthly: '5,000.00',
+  pro_annual: '54,000.00',
+  proPlus_monthly: '12,000.00',
+  proPlus_annual: '120,000.00',
+} as const 
+
+export const NGN_ANNUAL_DISCOUNT= {
+  pro: 10,
+  proPlus: 17,
 } as const;
+
+export const removeComma = (value: string): string => value.replace(/,/g, "");
+
 
 export function detectCurrency(): { currency: CurrencyConfig; isNigerian: boolean } {
   try {

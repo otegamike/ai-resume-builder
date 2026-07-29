@@ -6,7 +6,8 @@ import { Zap } from "lucide-react";
 import styles from "./page.module.css";
 import bgStyles from "@/app/auth/login/animated-bg.module.css";
 import Footer from "@/components/sections/Footer";
-import { NGN_PRICING, detectCurrency, CURRENCIES, type CurrencyConfig } from "@/utils/pricing";
+import SubscribeButton from "@/components/subscription/SubscribeButton";
+import { NGN_PRICING, removeComma, NGN_ANNUAL_DISCOUNT, detectCurrency, CURRENCIES, type CurrencyConfig } from "@/utils/pricing";
 
 const PLANS = [
   {
@@ -29,6 +30,7 @@ const PLANS = [
   },
   {
     id: "pro",
+    planId: "pro",
     name: "Pro",
     tagline: "Best for active job seekers.",
     monthlyPrice: 7,
@@ -36,8 +38,7 @@ const PLANS = [
     isPro: true,
     badge: null,
     savePercent: 20,
-    cta: "Start Free Trial",
-    ctaHref: "/auth/login",
+    cta: "Subscribe",
     features: [
       { label: "50000 AI credits/month", icon: "check", muted: false, isAiCredit: true },
       { label: "Unlimited Resumes", icon: "check", muted: false },
@@ -49,6 +50,7 @@ const PLANS = [
   },
   {
     id: "proPlus",
+    planId: "proPlus",
     name: "Pro+",
     tagline: "For recruitment teams.",
     monthlyPrice: 15,
@@ -56,8 +58,7 @@ const PLANS = [
     isPro: false,
     badge: null,
     savePercent: 20,
-    cta: "Get started",
-    ctaHref: "mailto:sales@agenticcv.com",
+    cta: "Subscribe",
     features: [
       { label: "Unlimited AI credits", icon: "check", muted: false, isAiCredit: true },
       { label: "Custom Brand Templates", icon: "check", muted: false },
@@ -149,15 +150,15 @@ export default function PricingPage() {
     if (plan.monthlyPrice === null) return null;
     if (plan.monthlyPrice === 0) return 0;
     if (isNigerian && plan.id !== "free") {
-      const p = NGN_PRICING[plan.id as keyof typeof NGN_PRICING];
-      return isAnnual ? p.annual : p.monthly;
+      const p = {monthly: NGN_PRICING[`${plan.id}_monthly` as keyof typeof NGN_PRICING], annual: NGN_PRICING[`${plan.id}_annual` as keyof typeof NGN_PRICING]};
+      return isAnnual ? Number(removeComma(p.annual)) / 12 : Number(removeComma(p.monthly));
     }
     return isAnnual ? plan.annualPrice : plan.monthlyPrice;
   };
 
   const getSavePercent = (plan: typeof PLANS[0]) => {
     if (isNigerian && plan.id !== "free") {
-      return NGN_PRICING[plan.id as keyof typeof NGN_PRICING].savePercent;
+      return NGN_ANNUAL_DISCOUNT[plan.id as keyof typeof NGN_ANNUAL_DISCOUNT];
     }
     return plan.savePercent;
   };
@@ -248,13 +249,22 @@ export default function PricingPage() {
                 ))}
               </ul>
 
-              <Link
-                id={`pricing-cta-${plan.id}`}
-                href={plan.ctaHref}
-                className={`${styles.ctaBtn} ${plan.isPro ? styles.ctaPrimary : ""}`}
-              >
-                {plan.cta}
-              </Link>
+              {plan.id === "pro" || plan.id === "proPlus" ? (
+                <SubscribeButton
+                  planId={plan.planId as "pro" | "proPlus"}
+                  interval={isAnnual ? "annually" : "monthly"}
+                  label={plan.cta}
+                  className={`${styles.ctaBtn} ${plan.id === "pro" ? styles.ctaPrimary : ""}`}
+                />
+              ) : (
+                <Link
+                  id={`pricing-cta-${plan.id}`}
+                  href={plan.ctaHref? plan.ctaHref : "/auth/login"}
+                  className={`${styles.ctaBtn}`}
+                >
+                  {plan.cta}
+                </Link>
+              )}
             </div>
           ))}
         </div>
