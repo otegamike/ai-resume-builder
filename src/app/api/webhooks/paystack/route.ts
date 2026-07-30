@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (tierInfo) {
-          await resetCreditsIfNeeded(String(user._id), tierInfo.tier);
+          await resetCreditsIfNeeded(String(user._id), tierInfo.tier, true);
         }
         break;
       }

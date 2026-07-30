@@ -15,7 +15,8 @@ export function getNextMonthFirstDay(): Date {
 
 export async function resetCreditsIfNeeded(
   userId: string,
-  subscriptionPlan: string | null | undefined
+  subscriptionPlan: string | null | undefined,
+  bypassResetCheck: boolean = false
 ): Promise<{ reset: boolean }> {
   const currentCycle = getCurrentCycleString();
   const plan = subscriptionPlan || "free";
@@ -23,12 +24,10 @@ export async function resetCreditsIfNeeded(
     MAX_CREDITS_PER_PLAN[plan as keyof typeof MAX_CREDITS_PER_PLAN] ??
     MAX_CREDITS_PER_PLAN.free;
 
+  const userQuery = bypassResetCheck ? { _id: userId } : { _id: userId, "creditResetMeta.lastResetCycle": { $ne: currentCycle } };
+
   const result = await User.findOneAndUpdate(
-    {
-      _id: userId,
-      // Target anyone whose last cycle doesn't match today's cycle string
-      "creditResetMeta.lastResetCycle": { $ne: currentCycle }
-    },
+    userQuery,
     {
       $set: {
         AiCredits: maxCredits,
