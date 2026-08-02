@@ -27,10 +27,10 @@
   padding: 2.5rem;
   background: linear-gradient(
     145deg,
-    #0d1f12 0%,
-    #132b1a 40%,
-    #1a2f22 70%,
-    #0f1e16 100%
+    var(--primary-100) 0%,
+    var(--primary-700) 60%,
+    var(--primary-800) 70%,
+    var(--primary-900) 100%
   );
   overflow: hidden;
 }
@@ -154,7 +154,7 @@
   width: 1.75rem;
   height: 1.75rem;
   border-radius: 50%;
-  background: rgba(132, 177, 121, 0.12);
+  background: rgba(184, 216, 176, 0.12);
   border: 1px solid rgba(132, 177, 121, 0.3);
   display: flex;
   align-items: center;
@@ -165,12 +165,10 @@
 .featureDot svg {
   width: 0.9rem;
   height: 0.9rem;
-  stroke: #a2cb8b;
 }
 
 .featureText {
   font-size: 0.9rem;
-  color: rgba(232, 245, 228, 0.75);
   line-height: 1.4;
 }
 
@@ -181,7 +179,7 @@
 
 .brandTagline {
   font-size: 0.78rem;
-  color: rgba(232, 245, 228, 0.35);
+  color: rgba(244, 249, 243, 0.35);
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }

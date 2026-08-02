@@ -136,7 +136,7 @@ export default function LoginClient({ callbackUrl }: { callbackUrl: string }) {
         <div className={styles.brandIllustration}>
           <div className={styles.illustrationWrapper}>
             <Image
-              src="/login-illustration.png"
+              src="/new-login-illustration.png"
               alt="AI-powered resume builder illustration"
               fill
               className={styles.illustrationImg}

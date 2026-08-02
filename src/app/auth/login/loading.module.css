@@ -27,10 +27,10 @@
   padding: 2.5rem;
   background: linear-gradient(
     145deg,
-    #0d1f12 0%,
-    #132b1a 40%,
-    #1a2f22 70%,
-    #0f1e16 100%
+    var(--primary-100) 0%,
+    var(--primary-200) 40%,
+    var(--primary-300) 70%,
+    var(--primary-400) 100%
   );
   overflow: hidden;
 }

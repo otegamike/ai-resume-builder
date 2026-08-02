@@ -9,6 +9,19 @@ import Footer from "@/components/sections/Footer";
 import SubscribeButton from "@/components/subscription/SubscribeButton";
 import { NGN_PRICING, removeComma, NGN_ANNUAL_DISCOUNT, detectCurrency, CURRENCIES, type CurrencyConfig } from "@/utils/pricing";
 
+const pricingNGN = {
+  pro: {
+    monthly: Number(removeComma(NGN_PRICING.pro_monthly)),
+    annual: Number(removeComma(NGN_PRICING.pro_annual)) / 12 ,
+    discount: NGN_ANNUAL_DISCOUNT.pro,
+  },
+  proPlus: {
+    monthly: Number(removeComma(NGN_PRICING.proPlus_monthly)),
+    annual: Number(removeComma(NGN_PRICING.proPlus_annual)) / 12 ,
+    discount: NGN_ANNUAL_DISCOUNT.proPlus,
+  },
+}
+
 const PLANS = [
   {
     id: "free",
@@ -73,7 +86,7 @@ const COMPARE_ROWS = [
   { feature: "Resume Limit",              free: "10",        pro: "50",   enterprise: "Unlimited" },
   { feature: "AI credits/month",    free: "1000",    pro: '50,000',          enterprise: 'Unlimited'},
   { feature: "High Definition Export",  free: false,             pro: true,          enterprise: true },
-  { feature: "Premium Proffesional Templates",   free: false,             pro: true,          enterprise: true },
+  { feature: "Premium Professional Templates",   free: false,             pro: true,          enterprise: true },
   { feature: "Branding Removal",          free: false,             pro: true,          enterprise: true },
   { feature: "Team Members",             free: "1",               pro: "1",           enterprise: "Unlimited" },
   { feature: "Priority Support",          free: false,             pro: false,         enterprise: true },
@@ -150,8 +163,7 @@ export default function PricingPage() {
     if (plan.monthlyPrice === null) return null;
     if (plan.monthlyPrice === 0) return 0;
     if (isNigerian && plan.id !== "free") {
-      const p = {monthly: NGN_PRICING[`${plan.id}_monthly` as keyof typeof NGN_PRICING], annual: NGN_PRICING[`${plan.id}_annual` as keyof typeof NGN_PRICING]};
-      return isAnnual ? Number(removeComma(p.annual)) / 12 : Number(removeComma(p.monthly));
+      return isAnnual ? pricingNGN[plan.id as keyof typeof pricingNGN].annual : pricingNGN[plan.id as keyof typeof pricingNGN].monthly;
     }
     return isAnnual ? plan.annualPrice : plan.monthlyPrice;
   };
