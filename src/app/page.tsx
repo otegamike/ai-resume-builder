@@ -13,8 +13,32 @@ const FeaturesSection = dynamic(
 );
 
 export default function Home() {
+  const softwareApplicationSchema = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "Agentic CV",
+    applicationCategory: "MultimediaApplication",
+    operatingSystem: "Web",
+    description:
+      "Build ATS-optimized resumes and personalized cover letters with AI in minutes.",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "4.8",
+      ratingCount: "1200",
+    },
+  };
+
   return (
     <div className={styles.container}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationSchema) }}
+      />
       <div className={styles.heroGradientLeft} />
       <div className={styles.heroGradientRight} />
       <main className={styles.main}>

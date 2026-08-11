@@ -20,11 +20,16 @@ export async function POST(request: Request) {
     const buffer = Buffer.from(arrayBuffer);
     const base64Image = `data:${file.type};base64,${buffer.toString("base64")}`;
 
+    const folder = (formData.get("folder") as string) || "Resume";
+
     const uploadResponse = await cloudinary.uploader.upload(base64Image, {
-      folder: "Resume",
+      folder,
     });
 
-    return NextResponse.json({ secure_url: uploadResponse.secure_url });
+    return NextResponse.json({
+      secure_url: uploadResponse.secure_url,
+      public_id: uploadResponse.public_id,
+    });
   } catch (error) {
     console.error("Cloudinary upload error:", error);
     return NextResponse.json(

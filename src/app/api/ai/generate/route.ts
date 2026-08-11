@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateSummary, generateExperienceBulletPoints, improveSummary, generateSkillsSuggestions, generateCategorizedSkills, categorizeExistingSkills } from '@/lib/ai';
+import { generateSummary, generateExperienceBulletPoints, improveSummary, generateSkillsSuggestions, generateCategorizedSkills, categorizeExistingSkills, generateBlogMeta } from '@/lib/ai';
 import { getAuthenticatedUser } from '@/lib/authUser';
 import { deductCredits, InsufficientCreditsError } from '@/lib/creditUtils';
 import type { AiFeature } from '@/lib/creditCosts';
@@ -15,6 +15,7 @@ interface GenerateBody {
     description?: string;
     summary?: string;
     achivements?: string[];
+    content?: string;
   };
 }
 
@@ -25,6 +26,7 @@ const FEATURE_MAP: Record<string, AiFeature> = {
   generateSkills: 'generateSkills',
   generateCategorizedSkills: 'generateCategorizedSkills',
   categorizeExistingSkills: 'categorizeExistingSkills',
+  generateBlogMeta: 'generateBlogMeta',
 };
 
 export async function POST(request: NextRequest) {
@@ -64,6 +66,12 @@ export async function POST(request: NextRequest) {
         break;
       case 'categorizeExistingSkills':
         result = await categorizeExistingSkills(data.skills || []);
+        break;
+      case 'generateBlogMeta':
+        if (!authUser.session?.user?.isAdmin) {
+          return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+        result = await generateBlogMeta(data.content || '');
         break;
     }
 

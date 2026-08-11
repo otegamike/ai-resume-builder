@@ -25,7 +25,8 @@ interface NavPanelProps {
 const primaryLinks = [
   { href: "/templates", label: "Template Gallery" },
   { href: "/#features", label: "Features" },
-  { href: "/pricing", label: "Pricing" }
+  { href: "/pricing", label: "Pricing" },
+  { href: "/blog", label: "Blog" }
 ];
 
 const secondaryLinks = [

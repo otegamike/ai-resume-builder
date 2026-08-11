@@ -1,0 +1,31 @@
+.container {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: var(--space-8) var(--container-padding);
+}
+
+.title {
+  font-family: var(--font-lora);
+  font-size: var(--text-3xl);
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-6);
+}
+
+.card {
+  background-color: var(--surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+}
+
+.notFound {
+  color: var(--text-secondary);
+  text-align: center;
+  padding: var(--space-16) 0;
+}

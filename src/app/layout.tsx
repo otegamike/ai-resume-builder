@@ -37,8 +37,40 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
-  title: "AgenticApp.cv",
-  description: "AgenticApp.cv helps you create polished, ATS-ready resumes with AI.",
+  metadataBase: new URL("https://agenticapp.cv"),
+  title: {
+    default: "Agentic CV | AI Resume Builder & ATS Score Checker",
+    template: "%s | Agentic CV",
+  },
+  description:
+    "Build ATS-optimized resumes and personalized cover letters with AI. Get instant ATS compatibility scores, track applications, and generate tailored content that gets you interviews.",
+  keywords: [
+    "AI resume builder",
+    "ATS resume checker",
+    "AI cover letter generator",
+    "ATS score",
+    "job application tracker",
+  ],
+  alternates: {
+    canonical: "https://agenticapp.cv",
+  },
+  openGraph: {
+    type: "website",
+    siteName: "Agentic CV",
+    locale: "en_US",
+    url: "https://agenticapp.cv",
+    title: "Agentic CV | AI Resume Builder & ATS Score Checker",
+    description:
+      "Build ATS-optimized resumes and personalized cover letters with AI in minutes.",
+    images: [{ url: "/og-default.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Agentic CV | AI Resume Builder & ATS Score Checker",
+    description:
+      "Build ATS-optimized resumes and personalized cover letters with AI in minutes.",
+    images: ["/og-default.png"],
+  },
 };
 
 export default function RootLayout({

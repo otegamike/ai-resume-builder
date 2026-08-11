@@ -5,6 +5,7 @@ export const CREDIT_COST = {
   generateSkills: 100,
   generateCategorizedSkills: 100,
   categorizeExistingSkills: 100,
+  generateBlogMeta: 0,
   atsAnalysisUpload: 300,
   atsAnalysisSaved: 200,
   resumeTailor: 300,

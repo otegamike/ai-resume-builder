@@ -39,6 +39,9 @@ export default function NavBar({ menuState, pathname }: { menuState: boolean; pa
                     <Link className={`${styles.navLink} ${pathname === "/pricing" ? styles.navLinkActive : ""}`} href="/pricing">
                         <li>Pricing</li>
                     </Link>
+                    <Link className={`${styles.navLink} ${pathname === "/blog" ? styles.navLinkActive : ""}`} href="/blog">
+                        <li>Blog</li>
+                    </Link>
                 </ul>
             </div>
         
