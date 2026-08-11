@@ -1,0 +1,32 @@
+/* Shared blog utilities + section scaffolding */
+
+.fullBleed {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+}
+
+.inner {
+  width: 100%;
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: 0 var(--container-padding);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--primary-400);
+}
+
+.eyebrowLine {
+  width: 2rem;
+  height: 1px;
+  background: var(--primary-500);
+  opacity: 0.7;
+}

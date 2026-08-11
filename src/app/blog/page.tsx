@@ -1,6 +1,15 @@
 import Link from "next/link";
 import dbConnect from "@/lib/db";
 import Post from "@/models/Post";
+import AdminLink from "@/components/blog/AdminLink";
+import BlogHero from "@/components/blog/BlogHero";
+import FeaturedPostCard, {
+  type BlogPostSummary,
+} from "@/components/blog/FeaturedPostCard";
+import PostCard from "@/components/blog/PostCard";
+import RecentPostList from "@/components/blog/RecentPostList";
+import BlogCTA from "@/components/blog/BlogCTA";
+import blogStyles from "@/components/blog/blog.module.css";
 import styles from "./page.module.css";
 
 void Post;
@@ -17,14 +26,6 @@ export const metadata = {
 };
 
 const POSTS_PER_PAGE = 12;
-
-function formatDate(iso: Date | string) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
 
 export default async function BlogPage({
   searchParams,
@@ -47,87 +48,86 @@ export default async function BlogPage({
   ]);
 
   const totalPages = Math.max(1, Math.ceil(totalPosts / POSTS_PER_PAGE));
+  const isFirstPage = page === 1;
+  const featured: BlogPostSummary | undefined = isFirstPage ? posts[0] : undefined;
+  const recent = isFirstPage ? posts.slice(1, 5) : [];
+  const grid = isFirstPage ? posts.slice(5) : posts;
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>The Agentic CV Blog</h1>
-        <p className={styles.subtitle}>
-          Tips, guides, and strategies for landing more interviews with an
-          ATS-optimized resume.
-        </p>
-      </div>
-
-      {posts.length === 0 ? (
-        <div className={styles.emptyState}>
-          <p>No posts published yet. Check back soon!</p>
-        </div>
-      ) : (
-        <>
-          <div className={styles.grid}>
-            {posts.map((post) => (
-              <Link
-                key={post._id.toString()}
-                href={`/blog/${post.slug}`}
-                className={styles.card}
-              >
-                {post.coverImageUrl && (
-                  <div className={styles.cardImageWrapper}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={post.coverImageUrl}
-                      alt={post.title}
-                      className={styles.cardImage}
-                    />
-                  </div>
-                )}
-                <div className={styles.cardBody}>
-                  {post.tags && post.tags.length > 0 && (
-                    <div className={styles.tags}>
-                      {(post.tags as string[]).slice(0, 3).map((tag) => (
-                        <span key={tag} className={styles.tag}>
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <h2 className={styles.cardTitle}>{post.title}</h2>
-                  {post.excerpt && (
-                    <p className={styles.cardExcerpt}>{post.excerpt}</p>
-                  )}
-                  <span className={styles.cardDate}>
-                    {formatDate(post.publishedAt ?? post.updatedAt)}
-                  </span>
-                </div>
-              </Link>
-            ))}
+    <div>
+      <section className={`${styles.hero} ${blogStyles.fullBleed}`}>
+        <div className={blogStyles.inner}>
+          <div className={styles.heroTop}>
+            <AdminLink />
           </div>
+          <BlogHero
+            eyebrow="From the blog"
+            title="The Agentic CV Blog"
+            subtitle="Tips, guides, and strategies for landing more interviews with an ATS-optimized resume."
+          />
+        </div>
+      </section>
 
-          {totalPages > 1 && (
-            <nav className={styles.pagination}>
-              {page > 1 && (
-                <Link
-                  href={`/blog?page=${page - 1}`}
-                  className={styles.pageButton}
-                >
-                  Previous
-                </Link>
+      <div className={`${styles.content} ${blogStyles.fullBleed}`}>
+        <div className={blogStyles.inner}>
+          {posts.length === 0 ? (
+            <div className={styles.emptyState}>
+              <p>No posts published yet. Check back soon!</p>
+            </div>
+          ) : (
+            <>
+              {featured && <FeaturedPostCard post={featured} />}
+
+              {recent.length > 0 && (
+                <section className={styles.recentSection}>
+                  <div className={styles.recentGrid}>
+                    <RecentPostList posts={recent} />
+                    <BlogCTA />
+                  </div>
+                </section>
               )}
-              <span className={styles.pageInfo}>
-                Page {page} of {totalPages}
-              </span>
-              {page < totalPages && (
-                <Link
-                  href={`/blog?page=${page + 1}`}
-                  className={styles.pageButton}
-                >
-                  Next
-                </Link>
+
+              {grid.length > 0 && (
+                <section className={styles.gridSection}>
+                  <h2 className={styles.sectionHeading}>All posts</h2>
+                  <div className={styles.grid}>
+                    {grid.map((post) => (
+                      <PostCard
+                        key={post._id.toString()}
+                        post={post as unknown as BlogPostSummary}
+                      />
+                    ))}
+                  </div>
+                </section>
               )}
-            </nav>
+
+              {totalPages > 1 && (
+                <nav className={styles.pagination}>
+                  {page > 1 && (
+                    <Link
+                      href={`/blog?page=${page - 1}`}
+                      className={styles.pageButton}
+                    >
+                      Previous
+                    </Link>
+                  )}
+                  <span className={styles.pageInfo}>
+                    Page {page} of {totalPages}
+                  </span>
+                  {page < totalPages && (
+                    <Link
+                      href={`/blog?page=${page + 1}`}
+                      className={styles.pageButton}
+                    >
+                      Next
+                    </Link>
+                  )}
+                </nav>
+              )}
+            </>
           )}
-        </>
-      )}
+        </div>
+      </div>
     </div>
   );
 }

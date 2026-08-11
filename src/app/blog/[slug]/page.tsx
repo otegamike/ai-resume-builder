@@ -4,6 +4,15 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import dbConnect from "@/lib/db";
 import Post from "@/models/Post";
+import PostHeader from "@/components/blog/PostHeader";
+import PostTOC from "@/components/blog/PostTOC";
+import TagPill from "@/components/blog/TagPill";
+import {
+  extractHeadings,
+  injectHeadingIds,
+  formatDate,
+} from "@/components/blog/blogHelpers";
+import blogStyles from "@/components/blog/blog.module.css";
 import styles from "./page.module.css";
 
 void Post;
@@ -41,8 +50,7 @@ export async function generateMetadata({
 
     const url = `${BASE_URL}/blog/${post.slug}`;
     const description =
-      post.excerpt ||
-      `Read "${post.title}" on the Agentic CV blog.`;
+      post.excerpt || `Read "${post.title}" on the Agentic CV blog.`;
 
     return {
       title: post.title,
@@ -81,12 +89,10 @@ export async function generateMetadata({
   }
 }
 
-function formatDate(iso: Date | string) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+function estimateReadTime(html: string): number {
+  const text = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  const words = text ? text.split(" ").length : 0;
+  return Math.max(1, Math.ceil(words / 200));
 }
 
 export default async function BlogPostPage({
@@ -102,6 +108,10 @@ export default async function BlogPostPage({
   if (!post) {
     notFound();
   }
+
+  const headings = extractHeadings(post.content);
+  const contentHtml = injectHeadingIds(post.content);
+  const readTime = estimateReadTime(post.content);
 
   const blogPostingSchema = {
     "@context": "https://schema.org",
@@ -126,53 +136,65 @@ export default async function BlogPostPage({
     },
   };
 
+  const tags = post.tags as string[] | undefined;
+
   return (
-    <div className={styles.container}>
+    <div>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingSchema) }}
       />
 
-      <Link href="/blog" className={styles.backLink}>
-        <ArrowLeft size={16} />
-        Back to blog
-      </Link>
+      <div className={`${styles.content} ${blogStyles.fullBleed}`}>
+        <div className={blogStyles.inner}>
+          <PostHeader
+            title={post.title}
+            date={formatDate(post.publishedAt ?? post.updatedAt)}
+            readTime={readTime}
+            tags={tags}
+          />
 
-      <article className={styles.article}>
-        <header className={styles.header}>
-          {post.tags && post.tags.length > 0 && (
-            <div className={styles.tags}>
-              {(post.tags as string[]).map((tag) => (
-                <span key={tag} className={styles.tag}>
-                  {tag}
-                </span>
-              ))}
+          <div className={styles.layout}>
+            <div className={styles.body}>
+              {post.coverImageUrl && (
+                <div className={styles.coverWrapper}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={post.coverImageUrl}
+                    alt={post.title}
+                    className={styles.coverImage}
+                  />
+                </div>
+              )}
+
+              <article
+                className={styles.article}
+                dangerouslySetInnerHTML={{ __html: contentHtml }}
+              />
             </div>
-          )}
-          <h1 className={styles.title}>{post.title}</h1>
-          <p className={styles.meta}>
-            Published{" "}
-            {formatDate(post.publishedAt ?? post.updatedAt)}
-          </p>
-          {post.excerpt && <p className={styles.excerpt}>{post.excerpt}</p>}
-        </header>
 
-        {post.coverImageUrl && (
-          <div className={styles.coverWrapper}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={post.coverImageUrl}
-              alt={post.title}
-              className={styles.coverImage}
-            />
+            {headings.length > 1 && (
+              <aside className={styles.sidebar}>
+                <PostTOC headings={headings} />
+              </aside>
+            )}
           </div>
-        )}
 
-        <div
-          className={styles.content}
-          dangerouslySetInnerHTML={{ __html: post.content }}
-        />
-      </article>
+          <footer className={styles.footerMeta}>
+            {tags && tags.length > 0 && (
+              <div className={styles.footerTags}>
+                {tags.map((tag) => (
+                  <TagPill key={tag} tag={tag} />
+                ))}
+              </div>
+            )}
+            <Link href="/blog" className={styles.allPostsLink}>
+              <ArrowLeft size={16} />
+              All articles
+            </Link>
+          </footer>
+        </div>
+      </div>
     </div>
   );
 }
