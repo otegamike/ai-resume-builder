@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, ArrowLeft } from "lucide-react";
 import styles from "./page.module.css";
 
 interface BlogPost {
@@ -68,6 +68,11 @@ export default function BlogAdminPage() {
 
   return (
     <div className={styles.container}>
+      <Link href="/blog" className={styles.backLink}>
+        <ArrowLeft size={16} />
+        Back to blog
+      </Link>
+
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Blog Posts</h1>
@@ -80,8 +85,21 @@ export default function BlogAdminPage() {
       </div>
 
       {loading && (
-        <div className={styles.loadingContainer}>
-          <Loader2 className={styles.loadingIcon} />
+        <div className={styles.cardGrid} aria-hidden="true">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className={`${styles.card} ${styles.skeletonCard}`}>
+              <div className={styles.cardTop}>
+                <span className={styles.skeletonBadge} />
+                <div className={styles.actions}>
+                  <span className={styles.skeletonButton} />
+                  <span className={styles.skeletonButton} />
+                </div>
+              </div>
+              <span className={styles.skeletonLine} />
+              <span className={`${styles.skeletonLine} ${styles.skeletonLineShort}`} />
+              <span className={`${styles.skeletonLine} ${styles.skeletonLineTiny}`} />
+            </div>
+          ))}
         </div>
       )}
 
@@ -97,64 +115,53 @@ export default function BlogAdminPage() {
       )}
 
       {!loading && !error && posts.length > 0 && (
-        <div className={styles.tableWrapper}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Status</th>
-                <th>Published</th>
-                <th>Updated</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {posts.map((post) => (
-                <tr key={post._id}>
-                  <td>
-                    <Link href={`/blog/${post.slug}`} className={styles.postTitle}>
-                      {post.title}
-                    </Link>
-                    <span className={styles.postSlug}>/{post.slug}</span>
-                  </td>
-                  <td>
-                    <span
-                      className={`${styles.statusBadge} ${
-                        post.published ? styles.statusPublished : styles.statusDraft
-                      }`}
-                    >
-                      {post.published ? "Published" : "Draft"}
-                    </span>
-                  </td>
-                  <td className={styles.mutedText}>{formatDate(post.publishedAt)}</td>
-                  <td className={styles.mutedText}>{formatDate(post.updatedAt)}</td>
-                  <td>
-                    <div className={styles.actions}>
-                      <Link
-                        href={`/blog/admin/edit/${post.slug}`}
-                        className={styles.iconButton}
-                        title="Edit"
-                      >
-                        <Pencil size={16} />
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(post.slug)}
-                        disabled={deleting === post.slug}
-                        className={`${styles.iconButton} ${styles.deleteButton}`}
-                        title="Delete"
-                      >
-                        {deleting === post.slug ? (
-                          <Loader2 size={16} className={styles.spinner} />
-                        ) : (
-                          <Trash2 size={16} />
-                        )}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className={styles.cardGrid}>
+          {posts.map((post) => (
+            <article key={post._id} className={styles.card}>
+              <div className={styles.cardTop}>
+                <span
+                  className={`${styles.statusBadge} ${
+                    post.published
+                      ? styles.statusPublished
+                      : styles.statusDraft
+                  }`}
+                >
+                  {post.published ? "Published" : "Draft"}
+                </span>
+                <div className={styles.actions}>
+                  <Link
+                    href={`/blog/admin/edit/${post.slug}`}
+                    className={styles.iconButton}
+                    title="Edit"
+                  >
+                    <Pencil size={16} />
+                  </Link>
+                  <button
+                    onClick={() => handleDelete(post.slug)}
+                    disabled={deleting === post.slug}
+                    className={`${styles.iconButton} ${styles.deleteButton}`}
+                    title="Delete"
+                  >
+                    {deleting === post.slug ? (
+                      <Loader2 size={16} className={styles.spinner} />
+                    ) : (
+                      <Trash2 size={16} />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <Link href={`/blog/${post.slug}`} className={styles.postTitle}>
+                <h3 className={styles.cardTitle}>{post.title}</h3>
+              </Link>
+              <span className={styles.postSlug}>/{post.slug}</span>
+
+              <div className={styles.cardMeta}>
+                <span>Published {formatDate(post.publishedAt)}</span>
+                <span>Updated {formatDate(post.updatedAt)}</span>
+              </div>
+            </article>
+          ))}
         </div>
       )}
     </div>

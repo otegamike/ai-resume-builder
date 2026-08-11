@@ -57,7 +57,7 @@
 }
 
 .titleLink:hover .title {
-  color: var(--primary-600);
+  color: var(--primary-800);
 }
 
 .excerpt {
