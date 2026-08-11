@@ -1,13 +1,13 @@
-# Agentic CV
+# AgenticApp.cv
 
-Agentic CV is a full-stack resume and job-application workspace built with Next.js. It helps users create ATS-friendly resumes, preview them in polished HTML templates, improve and tailor them with AI, generate cover letters, track applications, and export finished documents.
+AgenticApp.cv is a full-stack resume and job-application workspace built with Next.js. It helps users create ATS-friendly resumes, preview them in polished HTML templates, improve and tailor them with AI, generate cover letters, track applications, and export finished documents.
 
 For deeper architecture details, see [PROJECT_WALKTHROUGH.md](./PROJECT_WALKTHROUGH.md).  
 For template rendering details, see [template.md](./template.md).
 
 ## Product Scope
 
-Agentic CV currently includes:
+AgenticApp.cv currently includes:
 - Resume creation and editing with autosave.
 - Live resume previews rendered from static HTML templates.
 - PDF and image export from the selected resume template.

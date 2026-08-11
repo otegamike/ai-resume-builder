@@ -7,6 +7,7 @@ import Post from "@/models/Post";
 import PostHeader from "@/components/blog/PostHeader";
 import PostTOC from "@/components/blog/PostTOC";
 import TagPill from "@/components/blog/TagPill";
+import Footer from "@/components/sections/Footer";
 import {
   extractHeadings,
   injectHeadingIds,
@@ -50,7 +51,7 @@ export async function generateMetadata({
 
     const url = `${BASE_URL}/blog/${post.slug}`;
     const description =
-      post.excerpt || `Read "${post.title}" on the Agentic CV blog.`;
+      post.excerpt || `Read "${post.title}" on the AgenticApp.cv blog.`;
 
     return {
       title: post.title,
@@ -124,11 +125,11 @@ export default async function BlogPostPage({
     dateModified: new Date(post.updatedAt).toISOString(),
     author: {
       "@type": "Organization",
-      name: "Agentic CV",
+      name: "AgenticApp.cv",
     },
     publisher: {
       "@type": "Organization",
-      name: "Agentic CV",
+      name: "AgenticApp.cv",
     },
     mainEntityOfPage: {
       "@type": "WebPage",
@@ -194,6 +195,10 @@ export default async function BlogPostPage({
             </Link>
           </footer>
         </div>
+      </div>
+
+      <div className={blogStyles.fullBleed}>
+        <Footer />
       </div>
     </div>
   );

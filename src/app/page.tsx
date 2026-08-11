@@ -16,11 +16,11 @@ export default function Home() {
   const softwareApplicationSchema = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    name: "Agentic CV",
+    name: "AgenticApp.cv",
     applicationCategory: "MultimediaApplication",
     operatingSystem: "Web",
     description:
-      "Build ATS-optimized resumes and personalized cover letters with AI in minutes.",
+      "Free AI resume builder & ATS checker. Create ATS-friendly resumes, get an instant compatibility score, generate tailored cover letters, and track every application in one place.",
     offers: {
       "@type": "Offer",
       price: "0",

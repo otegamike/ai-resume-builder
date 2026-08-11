@@ -9,6 +9,7 @@ import FeaturedPostCard, {
 import PostCard from "@/components/blog/PostCard";
 import RecentPostList from "@/components/blog/RecentPostList";
 import BlogCTA from "@/components/blog/BlogCTA";
+import Footer from "@/components/sections/Footer";
 import blogStyles from "@/components/blog/blog.module.css";
 import styles from "./page.module.css";
 
@@ -19,7 +20,7 @@ export const revalidate = 3600;
 export const metadata = {
   title: "Blog",
   description:
-    "Expert advice on building ATS-optimized resumes, writing cover letters that get responses, and mastering your job search with Agentic CV.",
+    "Expert advice on building ATS-optimized resumes, writing cover letters that get responses, and mastering your job search with AgenticApp.cv.",
   alternates: {
     canonical: "https://agenticapp.cv/blog",
   },
@@ -62,7 +63,7 @@ export default async function BlogPage({
           </div>
           <BlogHero
             eyebrow="From the blog"
-            title="The Agentic CV Blog"
+            title="The AgenticApp.cv Blog"
             subtitle="Tips, guides, and strategies for landing more interviews with an ATS-optimized resume."
           />
         </div>
@@ -127,6 +128,10 @@ export default async function BlogPage({
             </>
           )}
         </div>
+      </div>
+
+      <div className={blogStyles.fullBleed}>
+        <Footer />
       </div>
     </div>
   );

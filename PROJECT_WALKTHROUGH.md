@@ -1,13 +1,13 @@
-# Agentic CV Project Walkthrough
+# AgenticApp.cv Project Walkthrough
 
-This document describes the current Agentic CV system: architecture, boundaries, data flows, API groups, and major user journeys.
+This document describes the current AgenticApp.cv system: architecture, boundaries, data flows, API groups, and major user journeys.
 
 For a product-level overview, see [README.md](./README.md).  
 For template rendering internals, see [template.md](./template.md).
 
 ## 1) Architecture at a Glance
 
-Agentic CV is a single Next.js 16 App Router application. It contains:
+AgenticApp.cv is a single Next.js 16 App Router application. It contains:
 - Public marketing and auth pages.
 - Authenticated dashboard and editor experiences.
 - Backend route handlers under `src/app/api/**/route.ts`.

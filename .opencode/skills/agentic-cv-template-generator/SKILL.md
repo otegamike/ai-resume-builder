@@ -1,18 +1,18 @@
 ﻿---
 name: agentic-cv-template-generator
 description: >
-  Use this skill whenever generating a new HTML resume template for Agentic CV.
+  Use this skill whenever generating a new HTML resume template for AgenticApp.cv.
   Triggers include: "create a new template", "add a resume template", "design a CV template",
-  "build templateN", or any request to produce a .html file that fits the Agentic CV template pipeline.
+  "build templateN", or any request to produce a .html file that fits the AgenticApp.cv template pipeline.
   This skill covers layout architecture, the custom Mustache-like rendering syntax, mandatory
   JavaScript scaling/pagination boilerplate, ATS compliance rules, typography, color, and
   visual-balance guidelines. Always read this skill before writing a single line of template HTML.
 ---
 
-# Agentic CV Template Generator Skill
+# AgenticApp.cv Template Generator Skill
 
 You are generating a professional, ATS-optimized, visually polished HTML resume template
-for the **Agentic CV** resume builder. Read every section of this skill before writing code.
+for the **AgenticApp.cv** resume builder. Read every section of this skill before writing code.
 Skipping any section produces broken templates.
 
 ---

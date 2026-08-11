@@ -39,11 +39,11 @@ const lora = Lora({
 export const metadata: Metadata = {
   metadataBase: new URL("https://agenticapp.cv"),
   title: {
-    default: "Agentic CV | AI Resume Builder & ATS Score Checker",
-    template: "%s | Agentic CV",
+    default: "AgenticApp.cv | AI Resume Builder & ATS Score Checker",
+    template: "%s | AgenticApp.cv",
   },
   description:
-    "Build ATS-optimized resumes and personalized cover letters with AI. Get instant ATS compatibility scores, track applications, and generate tailored content that gets you interviews.",
+    "Free AI resume builder & ATS checker. Create ATS-friendly resumes, get an instant compatibility score, generate tailored cover letters, and track every application in one place.",
   keywords: [
     "AI resume builder",
     "ATS resume checker",
@@ -56,19 +56,19 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    siteName: "Agentic CV",
+    siteName: "AgenticApp.cv",
     locale: "en_US",
     url: "https://agenticapp.cv",
-    title: "Agentic CV | AI Resume Builder & ATS Score Checker",
+    title: "AgenticApp.cv | AI Resume Builder & ATS Score Checker",
     description:
-      "Build ATS-optimized resumes and personalized cover letters with AI in minutes.",
+      "Free AI resume builder & ATS checker. Create ATS-friendly resumes, get an instant compatibility score, generate tailored cover letters, and track every application in one place.",
     images: [{ url: "/og-default.png", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Agentic CV | AI Resume Builder & ATS Score Checker",
+    title: "AgenticApp.cv | AI Resume Builder & ATS Score Checker",
     description:
-      "Build ATS-optimized resumes and personalized cover letters with AI in minutes.",
+      "Free AI resume builder & ATS checker. Create ATS-friendly resumes, get an instant compatibility score, generate tailored cover letters, and track every application in one place.",
     images: ["/og-default.png"],
   },
 };

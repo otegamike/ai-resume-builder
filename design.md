@@ -1,4 +1,4 @@
-# Design System — Agentic CV (Resumy AI)
+# Design System — AgenticApp.cv (Resumy AI)
 
 > Single source of truth for all visual and design decisions in this project.
 > Read this before making any UI changes.

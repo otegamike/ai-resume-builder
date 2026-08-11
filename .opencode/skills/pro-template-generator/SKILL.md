@@ -1,7 +1,7 @@
 ---
 name: pro-template-generator
 description: >
-  Use this skill whenever generating a new pro-tier or when the user asks for a pro skill or mentions 'pro' or 'ATS'. ATS resume template for Agentic CV.
+  Use this skill whenever generating a new pro-tier or when the user asks for a pro skill or mentions 'pro' or 'ATS'. ATS resume template for AgenticApp.cv.
   Triggers include: "create a pro template", "add an ATS template", "design a pro CV template",
   "build ats-templateN", or any request to produce a pro/ATS template pair (.html + .tsx).
   This skill covers the dual-file architecture, React-PDF export components, system-font-only
@@ -10,7 +10,7 @@ description: >
   agentic-cv-template-generator before writing any code.
 ---
 
-# Agentic CV Pro Template Generator Skill
+# AgenticApp.cv Pro Template Generator Skill
 
 This skill is a companion to **agentic-cv-template-generator**.  
 You MUST read that skill first — it covers shared rules that also apply to pro templates:
