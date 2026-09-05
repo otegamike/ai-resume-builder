@@ -1,21 +1,20 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
   Plus,
   Loader2,
   Save,
-  Upload,
-  AlignLeft,
-  FileImage,
   ChevronDown,
   ChevronUp,
   AlertTriangle,
   ArrowLeft,
   Clock,
 } from "lucide-react";
+import { useJobDescriptionInput } from "@/hooks/useJobDescriptionInput";
+import JobDescriptionInput from "@/components/job-description/JobDescriptionInput";
 import { Button } from "@/components/ui/Button";
 import { AiButton } from "@/components/ui/AiButton";
 import ResumeSelector, { ResumeSelection } from "@/components/resume/ResumeSelector";
@@ -28,7 +27,6 @@ import { useAlertStore } from "@/store/useAlertStore";
 import { useResumeStore } from "@/store/useResumeStore";
 import styles from "./page.module.css";
 
-type JobInputMode = "text" | "image";
 type PageView = "form" | "result" | "history";
 
 function buildTitle(role: string, company: string) {
@@ -56,17 +54,13 @@ export default function WriterPage() {
   const [clRole, setClRole] = useState("");
   const [clContent, setClContent] = useState("");
   const [resumeSelection, setResumeSelection] = useState<ResumeSelection | null>(null);
-  const [clJobMode, setClJobMode] = useState<JobInputMode>("text");
-  const [clJobText, setClJobText] = useState("");
-  const [clJobImage, setClJobImage] = useState<File | null>(null);
-  const [clJobImageUrl, setClJobImageUrl] = useState<string | null>(null);
+  const job = useJobDescriptionInput();
   const [clGenerating, setClGenerating] = useState(false);
   const [clSaving, setClSaving] = useState(false);
   const [clError, setClError] = useState("");
   const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
   const storeFetchResumes = useResumeStore((state) => state.fetchResumes);
   const getResumeById = useResumeStore((state) => state.getResumeById);
-  const clJobFileRef = useRef<HTMLInputElement>(null);
 
   // ── Result view state ──
   const [inferredRole, setInferredRole] = useState("");
@@ -92,12 +86,6 @@ export default function WriterPage() {
     }
   }, []);
 
-
-  useEffect(() => {
-    return () => {
-      if (clJobImageUrl) URL.revokeObjectURL(clJobImageUrl);
-    };
-  }, [clJobImageUrl]);
 
   useEffect(() => {
     if (authStatus === "loading") return;
@@ -133,10 +121,7 @@ export default function WriterPage() {
     setClRole("");
     setClContent("");
     setResumeSelection(null);
-    setClJobMode("text");
-    setClJobText("");
-    setClJobImage(null);
-    setClJobImageUrl(null);
+    job.reset();
     setClError("");
     setEditingClId(null);
     setInferredRole("");
@@ -157,38 +142,17 @@ export default function WriterPage() {
     setPageView("result");
   }
 
-  // ── Job image handlers ──
-  function handleClJobImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0] ?? null;
-    if (clJobImageUrl) URL.revokeObjectURL(clJobImageUrl);
-    if (file) {
-      setClJobImage(file);
-      setClJobImageUrl(URL.createObjectURL(file));
-    } else {
-      setClJobImage(null);
-      setClJobImageUrl(null);
-    }
-  }
-
-  function clearClJobImage() {
-    setClJobImage(null);
-    if (clJobImageUrl) URL.revokeObjectURL(clJobImageUrl);
-    setClJobImageUrl(null);
-    if (clJobFileRef.current) clJobFileRef.current.value = "";
-  }
-
   // ── Generate cover letter ──
   async function generateCoverLetter() {
     if (!resumeSelection) {
       setClError("Please select a resume.");
       return;
     }
-    const hasJobText = clJobMode === "text" ? !!clJobText.trim() : !!clJobImage;
-    if (!hasJobText && clJobMode === "text") {
+    if (!job.hasJobContext && job.jobMode === "text") {
       setClError("Please paste a job description.");
       return;
     }
-    if (!hasJobText && clJobMode === "image") {
+    if (!job.hasJobContext && job.jobMode === "image") {
       setClError("Please upload a job description image.");
       return;
     }
@@ -199,7 +163,6 @@ export default function WriterPage() {
     try {
       const formData = new FormData();
       formData.append("resumeMode", resumeSelection.mode);
-      formData.append("jobMode", clJobMode);
       formData.append("targetCompany", clCompany);
       formData.append("targetRole", clRole);
 
@@ -222,12 +185,7 @@ export default function WriterPage() {
         }
       }
 
-      if (clJobMode === "text") {
-        formData.append("jobText", clJobText);
-      } else {
-        if (!clJobImage) throw new Error("No job image selected.");
-        formData.append("jobImage", clJobImage);
-      }
+      job.appendToFormData(formData);
 
       const res = await fetch("/api/cover-letters/generate", {
         method: "POST",
@@ -295,7 +253,7 @@ export default function WriterPage() {
         targetRole: clRole,
         content: clContent,
         resumeId: resumeSelection?.selectedResumeId || undefined,
-        jobDescription: clJobText,
+        jobDescription: job.jobText,
       };
 
       let res: Response;
@@ -375,7 +333,7 @@ export default function WriterPage() {
     }
   }, [populateSenderInfo]);
 
-  const canGenerate = !!resumeSelection && (clJobMode === "text" ? !!clJobText.trim() : !!clJobImage) && !clGenerating;
+  const canGenerate = !!resumeSelection && job.hasJobContext && !clGenerating;
 
   return (
     <div className={styles.container}>
@@ -440,64 +398,7 @@ export default function WriterPage() {
               <h2 className={styles.formSectionTitle}>Job Description</h2>
             </div>
 
-            <div className={styles.tabsContainer}>
-              <div className={styles.inputTabs}>
-                <button
-                  type="button"
-                  className={`${styles.inputTab} ${clJobMode === "text" ? styles.activeInputTab : ""}`}
-                  onClick={() => setClJobMode("text")}
-                >
-                  <AlignLeft className={styles.tabIconSmall} />
-                  Paste Description Text
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.inputTab} ${clJobMode === "image" ? styles.activeInputTab : ""}`}
-                  onClick={() => setClJobMode("image")}
-                >
-                  <FileImage className={styles.tabIconSmall} />
-                  Upload Post Image
-                </button>
-              </div>
-            </div>
-
-            <div className={styles.inputBody}>
-              {clJobMode === "text" ? (
-                <div className={styles.field}>
-                  <textarea
-                    placeholder="Paste the responsibilities, requirements, and keywords from the job posting..."
-                    value={clJobText}
-                    onChange={(e) => setClJobText(e.target.value)}
-                    className={styles.textarea}
-                    rows={8}
-                  />
-                </div>
-              ) : (
-                <div className={styles.uploadContainer}>
-                  {clJobImageUrl ? (
-                    <div className={styles.jobImagePreviewBox}>
-                      <img src={clJobImageUrl} alt="Job posting preview" className={styles.jobImagePreview} />
-                      <button type="button" onClick={clearClJobImage} className={styles.removeImageBtn}>
-                        Change Image
-                      </button>
-                    </div>
-                  ) : (
-                    <label className={styles.jobImageUploadLabel}>
-                      <input
-                        ref={clJobFileRef}
-                        type="file"
-                        accept="image/png, image/jpeg, image/jpg, image/webp"
-                        onChange={handleClJobImageChange}
-                        className={styles.fileInput}
-                      />
-                      <Upload className={styles.uploadIcon} />
-                      <span className={styles.uploadTitle}>Choose a job post screenshot</span>
-                      <span className={styles.uploadHint}>Supports PNG, JPG, JPEG, WEBP files</span>
-                    </label>
-                  )}
-                </div>
-              )}
-            </div>
+            <JobDescriptionInput job={job} disabled={clGenerating} />
 
             <div className={styles.collapsibleSection}>
               <button

@@ -1,12 +1,8 @@
 "use client";
 
-import { useRef } from "react";
 import {
   ChevronDown,
   ChevronUp,
-  FileImage,
-  AlignLeft,
-  Upload,
   Loader2,
   CheckCircle2,
   AlertTriangle,
@@ -14,9 +10,10 @@ import {
 import { AiButton } from "@/components/ui/AiButton";
 import { CREDIT_COST } from "@/lib/creditCosts";
 import ResumeSelector, { ResumeSelection } from "@/components/resume/ResumeSelector";
+import JobDescriptionInput from "@/components/job-description/JobDescriptionInput";
+import type { UseJobDescriptionInputReturn } from "@/hooks/useJobDescriptionInput";
 import styles from "@/app/dashboard/applications/page.module.css";
 
-type JobInputMode = "text" | "image";
 type ProgressState = "idle" | "extracting" | "generating" | "ready";
 
 const progressCopy: Record<ProgressState, string> = {
@@ -29,14 +26,7 @@ const progressCopy: Record<ProgressState, string> = {
 interface CreateApplicationFormProps {
   selection: ResumeSelection | null;
   onSelectionChange: (selection: ResumeSelection | null) => void;
-  jobMode: JobInputMode;
-  onJobModeChange: (mode: JobInputMode) => void;
-  jobText: string;
-  onJobTextChange: (text: string) => void;
-  jobImage: File | null;
-  jobImageUrl: string | null;
-  onJobImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onClearJobImage: () => void;
+  job: UseJobDescriptionInputReturn;
   targetCompany: string;
   onTargetCompanyChange: (company: string) => void;
   targetRole: string;
@@ -53,14 +43,7 @@ interface CreateApplicationFormProps {
 export default function CreateApplicationForm({
   selection,
   onSelectionChange,
-  jobMode,
-  onJobModeChange,
-  jobText,
-  onJobTextChange,
-  jobImage,
-  jobImageUrl,
-  onJobImageChange,
-  onClearJobImage,
+  job,
   targetCompany,
   onTargetCompanyChange,
   targetRole,
@@ -73,15 +56,6 @@ export default function CreateApplicationForm({
   onGenerate,
   error,
 }: CreateApplicationFormProps) {
-  const jobFileInputRef = useRef<HTMLInputElement>(null);
-
-  function handleClearJobImage() {
-    onClearJobImage();
-    if (jobFileInputRef.current) {
-      jobFileInputRef.current.value = "";
-    }
-  }
-
   return (
     <div className={styles.tabContent}>
       <section className={styles.guideCard}>
@@ -123,68 +97,7 @@ export default function CreateApplicationForm({
           <h2 className={styles.formSectionTitle}>Job Description</h2>
         </div>
 
-        <div className={styles.tabsContainer}>
-          <div className={styles.inputTabs}>
-            <button
-              type="button"
-              className={`${styles.inputTab} ${jobMode === "text" ? styles.activeInputTab : ""}`}
-              onClick={() => onJobModeChange("text")}
-              disabled={isBusy}
-            >
-              <AlignLeft className={styles.tabIconSmall} />
-              Paste Description Text
-            </button>
-            <button
-              type="button"
-              className={`${styles.inputTab} ${jobMode === "image" ? styles.activeInputTab : ""}`}
-              onClick={() => onJobModeChange("image")}
-              disabled={isBusy}
-            >
-              <FileImage className={styles.tabIconSmall} />
-              Upload Post Image
-            </button>
-          </div>
-        </div>
-
-        <div className={styles.inputBody}>
-          {jobMode === "text" ? (
-            <div className={styles.field}>
-              <textarea
-                placeholder="Paste the responsibilities, requirements, and keywords from the job posting..."
-                value={jobText}
-                onChange={(e) => onJobTextChange(e.target.value)}
-                className={styles.textarea}
-                disabled={isBusy}
-                rows={8}
-              />
-            </div>
-          ) : (
-            <div className={styles.uploadContainer}>
-              {jobImageUrl ? (
-                <div className={styles.jobImagePreviewBox}>
-                  <img src={jobImageUrl} alt="Job posting preview" className={styles.jobImagePreview} />
-                  <button type="button" onClick={handleClearJobImage} className={styles.removeImageBtn} disabled={isBusy}>
-                    Change Image
-                  </button>
-                </div>
-              ) : (
-                <label className={styles.jobImageUploadLabel}>
-                  <input
-                    ref={jobFileInputRef}
-                    type="file"
-                    accept="image/png, image/jpeg, image/jpg, image/webp"
-                    onChange={onJobImageChange}
-                    className={styles.fileInput}
-                    disabled={isBusy}
-                  />
-                  <Upload className={styles.uploadIcon} />
-                  <span className={styles.uploadTitle}>Choose a job post screenshot</span>
-                  <span className={styles.uploadHint}>Supports PNG, JPG, JPEG, WEBP files</span>
-                </label>
-              )}
-            </div>
-          )}
-        </div>
+        <JobDescriptionInput job={job} disabled={isBusy} />
 
         <div className={styles.collapsibleSection}>
           <button

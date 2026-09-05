@@ -1,18 +1,17 @@
 "use client";
 
-import { FormEvent, useEffect, useState, useRef } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
   AlertTriangle,
   CheckCircle2,
   Loader2,
-  FileImage,
-  Upload,
-  AlignLeft,
   ArrowRight,
   Sparkles,
 } from "lucide-react";
+import { useJobDescriptionInput } from "@/hooks/useJobDescriptionInput";
+import JobDescriptionInput from "@/components/job-description/JobDescriptionInput";
 import { Button } from "@/components/ui/Button";
 import { AiButton } from "@/components/ui/AiButton";
 import ResumeSelector, { ResumeSelection } from "@/components/resume/ResumeSelector";
@@ -24,7 +23,6 @@ import { useAlertStore } from "@/store/useAlertStore";
 import styles from "./page.module.css";
 import scrollToId from "@/utils/scrollIntoview";
 
-type JobInputMode = "text" | "image";
 type ProgressState = "idle" | "extracting" | "tailoring" | "finishing" | "ready";
 
 const progressCopy: Record<ProgressState, string> = {
@@ -42,11 +40,7 @@ export default function TailorResumePage() {
   // Selection states
   const [selection, setSelection] = useState<ResumeSelection | null>(null);
   
-  // Job Description states
-  const [jobMode, setJobMode] = useState<JobInputMode>("text");
-  const [jobText, setJobText] = useState("");
-  const [jobImage, setJobImage] = useState<File | null>(null);
-  const [jobImageUrl, setJobImageUrl] = useState<string | null>(null);
+  const job = useJobDescriptionInput();
   const [targetTitle, setTargetTitle] = useState("");
   const [targetCompany, setTargetCompany] = useState("");
 
@@ -56,8 +50,6 @@ export default function TailorResumePage() {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
 
-  const jobFileInputRef = useRef<HTMLInputElement>(null);
-
   useEffect(() => {
     if (status === "loading") return;
     if (status !== "authenticated") {
@@ -65,52 +57,18 @@ export default function TailorResumePage() {
     }
   }, [status]);
 
-  // Clean up image previews on unmount
-  useEffect(() => {
-    return () => {
-      if (jobImageUrl) {
-        URL.revokeObjectURL(jobImageUrl);
-      }
-    };
-  }, [jobImageUrl]);
-
-  function handleJobImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0] ?? null;
-    setError("");
-    setReport(null);
-    setProgress("idle");
-
-    if (jobImageUrl) {
-      URL.revokeObjectURL(jobImageUrl);
-      setJobImageUrl(null);
+  function handleJobImageChange(e: React.ChangeEvent<HTMLInputElement>): string | null {
+    const err = job.handleJobImageChange(e);
+    setError(err ?? "");
+    if (!err) {
+      setReport(null);
+      setProgress("idle");
     }
-
-    if (file) {
-      if (!file.type.startsWith("image/")) {
-        setError("Please upload an image file (PNG, JPG, JPEG, or WEBP).");
-        setJobImage(null);
-        return;
-      }
-      setJobImage(file);
-      setJobImageUrl(URL.createObjectURL(file));
-    } else {
-      setJobImage(null);
-    }
+    return err;
   }
 
-  function clearJobImage() {
-    setJobImage(null);
-    if (jobImageUrl) {
-      URL.revokeObjectURL(jobImageUrl);
-      setJobImageUrl(null);
-    }
-    if (jobFileInputRef.current) {
-      jobFileInputRef.current.value = "";
-    }
-  }
-
-  function handleJobModeChange(mode: JobInputMode) {
-    setJobMode(mode);
+  function handleJobModeChange(mode: Parameters<typeof job.handleJobModeChange>[0]) {
+    job.handleJobModeChange(mode);
     setError("");
     setReport(null);
     setProgress("idle");
@@ -123,8 +81,7 @@ export default function TailorResumePage() {
       return;
     }
 
-    const hasJobContext = jobMode === "text" ? !!jobText.trim() : !!jobImage;
-    if (!hasJobContext) {
+    if (!job.hasJobContext) {
       setError("Please provide a job description (either paste text or upload an image).");
       return;
     }
@@ -136,7 +93,6 @@ export default function TailorResumePage() {
     try {
       const formData = new FormData();
       formData.append("resumeMode", selection.mode);
-      formData.append("jobMode", jobMode);
       formData.append("targetTitle", targetTitle);
       formData.append("targetCompany", targetCompany);
 
@@ -160,13 +116,7 @@ export default function TailorResumePage() {
         }
       }
 
-      // Add job description payload
-      if (jobMode === "text") {
-        formData.append("jobText", jobText);
-      } else {
-        if (!jobImage) throw new Error("No job description image selected.");
-        formData.append("jobImage", jobImage);
-      }
+      job.appendToFormData(formData);
 
       setProgress("tailoring");
       const response = await fetch("/api/resume-tailor", {
@@ -234,7 +184,7 @@ export default function TailorResumePage() {
   }
 
   const isBusy = progress !== "idle" && progress !== "ready";
-  const canSubmit = !!selection && (jobMode === "text" ? !!jobText.trim() : !!jobImage) && !isBusy;
+  const canSubmit = !!selection && job.hasJobContext && !isBusy;
 
   return (
     <div className={styles.container}>
@@ -325,70 +275,11 @@ export default function TailorResumePage() {
               </div>
             </div>
 
-            {/* Job Input Tabs */}
-            <div className={styles.tabsContainer}>
-              <div className={styles.inputTabs}>
-                <button
-                  type="button"
-                  className={`${styles.inputTab} ${jobMode === "text" ? styles.activeInputTab : ""}`}
-                  onClick={() => handleJobModeChange("text")}
-                  disabled={isBusy}
-                >
-                  <AlignLeft className={styles.tabIcon} />
-                  Paste Description Text
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.inputTab} ${jobMode === "image" ? styles.activeInputTab : ""}`}
-                  onClick={() => handleJobModeChange("image")}
-                  disabled={isBusy}
-                >
-                  <FileImage className={styles.tabIcon} />
-                  Upload Post Image
-                </button>
-              </div>
-            </div>
-
-            <div className={styles.inputBody}>
-              {jobMode === "text" ? (
-                <div className={styles.field}>
-                  <textarea
-                    id="jobText"
-                    placeholder="Paste the responsibilities, requirements, and keywords from the job posting..."
-                    value={jobText}
-                    onChange={(e) => setJobText(e.target.value)}
-                    className={styles.textarea}
-                    disabled={isBusy}
-                    rows={8}
-                  />
-                </div>
-              ) : (
-                <div className={styles.uploadContainer}>
-                  {jobImageUrl ? (
-                    <div className={styles.jobImagePreviewBox}>
-                      <img src={jobImageUrl} alt="Job posting preview" className={styles.jobImagePreview} />
-                      <button type="button" onClick={clearJobImage} className={styles.removeImageBtn} disabled={isBusy}>
-                        Change Image
-                      </button>
-                    </div>
-                  ) : (
-                    <label className={styles.jobImageUploadLabel}>
-                      <input
-                        ref={jobFileInputRef}
-                        type="file"
-                        accept="image/png, image/jpeg, image/jpg, image/webp"
-                        onChange={handleJobImageChange}
-                        className={styles.fileInput}
-                        disabled={isBusy}
-                      />
-                      <Upload className={styles.uploadIcon} />
-                      <span className={styles.uploadTitle}>Choose a job post screenshot</span>
-                      <span className={styles.uploadHint}>Supports PNG, JPG, JPEG, WEBP files</span>
-                    </label>
-                  )}
-                </div>
-              )}
-            </div>
+            <JobDescriptionInput
+              job={{ ...job, handleJobImageChange, handleJobModeChange }}
+              disabled={isBusy}
+              textareaId="jobText"
+            />
 
             <div className={styles.actions}>
               <div className={styles.progress}>

@@ -942,6 +942,119 @@ Required JSON schema:
 Resume text to parse:
 ${text}`;
 
+export interface ParsedJobAd {
+  title: string;
+  category: string;
+  jobType: string;
+  workplaceType: string;
+  location: string;
+  experienceLevel: string;
+  salaryMin: number | null;
+  salaryMax: number | null;
+  salaryCurrency: string;
+  salaryPeriod: string;
+  description: string;
+  requirements: string[];
+  benefits: string[];
+  skillsRequired: string[];
+}
+
+const JOB_PARSE_PROMPT = (text: string) => `
+You are a precise job-ad extractor. You ONLY output raw valid JSON. Never use markdown code fences. Never add explanations before or after the JSON object. Your entire response must be parseable by JSON.parse().
+
+CRITICAL RULES — preserve wording:
+- Extract fields VERBATIM from the source text. Do NOT reword, summarize, paraphrase, or invent.
+- Do NOT add information that is not explicitly present in the source. If a field is not in the source, return "" for strings, [] for arrays, or null for salary numbers.
+- For description, requirements, benefits, skillsRequired: copy the original phrasing exactly as it appears, only splitting into array items where needed. Do not add buzzwords or extra duties.
+- Preserve original sentence structure and wording for description. Convert plain text description to simple HTML paragraphs: wrap each paragraph in <p>...</p>, keep line breaks. Do not invent HTML you did not see.
+- For enums, map to the closest allowed value but still base it on source text: category must be one of ["Engineering","Design","Product","Marketing","Sales","HR","Finance","Other"] (default "Other"), jobType one of ["full-time","part-time","contract","freelance","internship"] (default "full-time"), workplaceType one of ["remote","hybrid","on-site"] (default "remote"), experienceLevel one of ["entry","mid","senior","lead","executive"] (default "mid").
+
+Return ONLY a JSON object with this exact schema — no markdown, no explanation:
+{
+  "title": "string — job title verbatim",
+  "category": "Engineering | Design | Product | Marketing | Sales | HR | Finance | Other",
+  "jobType": "full-time | part-time | contract | freelance | internship",
+  "workplaceType": "remote | hybrid | on-site",
+  "location": "string — location verbatim or Remote if not stated",
+  "experienceLevel": "entry | mid | senior | lead | executive",
+  "salaryMin": 90000 | null,
+  "salaryMax": 140000 | null,
+  "salaryCurrency": "USD",
+  "salaryPeriod": "yearly | monthly | hourly",
+  "description": "<p>verbatim description html</p>",
+  "requirements": ["verbatim requirement line 1"],
+  "benefits": ["verbatim benefit line 1"],
+  "skillsRequired": ["skill1", "skill2"]
+}
+
+Source job ad text to extract from:
+${text}`;
+
+function normalizeParsedJobAd(raw: Partial<ParsedJobAd>): ParsedJobAd {
+  const validCategories = ["Engineering", "Design", "Product", "Marketing", "Sales", "HR", "Finance", "Other"];
+  const validJobTypes = ["full-time", "part-time", "contract", "freelance", "internship"];
+  const validWorkplace = ["remote", "hybrid", "on-site"];
+  const validExp = ["entry", "mid", "senior", "lead", "executive"];
+  const validPeriods = ["yearly", "monthly", "hourly"];
+  return {
+    title: typeof raw.title === "string" ? raw.title.trim() : "",
+    category: validCategories.includes(raw.category as string) ? raw.category as string : "Other",
+    jobType: validJobTypes.includes(raw.jobType as string) ? raw.jobType as string : "full-time",
+    workplaceType: validWorkplace.includes(raw.workplaceType as string) ? raw.workplaceType as string : "remote",
+    location: typeof raw.location === "string" && raw.location.trim() ? raw.location.trim() : "Remote",
+    experienceLevel: validExp.includes(raw.experienceLevel as string) ? raw.experienceLevel as string : "mid",
+    salaryMin: typeof raw.salaryMin === "number" && !isNaN(raw.salaryMin) ? raw.salaryMin : null,
+    salaryMax: typeof raw.salaryMax === "number" && !isNaN(raw.salaryMax) ? raw.salaryMax : null,
+    salaryCurrency: typeof raw.salaryCurrency === "string" && raw.salaryCurrency.trim() ? raw.salaryCurrency.trim().toUpperCase().slice(0, 3) : "USD",
+    salaryPeriod: validPeriods.includes(raw.salaryPeriod as string) ? raw.salaryPeriod as string : "yearly",
+    description: typeof raw.description === "string" ? raw.description.trim() : "",
+    requirements: normalizeStringList(raw.requirements),
+    benefits: normalizeStringList(raw.benefits),
+    skillsRequired: normalizeStringList(raw.skillsRequired),
+  };
+}
+
+export async function parseJobAdFromText(extractedText: string): Promise<ParsedJobAd> {
+  assertApiKey();
+  if (!extractedText.trim()) {
+    return normalizeParsedJobAd({});
+  }
+  let { content: raw, truncated } = await callGroq(JOB_PARSE_PROMPT(extractedText), {
+    model: LONG_CONTEXT_MODEL,
+    systemInstruction: PARSER_SYSTEM_INSTRUCTION,
+    temperature: 0,
+    maxTokens: 4096,
+    feature: "job_parse",
+  });
+  let parsed: Partial<ParsedJobAd>;
+  try {
+    parsed = parseJsonObject<Partial<ParsedJobAd>>(raw);
+  } catch {
+    if (truncated) {
+      ({ content: raw } = await callGroq(JOB_PARSE_PROMPT(extractedText), {
+        model: ATS_MODEL,
+        systemInstruction: PARSER_SYSTEM_INSTRUCTION,
+        temperature: 0,
+        maxTokens: 8000,
+        feature: "job_parse",
+      }));
+    } else {
+      ({ content: raw } = await callGroq(
+        `Your previous response was not valid JSON. Return ONLY the raw JSON object, no markdown, no explanation.\n\n${JOB_PARSE_PROMPT(extractedText)}`,
+        {
+          model: ATS_MODEL,
+          systemInstruction: PARSER_SYSTEM_INSTRUCTION,
+          temperature: 0,
+          maxTokens: 4096,
+          feature: "job_parse",
+        }
+      ));
+    }
+    parsed = parseJsonObject<Partial<ParsedJobAd>>(raw);
+  }
+  return normalizeParsedJobAd(parsed);
+}
+
 export async function parseResumeContent(extractedText: string): Promise<ResumeContent> {
   assertApiKey();
   if (!extractedText.trim()) return { ...emptyResumeContent };

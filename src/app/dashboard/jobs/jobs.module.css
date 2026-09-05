@@ -36,6 +36,29 @@
   max-width: 48rem;
 }
 
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border: none;
+  background: none;
+  color: var(--primary-1);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.backButton:hover {
+  opacity: 0.8;
+}
+
+.backIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
 .employerCtaBtn {
   background: var(--primary-900);
   color: white;

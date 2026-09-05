@@ -15,6 +15,8 @@ import {
   ExternalLink,
 } from "lucide-react";
 import TipTapEditor from "@/components/blog/TipTapEditor";
+import JobAutofillSection from "@/components/jobs/JobAutofillSection";
+import type { ParsedJobAd } from "@/lib/ai";
 import styles from "../jobs.module.css";
 
 type ApplicationType = "on_platform" | "external_link" | "email";
@@ -64,11 +66,30 @@ export default function NewDashboardJobPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const isAdmin = Boolean(session?.user?.isAdmin);
+
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/auth/login?callbackUrl=/dashboard/jobs/new");
     }
   }, [router, status]);
+
+  const handleAutofill = (fields: ParsedJobAd) => {
+    if (fields.title) setTitle(fields.title);
+    if (fields.category) setCategory(fields.category);
+    if (fields.jobType) setJobType(fields.jobType);
+    if (fields.workplaceType) setWorkplaceType(fields.workplaceType);
+    if (fields.location) setLocation(fields.location);
+    if (fields.experienceLevel) setExperienceLevel(fields.experienceLevel);
+    setSalaryMin(fields.salaryMin != null ? String(fields.salaryMin) : "");
+    setSalaryMax(fields.salaryMax != null ? String(fields.salaryMax) : "");
+    if (fields.salaryCurrency) setSalaryCurrency(fields.salaryCurrency);
+    if (fields.salaryPeriod) setSalaryPeriod(fields.salaryPeriod);
+    if (fields.description) setDescription(fields.description);
+    if (fields.requirements.length) setRequirementsText(fields.requirements.join("\n"));
+    if (fields.skillsRequired.length) setSkillsText(fields.skillsRequired.join(", "));
+    if (fields.benefits.length) setBenefitsText(fields.benefits.join("\n"));
+  };
 
   const updateQuestion = (id: string, updates: Partial<ScreeningQuestion>) => {
     setScreeningQuestions((questions) =>
@@ -171,19 +192,22 @@ export default function NewDashboardJobPage() {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <div className={styles.headerLeft}>
-          <button type="button" onClick={() => router.back()} className={styles.inlineAction}>
-            <ArrowLeft size={16} /> Back
+        <div className={styles.headerRow}>
+          <button className={styles.backButton} onClick={() => router.back()} >
+            <ArrowLeft className={styles.backIcon} />
+            Back to jobs
           </button>
-          <h1 className={styles.title}>Post a Free Job</h1>
-          <p className={styles.subtitle}>
-            Create a public job page with rich details, application mode, and optional screening questions.
-          </p>
         </div>
+        <h1 className={styles.title}>Post a Job</h1>
+        <p className={styles.subtitle}>
+          Create a public job page with rich details, application mode, and optional screening questions.
+        </p>
       </header>
 
       <form onSubmit={handleSubmit} className={styles.postJobForm}>
         {error && <div className={styles.errorBanner}>{error}</div>}
+
+        {isAdmin && <JobAutofillSection onExtracted={handleAutofill} />}
 
         <section className={styles.formCard}>
           <div className={styles.formSectionHeader}>

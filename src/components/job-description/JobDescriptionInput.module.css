@@ -1,0 +1,155 @@
+.tabsContainer {
+  margin-bottom: var(--space-3);
+}
+
+.inputTabs {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-1);
+  background: var(--gray-100);
+  border-radius: var(--radius-lg);
+  width: fit-content;
+}
+
+.inputTab {
+  border: 0;
+  background: transparent;
+  color: var(--gray-600);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: var(--font-semibold);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.inputTab:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.activeInputTab {
+  background: white;
+  color: var(--primary-1);
+  box-shadow: var(--shadow-sm);
+}
+
+.tabIconSmall {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.inputBody {
+  margin-bottom: var(--space-4);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.textarea {
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  color: var(--neutral-700);
+  background: white;
+  font-size: var(--text-sm);
+  font-family: inherit;
+  resize: vertical;
+  line-height: 1.5;
+  transition: border-color 0.2s;
+}
+
+.textarea:focus {
+  border-color: var(--primary-1);
+  outline: none;
+}
+
+.uploadContainer {
+  width: 100%;
+}
+
+.jobImageUploadLabel {
+  min-height: 10rem;
+  border: 2px dashed var(--gray-300);
+  border-radius: var(--radius-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.2s, background-color 0.2s;
+  padding: var(--space-4);
+}
+
+.jobImageUploadLabel:hover {
+  border-color: var(--primary-1);
+  background: var(--primary-50);
+}
+
+.fileInput {
+  display: none;
+}
+
+.uploadIcon {
+  width: 1.75rem;
+  height: 1.75rem;
+  color: var(--primary-1);
+}
+
+.uploadTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--gray-700);
+}
+
+.uploadHint {
+  font-size: var(--text-xs);
+  color: var(--gray-400);
+}
+
+.jobImagePreviewBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  background: var(--gray-50);
+}
+
+.jobImagePreview {
+  max-width: 100%;
+  max-height: 250px;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.removeImageBtn {
+  background: none;
+  border: none;
+  color: var(--primary-1);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.removeImageBtn:hover {
+  color: var(--primary-700);
+}
+
+.removeImageBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

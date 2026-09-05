@@ -19,9 +19,9 @@ import scrollToId from "@/utils/scrollIntoview";
 import CreateApplicationForm from "@/components/applications/CreateApplicationForm";
 import ApplicationResults from "@/components/applications/ApplicationResults";
 import HistoryView from "@/components/applications/HistoryView";
+import { useJobDescriptionInput } from "@/hooks/useJobDescriptionInput";
 import styles from "./page.module.css";
 
-type JobInputMode = "text" | "image";
 type ProgressState = "idle" | "extracting" | "generating" | "ready";
 type PageView = "form" | "result" | "history";
 
@@ -49,10 +49,7 @@ export default function ApplicationsPage() {
 
   // ── Create Application State ──
   const [selection, setSelection] = useState<ResumeSelection | null>(null);
-  const [jobMode, setJobMode] = useState<JobInputMode>("text");
-  const [jobText, setJobText] = useState("");
-  const [jobImage, setJobImage] = useState<File | null>(null);
-  const [jobImageUrl, setJobImageUrl] = useState<string | null>(null);
+  const job = useJobDescriptionInput();
   const [targetCompany, setTargetCompany] = useState("");
   const [targetRole, setTargetRole] = useState("");
   const [showAdditional, setShowAdditional] = useState(false);
@@ -84,49 +81,21 @@ export default function ApplicationsPage() {
     }
   }, [authStatus, router]);
 
-  // ── Image cleanup ──
-  useEffect(() => {
-    return () => {
-      if (jobImageUrl) URL.revokeObjectURL(jobImageUrl);
-    };
-  }, [jobImageUrl]);
-
-  // ── Handlers: Job Image ──
-  function handleJobImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0] ?? null;
+  function handleJobImageChange(e: React.ChangeEvent<HTMLInputElement>): string | null {
+    const err = job.handleJobImageChange(e);
+    if (err) {
+      setError(err);
+      return err;
+    }
     setError("");
     setReport(null);
     setCoverLetter("");
     setProgress("idle");
-
-    if (jobImageUrl) {
-      URL.revokeObjectURL(jobImageUrl);
-      setJobImageUrl(null);
-    }
-
-    if (file) {
-      if (!file.type.startsWith("image/")) {
-        setError("Please upload an image file (PNG, JPG, JPEG, or WEBP).");
-        setJobImage(null);
-        return;
-      }
-      setJobImage(file);
-      setJobImageUrl(URL.createObjectURL(file));
-    } else {
-      setJobImage(null);
-    }
+    return null;
   }
 
-  function clearJobImage() {
-    setJobImage(null);
-    if (jobImageUrl) {
-      URL.revokeObjectURL(jobImageUrl);
-      setJobImageUrl(null);
-    }
-  }
-
-  function handleJobModeChange(mode: JobInputMode) {
-    setJobMode(mode);
+  function handleJobModeChange(mode: Parameters<typeof job.handleJobModeChange>[0]) {
+    job.handleJobModeChange(mode);
     setError("");
     setReport(null);
     setCoverLetter("");
@@ -140,8 +109,7 @@ export default function ApplicationsPage() {
       return;
     }
 
-    const hasJobContext = jobMode === "text" ? !!jobText.trim() : !!jobImage;
-    if (!hasJobContext) {
+    if (!job.hasJobContext) {
       setError("Please provide a job description (either paste text or upload an image).");
       return;
     }
@@ -154,7 +122,6 @@ export default function ApplicationsPage() {
     try {
       const formData = new FormData();
       formData.append("resumeMode", selection.mode);
-      formData.append("jobMode", jobMode);
       formData.append("targetCompany", targetCompany);
       formData.append("targetRole", targetRole);
 
@@ -177,12 +144,7 @@ export default function ApplicationsPage() {
         }
       }
 
-      if (jobMode === "text") {
-        formData.append("jobText", jobText);
-      } else {
-        if (!jobImage) throw new Error("No job description image selected.");
-        formData.append("jobImage", jobImage);
-      }
+      job.appendToFormData(formData);
 
       setProgress("generating");
       const response = await fetch("/api/applications/quick-apply", {
@@ -238,9 +200,7 @@ export default function ApplicationsPage() {
     setSavedResumeId(null);
     setSelectedTemplateId("");
     setInferredRole("");
-    setJobText("");
-    setJobImage(null);
-    setJobImageUrl(null);
+    job.reset();
     setTargetCompany("");
     setTargetRole("");
     setSelection(null);
@@ -327,7 +287,7 @@ export default function ApplicationsPage() {
   }
 
   const isBusy = progress !== "idle" && progress !== "ready";
-  const canGenerate = !!selection && (jobMode === "text" ? !!jobText.trim() : !!jobImage) && !isBusy;
+  const canGenerate = !!selection && job.hasJobContext && !isBusy;
 
   return (
     <div className={styles.container} id="pageTop">
@@ -386,14 +346,7 @@ export default function ApplicationsPage() {
         <CreateApplicationForm
           selection={selection}
           onSelectionChange={setSelection}
-          jobMode={jobMode}
-          onJobModeChange={handleJobModeChange}
-          jobText={jobText}
-          onJobTextChange={setJobText}
-          jobImage={jobImage}
-          jobImageUrl={jobImageUrl}
-          onJobImageChange={handleJobImageChange}
-          onClearJobImage={clearJobImage}
+          job={{ ...job, handleJobImageChange, handleJobModeChange }}
           targetCompany={targetCompany}
           onTargetCompanyChange={setTargetCompany}
           targetRole={targetRole}
