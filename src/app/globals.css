@@ -56,8 +56,8 @@ main {
   margin: 0 auto;
 }
 
-.hideScrollbar {
-  scrollbar-width: none;
+.thinScrollbar {
+  scrollbar-width: thin;
 }
 
 .hideScrollbar::-webkit-scrollbar {

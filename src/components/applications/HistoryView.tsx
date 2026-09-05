@@ -49,16 +49,33 @@ export default function HistoryView({
                     <h3 className={styles.cardCompany}>{app.company}</h3>
                     <p className={styles.cardRole}>{app.role}</p>
                   </div>
-                  <span
-                    className={styles.statusPill}
-                    style={{
-                      borderColor: STATUS_COLORS[app.status],
-                      color: STATUS_COLORS[app.status],
-                      backgroundColor: `${STATUS_COLORS[app.status]}14`,
-                    }}
-                  >
-                    {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    {app.source === "platform" && (
+                      <span
+                        style={{
+                          fontSize: "0.75rem",
+                          fontWeight: 700,
+                          background: "#eef2ff",
+                          color: "#4f46e5",
+                          padding: "0.2rem 0.5rem",
+                          borderRadius: "9999px",
+                          border: "1px solid #c7d2fe",
+                        }}
+                      >
+                        Platform
+                      </span>
+                    )}
+                    <span
+                      className={styles.statusPill}
+                      style={{
+                        borderColor: STATUS_COLORS[app.status] || "var(--gray-400)",
+                        color: STATUS_COLORS[app.status] || "var(--gray-700)",
+                        backgroundColor: `${STATUS_COLORS[app.status] || "var(--gray-400)"}14`,
+                      }}
+                    >
+                      {app.status.replace("_", " ").toUpperCase()}
+                    </span>
+                  </div>
                 </div>
 
                 <div className={styles.cardBody}>

@@ -9,10 +9,14 @@ export type ResumeDoc = {
 export type ApplicationStatus =
   | "saved"
   | "applied"
+  | "under_review"
+  | "shortlisted"
   | "interviewing"
   | "offered"
   | "rejected"
   | "withdrawn";
+
+export type ApplicationSource = "platform" | "off_platform";
 
 export interface ApplicationItem {
   _id: string;
@@ -31,6 +35,11 @@ export interface ApplicationItem {
   explanation?: string;
   coverLetterContent?: string;
   renderedResumeSrcDoc?: string;
+  jobId?: string;
+  companyId?: string;
+  aiMatchScore?: number;
+  aiMatchAnalysis?: string;
+  source?: ApplicationSource;
   createdAt: string;
   updatedAt: string;
 }

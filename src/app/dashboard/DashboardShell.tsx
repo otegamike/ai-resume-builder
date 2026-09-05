@@ -4,7 +4,7 @@ import Link from "next/link";
 import React, { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { FileText, Settings, Plus, LayoutTemplate, PanelRightClose,  PanelRightOpen, LogOut, BarChart3, WandSparkles, Sparkles, Home, PenLine, Briefcase } from "lucide-react";
+import { FileText, Settings, Plus, LayoutTemplate, PanelRightClose,  PanelRightOpen, LogOut, BarChart3, WandSparkles, Sparkles, Home, PenLine, Briefcase, Building2, Search, ShieldCheck } from "lucide-react";
 import styles from "./layout.module.css";
 
 export default function DashboardShell({
@@ -15,6 +15,7 @@ export default function DashboardShell({
   const { data: session } = useSession();
   const pathname = usePathname();
   const isAdmin = session?.user?.isAdmin ?? false;
+  const isEmployer = (session?.user as any)?.accountType === "employer" || (session?.user as any)?.accountType === "both" || !!(session?.user as any)?.organizationId;
   const [isSideBarOpen, setIsSideBarOpen] = useState<boolean>(false);
   const [sidebarState, setSideBarState] = useState<'show'|'hide'>('show');
 
@@ -53,7 +54,7 @@ export default function DashboardShell({
   };
 
   function isActive(path: string) {
-    return pathname === path ? styles.navLinkActive : "";
+    return pathname === path || pathname?.startsWith(path + "/") ? styles.navLinkActive : "";
   }
 
   function closeSidebar () {
@@ -97,6 +98,12 @@ export default function DashboardShell({
               Applications
             </span>
           </Link>
+          <Link href="/dashboard/jobs" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/jobs")}`}>
+            <Search className={styles.navIcon} />
+            <span className={styles.navLinkText}>
+              Jobs
+            </span>
+          </Link>
           <Link href="/dashboard/templates" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/templates")}`}>
             <LayoutTemplate className={styles.navIcon} />
             <span className={styles.navLinkText}>
@@ -125,7 +132,7 @@ export default function DashboardShell({
             <Link href="/dashboard/admin" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/admin")}`}>
               <BarChart3 className={styles.navIcon} />
               <span className={styles.navLinkText}>
-                Admin
+                Admin Stats
               </span>
             </Link>
           )}

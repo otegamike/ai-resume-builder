@@ -87,7 +87,9 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token }) {
       if (!token.email) return token;
       await dbConnect();
-      const dbUser = await User.findOne({ email: token.email }).select("_id email name image isAdmin subscriptionPlan AiCredits gmailAccessToken hasCompletedOnboarding creditResetMeta");
+      const dbUser = await User.findOne({ email: token.email }).select(
+        "_id email name image isAdmin subscriptionPlan AiCredits gmailAccessToken hasCompletedOnboarding creditResetMeta accountType organizationId"
+      );
       if (dbUser) {
         token.userId = String(dbUser._id);
         token.name = dbUser.name;
@@ -97,6 +99,8 @@ export const authOptions: NextAuthOptions = {
         token.AiCredits = dbUser.AiCredits ?? 0;
         token.hasGmailConnected = !!dbUser.gmailAccessToken;
         token.hasCompletedOnboarding = dbUser.hasCompletedOnboarding ?? true;
+        token.accountType = dbUser.accountType ?? "candidate";
+        token.organizationId = dbUser.organizationId ? String(dbUser.organizationId) : undefined;
 
         const currentCycle = getCurrentCycleString();
         if (dbUser.creditResetMeta?.lastResetCycle !== currentCycle) {
@@ -115,6 +119,8 @@ export const authOptions: NextAuthOptions = {
         session.user.AiCredits = (token.AiCredits as number | undefined) ?? 0;
         (session.user as any).hasGmailConnected = (token.hasGmailConnected as boolean | undefined) ?? false;
         session.user.hasCompletedOnboarding = (token.hasCompletedOnboarding as boolean | undefined) ?? true;
+        (session.user as any).accountType = (token.accountType as string | undefined) ?? "candidate";
+        (session.user as any).organizationId = (token.organizationId as string | undefined) ?? undefined;
       }
       return session;
     },

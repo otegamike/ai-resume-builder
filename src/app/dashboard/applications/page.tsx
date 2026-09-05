@@ -32,6 +32,8 @@ const STATUS_OPTIONS: ApplicationStatus[] = [
 const STATUS_COLORS: Record<ApplicationStatus, string> = {
   saved: "var(--gray-500)",
   applied: "var(--info)",
+  under_review: "var(--warning)",
+  shortlisted: "#4f46e5",
   interviewing: "var(--warning)",
   offered: "var(--success)",
   rejected: "var(--error)",

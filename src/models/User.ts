@@ -31,6 +31,8 @@ export interface IUser {
   primaryGoal: string[];
   targetField: string;
   hasExistingResume: boolean;
+  accountType?: "candidate" | "employer" | "both";
+  organizationId?: Types.ObjectId;
 }
 
 const UserSchema: Schema = new Schema<IUser>(
@@ -66,6 +68,8 @@ const UserSchema: Schema = new Schema<IUser>(
     primaryGoal: [{ type: String }],
     targetField: { type: String, default: "" },
     hasExistingResume: { type: Boolean, default: false },
+    accountType: { type: String, enum: ["candidate", "employer", "both"], default: "candidate" },
+    organizationId: { type: Schema.Types.ObjectId, ref: "Company" },
   },
   { timestamps: true }
 );
