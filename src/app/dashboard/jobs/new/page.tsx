@@ -66,6 +66,13 @@ export default function NewDashboardJobPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [companyName, setCompanyName] = useState("");
+  const [companyWebsite, setCompanyWebsite] = useState("");
+  const [companyLogo, setCompanyLogo] = useState("");
+  const [companyIndustry, setCompanyIndustry] = useState("Software & IT");
+  const [companyLocation, setCompanyLocation] = useState("");
+  const [companyDescription, setCompanyDescription] = useState("");
+
   const isAdmin = Boolean(session?.user?.isAdmin);
 
   useEffect(() => {
@@ -89,6 +96,12 @@ export default function NewDashboardJobPage() {
     if (fields.requirements.length) setRequirementsText(fields.requirements.join("\n"));
     if (fields.skillsRequired.length) setSkillsText(fields.skillsRequired.join(", "));
     if (fields.benefits.length) setBenefitsText(fields.benefits.join("\n"));
+    if (fields.companyName) setCompanyName(fields.companyName);
+    if (fields.companyWebsite) setCompanyWebsite(fields.companyWebsite);
+    if (fields.companyLogo) setCompanyLogo(fields.companyLogo);
+    if (fields.companyLocation) setCompanyLocation(fields.companyLocation);
+    if (fields.companyIndustry) setCompanyIndustry(fields.companyIndustry);
+    if (fields.companyDescription) setCompanyDescription(fields.companyDescription);
   };
 
   const updateQuestion = (id: string, updates: Partial<ScreeningQuestion>) => {
@@ -163,6 +176,16 @@ export default function NewDashboardJobPage() {
             question: question.question.trim(),
             options: question.type === "dropdown" ? question.options.map((option) => option.trim()).filter(Boolean) : [],
           })),
+          ...(isAdmin
+            ? {
+                companyName: companyName.trim(),
+                companyWebsite: companyWebsite.trim(),
+                companyLogo: companyLogo.trim(),
+                companyIndustry,
+                companyLocation: companyLocation.trim(),
+                companyDescription: companyDescription.trim(),
+              }
+            : {}),
         }),
       });
 
@@ -209,9 +232,55 @@ export default function NewDashboardJobPage() {
 
         {isAdmin && <JobAutofillSection onExtracted={handleAutofill} />}
 
+        {isAdmin && (
+          <section className={styles.formCard}>
+            <div className={styles.formSectionHeader}>
+              <Briefcase size={20} />
+              <h2>Hiring Company</h2>
+            </div>
+            <p className={styles.subtitle} style={{ marginBottom: "1rem" }}>
+              Fill in the employer for this posting. If a company with this name already exists it will be reused; otherwise a new verified company will be created.
+            </p>
+            <div className={styles.field}>
+              <label className={styles.label}>Company Name</label>
+              <input className={styles.input} value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="e.g. Acme Corporation" />
+            </div>
+            <div className={styles.formGrid}>
+              <div className={styles.field}>
+                <label className={styles.label}>Website URL</label>
+                <input type="url" className={styles.input} value={companyWebsite} onChange={(e) => setCompanyWebsite(e.target.value)} placeholder="https://company.com" />
+              </div>
+              <div className={styles.field}>
+                <label className={styles.label}>Logo Image URL</label>
+                <input type="url" className={styles.input} value={companyLogo} onChange={(e) => setCompanyLogo(e.target.value)} placeholder="https://company.com/logo.png" />
+              </div>
+              <div className={styles.field}>
+                <label className={styles.label}>Industry</label>
+                <select className={styles.select} value={companyIndustry} onChange={(e) => setCompanyIndustry(e.target.value)}>
+                  <option value="Software & IT">Software & IT</option>
+                  <option value="Design & Creative">Design & Creative</option>
+                  <option value="E-Commerce & Retail">E-Commerce & Retail</option>
+                  <option value="Finance & Fintech">Finance & Fintech</option>
+                  <option value="Healthcare & Bio">Healthcare & Bio</option>
+                  <option value="Marketing & Media">Marketing & Media</option>
+                  <option value="Education">Education</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div className={styles.field}>
+                <label className={styles.label}>HQ Location</label>
+                <input className={styles.input} value={companyLocation} onChange={(e) => setCompanyLocation(e.target.value)} placeholder="e.g. San Francisco, CA" />
+              </div>
+            </div>
+            <div className={styles.field}>
+              <label className={styles.label}>About Company</label>
+              <textarea className={styles.textarea} rows={3} value={companyDescription} onChange={(e) => setCompanyDescription(e.target.value)} placeholder="Brief overview of the employer..." />
+            </div>
+          </section>
+        )}
+
         <section className={styles.formCard}>
           <div className={styles.formSectionHeader}>
-            <Briefcase size={20} />
             <h2>Job Details</h2>
           </div>
           <div className={styles.field}>
@@ -262,7 +331,6 @@ export default function NewDashboardJobPage() {
 
         <section className={styles.formCard}>
           <div className={styles.formSectionHeader}>
-            <Sparkles size={20} />
             <h2>Compensation</h2>
           </div>
           <div className={styles.formGrid}>
@@ -295,7 +363,6 @@ export default function NewDashboardJobPage() {
 
         <section className={styles.formCard}>
           <div className={styles.formSectionHeader}>
-            <Send size={20} />
             <h2>Application Method</h2>
           </div>
           <div className={styles.segmentedControl}>
@@ -325,7 +392,6 @@ export default function NewDashboardJobPage() {
 
         <section className={styles.formCard}>
           <div className={styles.formSectionHeader}>
-            <Sparkles size={20} />
             <h2>Job Description</h2>
           </div>
           <TipTapEditor
@@ -336,6 +402,9 @@ export default function NewDashboardJobPage() {
         </section>
 
         <section className={styles.formCard}>
+          <div className={styles.formSectionHeader}>
+            <h2>Job Requirements</h2>
+          </div>
           <div className={styles.formGrid}>
             <div className={styles.field}>
               <label className={styles.label}>Requirements & Qualifications</label>
@@ -346,15 +415,14 @@ export default function NewDashboardJobPage() {
               <textarea className={styles.textarea} rows={6} value={benefitsText} onChange={(e) => setBenefitsText(e.target.value)} />
             </div>
           </div>
-          <div className={styles.field}>
-            <label className={styles.label}>Required Skills</label>
+          <div className={styles.field} style={{ marginTop: "var(--space-4)" }}>
+            <label className={styles.label}>Required Skills (comma-separated)</label>
             <input className={styles.input} value={skillsText} onChange={(e) => setSkillsText(e.target.value)} placeholder="React, TypeScript, MongoDB" />
           </div>
         </section>
 
         <section className={styles.formCard}>
           <div className={styles.formSectionHeader}>
-            <Sparkles size={20} />
             <h2>Screening Questions</h2>
             <button type="button" className={styles.inlineAction} onClick={() => setScreeningQuestions((questions) => [...questions, createQuestion()])}>
               <Plus size={16} /> Add Question
@@ -396,14 +464,10 @@ export default function NewDashboardJobPage() {
                         <option value="checkbox">Yes/No</option>
                       </select>
                     </div>
-                    <label className={styles.checkboxLine}>
-                      <input checked={question.required} type="checkbox" onChange={(e) => updateQuestion(question.id, { required: e.target.checked })} />
-                      Required
-                    </label>
                   </div>
                   {question.type === "dropdown" && (
                     <div className={styles.field}>
-                      <label className={styles.label}>Dropdown Options</label>
+                      <label className={styles.label}>Dropdown Options (comma-separated)</label>
                       <input
                         className={styles.input}
                         value={question.options.join(", ")}
@@ -412,6 +476,10 @@ export default function NewDashboardJobPage() {
                       />
                     </div>
                   )}
+                  <label className={styles.checkboxLine}>
+                    <input checked={question.required} type="checkbox" onChange={(e) => updateQuestion(question.id, { required: e.target.checked })} />
+                    Required
+                  </label>
                 </div>
               ))}
             </div>

@@ -134,12 +134,62 @@ export async function POST(req: Request) {
 
     let targetCompanyId = companyId;
 
-    // Check permissions
-    if (currentUser.isAdmin && companyId) {
-      // Admin posting on behalf of a specified company
-      targetCompanyId = companyId;
+    if (currentUser.isAdmin) {
+      const adminCompanyName = typeof body.companyName === "string" ? body.companyName.trim() : "";
+      const adminCompanyWebsite = typeof body.companyWebsite === "string" ? body.companyWebsite.trim() : "";
+      const adminCompanyLogo = typeof body.companyLogo === "string" ? body.companyLogo.trim() : "";
+      const adminCompanyIndustry = typeof body.companyIndustry === "string" ? body.companyIndustry.trim() : "";
+      const adminCompanyLocation = typeof body.companyLocation === "string" ? body.companyLocation.trim() : "";
+      const adminCompanyDescription = typeof body.companyDescription === "string" ? body.companyDescription.trim() : "";
+
+      if (adminCompanyName) {
+        const baseSlug = adminCompanyName
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9\s-]/g, "")
+          .replace(/\s+/g, "-");
+        let company = await Company.findOne({ slug: baseSlug });
+        if (!company) {
+          company = await Company.create({
+            name: adminCompanyName,
+            slug: baseSlug,
+            website: adminCompanyWebsite,
+            logo: adminCompanyLogo,
+            industry: adminCompanyIndustry || "Other",
+            location: adminCompanyLocation,
+            description: adminCompanyDescription,
+            ownerId: currentUser._id,
+            members: [{ userId: currentUser._id, role: "owner" }],
+            isVerified: true,
+            status: "active",
+          });
+        } else if (adminCompanyWebsite || adminCompanyLogo || adminCompanyDescription) {
+          await Company.updateOne(
+            { _id: company._id },
+            {
+              $set: {
+                ...(adminCompanyWebsite ? { website: adminCompanyWebsite } : {}),
+                ...(adminCompanyLogo ? { logo: adminCompanyLogo } : {}),
+                ...(adminCompanyLocation ? { location: adminCompanyLocation } : {}),
+                ...(adminCompanyIndustry ? { industry: adminCompanyIndustry } : {}),
+                ...(adminCompanyDescription ? { description: adminCompanyDescription } : {}),
+              },
+            }
+          );
+        }
+        targetCompanyId = company._id;
+      } else if (companyId) {
+        targetCompanyId = companyId;
+      } else {
+        if (!currentUser.organizationId) {
+          return NextResponse.json(
+            { error: "Company name is required for admin job posts" },
+            { status: 400 }
+          );
+        }
+        targetCompanyId = currentUser.organizationId;
+      }
     } else {
-      // Regular user / employer must own an organization
       if (!currentUser.organizationId) {
         return NextResponse.json(
           { error: "You must register an organization before posting job ads" },

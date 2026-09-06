@@ -18,7 +18,7 @@ import {
   Image as ImageIcon,
   Loader2,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "./TipTapEditor.module.css";
 
 interface TipTapEditorProps {
@@ -63,6 +63,16 @@ export default function TipTapEditor({
       },
     },
   });
+
+  useEffect(() => {
+    if (editor && content !== undefined && content !== editor.getHTML()) {
+      const isEmpty = editor.isEmpty;
+      const currentEmpty = content === "" || content === "<p></p>";
+      if (!currentEmpty || !isEmpty) {
+        editor.commands.setContent(content || "");
+      }
+    }
+  }, [content, editor]);
 
   if (!editor) {
     return <div className={styles.container}>Loading editor...</div>;

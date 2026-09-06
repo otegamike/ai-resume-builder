@@ -957,6 +957,12 @@ export interface ParsedJobAd {
   requirements: string[];
   benefits: string[];
   skillsRequired: string[];
+  companyName: string;
+  companyWebsite: string;
+  companyLogo: string;
+  companyLocation: string;
+  companyIndustry: string;
+  companyDescription: string;
 }
 
 const JOB_PARSE_PROMPT = (text: string) => `
@@ -984,7 +990,13 @@ Return ONLY a JSON object with this exact schema — no markdown, no explanation
   "description": "<p>verbatim description html</p>",
   "requirements": ["verbatim requirement line 1"],
   "benefits": ["verbatim benefit line 1"],
-  "skillsRequired": ["skill1", "skill2"]
+  "skillsRequired": ["skill1", "skill2"],
+  "companyName": "string — employer/company name verbatim or empty",
+  "companyWebsite": "string — website URL verbatim or empty",
+  "companyLogo": "string — logo image URL if present or empty",
+  "companyLocation": "string — company HQ/location verbatim or empty",
+  "companyIndustry": "string — industry verbatim or empty",
+  "companyDescription": "string — about the company verbatim or empty"
 }
 
 Source job ad text to extract from:
@@ -1011,6 +1023,12 @@ function normalizeParsedJobAd(raw: Partial<ParsedJobAd>): ParsedJobAd {
     requirements: normalizeStringList(raw.requirements),
     benefits: normalizeStringList(raw.benefits),
     skillsRequired: normalizeStringList(raw.skillsRequired),
+    companyName: typeof raw.companyName === "string" ? raw.companyName.trim() : "",
+    companyWebsite: typeof raw.companyWebsite === "string" ? raw.companyWebsite.trim() : "",
+    companyLogo: typeof raw.companyLogo === "string" ? raw.companyLogo.trim() : "",
+    companyLocation: typeof raw.companyLocation === "string" ? raw.companyLocation.trim() : "",
+    companyIndustry: typeof raw.companyIndustry === "string" ? raw.companyIndustry.trim() : "",
+    companyDescription: typeof raw.companyDescription === "string" ? raw.companyDescription.trim() : "",
   };
 }
 
