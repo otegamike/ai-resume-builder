@@ -21,10 +21,32 @@ export async function GET(req: Request) {
     const workplaceType = searchParams.get("workplaceType") || "";
     const experienceLevel = searchParams.get("experienceLevel") || "";
     const location = searchParams.get("location") || "";
+    const mine = searchParams.get("mine") === "true";
+    const companyIdFilter = searchParams.get("companyId") || "";
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "12", 10);
 
-    const query: any = { status: "active" };
+    const query: any = {};
+
+    if (mine) {
+      const session = await getServerSession(authOptions);
+      if (!session?.user?.id) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      const me = await User.findById(session.user.id).select("organizationId isAdmin");
+      if (!me) return NextResponse.json({ error: "User not found" }, { status: 404 });
+      if (me.isAdmin) {
+        // admins see all when mine=true without org filter, unless filtered below
+      } else if (me.organizationId) {
+        query.companyId = me.organizationId;
+      } else {
+        return NextResponse.json({ jobs: [], locations: [], pagination: { page, limit, total: 0, totalPages: 0 } });
+      }
+    } else {
+      query.status = "active";
+    }
+
+    if (companyIdFilter) query.companyId = companyIdFilter;
 
     if (search.trim()) {
       const searchRegex = new RegExp(search.trim(), "i");
@@ -57,6 +79,12 @@ export async function GET(req: Request) {
 
     const skip = (page - 1) * limit;
 
+    const locationQuery: any = mine ? {} : { status: "active" };
+    if (locationQuery.status) {
+      locationQuery.location = { $exists: true, $ne: "" };
+    } else {
+      locationQuery.location = { $exists: true, $ne: "" };
+    }
     const [jobs, total, locations] = await Promise.all([
       JobAd.find(query)
         .sort({ isPinned: -1, isFeatured: -1, createdAt: -1 })
@@ -64,10 +92,7 @@ export async function GET(req: Request) {
         .limit(limit)
         .populate("companyId", "name logo website industry location isVerified slug"),
       JobAd.countDocuments(query),
-      JobAd.distinct("location", {
-        status: "active", // Optional: filter only active jobs
-        location: { $exists: true, $ne: "" }, // Exclude missing or blank entries
-      })
+      JobAd.distinct("location", locationQuery)
     ]);
 
     return NextResponse.json({

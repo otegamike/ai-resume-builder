@@ -63,11 +63,10 @@ export default function JobAutofillSection({ onExtracted }: JobAutofillSectionPr
     <section className={styles.card}>
       <div className={styles.header}>
         <Sparkles size={18} />
-        <h2>AI Autofill — Admin Only</h2>
-        <span className={styles.badge}>Free • Verbatim Extract</span>
+        <h2>AI Autofill </h2>
       </div>
       <p className={styles.hint}>
-        Paste a full job ad or upload a screenshot. AI will fill the fields below using the original wording — it will not reword or add info.
+        Paste a full job ad or upload a screenshot. AI will fill the fields below using the original wording. it will not reword or add info.
       </p>
 
       <JobDescriptionInput job={{ ...job, handleJobImageChange }} disabled={loading} />

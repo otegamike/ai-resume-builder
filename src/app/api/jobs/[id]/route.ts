@@ -94,6 +94,35 @@ export async function PUT(
       if (body.status) job.status = body.status;
       if (body.isFeatured !== undefined) job.isFeatured = body.isFeatured;
       if (body.isPinned !== undefined) job.isPinned = body.isPinned;
+      const adminCompanyName = typeof body.companyName === "string" ? body.companyName.trim() : "";
+      if (adminCompanyName) {
+        const baseSlug = adminCompanyName.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-");
+        let company = await Company.findOne({ slug: baseSlug });
+        if (!company) {
+          company = await Company.create({
+            name: adminCompanyName,
+            slug: baseSlug,
+            website: typeof body.companyWebsite === "string" ? body.companyWebsite.trim() : "",
+            logo: typeof body.companyLogo === "string" ? body.companyLogo.trim() : "",
+            industry: typeof body.companyIndustry === "string" ? body.companyIndustry.trim() : "Other",
+            location: typeof body.companyLocation === "string" ? body.companyLocation.trim() : "",
+            description: typeof body.companyDescription === "string" ? body.companyDescription.trim() : "",
+            ownerId: currentUser._id,
+            members: [{ userId: currentUser._id, role: "owner" }],
+            isVerified: true,
+            status: "active",
+          });
+        } else {
+          const updates: Record<string, string> = {};
+          if (typeof body.companyWebsite === "string" && body.companyWebsite.trim()) updates.website = body.companyWebsite.trim();
+          if (typeof body.companyLogo === "string" && body.companyLogo.trim()) updates.logo = body.companyLogo.trim();
+          if (typeof body.companyLocation === "string" && body.companyLocation.trim()) updates.location = body.companyLocation.trim();
+          if (typeof body.companyIndustry === "string" && body.companyIndustry.trim()) updates.industry = body.companyIndustry.trim();
+          if (typeof body.companyDescription === "string" && body.companyDescription.trim()) updates.description = body.companyDescription.trim();
+          if (Object.keys(updates).length) await Company.updateOne({ _id: company._id }, { $set: updates });
+        }
+        job.companyId = company._id as never;
+      }
     }
 
     await job.save();

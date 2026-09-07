@@ -40,7 +40,9 @@ const createQuestion = (): ScreeningQuestion => ({
   required: false,
 });
 
-export default function NewDashboardJobPage() {
+export default function DashboardJobEditorPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = React.use(params);
+  const isEdit = id !== "new";
   const router = useRouter();
   const { data: session, status } = useSession();
 
@@ -75,11 +77,64 @@ export default function NewDashboardJobPage() {
 
   const isAdmin = Boolean(session?.user?.isAdmin);
 
+  const [initialLoading, setInitialLoading] = useState(isEdit);
+
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push("/auth/login?callbackUrl=/dashboard/jobs/new");
+      router.push(`/auth/login?callbackUrl=/dashboard/jobs/${id}`);
     }
-  }, [router, status]);
+  }, [router, status, id]);
+
+  useEffect(() => {
+    if (!isEdit || status !== "authenticated") return;
+    let cancelled = false;
+    async function loadJob() {
+      setInitialLoading(true);
+      try {
+        const res = await fetch(`/api/jobs/${id}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to load job");
+        const job = data.job;
+        if (!job || cancelled) return;
+        setTitle(job.title || "");
+        setCategory(job.category || "Engineering");
+        setJobType(job.jobType || "full-time");
+        setWorkplaceType(job.workplaceType || "remote");
+        setLocation(job.location || "Remote");
+        setExperienceLevel(job.experienceLevel || "mid");
+        setSalaryMin(job.salaryMin != null ? String(job.salaryMin) : "");
+        setSalaryMax(job.salaryMax != null ? String(job.salaryMax) : "");
+        setSalaryCurrency(job.salaryCurrency || "USD");
+        setSalaryPeriod(job.salaryPeriod || "yearly");
+        setHideSalary(Boolean(job.hideSalary));
+        setDescription(job.description || "");
+        setRequirementsText(Array.isArray(job.requirements) ? job.requirements.join("\n") : "");
+        setSkillsText(Array.isArray(job.skillsRequired) ? job.skillsRequired.join(", ") : "");
+        setBenefitsText(Array.isArray(job.benefits) ? job.benefits.join("\n") : "");
+        setApplicationType(job.applicationType || "on_platform");
+        setExternalUrl(job.externalUrl || "");
+        setContactEmail(job.contactEmail || "");
+        setScreeningQuestions(Array.isArray(job.screeningQuestions) ? job.screeningQuestions : []);
+        if (job.companyId) {
+          const c = job.companyId as { name?: string; website?: string; logo?: string; industry?: string; location?: string; description?: string };
+          setCompanyName(c.name || "");
+          setCompanyWebsite(c.website || "");
+          setCompanyLogo(c.logo || "");
+          setCompanyIndustry(c.industry || "Software & IT");
+          setCompanyLocation(c.location || "");
+          setCompanyDescription(c.description || "");
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load job");
+      } finally {
+        if (!cancelled) setInitialLoading(false);
+      }
+    }
+    loadJob();
+    return () => {
+      cancelled = true;
+    };
+  }, [isEdit, id, status]);
 
   const handleAutofill = (fields: ParsedJobAd) => {
     if (fields.title) setTitle(fields.title);
@@ -102,6 +157,9 @@ export default function NewDashboardJobPage() {
     if (fields.companyLocation) setCompanyLocation(fields.companyLocation);
     if (fields.companyIndustry) setCompanyIndustry(fields.companyIndustry);
     if (fields.companyDescription) setCompanyDescription(fields.companyDescription);
+    if (fields.applicationType) setApplicationType(fields.applicationType as ApplicationType);
+    if (fields.externalUrl) setExternalUrl(fields.externalUrl);
+    if (fields.contactEmail) setContactEmail(fields.contactEmail);
   };
 
   const updateQuestion = (id: string, updates: Partial<ScreeningQuestion>) => {
@@ -148,11 +206,7 @@ export default function NewDashboardJobPage() {
 
     const splitLines = (value: string) => value.split("\n").map((line) => line.trim()).filter(Boolean);
 
-    try {
-      const res = await fetch("/api/jobs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+    const payload = {
           title: title.trim(),
           category,
           jobType,
@@ -186,7 +240,13 @@ export default function NewDashboardJobPage() {
                 companyDescription: companyDescription.trim(),
               }
             : {}),
-        }),
+        };
+
+    try {
+      const res = await fetch(isEdit ? `/api/jobs/${id}` : "/api/jobs", {
+        method: isEdit ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -203,11 +263,11 @@ export default function NewDashboardJobPage() {
     }
   };
 
-  if (status === "loading" || !session) {
+  if (status === "loading" || !session || initialLoading) {
     return (
       <div className={styles.emptyState}>
         <Loader2 className="loading_icon" size={28} style={{ margin: "0 auto 1rem" }} />
-        <p>Loading job posting form...</p>
+        <p>{initialLoading ? "Loading job..." : "Loading job posting form..."}</p>
       </div>
     );
   }
@@ -221,9 +281,9 @@ export default function NewDashboardJobPage() {
             Back to jobs
           </button>
         </div>
-        <h1 className={styles.title}>Post a Job</h1>
+        <h1 className={styles.title}>{isEdit ? "Edit Job Ad" : "Post a Job"}</h1>
         <p className={styles.subtitle}>
-          Create a public job page with rich details, application mode, and optional screening questions.
+          {isEdit ? "Update the job details, company, and screening questions." : "Create a public job page with rich details, application mode, and optional screening questions."}
         </p>
       </header>
 
@@ -491,7 +551,7 @@ export default function NewDashboardJobPage() {
             Cancel
           </button>
           <button type="submit" className={styles.submitBtn} disabled={loading}>
-            {loading ? <Loader2 className="loading_icon" size={18} /> : <>Publish Job Ad <Send size={18} /></>}
+            {loading ? <Loader2 className="loading_icon" size={18} /> : isEdit ? <>Save Changes <Send size={18} /></> : <>Publish Job Ad <Send size={18} /></>}
           </button>
         </div>
       </form>

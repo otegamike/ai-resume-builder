@@ -963,6 +963,9 @@ export interface ParsedJobAd {
   companyLocation: string;
   companyIndustry: string;
   companyDescription: string;
+  applicationType: string;
+  externalUrl: string;
+  contactEmail: string;
 }
 
 const JOB_PARSE_PROMPT = (text: string) => `
@@ -973,7 +976,8 @@ CRITICAL RULES — preserve wording:
 - Do NOT add information that is not explicitly present in the source. If a field is not in the source, return "" for strings, [] for arrays, or null for salary numbers.
 - For description, requirements, benefits, skillsRequired: copy the original phrasing exactly as it appears, only splitting into array items where needed. Do not add buzzwords or extra duties.
 - Preserve original sentence structure and wording for description. Convert plain text description to simple HTML paragraphs: wrap each paragraph in <p>...</p>, keep line breaks. Do not invent HTML you did not see.
-- For enums, map to the closest allowed value but still base it on source text: category must be one of ["Engineering","Design","Product","Marketing","Sales","HR","Finance","Other"] (default "Other"), jobType one of ["full-time","part-time","contract","freelance","internship"] (default "full-time"), workplaceType one of ["remote","hybrid","on-site"] (default "remote"), experienceLevel one of ["entry","mid","senior","lead","executive"] (default "mid").
+- For enums, map to the closest allowed value but still base it on source text: category must be one of ["Engineering","Design","Product","Marketing","Sales","HR","Finance","Other"] (default "Other"), jobType one of ["full-time","part-time","contract","freelance","internship"] (default "full-time"), workplaceType one of ["remote","hybrid","on-site"] (default "remote"), experienceLevel one of ["entry","mid","senior","lead","executive"] (default "mid"), applicationType one of ["on_platform","external_link","email"] (default "on_platform").
+- For applicationType: set to "external_link" ONLY if source contains a verbatim apply URL (e.g. "Apply at https://..." ), "email" ONLY if it contains a verbatim apply email (e.g. "send CV to jobs@..."), otherwise "on_platform". Copy URL/email verbatim when present; never invent. If neither URL nor email is present, return "" for both externalUrl and contactEmail.
 
 Return ONLY a JSON object with this exact schema — no markdown, no explanation:
 {
@@ -996,7 +1000,10 @@ Return ONLY a JSON object with this exact schema — no markdown, no explanation
   "companyLogo": "string — logo image URL if present or empty",
   "companyLocation": "string — company HQ/location verbatim or empty",
   "companyIndustry": "string — industry verbatim or empty",
-  "companyDescription": "string — about the company verbatim or empty"
+  "companyDescription": "string — about the company verbatim or empty",
+  "applicationType": "on_platform | external_link | email",
+  "externalUrl": "string — verbatim apply URL or empty",
+  "contactEmail": "string — verbatim apply email or empty"
 }
 
 Source job ad text to extract from:
@@ -1008,6 +1015,16 @@ function normalizeParsedJobAd(raw: Partial<ParsedJobAd>): ParsedJobAd {
   const validWorkplace = ["remote", "hybrid", "on-site"];
   const validExp = ["entry", "mid", "senior", "lead", "executive"];
   const validPeriods = ["yearly", "monthly", "hourly"];
+  const validAppTypes = ["on_platform", "external_link", "email"];
+  let applicationType = validAppTypes.includes(raw.applicationType as string) ? (raw.applicationType as string) : "on_platform";
+  let externalUrl = typeof raw.externalUrl === "string" ? raw.externalUrl.trim() : "";
+  let contactEmail = typeof raw.contactEmail === "string" ? raw.contactEmail.trim() : "";
+  if (applicationType === "external_link" && !externalUrl) applicationType = "on_platform";
+  if (applicationType === "email" && !contactEmail) applicationType = "on_platform";
+  if (externalUrl && !/^https?:\/\//i.test(externalUrl) && !externalUrl.includes(".")) externalUrl = "";
+  if (externalUrl && applicationType !== "external_link") externalUrl = "";
+  if (contactEmail && !contactEmail.includes("@")) contactEmail = "";
+  if (contactEmail && applicationType !== "email") contactEmail = "";
   return {
     title: typeof raw.title === "string" ? raw.title.trim() : "",
     category: validCategories.includes(raw.category as string) ? raw.category as string : "Other",
@@ -1029,6 +1046,9 @@ function normalizeParsedJobAd(raw: Partial<ParsedJobAd>): ParsedJobAd {
     companyLocation: typeof raw.companyLocation === "string" ? raw.companyLocation.trim() : "",
     companyIndustry: typeof raw.companyIndustry === "string" ? raw.companyIndustry.trim() : "",
     companyDescription: typeof raw.companyDescription === "string" ? raw.companyDescription.trim() : "",
+    applicationType,
+    externalUrl,
+    contactEmail,
   };
 }
 
