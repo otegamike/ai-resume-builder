@@ -20,7 +20,6 @@ import {
   Share2,
   Sparkles,
 } from "lucide-react";
-import styles from "../jobs.module.css";
 import detailStyles from "./jobDetail.module.css";
 
 interface JobCompany {
@@ -312,7 +311,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ slug: stri
   const salaryPeriod = job.salaryPeriod === "hourly" ? "hr" : job.salaryPeriod === "monthly" ? "mo" : "yr";
 
   return (
-    <div className={styles.container}>
+    <div className={detailStyles.container}>
       <div className={detailStyles.wrapper}>
         <Link href="/jobs" className={detailStyles.backLink}>
           <ArrowLeft size={16} /> Back to Job Search
@@ -325,7 +324,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ slug: stri
                 <span className={detailStyles.companyName}>{company?.name}</span>
                 {company?.isVerified && (
                   <span className={detailStyles.verifiedTag} title="Verified Organization">
-                    <CheckCircle2 size={16} /> Verified
+                    <CheckCircle2 size={14} /> 
                   </span>
                 )}
               </div>
@@ -378,7 +377,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ slug: stri
               </a>
             ) : (
               <button onClick={handleOpenApplyModal} className={detailStyles.applyBtn} id="open-apply-modal-btn">
-                1-Click Apply Now <Sparkles size={16} />
+                Apply Now <Send size={16} />
               </button>
             )}
           </div>
@@ -486,7 +485,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ slug: stri
                       <h3>Apply with your Resumy AI resume</h3>
                       <p>Choose a saved resume, check your match, answer any screening questions, and submit directly.</p>
                       <button type="button" onClick={handleOpenApplyModal} className={detailStyles.applyBtn}>
-                        Start 1-Click Apply <Sparkles size={16} />
+                        Apply Now <Send size={16} />
                       </button>
                     </div>
                   </div>
