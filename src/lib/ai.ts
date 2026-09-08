@@ -1042,10 +1042,11 @@ You are a precise job-ad extractor. You ONLY output raw valid JSON. Never use ma
 CRITICAL RULES — preserve wording:
 - Extract fields VERBATIM from the source text. Do NOT reword, summarize, paraphrase, or invent.
 - Do NOT add information that is not explicitly present in the source. If a field is not in the source, return "" for strings, [] for arrays, or null for salary numbers.
-- For description, requirements, benefits, skillsRequired: copy the original phrasing exactly as it appears, only splitting into array items where needed. Do not add buzzwords or extra duties.
+ - For description, requirements, benefits, skillsRequired: copy the original phrasing exactly as it appears, only splitting into array items where needed. Do not add buzzwords or extra duties.
 - Preserve original sentence structure and wording for description. Convert plain text description to simple HTML paragraphs: wrap each paragraph in <p>...</p>, keep line breaks. Do not invent HTML you did not see.
 - For enums, map to the closest allowed value but still base it on source text: category must be one of ["Engineering","Design","Product","Marketing","Sales","HR","Finance","Other"] (default "Other"), jobType one of ["full-time","part-time","contract","freelance","internship"] (default "full-time"), workplaceType one of ["remote","hybrid","on-site"] (default "remote"), experienceLevel one of ["entry","mid","senior","lead","executive"] (default "mid"), applicationType one of ["on_platform","external_link","email"] (default "on_platform").
 - For applicationType: set to "external_link" ONLY if source contains a verbatim apply URL (e.g. "Apply at https://..." ), "email" ONLY if it contains a verbatim apply email (e.g. "send CV to jobs@..."), otherwise "on_platform". Copy URL/email verbatim when present; never invent. If neither URL nor email is present, return "" for both externalUrl and contactEmail.
+- For salary: recognize patterns like "$90K - $120K", "$90,000", "₦2,000,000", "£35k per annum", "€45/hr", "NGN 500k–800k", "2,000 USD per month". Extract salaryMin as first number, salaryMax as second number or null if single value, salaryCurrency from symbol ($→USD, £→GBP, €→EUR, ₦→NGN, ₹→INR) or code (USD, NGN, GBP, EUR) normalized to uppercase 3-letter code, salaryPeriod from keywords "per year|annum|yearly→yearly, per month|monthly→monthly, per hour|hourly|/hr→hourly". If text says "Competitive" or "Negotiable" return nulls and leave currency as "USD".
 
 Return ONLY a JSON object with this exact schema — no markdown, no explanation:
 {
@@ -1093,6 +1094,18 @@ function normalizeParsedJobAd(raw: Partial<ParsedJobAd>): ParsedJobAd {
   if (externalUrl && applicationType !== "external_link") externalUrl = "";
   if (contactEmail && !contactEmail.includes("@")) contactEmail = "";
   if (contactEmail && applicationType !== "email") contactEmail = "";
+
+  let salaryMin = typeof raw.salaryMin === "number" && !isNaN(raw.salaryMin) ? raw.salaryMin : null;
+  let salaryMax = typeof raw.salaryMax === "number" && !isNaN(raw.salaryMax) ? raw.salaryMax : null;
+  let salaryCurrencyRaw = typeof raw.salaryCurrency === "string" ? raw.salaryCurrency.trim() : "";
+  const symbolToCode: Record<string, string> = { "$": "USD", "£": "GBP", "€": "EUR", "₦": "NGN", "₹": "INR" };
+  if (symbolToCode[salaryCurrencyRaw]) salaryCurrencyRaw = symbolToCode[salaryCurrencyRaw];
+  if (salaryCurrencyRaw.length === 1 && symbolToCode[salaryCurrencyRaw]) salaryCurrencyRaw = symbolToCode[salaryCurrencyRaw];
+  let salaryCurrency = salaryCurrencyRaw ? salaryCurrencyRaw.toUpperCase().slice(0, 3) : "USD";
+  let salaryPeriodRaw = typeof raw.salaryPeriod === "string" ? raw.salaryPeriod.trim().toLowerCase() : "";
+  const periodMap: Record<string, string> = { "per annum": "yearly", annum: "yearly", annual: "yearly", "per year": "yearly", yearly: "yearly", "per month": "monthly", monthly: "monthly", "per hour": "hourly", hourly: "hourly", "/hr": "hourly", "per hr": "hourly" };
+  let salaryPeriod = periodMap[salaryPeriodRaw] ?? (validPeriods.includes(salaryPeriodRaw) ? salaryPeriodRaw : "yearly");
+  if (salaryMin === null && salaryMax !== null) { salaryMin = salaryMax; salaryMax = null; }
   return {
     title: typeof raw.title === "string" ? raw.title.trim() : "",
     category: validCategories.includes(raw.category as string) ? raw.category as string : "Other",
@@ -1100,10 +1113,10 @@ function normalizeParsedJobAd(raw: Partial<ParsedJobAd>): ParsedJobAd {
     workplaceType: validWorkplace.includes(raw.workplaceType as string) ? raw.workplaceType as string : "remote",
     location: typeof raw.location === "string" && raw.location.trim() ? raw.location.trim() : "Remote",
     experienceLevel: validExp.includes(raw.experienceLevel as string) ? raw.experienceLevel as string : "mid",
-    salaryMin: typeof raw.salaryMin === "number" && !isNaN(raw.salaryMin) ? raw.salaryMin : null,
-    salaryMax: typeof raw.salaryMax === "number" && !isNaN(raw.salaryMax) ? raw.salaryMax : null,
-    salaryCurrency: typeof raw.salaryCurrency === "string" && raw.salaryCurrency.trim() ? raw.salaryCurrency.trim().toUpperCase().slice(0, 3) : "USD",
-    salaryPeriod: validPeriods.includes(raw.salaryPeriod as string) ? raw.salaryPeriod as string : "yearly",
+    salaryMin,
+    salaryMax,
+    salaryCurrency,
+    salaryPeriod,
     description: typeof raw.description === "string" ? raw.description.trim() : "",
     requirements: normalizeStringList(raw.requirements),
     benefits: normalizeStringList(raw.benefits),

@@ -48,6 +48,7 @@ export default function TipTapEditor({
       }),
       Image.configure({
         allowBase64: false,
+        HTMLAttributes: { class: "tiptap-image" },
       }),
       Placeholder.configure({
         placeholder,

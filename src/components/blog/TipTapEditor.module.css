@@ -145,8 +145,10 @@
 }
 
 .editor :global(.ProseMirror img) {
+  width: 100%;
   max-width: 100%;
   height: auto;
+  display: block;
   border-radius: var(--radius-md);
   margin: 1em 0;
 }

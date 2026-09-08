@@ -461,7 +461,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
               {applyError && <div className={styles.errorBanner}>{applyError}</div>}
 
               <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "1rem", alignItems: "start" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", alignItems: "center" }}>
                   <div style={{ border: "1px solid var(--gray-200)", borderRadius: "var(--radius-lg)", padding: "0.5rem", background: "white", maxHeight: "320px", overflow: "hidden" }}>
                     {selection?.mode === "saved" && selection.selectedSavedResume ? (
                       <ResumeComponent resumeContent={tailoredReport?.tailoredResume ?? selection.selectedSavedResume.content} templateId={normalizeTemplateId(selection.selectedSavedResume.template)} />
@@ -479,7 +479,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", minWidth: "120px" }}>
                     <ScoreCircle score={finalScore} />
-                    <span className={`${styles.tierPill} ${finalTier.cls}`}>{finalTier.label} — {finalScore}%</span>
+                    <span className={`${styles.tierPill} ${finalTier.cls}`}>{finalTier.label}</span>
                     <span className={styles.tierHint} style={{ textAlign: "center" }}>{finalTier.hint}</span>
                   </div>
                 </div>

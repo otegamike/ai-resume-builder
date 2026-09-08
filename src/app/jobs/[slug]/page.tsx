@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState, use } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
   AlertCircle,
@@ -74,6 +75,7 @@ const hasHtmlTags = (value: string) => /<\/?[a-z][\s\S]*>/i.test(value);
 
 export default function JobDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
+  const router = useRouter();
   const { data: session, status } = useSession();
 
   const [job, setJob] = useState<JobDetail | null>(null);
@@ -159,9 +161,9 @@ export default function JobDetailPage({ params }: { params: Promise<{ slug: stri
         <AlertCircle size={48} />
         <h2>Job Not Found</h2>
         <p>{error || "This job listing may have expired or been removed."}</p>
-        <Link href="/jobs" className={detailStyles.backBtn}>
+        <button onClick={() => (typeof window !== "undefined" && window.history.length > 1 ? router.back() : router.push(isSignedIn ? "/dashboard/jobs" : "/jobs"))} className={detailStyles.backBtn}>
           <ArrowLeft size={16} /> Back to Job Board
-        </Link>
+        </button>
       </div>
     );
   }
@@ -170,12 +172,17 @@ export default function JobDetailPage({ params }: { params: Promise<{ slug: stri
   const isSignedIn = !!session;
   const salaryPeriod = job.salaryPeriod === "hourly" ? "hr" : job.salaryPeriod === "monthly" ? "mo" : "yr";
 
+  const handleBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) router.back();
+    else router.push(isSignedIn ? "/dashboard/jobs" : "/jobs");
+  };
+
   return (
     <div className={detailStyles.container}>
       <div className={detailStyles.wrapper}>
-        <Link href="/jobs" className={detailStyles.backLink}>
+        <button onClick={handleBack} className={detailStyles.backLink} style={{ background: "none", border: "none", cursor: "pointer" }}>
           <ArrowLeft size={16} /> Back to Job Search
-        </Link>
+        </button>
 
         <header className={detailStyles.headerCard}>
           <div className={detailStyles.headerMain}>

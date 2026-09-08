@@ -16,6 +16,8 @@ interface JobItem {
   hideSalary: boolean;
   salaryMin?: number;
   salaryMax?: number;
+  salaryCurrency?: string;
+  salaryPeriod?: string;
   isFeatured: boolean;
   description: string;
   status: string;
@@ -216,6 +218,18 @@ export default function EmployerHub({ isEmployer }: { isEmployer: boolean }) {
   );
 }
 
+function salaryText(job: JobItem): string | null {
+  if (job.hideSalary || !job.salaryMin) return null;
+  const cur = String(job.salaryCurrency || "").toUpperCase();
+  const symbolMap: Record<string, string> = { USD: "$", NGN: "₦", GBP: "£", EUR: "€" };
+  const sym = symbolMap[cur] ?? (cur ? cur + " " : "");
+  const periodMap: Record<string, string> = { yearly: "/yr", monthly: "/mo", hourly: "/hr" };
+  const period = periodMap[String(job.salaryPeriod || "").toLowerCase()] ?? (job.salaryPeriod ? `/${job.salaryPeriod}` : "");
+  const periodSuffix = period ? ` ${period}` : "";
+  if (!job.salaryMax) return `${sym}${job.salaryMin.toLocaleString()}${periodSuffix}`.trim();
+  return `${sym}${job.salaryMin.toLocaleString()} - ${sym}${job.salaryMax.toLocaleString()}${periodSuffix}`.trim();
+}
+
 function EmployerJobCard({ job, onViewApplicants }: { job: JobItem; onViewApplicants: (id: string) => void }) {
   const router = useRouter();
   const plainDesc = job.description ? job.description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() : "";
@@ -231,9 +245,7 @@ function EmployerJobCard({ job, onViewApplicants }: { job: JobItem; onViewApplic
       <div className={styles.tagsRow}>
         <span className={styles.tag}><MapPin size={13} /> {job.location} ({job.workplaceType ?? "remote"})</span>
         <span className={styles.tag}><Briefcase size={13} /> {job.jobType}</span>
-        {!job.hideSalary && job.salaryMin && (
-          <span className={`${styles.tag} ${styles.salaryTag}`}><DollarSign size={13} /> ${job.salaryMin.toLocaleString()}{job.salaryMax ? ` - $${job.salaryMax.toLocaleString()}` : "+"} / yr</span>
-        )}
+        {(() => { const s = salaryText(job); return s ? <span className={`${styles.tag} ${styles.salaryTag}`}>{s}</span> : null; })()}
       </div>
       <p style={{ fontSize: "var(--text-xs)", color: "var(--gray-600)", background: "var(--gray-50)", padding: "0.5rem", borderRadius: "6px" }}>
         {plainDesc.slice(0, 200)}{plainDesc.length > 200 ? "…" : ""}

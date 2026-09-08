@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
-import { Search, MapPin, Briefcase, DollarSign, CheckCircle2, Loader2 } from "lucide-react";
+import { Search, MapPin, Briefcase, CheckCircle2, Loader2 } from "lucide-react";
 import DropDown from "@/components/ui/dropdown/Dropdown";
 import styles from "./FindJobsBoard.module.css";
 
@@ -24,6 +24,8 @@ interface JobItem {
   hideSalary: boolean;
   salaryMin?: number;
   salaryMax?: number;
+  salaryCurrency?: string;
+  salaryPeriod?: string;
   isFeatured: boolean;
 }
 
@@ -176,6 +178,19 @@ export default function FindJobsBoard() {
   );
 }
 
+function salaryText(job: JobItem): string | null {
+  if (job.hideSalary || !job.salaryMin) return null;
+  const cur = String(job.salaryCurrency || "").toUpperCase();
+  const symbolMap: Record<string, string> = { USD: "$", NGN: "₦", GBP: "£", EUR: "€" };
+  const sym = symbolMap[cur] ?? (cur ? cur + " " : "");
+  const periodMap: Record<string, string> = { yearly: "/yr", monthly: "/mo", hourly: "/hr" };
+  const period = periodMap[String(job.salaryPeriod || "").toLowerCase()] ?? (job.salaryPeriod ? `/${job.salaryPeriod}` : "");
+  const min = job.salaryMin.toLocaleString();
+  const periodSuffix = period ? ` ${period}` : "";
+  if (!job.salaryMax) return `${sym}${min}${periodSuffix}`.trim();
+  return `${sym}${min} - ${sym}${job.salaryMax.toLocaleString()}${periodSuffix}`.trim();
+}
+
 function JobCard({ job }: { job: JobItem }) {
   const companyName = job.companyId?.name || "Hiring Organization";
   const isVerified = job.companyId?.isVerified;
@@ -202,11 +217,8 @@ function JobCard({ job }: { job: JobItem }) {
         <span className={styles.tag}>
           <Briefcase size={13} /> {job.jobType}
         </span>
-        {!job.hideSalary && job.salaryMin && (
-          <span className={`${styles.tag} ${styles.salaryTag}`}>
-            <DollarSign size={13} /> ${job.salaryMin.toLocaleString()}
-            {job.salaryMax ? ` - $${job.salaryMax.toLocaleString()}` : "+"} / yr
-          </span>
+        {salaryText(job) && (
+          <span className={`${styles.tag} ${styles.salaryTag}`}>{salaryText(job)}</span>
         )}
       </div>
     </Link>

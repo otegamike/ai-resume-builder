@@ -54,7 +54,9 @@ export default function DashboardJobEditorPage({ params }: { params: Promise<{ i
   const [experienceLevel, setExperienceLevel] = useState("mid");
   const [salaryMin, setSalaryMin] = useState("");
   const [salaryMax, setSalaryMax] = useState("");
+  const [salaryMode, setSalaryMode] = useState<"single" | "range">("single");
   const [salaryCurrency, setSalaryCurrency] = useState("USD");
+  const [salaryCurrencyCustom, setSalaryCurrencyCustom] = useState("");
   const [salaryPeriod, setSalaryPeriod] = useState("yearly");
   const [hideSalary, setHideSalary] = useState(false);
   const [description, setDescription] = useState("");
@@ -104,7 +106,15 @@ export default function DashboardJobEditorPage({ params }: { params: Promise<{ i
         setExperienceLevel(job.experienceLevel || "mid");
         setSalaryMin(job.salaryMin != null ? String(job.salaryMin) : "");
         setSalaryMax(job.salaryMax != null ? String(job.salaryMax) : "");
-        setSalaryCurrency(job.salaryCurrency || "USD");
+        setSalaryMode(job.salaryMax != null ? "range" : "single");
+        const knownCur = ["USD", "NGN", "GBP", "EUR"].includes(String(job.salaryCurrency || "USD").toUpperCase()) ? String(job.salaryCurrency || "USD").toUpperCase() : "OTHER";
+        if (knownCur === "OTHER") {
+          setSalaryCurrency("OTHER");
+          setSalaryCurrencyCustom(String(job.salaryCurrency || "USD").toUpperCase());
+        } else {
+          setSalaryCurrency(knownCur);
+          setSalaryCurrencyCustom("");
+        }
         setSalaryPeriod(job.salaryPeriod || "yearly");
         setHideSalary(Boolean(job.hideSalary));
         setDescription(job.description || "");
@@ -145,7 +155,17 @@ export default function DashboardJobEditorPage({ params }: { params: Promise<{ i
     if (fields.experienceLevel) setExperienceLevel(fields.experienceLevel);
     setSalaryMin(fields.salaryMin != null ? String(fields.salaryMin) : "");
     setSalaryMax(fields.salaryMax != null ? String(fields.salaryMax) : "");
-    if (fields.salaryCurrency) setSalaryCurrency(fields.salaryCurrency);
+    setSalaryMode(fields.salaryMax != null ? "range" : "single");
+    if (fields.salaryCurrency) {
+      const cur = fields.salaryCurrency.toUpperCase();
+      if (["USD", "NGN", "GBP", "EUR"].includes(cur)) {
+        setSalaryCurrency(cur);
+        setSalaryCurrencyCustom("");
+      } else {
+        setSalaryCurrency("OTHER");
+        setSalaryCurrencyCustom(cur);
+      }
+    }
     if (fields.salaryPeriod) setSalaryPeriod(fields.salaryPeriod);
     if (fields.description) setDescription(fields.description);
     if (fields.requirements.length) setRequirementsText(fields.requirements.join("\n"));
@@ -206,6 +226,7 @@ export default function DashboardJobEditorPage({ params }: { params: Promise<{ i
 
     const splitLines = (value: string) => value.split("\n").map((line) => line.trim()).filter(Boolean);
 
+    const effectiveCurrency = salaryCurrency === "OTHER" ? salaryCurrencyCustom.trim().toUpperCase() : salaryCurrency;
     const payload = {
           title: title.trim(),
           category,
@@ -214,8 +235,8 @@ export default function DashboardJobEditorPage({ params }: { params: Promise<{ i
           location: location.trim() || "Remote",
           experienceLevel,
           salaryMin: salaryMin ? Number(salaryMin) : undefined,
-          salaryMax: salaryMax ? Number(salaryMax) : undefined,
-          salaryCurrency,
+          salaryMax: salaryMode === "range" && salaryMax ? Number(salaryMax) : undefined,
+          salaryCurrency: effectiveCurrency,
           salaryPeriod,
           hideSalary,
           description,
@@ -393,19 +414,37 @@ export default function DashboardJobEditorPage({ params }: { params: Promise<{ i
           <div className={styles.formSectionHeader}>
             <h2>Compensation</h2>
           </div>
+          <div className={styles.segmentedControl} style={{ marginBottom: "var(--space-4)" }}>
+            <button type="button" className={salaryMode === "single" ? styles.segmentActive : ""} onClick={() => setSalaryMode("single")}>Single value</button>
+            <button type="button" className={salaryMode === "range" ? styles.segmentActive : ""} onClick={() => setSalaryMode("range")}>Range</button>
+          </div>
           <div className={styles.formGrid}>
             <div className={styles.field}>
-              <label className={styles.label}>Minimum Salary</label>
+              <label className={styles.label}>{salaryMode === "single" ? "Salary" : "Minimum Salary"}</label>
               <input type="number" className={styles.input} value={salaryMin} onChange={(e) => setSalaryMin(e.target.value)} />
             </div>
-            <div className={styles.field}>
-              <label className={styles.label}>Maximum Salary</label>
-              <input type="number" className={styles.input} value={salaryMax} onChange={(e) => setSalaryMax(e.target.value)} />
-            </div>
+            {salaryMode === "range" && (
+              <div className={styles.field}>
+                <label className={styles.label}>Maximum Salary</label>
+                <input type="number" className={styles.input} value={salaryMax} onChange={(e) => setSalaryMax(e.target.value)} />
+              </div>
+            )}
             <div className={styles.field}>
               <label className={styles.label}>Currency</label>
-              <input className={styles.input} value={salaryCurrency} onChange={(e) => setSalaryCurrency(e.target.value.toUpperCase())} />
+              <select className={styles.select} value={salaryCurrency} onChange={(e) => setSalaryCurrency(e.target.value)}>
+                <option value="USD">USD ($)</option>
+                <option value="NGN">NGN (₦)</option>
+                <option value="GBP">GBP (£)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="OTHER">Other</option>
+              </select>
             </div>
+            {salaryCurrency === "OTHER" && (
+              <div className={styles.field}>
+                <label className={styles.label}>Custom Currency</label>
+                <input className={styles.input} placeholder="e.g. KES, ZAR" value={salaryCurrencyCustom} onChange={(e) => setSalaryCurrencyCustom(e.target.value.toUpperCase())} />
+              </div>
+            )}
             <div className={styles.field}>
               <label className={styles.label}>Period</label>
               <select className={styles.select} value={salaryPeriod} onChange={(e) => setSalaryPeriod(e.target.value)}>

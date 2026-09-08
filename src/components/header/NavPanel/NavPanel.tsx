@@ -23,6 +23,7 @@ interface NavPanelProps {
 }
 
 const primaryLinks = [
+  { href: "/jobs", label: "Jobs" },
   { href: "/templates", label: "Template Gallery" },
   { href: "/#features", label: "Features" },
   { href: "/pricing", label: "Pricing" },
