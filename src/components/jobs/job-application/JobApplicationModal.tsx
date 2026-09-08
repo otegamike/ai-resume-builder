@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { Check, Loader2, Send, CheckCircle2, AlertTriangle, ArrowRight, ArrowLeft, ExternalLink, Mail } from "lucide-react";
+import { motion } from "motion/react";
 import ResumeSelector, { ResumeSelection } from "@/components/resume/ResumeSelector";
 import ResumeComponent from "@/components/resume/ResumeComponent";
 import { normalizeTemplateId } from "@/lib/templateRenderer";
@@ -14,6 +15,7 @@ import { useAlertStore } from "@/store/useAlertStore";
 import type { MatchAnalysis } from "@/lib/ai";
 import type { TailorReport } from "@/types/TailorReport";
 import styles from "./JobApplicationModal.module.css";
+import scrollToId from "@/utils/scrollIntoview";
 
 interface JobDetail {
   _id: string;
@@ -121,7 +123,10 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Analysis failed");
-        if (!cancelled) setAnalysis(data as MatchAnalysis);
+        if (!cancelled) { 
+          setAnalysis(data as MatchAnalysis);
+          scrollToId('analysisReport');
+        }
       } catch (err) {
         if (!cancelled) setAnalysisError(err instanceof Error ? err.message : "Failed to analyze");
       } finally {
@@ -280,7 +285,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
 
   return (
     <div className={styles.overlay} onClick={onClose}>
-      <div ref={cardRef} className={styles.card} onClick={(e) => e.stopPropagation()}>
+      <div className={styles.card} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
           <h2 className={styles.title}>Apply to {job.title}</h2>
           <button onClick={onClose} className={styles.closeBtn} aria-label="Close">&times;</button>
@@ -302,8 +307,10 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
             <button onClick={onClose} className={styles.primaryBtn}>Close</button>
           </div>
         ) : (
-          <div className={styles.stepsWrapper}>
+          <>
+          <div ref={cardRef} className={styles.stepsWrapper}>
             <div className={`${styles.stepContent} ${step === 0 ? styles.stepActive : ""}`}>
+              <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: step === 0 ? 1 : 0, x: step === 0 ? 0 : 16 }} transition={{ duration: 0.25 }} style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
               <div className={styles.stepBadge}>Step 1 of {totalSteps}</div>
               <h3 className={styles.stepTitle}>Select your resume</h3>
               <p className={styles.stepSubtitle}>Choose a saved resume or upload a PDF/image. We’ll analyze how well it matches this job.</p>
@@ -319,11 +326,11 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
               {analysisError && <div className={styles.errorBanner} style={{ marginTop: "1rem" }}>{analysisError}</div>}
 
               {analysis && tier && !tailoredReport && (
-                <div style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "1rem", border: "1px solid var(--gray-200)", borderRadius: "var(--radius-lg)", padding: "1rem", background: "var(--gray-50)" }}>
+                <div id='analysisReport' style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "1rem", border: "1px solid var(--gray-200)", borderRadius: "var(--radius-lg)", padding: "1rem", background: "var(--gray-50)" }}>
                   <div className={styles.analysisGrid}>
                     <ScoreCircle score={analysis.score} />
+                    <span className={`${styles.tierPill} ${tier.cls}`}>{tier.label}</span>
                     <div className={styles.analysisText}>
-                      <span className={`${styles.tierPill} ${tier.cls}`}>{tier.label} — {analysis.score}%</span>
                       <span className={styles.tierHint}>{tier.hint}</span>
                       {analysis.verdict && <p style={{ fontSize: "var(--text-sm)", color: "var(--gray-700)", lineHeight: 1.5 }}>{analysis.verdict}</p>}
                     </div>
@@ -403,16 +410,11 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
               })()}
 
               {applyError && !analysis && <div className={styles.errorBanner} style={{ marginTop: "1rem" }}>{applyError}</div>}
-
-              <div className={styles.navRow}>
-                <span className={styles.spacer} />
-                <button type="button" className={styles.primaryBtn} onClick={handleNext} disabled={!canProceedStep1}>
-                  Continue <ArrowRight size={16} />
-                </button>
-              </div>
+              </motion.div>
             </div>
 
             <div className={`${styles.stepContent} ${step === 1 ? styles.stepActive : ""}`}>
+              <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: step === 1 ? 1 : 0, x: step === 1 ? 0 : 16 }} transition={{ duration: 0.25 }} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div className={styles.stepBadge}>Step 2 of {totalSteps}</div>
               <h3 className={styles.stepTitle}>Additional information</h3>
               <p className={styles.stepSubtitle}>{hasQuestions ? "Answer employer questions and add an optional cover letter." : "Add an optional cover letter."}</p>
@@ -423,7 +425,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1rem" }}>
                   {job.screeningQuestions!.map((q) => (
                     <div key={q.id} className={styles.formGroup}>
-                      <label className={styles.label}>{q.question} {q.required && <span aria-label="required">*</span>}</label>
+                      <label className={styles.label}>{q.question} {q.required && <span className={styles.asterisk} aria-label="required">*</span>}</label>
                       {q.type === "textarea" ? (
                         <textarea className={styles.textareaInput} rows={3} value={screeningAnswers[q.id] || ""} onChange={(e) => setScreeningAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))} required={q.required} />
                       ) : q.type === "dropdown" ? (
@@ -445,15 +447,11 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
                 <label className={styles.label}>Cover letter / message (optional)</label>
                 <textarea className={styles.textareaInput} rows={4} placeholder="Introduce yourself and explain why you're a great fit..." value={coverLetterText} onChange={(e) => setCoverLetterText(e.target.value)} />
               </div>
-
-              <div className={styles.navRow}>
-                <button type="button" onClick={handleBack} className={styles.backBtn}><ArrowLeft size={16} /> Back</button>
-                <span className={styles.spacer} />
-                <button type="button" onClick={handleNext} className={styles.primaryBtn}>Continue <ArrowRight size={16} /></button>
-              </div>
+              </motion.div>
             </div>
 
             <div className={`${styles.stepContent} ${step === 2 ? styles.stepActive : ""}`}>
+              <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: step === 2 ? 1 : 0, x: step === 2 ? 0 : 16 }} transition={{ duration: 0.25 }} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div className={styles.stepBadge}>Step 3 of {totalSteps}</div>
               <h3 className={styles.stepTitle}>Review and apply</h3>
               <p className={styles.stepSubtitle}>Review your resume, answers, and cover letter before sending.</p>
@@ -506,25 +504,38 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
                 {tailoredResumeId && <div className={styles.successBanner}><CheckCircle2 size={14} /> Tailored resume will be sent.</div>}
                 {!tailoredResumeId && selection?.mode === "upload" && <div className={styles.successBanner}><AlertTriangle size={14} /> Uploaded resume will be sent as images.</div>}
               </div>
-
-              <div className={styles.navRow}>
-                <button type="button" onClick={handleBack} className={styles.backBtn}><ArrowLeft size={16} /> Back</button>
-                <span className={styles.spacer} />
-                {offPlatformType ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", alignItems: "flex-end" }}>
-                    {job.applicationType === "external_link" && job.externalUrl ? (
-                      <a href={job.externalUrl} target="_blank" rel="noopener noreferrer" className={styles.primaryBtn}><ExternalLink size={16} /> Apply on Company Site</a>
-                    ) : job.applicationType === "email" && job.contactEmail ? (
-                      <a href={`mailto:${job.contactEmail}`} className={styles.primaryBtn}><Mail size={16} /> Email {job.contactEmail}</a>
-                    ) : null}
-                    <button type="button" onClick={handleConfirmOffPlatform} className={styles.backBtn} disabled={submitting}>{submitting ? <><Loader2 size={16} className={styles.spinner} /> Sending...</> : "I've Applied — Confirm"}</button>
-                  </div>
-                ) : (
-                  <button type="button" onClick={(e) => handleApply(e as any)} className={styles.primaryBtn} disabled={submitting}>{submitting ? <><Loader2 size={16} className={styles.spinner} /> Sending...</> : <><Send size={16} /> Send application</>}</button>
-                )}
-              </div>
+              </motion.div>
             </div>
           </div>
+          <div className={styles.footer}>
+            {step > 0 && (
+              <button type="button" onClick={handleBack} className={styles.backBtn}><ArrowLeft size={16} /> Back</button>
+            )}
+            <span className={styles.spacer} />
+            {step === 0 && (
+              <button type="button" className={styles.primaryBtn} onClick={handleNext} disabled={!canProceedStep1}>
+                Continue <ArrowRight size={16} />
+              </button>
+            )}
+            {step === 1 && (
+              <button type="button" onClick={handleNext} className={styles.primaryBtn}>Continue <ArrowRight size={16} /></button>
+            )}
+            {step === 2 && (
+              offPlatformType ? (
+                <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+                  {job.applicationType === "external_link" && job.externalUrl ? (
+                    <a href={job.externalUrl} target="_blank" rel="noopener noreferrer" className={styles.primaryBtn}><ExternalLink size={16} /> Apply on Company Site</a>
+                  ) : job.applicationType === "email" && job.contactEmail ? (
+                    <a href={`mailto:${job.contactEmail}`} className={styles.primaryBtn}><Mail size={16} /> Email {job.contactEmail}</a>
+                  ) : null}
+                  <button type="button" onClick={handleConfirmOffPlatform} className={styles.backBtn} disabled={submitting}>{submitting ? <><Loader2 size={16} className={styles.spinner} /> Sending...</> : "I've Applied — Confirm"}</button>
+                </div>
+              ) : (
+                <button type="button" onClick={(e) => handleApply(e as any)} className={styles.primaryBtn} disabled={submitting}>{submitting ? <><Loader2 size={16} className={styles.spinner} /> Sending...</> : <><Send size={16} /> Send application</>}</button>
+              )
+            )}
+          </div>
+          </>
         )}
       </div>
     </div>
