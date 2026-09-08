@@ -15,7 +15,7 @@ import { useAlertStore } from "@/store/useAlertStore";
 import type { MatchAnalysis } from "@/lib/ai";
 import type { TailorReport } from "@/types/TailorReport";
 import styles from "./JobApplicationModal.module.css";
-import scrollToId from "@/utils/scrollIntoview";
+import { delayedScrollIntoView } from "@/utils/scrollIntoview";
 
 interface JobDetail {
   _id: string;
@@ -95,6 +95,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
   useEffect(() => {
     if (!selection) return;
     let cancelled = false;
+    let cleanupScroll: (() => void) | null = null;
     async function runAnalysis() {
       setAnalysisLoading(true);
       setAnalysisError("");
@@ -123,9 +124,9 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Analysis failed");
-        if (!cancelled) { 
+        if (!cancelled) {
           setAnalysis(data as MatchAnalysis);
-          scrollToId('analysisReport');
+          cleanupScroll = delayedScrollIntoView("analysisReport", 250);
         }
       } catch (err) {
         if (!cancelled) setAnalysisError(err instanceof Error ? err.message : "Failed to analyze");
@@ -136,6 +137,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
     runAnalysis();
     return () => {
       cancelled = true;
+      cleanupScroll?.();
     };
   }, [selection, job._id]);
 
@@ -171,6 +173,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
       if (!res.ok) throw new Error(data.error || "Tailoring failed");
       if (typeof data.newAiCredits === "number") useAiCreditStore.getState().setCredits(data.newAiCredits);
       setTailoredReport(data as TailorReport);
+      setTimeout(() => import("@/utils/scrollIntoview").then(({ delayedScrollIntoView }) => delayedScrollIntoView("tailoredReport", 200)), 50);
 
       const sourceResume = selection.selectedSavedResume;
       const createRes = await fetch("/api/resume-improver/create", {
@@ -308,7 +311,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
           </div>
         ) : (
           <>
-          <div ref={cardRef} className={styles.stepsWrapper}>
+          <div ref={cardRef} data-steps-wrapper data-scroll-container className={styles.stepsWrapper}>
             <div className={`${styles.stepContent} ${step === 0 ? styles.stepActive : ""}`}>
               <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: step === 0 ? 1 : 0, x: step === 0 ? 0 : 16 }} transition={{ duration: 0.25 }} style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
               <div className={styles.stepBadge}>Step 1 of {totalSteps}</div>
@@ -363,7 +366,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
 
                   {applyError && <div className={styles.errorBanner}>{applyError}</div>}
 
-                  <AiButton variant="primary" disabled={tailoring} onClick={handleTailor} cost={CREDIT_COST.resumeTailor} fullWidth>
+                  <AiButton variant="secondary" disabled={tailoring} onClick={handleTailor} cost={CREDIT_COST.resumeTailor} fullWidth>
                     {tailoring ? <><Loader2 size={16} className={styles.spinner} /> Tailoring...</> : "Generate tailored resume"}
                   </AiButton>
                 </div>
@@ -373,7 +376,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
                 const newTier = getTier(tailoredReport.matchScoreAfter);
                 const diff = tailoredReport.matchScoreAfter - analysis.score;
                 return (
-                  <div style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "1rem", border: "1px solid var(--gray-200)", borderRadius: "var(--radius-lg)", padding: "1rem", background: "var(--gray-50)" }}>
+                  <div id="tailoredReport" style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "1rem", border: "1px solid var(--gray-200)", borderRadius: "var(--radius-lg)", padding: "1rem", background: "var(--gray-50)" }}>
                     <div className={styles.scoreComparison}>
                       <div className={styles.scoreBox}>
                         <span className={styles.scoreLabel}>Original</span>
@@ -414,7 +417,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
             </div>
 
             <div className={`${styles.stepContent} ${step === 1 ? styles.stepActive : ""}`}>
-              <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: step === 1 ? 1 : 0, x: step === 1 ? 0 : 16 }} transition={{ duration: 0.25 }} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: step === 1 ? 1 : 0, x: step === 1 ? 0 : 16 }} transition={{ duration: 0.25 }} style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
               <div className={styles.stepBadge}>Step 2 of {totalSteps}</div>
               <h3 className={styles.stepTitle}>Additional information</h3>
               <p className={styles.stepSubtitle}>{hasQuestions ? "Answer employer questions and add an optional cover letter." : "Add an optional cover letter."}</p>
