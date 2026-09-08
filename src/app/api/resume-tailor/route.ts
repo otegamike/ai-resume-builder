@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { tailorResume, extractTextFromJobImage, extractResumeTextFromImages } from "@/lib/ai";
+import { tailorResume, tailorResumeGrounded, extractTextFromJobImage, extractResumeTextFromImages, type MatchAnalysis } from "@/lib/ai";
 import { buildResumeOwnerQuery, getAuthenticatedUser } from "@/lib/authUser";
 import dbConnect from "@/lib/db";
 import Resume from "@/models/Resume";
@@ -98,13 +98,18 @@ export async function POST(request: Request) {
     }
 
     // 3. Perform AI Tailoring
-    const report = await tailorResume(
-      resumeText,
-      jobDescriptionText,
-      targetTitle,
-      targetCompany,
-      existingResume
-    );
+    let report;
+    const analysisRaw = formData.get("analysis") as string | null;
+    if (analysisRaw) {
+      try {
+        const analysis = JSON.parse(analysisRaw) as MatchAnalysis;
+        report = await tailorResumeGrounded(resumeText, jobDescriptionText, analysis, existingResume);
+      } catch {
+        report = await tailorResume(resumeText, jobDescriptionText, targetTitle, targetCompany, existingResume);
+      }
+    } else {
+      report = await tailorResume(resumeText, jobDescriptionText, targetTitle, targetCompany, existingResume);
+    }
 
     return NextResponse.json({ ...report, newAiCredits });
   } catch (error) {

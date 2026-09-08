@@ -7,7 +7,7 @@ import { logAiUsage } from "@/lib/logAiUsage";
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 // Use a capable model for structured JSON output
-const ATS_MODEL = "llama-3.3-70b-versatile";
+const ATS_MODEL = "openai/gpt-oss-120b"; // good for structured JSON output
 const VISION_MODEL = "qwen/qwen3.6-27b";
 const GENERATION_MODEL = "openai/gpt-oss-20b"; // fine for simple text gen
 const LONG_CONTEXT_MODEL = "groq/compound"; // for long cover letters, etc.
@@ -608,6 +608,74 @@ export async function tailorResume(
   return normalizeTailorReport(parsed);
 }
 
+const GROUNDED_TAILOR_PROMPT = (
+  resumeText: string,
+  knownResumeBlock: string,
+  jobDescription: string,
+  analysis: MatchAnalysis
+) => `
+You are an expert recruiter tailoring a resume. Use the prior match analysis to guide improvements.
+
+Prior match analysis score: ${analysis.score}
+Missing keywords: ${analysis.missingKeywords.join(", ") || "none"}
+Missing skills: ${analysis.missingSkills.join(", ") || "none"}
+Gaps: ${analysis.gaps.join("; ") || "none"}
+How to improve: ${analysis.suggestions.join("; ") || "none"}
+Strengths: ${analysis.strengths.join("; ") || "none"}
+Weaknesses: ${analysis.weaknesses.join("; ") || "none"}
+Verdict: ${analysis.verdict}
+
+STRICT GROUNDED RULES — do not hallucinate:
+- Do NOT invent job roles, companies, dates (startDate/endDate), schools, degrees, certifications, or years of experience. Keep all dates and employers exactly as in the source.
+- Do NOT add skills, tools, or technologies that are not already in the resume text or directly inferable from the experience/project descriptions. If a missing skill is not evidenced in the resume's experience, do not add it to skills; instead surface transferable phrasing.
+- Skills in tailoredResume.skills or skillCategories must be a subset/filter/reorder of the original skills, plus only missing keywords/skills where the resume's experience semantically covers them verbatim.
+- Experience bullets may be reworded to foreground verifiable achievements and the missing keywords that are actually evidenced. Do not fabricate metrics.
+- Preserve id values stable. Preserve skillCategorized flag and shape (flat vs categorized).
+- Tailor summary to 2-3 sentences foregrounding strengths that align to the job, using only truthful claims.
+- Assign matchScoreBefore = prior score (${analysis.score}), and calculate matchScoreAfter for the tailored version.
+
+${TAILOR_PROMPT(resumeText, knownResumeBlock, jobDescription).replace("You are an expert recruiter and professional resume writer.", "Follow the grounded rules above while tailoring.")}
+`;
+
+export async function tailorResumeGrounded(
+  resumeText: string,
+  jobDescription: string,
+  analysis: MatchAnalysis,
+  existingResume?: ResumeContent
+): Promise<TailorReport> {
+  assertApiKey();
+  const knownResumeBlock = existingResume ? `\nExisting structured resume JSON:\n${JSON.stringify(existingResume, null, 2)}` : "";
+  const prompt = GROUNDED_TAILOR_PROMPT(resumeText, knownResumeBlock, jobDescription, analysis);
+  let { content: raw, truncated } = await callGroq(prompt, {
+    model: ATS_MODEL,
+    systemInstruction: TAILOR_SYSTEM_INSTRUCTION,
+    temperature: 0.1,
+    maxTokens: 4096,
+    feature: "tailor_grounded",
+  });
+  let parsed: Partial<TailorReport>;
+  try {
+    parsed = parseJsonObject<Partial<TailorReport>>(raw);
+  } catch {
+    if (truncated) {
+      ({ content: raw } = await callGroq(prompt, {
+        model: ATS_MODEL,
+        systemInstruction: TAILOR_SYSTEM_INSTRUCTION,
+        temperature: 0,
+        maxTokens: 8000,
+        feature: "tailor_grounded",
+      }));
+    } else {
+      ({ content: raw } = await callGroq(
+        `Your previous response was not valid JSON. Return ONLY the raw JSON object, no markdown, no explanation.\n\n${prompt}`,
+        { model: ATS_MODEL, systemInstruction: TAILOR_SYSTEM_INSTRUCTION, temperature: 0, maxTokens: 4096, feature: "tailor_grounded" }
+      ));
+    }
+    parsed = parseJsonObject<Partial<TailorReport>>(raw);
+  }
+  return normalizeTailorReport(parsed);
+}
+
 // ─── Resume Writing Helpers ───────────────────────────────────────────────────
 
 export async function generateWithAI(prompt: string): Promise<string> {
@@ -1091,6 +1159,93 @@ export async function parseJobAdFromText(extractedText: string): Promise<ParsedJ
     parsed = parseJsonObject<Partial<ParsedJobAd>>(raw);
   }
   return normalizeParsedJobAd(parsed);
+}
+
+export interface MatchAnalysis {
+  score: number;
+  missingKeywords: string[];
+  missingSkills: string[];
+  strengths: string[];
+  weaknesses: string[];
+  gaps: string[];
+  suggestions: string[];
+  verdict: string;
+}
+
+const RESUME_JOB_MATCH_PROMPT = (resumeText: string, jobText: string) => `
+You are a precise resume-to-job match analyzer. Compare the candidate resume against the job ad.
+
+Rules:
+- Be truthful and concise. Score 0-100 based on skill/requirement overlap, quantified achievements, and relevance.
+- Do NOT invent facts. Base everything on the provided texts.
+- Extract missingKeywords (job keywords not found in resume), missingSkills (skills listed in job but absent in resume).
+- strengths: what already aligns well (2-4 items). weaknesses: where the resume falls short (2-4 items). gaps: specific experience/skill gaps. suggestions: 2-4 actionable improvements to raise the score.
+- verdict: 1-2 sentences honest summary and the single biggest improvement opportunity.
+
+Return ONLY raw valid JSON, no markdown, no explanation, with this exact schema:
+{
+  "score": 64,
+  "missingKeywords": ["React", "TypeScript"],
+  "missingSkills": ["AWS"],
+  "strengths": ["3 years frontend experience"],
+  "weaknesses": ["No quantified achievements"],
+  "gaps": ["No AWS experience mentioned"],
+  "suggestions": ["Add AWS project bullet", "Quantify impact with metrics"],
+  "verdict": "1-2 sentence summary"
+}
+
+Resume:
+${resumeText}
+
+Job ad:
+${jobText}`;
+
+function normalizeMatchAnalysis(raw: Partial<MatchAnalysis>): MatchAnalysis {
+  return {
+    score: Math.max(0, Math.min(100, Math.round(Number(raw.score) || 0))),
+    missingKeywords: normalizeStringList(raw.missingKeywords),
+    missingSkills: normalizeStringList(raw.missingSkills),
+    strengths: normalizeStringList(raw.strengths),
+    weaknesses: normalizeStringList(raw.weaknesses),
+    gaps: normalizeStringList(raw.gaps),
+    suggestions: normalizeStringList(raw.suggestions),
+    verdict: typeof raw.verdict === "string" ? raw.verdict.trim() : "",
+  };
+}
+
+export async function analyzeResumeJobMatch(resumeText: string, jobAdText: string): Promise<MatchAnalysis> {
+  assertApiKey();
+  if (!resumeText.trim() || !jobAdText.trim()) {
+    return normalizeMatchAnalysis({ score: 0, verdict: "Provide both resume and job ad to analyze." });
+  }
+  let { content: raw, truncated } = await callGroq(RESUME_JOB_MATCH_PROMPT(resumeText, jobAdText), {
+    model: ATS_MODEL,
+    systemInstruction: PARSER_SYSTEM_INSTRUCTION,
+    temperature: 0,
+    maxTokens: 2048,
+    feature: "job_match_analysis",
+  });
+  let parsed: Partial<MatchAnalysis>;
+  try {
+    parsed = parseJsonObject<Partial<MatchAnalysis>>(raw);
+  } catch {
+    if (truncated) {
+      ({ content: raw } = await callGroq(RESUME_JOB_MATCH_PROMPT(resumeText, jobAdText), {
+        model: ATS_MODEL,
+        systemInstruction: PARSER_SYSTEM_INSTRUCTION,
+        temperature: 0,
+        maxTokens: 4096,
+        feature: "job_match_analysis",
+      }));
+    } else {
+      ({ content: raw } = await callGroq(
+        `Your previous response was not valid JSON. Return ONLY the raw JSON object, no markdown, no explanation.\n\n${RESUME_JOB_MATCH_PROMPT(resumeText, jobAdText)}`,
+        { model: ATS_MODEL, systemInstruction: PARSER_SYSTEM_INSTRUCTION, temperature: 0, maxTokens: 2048, feature: "job_match_analysis" }
+      ));
+    }
+    parsed = parseJsonObject<Partial<MatchAnalysis>>(raw);
+  }
+  return normalizeMatchAnalysis(parsed);
 }
 
 export async function parseResumeContent(extractedText: string): Promise<ResumeContent> {
