@@ -2,10 +2,12 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
-import { Check, Loader2, Send, CheckCircle2, AlertTriangle, ArrowRight, ArrowLeft, ExternalLink, Mail } from "lucide-react";
+import { Check, Loader2, Send, CheckCircle2, AlertTriangle, ArrowRight, ArrowLeft, ExternalLink, Mail, ZoomIn } from "lucide-react";
 import { motion } from "motion/react";
 import ResumeSelector, { ResumeSelection } from "@/components/resume/ResumeSelector";
 import ResumeComponent from "@/components/resume/ResumeComponent";
+import ResumeViewer from "@/components/resume/ResumeViewer";
+import viewerStyles from "@/components/resume/ResumeViewer.module.css";
 import { normalizeTemplateId } from "@/lib/templateRenderer";
 import ScoreCircle from "@/components/ui/score-circle/ScoreCircle";
 import { AiButton } from "@/components/ui/AiButton";
@@ -61,6 +63,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [applyError, setApplyError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const resetAll = useCallback(() => {
@@ -74,6 +77,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
     setCoverLetterText("");
     setApplyError("");
     setSuccess(false);
+    setViewerOpen(false);
   }, []);
 
   useEffect(() => {
@@ -463,9 +467,23 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
 
               <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", alignItems: "center" }}>
-                  <div style={{ border: "1px solid var(--gray-200)", borderRadius: "var(--radius-lg)", padding: "0.5rem", background: "white", maxHeight: "320px", overflow: "hidden" }}>
+                  <div className={viewerStyles.previewThumbnail} style={{ maxHeight: "320px" }}>
                     {selection?.mode === "saved" && selection.selectedSavedResume ? (
-                      <ResumeComponent resumeContent={tailoredReport?.tailoredResume ?? selection.selectedSavedResume.content} templateId={normalizeTemplateId(selection.selectedSavedResume.template)} />
+                      <>
+                        <div style={{ maxHeight: "320px", overflow: "hidden", background: "white", padding: "0.25rem" }}>
+                          <ResumeComponent resumeContent={tailoredReport?.tailoredResume ?? selection.selectedSavedResume.content} templateId={normalizeTemplateId(selection.selectedSavedResume.template)} />
+                        </div>
+                        <button type="button" className={viewerStyles.viewBtn} onClick={() => setViewerOpen(true)}>
+                          <ZoomIn size={12} /> View
+                        </button>
+                        <ResumeViewer
+                          isOpen={viewerOpen}
+                          onClose={() => setViewerOpen(false)}
+                          resumeContent={tailoredReport?.tailoredResume ?? selection.selectedSavedResume.content}
+                          templateId={normalizeTemplateId(selection.selectedSavedResume.template)}
+                          title={`${selection.selectedSavedResume.title || "Resume"}${tailoredReport ? " — Tailored" : ""}`}
+                        />
+                      </>
                     ) : selection?.mode === "upload" && selection.selectedFile ? (
                       selection.selectedFile.type.startsWith("image/") ? (
                         <img src={URL.createObjectURL(selection.selectedFile)} alt="Resume preview" style={{ width: "100%", objectFit: "contain" }} />
