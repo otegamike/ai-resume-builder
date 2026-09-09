@@ -16,6 +16,8 @@ import { useAiCreditStore } from "@/store/useAiCreditStore";
 import { useAlertStore } from "@/store/useAlertStore";
 import type { MatchAnalysis } from "@/lib/ai";
 import type { TailorReport } from "@/types/TailorReport";
+import CoverLetterResultCard from "@/components/cover-letter/CoverLetterResultCard";
+import { useResumeStore } from "@/store/useResumeStore";
 import styles from "./JobApplicationModal.module.css";
 import { delayedScrollIntoView } from "@/utils/scrollIntoview";
 
@@ -60,6 +62,11 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
 
   const [screeningAnswers, setScreeningAnswers] = useState<Record<string, string>>({});
   const [coverLetterText, setCoverLetterText] = useState("");
+  const [coverLetterGenerating, setCoverLetterGenerating] = useState(false);
+  const [coverLetterGenerated, setCoverLetterGenerated] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [senderInfo, setSenderInfo] = useState({ name: "", email: "", phone: "", location: "" });
+  const getResumeById = useResumeStore((s) => s.getResumeById);
   const [submitting, setSubmitting] = useState(false);
   const [applyError, setApplyError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -75,6 +82,10 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
     setTailoredReport(null);
     setScreeningAnswers({});
     setCoverLetterText("");
+    setCoverLetterGenerated(false);
+    setCoverLetterGenerating(false);
+    setCopied(false);
+    setSenderInfo({ name: "", email: "", phone: "", location: "" });
     setApplyError("");
     setSuccess(false);
     setViewerOpen(false);
@@ -94,7 +105,14 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
     setAnalysisError("");
     setTailoredResumeId(null);
     setTailoredReport(null);
-  }, []);
+    if (sel?.mode === "saved" && sel.selectedResumeId) {
+      const r = getResumeById(sel.selectedResumeId);
+      const pi = r?.content?.personalInfo;
+      if (pi) setSenderInfo({ name: pi.name || "", email: pi.email || "", phone: pi.phone || "", location: pi.location || "" });
+    } else if (!sel) {
+      setSenderInfo({ name: "", email: "", phone: "", location: "" });
+    }
+  }, [getResumeById]);
 
   useEffect(() => {
     if (!selection) return;
@@ -200,6 +218,65 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
     }
   };
 
+  const handleGenerateCoverLetter = async () => {
+    if (!selection) {
+      setApplyError("Please select a resume first.");
+      return;
+    }
+    setCoverLetterGenerating(true);
+    setApplyError("");
+    try {
+      const formData = new FormData();
+      formData.append("resumeMode", selection.mode);
+      const companyName = (job as any).companyName || "";
+      formData.append("targetCompany", companyName);
+      formData.append("targetRole", job.title);
+      if (selection.mode === "saved") {
+        formData.append("resumeId", selection.selectedResumeId);
+      } else {
+        if (selection.selectedFile && selection.selectedFile.type.startsWith("image/")) {
+          formData.append("resumeFile", selection.selectedFile);
+        } else if (selection.pdfCanvasRefs.length > 0) {
+          for (const canvas of selection.pdfCanvasRefs) {
+            const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
+            if (blob) formData.append("resumeFile", blob, "page.png");
+          }
+        } else {
+          throw new Error("Invalid resume file selection.");
+        }
+      }
+      formData.append("jobMode", "text");
+      formData.append("jobText", `${job.title} ${(job as any).description || ""}`);
+      const res = await fetch("/api/cover-letters/generate", { method: "POST", body: formData });
+      const data = await res.json();
+      if (res.status === 402) {
+        useAlertStore.getState().addAlert("error", data.error);
+        return;
+      }
+      if (!res.ok) throw new Error(data.error || "Failed to generate cover letter");
+      if (typeof data.newAiCredits === "number") useAiCreditStore.getState().setCredits(data.newAiCredits);
+      setCoverLetterText(data.content || "");
+      setCoverLetterGenerated(true);
+      const pi = selection.selectedSavedResume?.content?.personalInfo;
+      if (pi) setSenderInfo({ name: pi.name || "", email: pi.email || "", phone: pi.phone || "", location: pi.location || "" });
+      setTimeout(() => import("@/utils/scrollIntoview").then(({ delayedScrollIntoView }) => delayedScrollIntoView("coverLetterPreview", 200)), 100);
+    } catch (err) {
+      setApplyError(err instanceof Error ? err.message : "Failed to generate cover letter");
+    } finally {
+      setCoverLetterGenerating(false);
+    }
+  };
+
+  const handleCopyCoverLetter = async () => {
+    try {
+      await navigator.clipboard.writeText(coverLetterText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      useAlertStore.getState().addAlert("error", "Failed to copy");
+    }
+  };
+
   const canProceedStep1 = !!selection && !!analysis && !analysisLoading;
   const validateQuestions = () => {
     const missing = (job.screeningQuestions || []).find((q) => q.required && !screeningAnswers[q.id]?.trim());
@@ -248,7 +325,15 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           resumeId: resumeIdToSend,
+          tailoredResumeId: tailoredResumeId || undefined,
+          resumeSnapshot: selection?.selectedSavedResume?.content,
+          tailoredResumeSnapshot: tailoredReport?.tailoredResume,
+          matchScore: analysis?.score,
+          tailoredMatchScore: tailoredReport?.matchScoreAfter,
+          analysisReport: analysis,
+          tailorReport: tailoredReport,
           coverLetterText: coverLetterText || undefined,
+          coverLetterGenerated,
           screeningAnswers: screeningAnswersPayload,
           customResumeUrl,
           source: "platform",
@@ -269,6 +354,8 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
   const tier = analysis ? getTier(analysis.score) : null;
   const finalScore = tailoredReport?.matchScoreAfter ?? analysis?.score ?? 0;
   const finalTier = getTier(finalScore);
+  const tailoredTier = tailoredReport ? getTier(tailoredReport.matchScoreAfter) : null;
+  const tailoredDiff = tailoredReport && analysis ? tailoredReport.matchScoreAfter - analysis.score : 0;
   const offPlatformType = job.applicationType === "external_link" || job.applicationType === "email";
 
   const handleConfirmOffPlatform = async () => {
@@ -376,52 +463,48 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
                 </div>
               )}
 
-              {analysis && tier && tailoredReport && (() => {
-                const newTier = getTier(tailoredReport.matchScoreAfter);
-                const diff = tailoredReport.matchScoreAfter - analysis.score;
-                return (
-                  <div id="tailoredReport" style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "1rem", border: "1px solid var(--gray-200)", borderRadius: "var(--radius-lg)", padding: "1rem", background: "var(--gray-50)" }}>
-                    <div className={styles.scoreComparison}>
-                      <div className={styles.scoreBox}>
-                        <span className={styles.scoreLabel}>Original</span>
-                        <ScoreCircle score={analysis.score} />
-                      </div>
-                      <div className={styles.scoreArrow}>
-                        <ArrowRight className={styles.arrowIcon} />
-                        <span className={styles.scoreDiff}>+{diff}%</span>
-                      </div>
-                      <div className={styles.scoreBox}>
-                        <span className={styles.scoreLabel}>Tailored</span>
-                        <ScoreCircle score={tailoredReport.matchScoreAfter} />
-                      </div>
+              {analysis && tier && tailoredReport && tailoredTier && (
+                <div id="tailoredReport" style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "1rem", border: "1px solid var(--gray-200)", borderRadius: "var(--radius-lg)", padding: "1rem", background: "var(--gray-50)" }}>
+                  <div className={styles.scoreComparison}>
+                    <div className={styles.scoreBox}>
+                      <span className={styles.scoreLabel}>Original</span>
+                      <ScoreCircle score={analysis.score} />
                     </div>
-                    <p style={{ fontSize: "var(--text-sm)", color: "var(--gray-700)", lineHeight: 1.5 }}>{tailoredReport.explanation}</p>
-                    {tailoredReport.keyChanges.length > 0 && (
-                      <div className={styles.bulletSection}>
-                        <span className={styles.bulletSectionTitle}>What’s been improved</span>
-                        <ul className={styles.bulletList}>{tailoredReport.keyChanges.map((c: string, i: number) => <li key={i}>{c}</li>)}</ul>
-                      </div>
-                    )}
-                    <div className={styles.successBanner}><CheckCircle2 size={16} /> Tailored resume saved and selected — new score {tailoredReport.matchScoreAfter}%</div>
-                    {applyError && <div className={styles.errorBanner}>{applyError}</div>}
-                    <AiButton variant="primary" disabled={tailoring} onClick={handleTailor} cost={CREDIT_COST.resumeTailor} fullWidth>
-                      {tailoring ? <><Loader2 size={16} className={styles.spinner} /> Tailoring...</> : "Regenerate tailored resume"}
-                    </AiButton>
-                    {tailoredResumeId && (
-                      <Link href={`/editor/${tailoredResumeId}`} target="_blank" style={{ fontSize: "var(--text-xs)", color: "var(--primary-600)", textAlign: "center" }}>
-                        Open tailored resume in editor
-                      </Link>
-                    )}
+                    <div className={styles.scoreArrow}>
+                      <ArrowRight className={styles.arrowIcon} />
+                      <span className={styles.scoreDiff}>+{tailoredDiff}%</span>
+                    </div>
+                    <div className={styles.scoreBox}>
+                      <span className={styles.scoreLabel}>Tailored</span>
+                      <ScoreCircle score={tailoredReport.matchScoreAfter} />
+                    </div>
                   </div>
-                );
-              })()}
+                  <p style={{ fontSize: "var(--text-sm)", color: "var(--gray-700)", lineHeight: 1.5 }}>{tailoredReport.explanation}</p>
+                  {tailoredReport.keyChanges.length > 0 && (
+                    <div className={styles.bulletSection}>
+                      <span className={styles.bulletSectionTitle}>What’s been improved</span>
+                      <ul className={styles.bulletList}>{tailoredReport.keyChanges.map((c: string, i: number) => <li key={i}>{c}</li>)}</ul>
+                    </div>
+                  )}
+                  <div className={styles.successBanner}><CheckCircle2 size={16} /> Tailored resume saved and selected — new score {tailoredReport.matchScoreAfter}%</div>
+                  {applyError && <div className={styles.errorBanner}>{applyError}</div>}
+                  <AiButton variant="primary" disabled={tailoring} onClick={handleTailor} cost={CREDIT_COST.resumeTailor} fullWidth>
+                    {tailoring ? <><Loader2 size={16} className={styles.spinner} /> Tailoring...</> : "Regenerate tailored resume"}
+                  </AiButton>
+                  {tailoredResumeId && (
+                    <Link href={`/editor/${tailoredResumeId}`} target="_blank" style={{ fontSize: "var(--text-xs)", color: "var(--primary-600)", textAlign: "center" }}>
+                      Open tailored resume in editor
+                    </Link>
+                  )}
+                </div>
+              )}
 
               {applyError && !analysis && <div className={styles.errorBanner} style={{ marginTop: "1rem" }}>{applyError}</div>}
               </motion.div>
             </div>
 
             <div className={`${styles.stepContent} ${step === 1 ? styles.stepActive : ""}`}>
-              <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: step === 1 ? 1 : 0, x: step === 1 ? 0 : 16 }} transition={{ duration: 0.25 }} style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: step === 1 ? 1 : 0, x: step === 1 ? 0 : 16 }} transition={{ duration: 0.25 }} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div className={styles.stepBadge}>Step 2 of {totalSteps}</div>
               <h3 className={styles.stepTitle}>Additional information</h3>
               <p className={styles.stepSubtitle}>{hasQuestions ? "Answer employer questions and add an optional cover letter." : "Add an optional cover letter."}</p>
@@ -432,7 +515,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1rem" }}>
                   {job.screeningQuestions!.map((q) => (
                     <div key={q.id} className={styles.formGroup}>
-                      <label className={styles.label}>{q.question} {q.required && <span className={styles.asterisk} aria-label="required">*</span>}</label>
+                      <label className={styles.label}>{q.question} {q.required && <span aria-label="required">*</span>}</label>
                       {q.type === "textarea" ? (
                         <textarea className={styles.textareaInput} rows={3} value={screeningAnswers[q.id] || ""} onChange={(e) => setScreeningAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))} required={q.required} />
                       ) : q.type === "dropdown" ? (
@@ -450,10 +533,22 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
                 </div>
               )}
 
-              <div className={styles.formGroup}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem" }}>
                 <label className={styles.label}>Cover letter / message (optional)</label>
-                <textarea className={styles.textareaInput} rows={4} placeholder="Introduce yourself and explain why you're a great fit..." value={coverLetterText} onChange={(e) => setCoverLetterText(e.target.value)} />
+                <AiButton variant="secondary" size="sm" onClick={handleGenerateCoverLetter} disabled={!selection || coverLetterGenerating} cost={CREDIT_COST.coverLetterGenerate}>
+                  {coverLetterGenerating ? <><Loader2 size={14} className={styles.spinner} /> Generating...</> : coverLetterGenerated ? "Regenerate" : "Generate"}
+                </AiButton>
               </div>
+
+              {coverLetterGenerated && coverLetterText ? (
+                <div id="coverLetterPreview">
+                  <CoverLetterResultCard hideLetterhead coverLetter={coverLetterText} senderInfo={senderInfo} targetRole={job.title} onCopy={handleCopyCoverLetter} copied={copied} onEditChange={setCoverLetterText} />
+                </div>
+              ) : (
+                <div className={styles.formGroup}>
+                  <textarea className={styles.textareaInput} rows={4} placeholder="Introduce yourself and explain why you're a great fit..." value={coverLetterText} onChange={(e) => setCoverLetterText(e.target.value)} />
+                </div>
+              )}
               </motion.div>
             </div>
 

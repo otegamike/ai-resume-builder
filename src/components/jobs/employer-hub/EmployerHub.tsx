@@ -252,7 +252,7 @@ function EmployerJobCard({ job, onViewApplicants }: { job: JobItem; onViewApplic
       </p>
       <div className={styles.cardFooter}>
         <span style={{ fontSize: "var(--text-xs)" }}>Status: <strong style={{ color: job.status === "active" ? "#047857" : "#b45309" }}>{job.status.replace("_", " ").toUpperCase()}</strong> • {job.viewsCount ?? 0} views • {job.applicationsCount ?? 0} applicants</span>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
+        <div className={styles.cardFooterActions}>
           <button onClick={() => router.push(`/dashboard/jobs/${job._id}`)} className={styles.inlineAction} style={{ padding: "0.3rem 0.75rem", fontSize: "var(--text-xs)" }}>
             <Pencil size={14} /> Edit
           </button>

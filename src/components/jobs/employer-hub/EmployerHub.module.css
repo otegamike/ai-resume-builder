@@ -37,7 +37,12 @@
 .tag { background: var(--gray-100); border: 1px solid var(--gray-200); padding: 0.25rem 0.6rem; border-radius: var(--radius-md); font-size: var(--text-xs); color: var(--gray-700); display: inline-flex; align-items: center; gap: 0.35rem; }
 .salaryTag { background: #ecfdf5; border-color: #a7f3d0; color: #047857; font-weight: var(--font-bold); }
 .featuredBadge { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; font-size: var(--text-xs); font-weight: var(--font-bold); padding: 0.2rem 0.5rem; border-radius: var(--radius-md); text-transform: uppercase; }
-.cardFooter { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--gray-100); padding-top: var(--space-3); font-size: var(--text-xs); color: var(--gray-500); }
+.cardFooter { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-3); justify-content: flex-start; border-top: 1px solid var(--gray-100); padding-top: var(--space-3); font-size: var(--text-xs); color: var(--gray-500); }
+.cardFooterActions { display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: flex-start; }
+@media (width >= 1000px) {
+  .cardFooter { flex-direction: row; align-items: center; justify-content: space-between; }
+  .cardFooterActions { justify-content: flex-end; }
+}
 
 .employerCtaBtn { background: var(--primary-900); color: white; border: none; border-radius: var(--radius-lg); padding: var(--space-3) var(--space-5); font-size: var(--text-sm); font-weight: var(--font-semibold); cursor: pointer; display: inline-flex; align-items: center; gap: var(--space-2); }
 .inlineAction { background: transparent; color: var(--primary-900); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: var(--space-2) var(--space-3); font-size: var(--text-sm); font-weight: var(--font-semibold); cursor: pointer; display: inline-flex; align-items: center; gap: var(--space-2); }

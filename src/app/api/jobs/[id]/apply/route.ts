@@ -3,16 +3,12 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import JobAd from "@/models/JobAd";
-import Application from "@/models/Application";
+import JobApplication from "@/models/JobApplication";
 import Company from "@/models/Company";
-import Resume from "@/models/Resume";
-import CoverLetter from "@/models/CoverLetter";
 
 void JobAd;
-void Application;
+void JobApplication;
 void Company;
-void Resume;
-void CoverLetter;
 
 export async function POST(
   req: Request,
@@ -32,13 +28,12 @@ export async function POST(
       return NextResponse.json({ error: "This job listing is no longer active" }, { status: 404 });
     }
 
-    // Check if candidate already applied for this job ad
-    const existingApplication = await Application.findOne({
+    const existing = await JobApplication.findOne({
       jobId: job._id,
-      user: session.user.id,
+      applicantId: session.user.id,
     });
 
-    if (existingApplication) {
+    if (existing) {
       return NextResponse.json(
         { error: "You have already submitted an application for this position" },
         { status: 400 }
@@ -47,9 +42,16 @@ export async function POST(
 
     const {
       resumeId,
-      coverLetterId,
-      customResumeUrl,
+      tailoredResumeId,
+      resumeSnapshot,
+      tailoredResumeSnapshot,
+      matchScore,
+      tailoredMatchScore,
+      analysisReport,
+      tailorReport,
       coverLetterText,
+      coverLetterGenerated,
+      customResumeUrl,
       screeningAnswers,
       source,
     } = await req.json();
@@ -80,57 +82,32 @@ export async function POST(
       }
     }
 
-    let aiMatchScore: number | undefined = undefined;
-    let aiMatchAnalysis: string = "";
-
-    // Compute AI match score if candidate selected a resume
-    if (resumeId) {
-      const selectedResume = await Resume.findById(resumeId);
-      if (selectedResume) {
-        const reqText = `${job.title} ${job.description} ${(job.skillsRequired || []).join(" ")}`.toLowerCase();
-        const resumeText = JSON.stringify(selectedResume.content || {}).toLowerCase();
-
-        let matches = 0;
-        const skills = (job.skillsRequired && job.skillsRequired.length > 0)
-          ? job.skillsRequired
-          : ["experience", "developer", "management", "design"];
-
-        skills.forEach((skill: string) => {
-          if (resumeText.includes(skill.toLowerCase())) matches++;
-        });
-
-        const baseScore = Math.round((matches / Math.max(skills.length, 1)) * 40) + 55;
-        aiMatchScore = Math.min(Math.max(baseScore, 60), 98);
-        aiMatchAnalysis = `Resume matches ${matches} key skills listed in the job post (${skills.join(", ")}).`;
-      }
+    if (applicationSource === "platform" && !analysisReport) {
+      return NextResponse.json({ error: "Missing analysis report" }, { status: 400 });
     }
 
-    const companyName = (job.companyId as any)?.name || "Hiring Organization";
-
-    const newApplication = await Application.create({
-      userId: session.user.id,
-      user: session.user.id,
-      company: companyName,
-      role: job.title,
-      status: "applied",
-      appliedDate: new Date(),
-      notes:
-        applicationSource === "off_platform"
-          ? "Confirmed off-platform application from Resumy AI Job Board"
-          : "Submitted via Resumy AI Job Board",
+    const doc: any = {
       jobId: job._id,
-      companyId: job.companyId?._id || job.companyId,
+      applicantId: session.user.id,
+      companyId: (job.companyId as any)?._id || job.companyId,
+      status: "submitted",
       resumeId: resumeId || undefined,
-      coverLetterId: coverLetterId || undefined,
+      tailoredResumeId: tailoredResumeId || undefined,
+      resumeSnapshot,
+      tailoredResumeSnapshot,
+      matchScore: typeof matchScore === "number" ? matchScore : (analysisReport?.score ?? 0),
+      tailoredMatchScore: typeof tailoredMatchScore === "number" ? tailoredMatchScore : undefined,
+      analysisReport: analysisReport || { score: 0, missingKeywords: [], missingSkills: [], strengths: [], weaknesses: [], gaps: [], suggestions: [], verdict: "" },
+      tailorReport: tailorReport || undefined,
       coverLetterText: coverLetterText || "",
-      customResumeUrl: customResumeUrl || "",
-      aiMatchScore,
-      aiMatchAnalysis,
+      coverLetterGenerated: !!coverLetterGenerated,
       screeningAnswers: normalizedScreeningAnswers,
+      customResumeUrl: customResumeUrl || "",
       source: applicationSource,
-    });
+    };
 
-    // Increment applications count on job ad
+    const newApplication = await JobApplication.create(doc);
+
     await JobAd.updateOne({ _id: job._id }, { $inc: { applicationsCount: 1 } });
 
     return NextResponse.json(
@@ -142,6 +119,9 @@ export async function POST(
       { status: 201 }
     );
   } catch (error: any) {
+    if (error?.code === 11000) {
+      return NextResponse.json({ error: "You have already submitted an application for this position" }, { status: 400 });
+    }
     console.error("Error submitting job application:", error);
     return NextResponse.json({ error: error.message || "Failed to submit application" }, { status: 500 });
   }

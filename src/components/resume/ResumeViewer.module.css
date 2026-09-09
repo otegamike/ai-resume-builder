@@ -13,7 +13,7 @@
 .card {
   background: var(--gray-100);
   border-radius: var(--radius-xl);
-  width: min(95vw, 900px);
+  width: min(92vw, 900px);
   height: 90vh;
   display: flex;
   flex-direction: column;

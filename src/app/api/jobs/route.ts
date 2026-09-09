@@ -5,10 +5,12 @@ import dbConnect from "@/lib/db";
 import JobAd from "@/models/JobAd";
 import Company from "@/models/Company";
 import User from "@/models/User";
+import JobApplication from "@/models/JobApplication";
 
 void JobAd;
 void Company;
 void User;
+void JobApplication;
 
 export async function GET(req: Request) {
   try {
@@ -95,8 +97,24 @@ export async function GET(req: Request) {
       JobAd.distinct("location", locationQuery)
     ]);
 
+    let jobsWithLiveCount: typeof jobs = jobs;
+    if (mine && jobs.length > 0) {
+      const ids = jobs.map((j: any) => j._id);
+      const counts = await JobApplication.aggregate([
+        { $match: { jobId: { $in: ids } } },
+        { $group: { _id: "$jobId", count: { $sum: 1 } } },
+      ]);
+      const map = new Map<string, number>(counts.map((c: any) => [String(c._id), c.count]));
+      jobsWithLiveCount = jobs.map((j: any) => {
+        const obj = j.toObject ? j.toObject() : { ...j };
+        const live = map.get(String(j._id));
+        if (typeof live === "number") obj.applicationsCount = live;
+        return obj;
+      }) as typeof jobs;
+    }
+
     return NextResponse.json({
-      jobs,
+      jobs: jobsWithLiveCount,
       locations:  locations.sort((a, b) => a.localeCompare(b)), // Sort locations alphabetically
       pagination: {
         page,

@@ -124,7 +124,7 @@
   gap: 0.25rem;
 }
 
-.verifiedBadge { color: var(--primary-600, #4f46e5); }
+.verifiedBadge { display: flex; align-items: center; color: var(--primary-600, #4f46e5); }
 
 .tagsRow { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 

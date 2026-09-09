@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
+import { ResumeContent } from "@/types/ResumeData";
 
 export type JobApplicationStatus =
   | "submitted"
@@ -9,18 +10,44 @@ export type JobApplicationStatus =
   | "rejected"
   | "withdrawn";
 
+export interface MatchAnalysisSnapshot {
+  score: number;
+  missingKeywords: string[];
+  missingSkills: string[];
+  strengths: string[];
+  weaknesses: string[];
+  gaps: string[];
+  suggestions: string[];
+  verdict: string;
+}
+
+export interface TailorSnapshot {
+  matchScoreBefore: number;
+  matchScoreAfter: number;
+  explanation: string;
+  keyChanges: string[];
+  tailoredResume: ResumeContent;
+}
+
 export interface IJobApplication extends Document {
   _id: Types.ObjectId;
   jobId: Types.ObjectId;
   applicantId: Types.ObjectId;
   companyId: Types.ObjectId;
-  resumeId?: Types.ObjectId;
-  coverLetterId?: Types.ObjectId;
-  customResumeUrl?: string;
-  coverLetterText?: string;
   status: JobApplicationStatus;
-  aiMatchScore?: number;
-  aiMatchAnalysis?: string;
+  resumeId?: Types.ObjectId;
+  tailoredResumeId?: Types.ObjectId;
+  resumeSnapshot?: ResumeContent;
+  tailoredResumeSnapshot?: ResumeContent;
+  matchScore: number;
+  tailoredMatchScore?: number;
+  analysisReport: MatchAnalysisSnapshot;
+  tailorReport?: TailorSnapshot;
+  coverLetterText?: string;
+  coverLetterGenerated: boolean;
+  screeningAnswers: { questionId: string; question: string; answer: string }[];
+  customResumeUrl?: string;
+  source: "platform" | "off_platform";
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -31,22 +58,39 @@ const JobApplicationSchema: Schema = new Schema<IJobApplication>(
     jobId: { type: Schema.Types.ObjectId, ref: "JobAd", required: true, index: true },
     applicantId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     companyId: { type: Schema.Types.ObjectId, ref: "Company", required: true, index: true },
-    resumeId: { type: Schema.Types.ObjectId, ref: "Resume" },
-    coverLetterId: { type: Schema.Types.ObjectId, ref: "CoverLetter" },
-    customResumeUrl: { type: String, default: "" },
-    coverLetterText: { type: String, default: "" },
     status: {
       type: String,
       enum: ["submitted", "under_review", "shortlisted", "interviewing", "offered", "rejected", "withdrawn"],
       default: "submitted",
       index: true,
     },
-    aiMatchScore: { type: Number },
-    aiMatchAnalysis: { type: String, default: "" },
+    resumeId: { type: Schema.Types.ObjectId, ref: "Resume" },
+    tailoredResumeId: { type: Schema.Types.ObjectId, ref: "Resume" },
+    resumeSnapshot: { type: Schema.Types.Mixed },
+    tailoredResumeSnapshot: { type: Schema.Types.Mixed },
+    matchScore: { type: Number, required: true },
+    tailoredMatchScore: { type: Number },
+    analysisReport: { type: Schema.Types.Mixed, required: true },
+    tailorReport: { type: Schema.Types.Mixed },
+    coverLetterText: { type: String, default: "" },
+    coverLetterGenerated: { type: Boolean, default: false },
+    screeningAnswers: {
+      type: [
+        {
+          questionId: { type: String, required: true },
+          question: { type: String, required: true },
+          answer: { type: String, default: "" },
+        },
+      ],
+      default: [],
+    },
+    customResumeUrl: { type: String, default: "" },
+    source: { type: String, enum: ["platform", "off_platform"], default: "platform", index: true },
     notes: { type: String, default: "" },
   },
   { timestamps: true }
 );
 
-export default mongoose.models.JobApplication ||
-  mongoose.model<IJobApplication>("JobApplication", JobApplicationSchema);
+JobApplicationSchema.index({ jobId: 1, applicantId: 1 }, { unique: true });
+
+export default mongoose.models.JobApplication || mongoose.model<IJobApplication>("JobApplication", JobApplicationSchema);

@@ -2,46 +2,61 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
-import { Search, Building2, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { Search, Building2, Clock } from "lucide-react";
 import styles from "./jobs.module.css";
 import FindJobsBoard from "@/components/jobs/find-jobs/FindJobsBoard";
-import EmployerHub from "@/components/jobs/employer-hub/EmployerHub";
-import AdminQueue from "@/components/jobs/admin-queue/AdminQueue";
+import ApplicationHistory from "@/components/jobs/application-history/ApplicationHistory";
 
 export default function UnifiedJobsPage() {
   const { data: session } = useSession();
-  const isAdmin = session?.user?.isAdmin ?? false;
   const userAccountType = (session?.user as any)?.accountType ?? "candidate";
   const userOrgId = (session?.user as any)?.organizationId;
   const isEmployer = userAccountType === "employer" || userAccountType === "both" || !!userOrgId;
-  const [activeTab, setActiveTab] = useState<"find" | "employer" | "admin">("find");
+  const [activeTab, setActiveTab] = useState<"find" | "history">("find");
 
   return (
     <div className={styles.container}>
       <header className={styles.header}>
         <div className={styles.headerRow}>
           <h1 className={styles.title}>Jobs & Hiring Hub</h1>
-          {isAdmin && (
-            <button className={`${styles.tabBtn}`} onClick={() => setActiveTab("admin")}>
-              <ShieldCheck size={16} /> Admin {` `}
-            </button>
-          )}
         </div>
-        <p className={styles.subtitle}>Browse top opportunities, apply with 1-Click AI matching, or register as an employer to hire top talent.</p>
+        <p className={styles.subtitle}>Browse top opportunities, apply with AI matching, or register as an employer to hire top talent.</p>
       </header>
+
+      {isEmployer ? (
+        <div className={styles.employerBannerCard} style={{ padding: "var(--space-4)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <Building2 size={20} color="var(--primary-900)" />
+              <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--primary-900)" }}>Go to Employer page to manage ads and review applications</span>
+            </div>
+            <Link href="/dashboard/employers" className={styles.employerCtaBtn}>Go to Employer Hub</Link>
+          </div>
+        </div>
+      ) : (
+        <div className={styles.employerBannerCard} style={{ padding: "var(--space-4)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
+            <div>
+              <h3 className={styles.bannerTitle} style={{ fontSize: "var(--text-base)", marginBottom: 0 }}>Become an employer to post your own job ads</h3>
+              <p className={styles.bannerText} style={{ fontSize: "var(--text-xs)", marginTop: "0.25rem" }}>Post free job ads and hire top talent.</p>
+            </div>
+            <Link href="/dashboard/employers" className={styles.employerCtaBtn}>Become an Employer</Link>
+          </div>
+        </div>
+      )}
 
       <div className={styles.tabNavigation}>
         <button className={`${styles.tabBtn} ${activeTab === "find" ? styles.activeTab : ""}`} onClick={() => setActiveTab("find")}>
           <Search size={16} /> Find Jobs
         </button>
-        <button className={`${styles.tabBtn} ${activeTab === "employer" ? styles.activeTab : ""}`} onClick={() => setActiveTab("employer")}>
-          <Building2 size={16} /> {isEmployer ? "Employer Hub" : "Become an Employer"}
+        <button className={`${styles.tabBtn} ${activeTab === "history" ? styles.activeTab : ""}`} onClick={() => setActiveTab("history")}>
+          <Clock size={16} /> Application History
         </button>
       </div>
 
       {activeTab === "find" && <FindJobsBoard />}
-      {activeTab === "employer" && <EmployerHub isEmployer={isEmployer} />}
-      {activeTab === "admin" && isAdmin && <AdminQueue />}
+      {activeTab === "history" && <ApplicationHistory />}
     </div>
   );
 }

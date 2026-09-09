@@ -77,6 +77,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ slug: stri
   const { slug } = use(params);
   const router = useRouter();
   const { data: session, status } = useSession();
+  const isSignedIn = !!session;
 
   const [job, setJob] = useState<JobDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -84,6 +85,33 @@ export default function JobDetailPage({ params }: { params: Promise<{ slug: stri
   const [copied, setCopied] = useState(false);
 
   const [showApplyModal, setShowApplyModal] = useState(false);
+  const [alreadyApplied, setAlreadyApplied] = useState(false);
+  const [alreadyAppliedStatus, setAlreadyAppliedStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!job || !isSignedIn) return;
+    let cancelled = false;
+    async function checkApplied() {
+      try {
+        const res = await fetch(`/api/job-applications/mine?jobId=${job!._id}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const apps: any[] = data.applications || [];
+        const match = apps.find((a: any) => String(a.status) !== "withdrawn");
+        if (!cancelled && match) {
+          setAlreadyApplied(true);
+          setAlreadyAppliedStatus(match.status);
+        } else if (!cancelled) {
+          setAlreadyApplied(false);
+          setAlreadyAppliedStatus(null);
+        }
+      } catch {}
+    }
+    checkApplied();
+    return () => {
+      cancelled = true;
+    };
+  }, [job, isSignedIn]);
 
   useEffect(() => {
     const fetchJobDetail = async () => {
@@ -169,7 +197,6 @@ export default function JobDetailPage({ params }: { params: Promise<{ slug: stri
   }
 
   const company = job.companyId;
-  const isSignedIn = !!session;
   const salaryPeriod = job.salaryPeriod === "hourly" ? "hr" : job.salaryPeriod === "monthly" ? "mo" : "yr";
 
   const handleBack = () => {
@@ -229,6 +256,15 @@ export default function JobDetailPage({ params }: { params: Promise<{ slug: stri
               <Link href={signInUrl} className={detailStyles.applyBtn} id="sign-in-to-apply-btn">
                 Sign In to Apply <Send size={16} />
               </Link>
+            ) : alreadyApplied ? (
+              <>
+                <button disabled className={detailStyles.applyBtn} style={{ opacity: 0.6, cursor: "not-allowed" }}>
+                  Applied <Check size={16} />
+                </button>
+                <span style={{ fontSize: "var(--text-xs)", color: "var(--gray-500)", marginTop: "0.25rem", textAlign: "right" }}>
+                  You already applied to this job{alreadyAppliedStatus ? ` — ${alreadyAppliedStatus.replace("_", " ")}` : ""}.
+                </span>
+              </>
             ) : (
               <button onClick={() => setShowApplyModal(true)} className={detailStyles.applyBtn} id="open-apply-modal-btn">
                 Apply Now <Send size={16} />
@@ -270,6 +306,13 @@ export default function JobDetailPage({ params }: { params: Promise<{ slug: stri
                 <Link href={signInUrl} className={detailStyles.applyBtn} style={{ margin: "0 auto" }}>
                   Sign In to Apply <Send size={16} />
                 </Link>
+              ) : alreadyApplied ? (
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
+                  <button disabled className={detailStyles.applyBtn} style={{ opacity: 0.6, cursor: "not-allowed", margin: "0 auto" }}>
+                    Applied <Check size={16} />
+                  </button>
+                  <span style={{ fontSize: "var(--text-xs)", color: "var(--gray-500)" }}>You already applied to this job{alreadyAppliedStatus ? ` — ${alreadyAppliedStatus.replace("_", " ")}` : ""}.</span>
+                </div>
               ) : (
                 <button onClick={() => setShowApplyModal(true)} className={detailStyles.applyBtn} style={{ margin: "0 auto" }}>
                   Apply Now <Send size={16} />

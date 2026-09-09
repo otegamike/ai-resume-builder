@@ -20,6 +20,7 @@ interface CoverLetterResultCardProps {
   onCopy: () => void;
   copied: boolean;
   onEditChange?: (newContent: string) => void;
+  hideLetterhead?: boolean;
 }
 
 export default function CoverLetterResultCard({
@@ -30,6 +31,7 @@ export default function CoverLetterResultCard({
   onCopy,
   copied,
   onEditChange,
+  hideLetterhead = false,
 }: CoverLetterResultCardProps) {
   const [editMode, setEditMode] = useState(false);
   const [draftContent, setDraftContent] = useState(coverLetter);
@@ -60,17 +62,21 @@ export default function CoverLetterResultCard({
 
   return (
     <div className={styles.letterCard}>
-      <div className={styles.letterhead}>
-        <div className={styles.senderInfo}>
-          <span className={styles.senderName}>{name}</span>
-          {email && <span className={styles.senderDetail}>{email}</span>}
-          {phone && <span className={styles.senderDetail}>{phone}</span>}
-          {location && <span className={styles.senderDetail}>{location}</span>}
-        </div>
-        <span className={styles.dateSide}>{generatedDate}</span>
-      </div>
+      {!hideLetterhead && (
+        <>
+          <div className={styles.letterhead}>
+            <div className={styles.senderInfo}>
+              <span className={styles.senderName}>{name}</span>
+              {email && <span className={styles.senderDetail}>{email}</span>}
+              {phone && <span className={styles.senderDetail}>{phone}</span>}
+              {location && <span className={styles.senderDetail}>{location}</span>}
+            </div>
+            <span className={styles.dateSide}>{generatedDate}</span>
+          </div>
 
-      <hr className={styles.hairline} />
+          <hr className={styles.hairline} />
+        </>
+      )}
 
       <div className={styles.subjectBlock}>
         Re: <strong>{roleDisplay}</strong> &mdash; {name}

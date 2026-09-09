@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
     return [
       { source: "/employer", destination: "/dashboard/jobs", permanent: true },
       { source: "/employer/:path*", destination: "/dashboard/jobs", permanent: true },
+      { source: "/dashboard/employer", destination: "/dashboard/employers", permanent: true },
+      { source: "/dashboard/employer/:path*", destination: "/dashboard/employers", permanent: true },
     ];
   },
 };

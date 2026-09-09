@@ -3,13 +3,13 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import JobAd from "@/models/JobAd";
-import Application from "@/models/Application";
+import JobApplication from "@/models/JobApplication";
 import User from "@/models/User";
 import Resume from "@/models/Resume";
 import CoverLetter from "@/models/CoverLetter";
 
 void JobAd;
-void Application;
+void JobApplication;
 void User;
 void Resume;
 void CoverLetter;
@@ -42,13 +42,22 @@ export async function GET(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const applicants = await Application.find({ jobId: job._id })
+    const applicants = await JobApplication.find({ jobId: job._id, status: { $ne: "withdrawn" } })
       .sort({ createdAt: -1 })
-      .populate("user", "name email image location jobTitle phone")
+      .populate("applicantId", "name email image location jobTitle phone")
       .populate("resumeId", "title targetRole content updatedAt")
-      .populate("coverLetterId", "title content updatedAt");
+      .populate("tailoredResumeId", "title targetRole content updatedAt");
 
-    return NextResponse.json({ job, applicants });
+    const mapped = applicants.map((a: any) => ({
+      ...a.toObject(),
+      user: a.applicantId,
+      aiMatchScore: a.matchScore,
+      aiMatchAnalysis: a.analysisReport?.verdict || "",
+      coverLetterText: a.coverLetterText,
+      screeningAnswers: a.screeningAnswers,
+    }));
+
+    return NextResponse.json({ job, applicants: mapped });
   } catch (error: any) {
     console.error("Error fetching applicants:", error);
     return NextResponse.json({ error: "Failed to fetch applicants" }, { status: 500 });
