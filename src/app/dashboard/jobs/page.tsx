@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { Search, Building2, Clock } from "lucide-react";
+import { Search, Building2, Clock, ArrowRight } from "lucide-react";
 import styles from "./jobs.module.css";
 import FindJobsBoard from "@/components/jobs/find-jobs/FindJobsBoard";
 import ApplicationHistory from "@/components/jobs/application-history/ApplicationHistory";
@@ -25,25 +25,25 @@ export default function UnifiedJobsPage() {
       </header>
 
       {isEmployer ? (
-        <div className={styles.employerBannerCard} style={{ padding: "var(--space-4)" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
+        <Link href="/dashboard/employers" className={styles.employerBannerCard} style={{ padding: "var(--space-4)", textDecoration: "none" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap", width: "100%" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
               <Building2 size={20} color="var(--primary-900)" />
               <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--primary-900)" }}>Go to Employer page to manage ads and review applications</span>
             </div>
-            <Link href="/dashboard/employers" className={styles.employerCtaBtn}>Go to Employer Hub</Link>
+
           </div>
-        </div>
+        </Link>
       ) : (
-        <div className={styles.employerBannerCard} style={{ padding: "var(--space-4)" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
+        <Link href="/dashboard/employers" className={styles.employerBannerCard} style={{ padding: "var(--space-4)", textDecoration: "none" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap", width: "100%" }}>
             <div>
               <h3 className={styles.bannerTitle} style={{ fontSize: "var(--text-base)", marginBottom: 0 }}>Become an employer to post your own job ads</h3>
               <p className={styles.bannerText} style={{ fontSize: "var(--text-xs)", marginTop: "0.25rem" }}>Post free job ads and hire top talent.</p>
             </div>
-            <Link href="/dashboard/employers" className={styles.employerCtaBtn}>Become an Employer</Link>
+            
           </div>
-        </div>
+        </Link>
       )}
 
       <div className={styles.tabNavigation}>

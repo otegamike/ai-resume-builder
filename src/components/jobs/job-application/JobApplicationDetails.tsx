@@ -1,7 +1,10 @@
 "use client";
 
-import { CheckCircle2, AlertTriangle } from "lucide-react";
+import { useState } from "react";
+import { CheckCircle2, ZoomIn } from "lucide-react";
 import ResumeComponent from "@/components/resume/ResumeComponent";
+import ResumeViewer from "@/components/resume/ResumeViewer";
+import viewerStyles from "@/components/resume/ResumeViewer.module.css";
 import { normalizeTemplateId } from "@/lib/templateRenderer";
 import ScoreCircle from "@/components/ui/score-circle/ScoreCircle";
 import styles from "./JobApplicationDetails.module.css";
@@ -24,13 +27,14 @@ interface JobApplicationDetailsProps {
 export default function JobApplicationDetails({ application }: JobApplicationDetailsProps) {
   const job = application.jobId || application.job;
   const resumeContent = application.tailoredResumeSnapshot || application.resumeSnapshot || application.tailoredResume || application.resumeContent;
-  const templateId = application.tailoredResumeId ? application.tailoredResumeSnapshot?.template || application.templateId || "template1" : application.resumeSnapshot?.template || "template1";
-  const normalizedId = templateId ? normalizeTemplateId(templateId) : "template1" as any;
+  const templateIdRaw = application.tailoredResumeId ? application.tailoredResumeSnapshot?.template || application.templateId || "template1" : application.resumeSnapshot?.template || "template1";
+  const normalizedId = templateIdRaw ? normalizeTemplateId(templateIdRaw) : "template1" as any;
   const score = application.tailoredMatchScore ?? application.matchScore ?? application.analysisReport?.score ?? 0;
   const tier = getTier(score);
   const screeningAnswers: { questionId: string; question: string; answer: string }[] = application.screeningAnswers || [];
   const coverLetter: string = application.coverLetterText || "";
   const status: string = application.status || "submitted";
+  const [viewerOpen, setViewerOpen] = useState(false);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -45,19 +49,33 @@ export default function JobApplicationDetails({ application }: JobApplicationDet
         </div>
       )}
 
-      <div className={styles.grid}>
-        <div className={styles.previewBox}>
+      <div className={styles.grid} style={{ alignItems: "center" }}>
+        <div className={viewerStyles.previewThumbnail} style={{ maxHeight: "320px" }}>
           {resumeContent ? (
-            <ResumeComponent resumeContent={resumeContent} templateId={normalizedId} />
+            <>
+              <div style={{ maxHeight: "320px", overflow: "hidden", background: "white", padding: "0.25rem" }}>
+                <ResumeComponent resumeContent={resumeContent} templateId={normalizedId} />
+              </div>
+              <button type="button" className={viewerStyles.viewBtn} onClick={() => setViewerOpen(true)}>
+                <ZoomIn size={12} /> View
+              </button>
+              <ResumeViewer
+                isOpen={viewerOpen}
+                onClose={() => setViewerOpen(false)}
+                resumeContent={resumeContent}
+                templateId={normalizedId}
+                title={`${job?.title || "Resume"}${application.tailoredResumeSnapshot ? " — Tailored" : ""}`}
+              />
+            </>
           ) : application.customResumeUrl ? (
             <p style={{ fontSize: "var(--text-xs)", color: "var(--gray-500)", padding: "1rem", textAlign: "center" }}>Uploaded resume (image/PDF) — no structured preview</p>
           ) : (
             <p style={{ fontSize: "var(--text-xs)", color: "var(--gray-500)", padding: "1rem", textAlign: "center" }}>No resume preview</p>
           )}
         </div>
-        <div className={styles.scoreCol}>
+        <div className={styles.scoreCol} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", minWidth: "120px" }}>
           <ScoreCircle score={score} />
-          <span className={`${modalStyles.tierPill} ${tier.cls}`}>{tier.label} — {score}%</span>
+          <span className={`${modalStyles.tierPill} ${tier.cls}`}>{tier.label}</span>
           <span className={modalStyles.tierHint} style={{ textAlign: "center" }}>{tier.hint}</span>
         </div>
       </div>
@@ -101,7 +119,6 @@ export default function JobApplicationDetails({ application }: JobApplicationDet
         <p style={{ fontSize: "var(--text-sm)", color: "var(--gray-700)", background: "var(--gray-50)", padding: "0.75rem", borderRadius: "6px", whiteSpace: "pre-wrap" }}>{coverLetter || "— No cover letter —"}</p>
       </div>
 
-      {application.coverLetterGenerated && <div className={styles.successBanner}><CheckCircle2 size={14} /> AI-generated cover letter</div>}
       {application.tailoredResumeId && <div className={styles.successBanner}><CheckCircle2 size={14} /> Tailored resume was used</div>}
     </div>
   );

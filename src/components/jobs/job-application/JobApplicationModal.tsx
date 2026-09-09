@@ -359,13 +359,40 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
   const offPlatformType = job.applicationType === "external_link" || job.applicationType === "email";
 
   const handleConfirmOffPlatform = async () => {
+    if (!validateQuestions()) return;
     setSubmitting(true);
     setApplyError("");
     try {
+      const effectiveResumeId = tailoredResumeId || (selection?.mode === "saved" ? selection.selectedResumeId : undefined);
+      const screeningAnswersPayload = (job.screeningQuestions || []).map((q) => ({
+        questionId: q.id,
+        question: q.question,
+        answer: screeningAnswers[q.id] || "",
+      }));
+      let customResumeUrl: string | undefined;
+      let resumeIdToSend = effectiveResumeId;
+      if (selection?.mode === "upload" && !tailoredResumeId) {
+        customResumeUrl = "upload-placeholder";
+        resumeIdToSend = undefined;
+      }
       const res = await fetch(`/api/jobs/${job._id}/apply`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ source: "off_platform" }),
+        body: JSON.stringify({
+          resumeId: resumeIdToSend,
+          tailoredResumeId: tailoredResumeId || undefined,
+          resumeSnapshot: selection?.selectedSavedResume?.content,
+          tailoredResumeSnapshot: tailoredReport?.tailoredResume,
+          matchScore: analysis?.score,
+          tailoredMatchScore: tailoredReport?.matchScoreAfter,
+          analysisReport: analysis,
+          tailorReport: tailoredReport,
+          coverLetterText: coverLetterText || undefined,
+          coverLetterGenerated,
+          screeningAnswers: screeningAnswersPayload,
+          customResumeUrl,
+          source: "off_platform",
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to confirm");

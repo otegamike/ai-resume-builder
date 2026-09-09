@@ -54,6 +54,7 @@ export default function DashboardShell({
   };
 
   function isActive(path: string) {
+    if (path === "/dashboard") return pathname === path ? styles.navLinkActive : "";
     return pathname === path || pathname?.startsWith(path + "/") ? styles.navLinkActive : "";
   }
 
@@ -128,6 +129,14 @@ export default function DashboardShell({
               Settings
             </span>
           </Link>
+          {isEmployer && (
+            <Link href="/dashboard/employers" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/employers")}`}>
+              <Building2 className={styles.navIcon} />
+              <span className={styles.navLinkText}>
+                Employer Hub
+              </span>
+            </Link>
+          )}
           {isAdmin && (
             <Link href="/dashboard/admin" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/admin")}`}>
               <BarChart3 className={styles.navIcon} />
