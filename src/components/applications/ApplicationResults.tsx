@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import {
-  ArrowRight,
   Edit,
 } from "lucide-react";
 import ScoreCircle from "@/components/ui/score-circle/ScoreCircle";
@@ -55,23 +54,10 @@ export default function ApplicationResults({
           </div>
 
           <div className={styles.scoreRowContainer}>
-            <div className={styles.scoreRow}>
-              <div className={styles.scoreBox}>
-                <span className={styles.scoreLabel}>Before Match</span>
-                <ScoreCircle score={report.matchScoreBefore} />
-              </div>
-              <div className={styles.scoreArrow}>
-                <ArrowRight className={styles.arrowIcon} />
-              </div>
-              <div className={styles.scoreBox}>
-                <span className={styles.scoreLabel}>After Tailor</span>
-                <ScoreCircle score={report.matchScoreAfter} />
-              </div>
+            <div className={styles.scoreBox}>
+              <span className={styles.scoreLabel}>Match Score</span>
+              <ScoreCircle score={report.matchAnalysis.score} />
             </div>
-
-            <span className={styles.scoreDiff}>
-                  +{report.matchScoreAfter - report.matchScoreBefore}% Improve
-            </span>
           </div>
           <div className={styles.resultBlock}>
             <h3 className={styles.resultBlockTitle}>Optimizations Performed</h3>

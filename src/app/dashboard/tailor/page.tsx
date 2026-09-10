@@ -7,7 +7,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   Loader2,
-  ArrowRight,
   Sparkles,
 } from "lucide-react";
 import { useJobDescriptionInput } from "@/hooks/useJobDescriptionInput";
@@ -312,18 +311,8 @@ export default function TailorResumePage() {
               <article className={styles.scoreComparisonPanel}>
                 <div className={styles.scoreComparisonContainer}>
                   <div className={styles.scoreBox}>
-                    <span className={styles.scoreLabel}>Before Match</span>
-                    <ScoreCircle score={report.matchScoreBefore} />
-                  </div>
-                  <div className={styles.scoreArrow}>
-                    <ArrowRight className={styles.arrowIcon} />
-                    <span className={styles.scoreDiff}>
-                      +{report.matchScoreAfter - report.matchScoreBefore}% Improve
-                    </span>
-                  </div>
-                  <div className={styles.scoreBox}>
-                    <span className={styles.scoreLabel}>After Tailor</span>
-                    <ScoreCircle score={report.matchScoreAfter} />
+                    <span className={styles.scoreLabel}>Match Score</span>
+                    <ScoreCircle score={report.matchAnalysis.score} />
                   </div>
                 </div>
                 

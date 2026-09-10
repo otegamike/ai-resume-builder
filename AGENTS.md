@@ -80,6 +80,23 @@ src/app/dashboard/jobs/page.tsx // slim shell: tab buttons + {activeTab==="find"
 * If a function/parse/normalize/fetch is used by two or more components, extract it to `src/hooks/useX.ts`.
 * If it is used by only one tab/section, keep it colocated inside that tab's component (e.g. `FindJobsBoard` keeps its `fetchPublicJobs` + `IntersectionObserver` pagination). Do not create a hook file by default when there is no cross-component reuse.
 
+# Consolidation — one definition, many consumers
+
+When the same branching, validation, or parsing appears in two or more API routes or components, consolidate it. Do not copy `FormData` → validate → AI/DB → trim-check logic. The helpers created this session are the reference.
+
+* **Where it lives:** `src/lib/*` is server-only business logic (`DB`, `AI`, `FormData` extraction, `createResume`). Start files with `import "server-only"` and use `void Model;` for every Mongoose model the file touches. `src/hooks/*` is client/reusable React logic (e.g. `useJobDescriptionInput`). Do not put server code in hooks. `src/types/*` is the type source of truth — never re-declare a type that already exists there. `src/store/*` is cross-cutting UI state only.
+  * Keep extraction separate from creation. `src/lib/inputExtraction.ts` owns reading and validating `FormData` (`resolveResumeInput`, `resolveJobInput`, `InputExtractionError`). `src/lib/resumeService.ts` owns writing (`createResume({authUser,title,content,template})`, `createResumeFromExtractedText`). Do not merge them into one God file.
+* **Types follow schemas, schemas follow product:** `src/types/X` and `src/models/X` must agree. Model interfaces do `Omit<SharedType, ids>` and re-add `Types.ObjectId` forms (`IJobApplication extends Omit<JobApplication, ...>`). Reuse canonical types (`import type { JobMatchAnalysis } from "@/types/JobApplicationData"` instead of redefining `MatchAnalysis` in `lib/ai.ts`; alias when needed: `export type MatchAnalysis = JobMatchAnalysis`). Embedded Mongoose sub-schemas (`ResumeDocumentSchema`, `JobMatchAnalysisSchema`) are the DB contract.
+* **Legacy fields:** keep old fields as `field?: type` and map them in a normalizer (`normalizeTailorReport`) for one release, then delete schema + type + all call sites together in the next PR. Do not delete a field from just one layer.
+
+**Checklist for cross-file rewrites:**
+1. Search all names first (`rg "new Resume"`, `"matchScore"`, `"analysisReport"`). List every file that reads or writes the shape.
+2. Update type (`src/types`) → model/schema (`src/models`) → lib normalizer/helper (`src/lib`) → routes (`parseJsonField<T>` + `InputExtractionError` handling) → components (`report.matchAnalysis.score`). Keep `any` out — use `unknown` + `Array.isArray`/`typeof` narrowing or a `JobForText` type.
+3. Replace inline fallbacks/empty objects with the shared one (`emptyResumeContent` from `lib/ai.ts`). Throw `InputExtractionError(status)` from `src/lib/*` and handle `status` in each route's `catch` before the generic `500`.
+4. Run `npx tsc --noEmit` and `npx eslint` on changed files. Keep `any` and unused model imports out.
+
+References: `src/lib/inputExtraction.ts` (single `FormData` extraction for 6 routes), `src/lib/resumeService.ts` (single creation for onboarding + job apply), `src/models/JobApplication.ts` ↔ `src/types/JobApplicationData.ts` ↔ `src/types/TailorReport.ts` (types imported, not duplicated).
+
 # Global State — Zustand stores
 
 Examples to follow: `src/store/useResumeStore.ts`, `useAiCreditStore.ts`, `useAlertStore.ts`, `useTemplateStore.ts`.

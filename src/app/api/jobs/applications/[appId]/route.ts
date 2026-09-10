@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
-import Application from "@/models/Application";
+import JobApplication from "@/models/JobApplication";
 import User from "@/models/User";
 
-void Application;
+void JobApplication;
 void User;
 
 export async function PUT(
@@ -22,7 +22,7 @@ export async function PUT(
     await dbConnect();
 
     const currentUser = await User.findById(session.user.id);
-    const application = await Application.findById(appId);
+    const application = await JobApplication.findById(appId);
 
     if (!application) {
       return NextResponse.json({ error: "Application not found" }, { status: 404 });
@@ -38,6 +38,11 @@ export async function PUT(
     }
 
     const { status, notes } = await req.json();
+
+    const allowed = ["submitted", "under_review", "shortlisted", "interviewing", "offered", "rejected", "withdrawn"];
+    if (status && !allowed.includes(status)) {
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+    }
 
     if (status) {
       application.status = status;

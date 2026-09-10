@@ -71,7 +71,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { company, role, status, appliedDate, notes, resumeId, coverLetterId, jobUrl, optimizations, matchScoreBefore, matchScoreAfter, explanation } = body;
+    const { company, role, status, appliedDate, notes, resumeId, coverLetterId, jobUrl, optimizations, explanation } = body;
 
     await dbConnect();
     const application = await Application.findOneAndUpdate(
@@ -86,8 +86,6 @@ export async function PUT(
         ...(coverLetterId !== undefined && { coverLetterId: coverLetterId || undefined }),
         ...(jobUrl !== undefined && { jobUrl }),
         ...(optimizations !== undefined && { optimizations }),
-        ...(matchScoreBefore !== undefined && { matchScoreBefore }),
-        ...(matchScoreAfter !== undefined && { matchScoreAfter }),
         ...(explanation !== undefined && { explanation }),
         updatedAt: new Date(),
       },

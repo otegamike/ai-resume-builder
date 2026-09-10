@@ -93,16 +93,8 @@ export default function EmployerHub({ isEmployer }: { isEmployer: boolean }) {
     }
   };
 
-  const handleViewApplicants = async (jobId: string) => {
-    setViewingApplicantsJobId(jobId);
-    setLoadingApplicants(true);
-    try {
-      const res = await fetch(`/api/jobs/${jobId}/applicants`);
-      const data = await res.json();
-      setApplicantsList(data.applicants || []);
-    } catch {} finally {
-      setLoadingApplicants(false);
-    }
+  const handleViewApplicants = (jobId: string) => {
+    router.push(`/dashboard/employers/job/${jobId}`);
   };
 
   const handleUpdateApplicantStatus = async (appId: string, statusVal: string) => {

@@ -26,10 +26,11 @@ interface JobApplicationDetailsProps {
 
 export default function JobApplicationDetails({ application }: JobApplicationDetailsProps) {
   const job = application.jobId || application.job;
-  const resumeContent = application.tailoredResumeSnapshot || application.resumeSnapshot || application.tailoredResume || application.resumeContent;
-  const templateIdRaw = application.tailoredResumeId ? application.tailoredResumeSnapshot?.template || application.templateId || "template1" : application.resumeSnapshot?.template || "template1";
+  const resumeDoc = application.resume;
+  const resumeContent = resumeDoc?.content || application.resumeSnapshot || application.resumeContent;
+  const templateIdRaw = resumeDoc?.template || application.templateId || "template1";
   const normalizedId = templateIdRaw ? normalizeTemplateId(templateIdRaw) : "template1" as any;
-  const score = application.tailoredMatchScore ?? application.matchScore ?? application.analysisReport?.score ?? 0;
+  const score = application.jobMatchAnalysis?.score ?? application.analysisReport?.score ?? application.matchScore ?? 0;
   const tier = getTier(score);
   const screeningAnswers: { questionId: string; question: string; answer: string }[] = application.screeningAnswers || [];
   const coverLetter: string = application.coverLetterText || "";
@@ -64,11 +65,15 @@ export default function JobApplicationDetails({ application }: JobApplicationDet
                 onClose={() => setViewerOpen(false)}
                 resumeContent={resumeContent}
                 templateId={normalizedId}
-                title={`${job?.title || "Resume"}${application.tailoredResumeSnapshot ? " — Tailored" : ""}`}
+                title={job?.title || "Resume"}
               />
             </>
-          ) : application.customResumeUrl ? (
-            <p style={{ fontSize: "var(--text-xs)", color: "var(--gray-500)", padding: "1rem", textAlign: "center" }}>Uploaded resume (image/PDF) — no structured preview</p>
+          ) : application.uploadedResume?.pages?.length ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              {application.uploadedResume.pages.map((url: string, i: number) => (
+                <img key={i} src={url} alt={`Resume page ${i + 1}`} style={{ width: "100%", borderRadius: "6px" }} />
+              ))}
+            </div>
           ) : (
             <p style={{ fontSize: "var(--text-xs)", color: "var(--gray-500)", padding: "1rem", textAlign: "center" }}>No resume preview</p>
           )}
@@ -80,25 +85,45 @@ export default function JobApplicationDetails({ application }: JobApplicationDet
         </div>
       </div>
 
-      {application.analysisReport && (
-        <div className={styles.bulletSection}>
-          <span className={styles.bulletSectionTitle}>Analysis</span>
-          <p style={{ fontSize: "var(--text-sm)", color: "var(--gray-700)", lineHeight: 1.5 }}>{application.analysisReport.verdict || ""}</p>
-          {(application.analysisReport.missingKeywords?.length > 0 || application.analysisReport.missingSkills?.length > 0) && (
-            <ul className={styles.bulletList}>{[...(application.analysisReport.missingKeywords || []), ...(application.analysisReport.missingSkills || [])].slice(0, 8).map((k: string, i: number) => <li key={i}>{k}</li>)}</ul>
-          )}
-        </div>
-      )}
-
-      {application.tailorReport && (
-        <div className={styles.bulletSection}>
-          <span className={styles.bulletSectionTitle}>Tailored improvements</span>
-          <p style={{ fontSize: "var(--text-sm)", color: "var(--gray-700)" }}>{application.tailorReport.explanation || ""}</p>
-          {application.tailorReport.keyChanges?.length > 0 && (
-            <ul className={styles.bulletList}>{application.tailorReport.keyChanges.map((c: string, i: number) => <li key={i}>{c}</li>)}</ul>
-          )}
-        </div>
-      )}
+      {(() => {
+        const a = application.jobMatchAnalysis || application.analysisReport;
+        if (!a) return null;
+        return (
+          <>
+            <div className={styles.bulletSection}>
+              <span className={styles.bulletSectionTitle}>Analysis</span>
+              <p style={{ fontSize: "var(--text-sm)", color: "var(--gray-700)", lineHeight: 1.5 }}>{a.verdict || ""}</p>
+              {(a.missingKeywords?.length > 0 || a.missingSkills?.length > 0) && (
+                <ul className={styles.bulletList}>{[...(a.missingKeywords || []), ...(a.missingSkills || [])].slice(0, 8).map((k: string, i: number) => <li key={i}>{k}</li>)}</ul>
+              )}
+            </div>
+            {a.strengths?.length > 0 && (
+              <div className={styles.bulletSection}>
+                <span className={styles.bulletSectionTitle}>Strengths</span>
+                <ul className={styles.bulletList}>{a.strengths.slice(0, 4).map((s: string, i: number) => <li key={i}>{s}</li>)}</ul>
+              </div>
+            )}
+            {a.weaknesses?.length > 0 && (
+              <div className={styles.bulletSection}>
+                <span className={styles.bulletSectionTitle}>Weaknesses</span>
+                <ul className={styles.bulletList}>{a.weaknesses.slice(0, 4).map((w: string, i: number) => <li key={i}>{w}</li>)}</ul>
+              </div>
+            )}
+            {a.gaps?.length > 0 && (
+              <div className={styles.bulletSection}>
+                <span className={styles.bulletSectionTitle}>Gaps</span>
+                <ul className={styles.bulletList}>{a.gaps.slice(0, 4).map((g: string, i: number) => <li key={i}>{g}</li>)}</ul>
+              </div>
+            )}
+            {a.suggestions?.length > 0 && (
+              <div className={styles.bulletSection}>
+                <span className={styles.bulletSectionTitle}>How to improve</span>
+                <ul className={styles.bulletList}>{a.suggestions.slice(0, 4).map((s: string, i: number) => <li key={i}>{s}</li>)}</ul>
+              </div>
+            )}
+          </>
+        );
+      })()}
 
       {screeningAnswers.length > 0 && (
         <div className={styles.bulletSection}>
@@ -119,7 +144,7 @@ export default function JobApplicationDetails({ application }: JobApplicationDet
         <p style={{ fontSize: "var(--text-sm)", color: "var(--gray-700)", background: "var(--gray-50)", padding: "0.75rem", borderRadius: "6px", whiteSpace: "pre-wrap" }}>{coverLetter || "— No cover letter —"}</p>
       </div>
 
-      {application.tailoredResumeId && <div className={styles.successBanner}><CheckCircle2 size={14} /> Tailored resume was used</div>}
+
     </div>
   );
 }

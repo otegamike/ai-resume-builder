@@ -38,10 +38,10 @@ const JobApplicationSchema: Schema = new Schema<IJobApplication>(
       default: "submitted",
       index: true,
     },
-    resume: { type: ResumeDocumentSchema, default: () => ({}) },
-    uploadedResume: { type: uploadedResumeDocumentSchema,  default: () => ({})  },
-    matchScore: { type: Number, required: true },
-    analysisForEmployer: { type: JobMatchAnalysisSchema, required: true },
+    resumeType: { type: String, enum: ["platform", "uploaded"], required: true },
+    resume: { type: ResumeDocumentSchema, required: true },
+    uploadedResume: { type: uploadedResumeDocumentSchema, required: false },
+    jobMatchAnalysis: { type: JobMatchAnalysisSchema, required: true },
     coverLetterText: { type: String, default: "" },
     screeningAnswers: {
       type: [

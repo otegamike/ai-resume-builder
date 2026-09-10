@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { company, role, status, appliedDate, notes, resumeId, coverLetterId, jobUrl, optimizations, matchScoreBefore, matchScoreAfter, explanation } = body;
+    const { company, role, status, appliedDate, notes, resumeId, coverLetterId, jobUrl, optimizations, explanation } = body;
 
     if (!company || !role) {
       return NextResponse.json({ error: "Company and role are required" }, { status: 400 });
@@ -73,8 +73,6 @@ export async function POST(request: NextRequest) {
       coverLetterId: coverLetterId || undefined,
       jobUrl: jobUrl || "",
       optimizations: optimizations || undefined,
-      matchScoreBefore: matchScoreBefore !== undefined ? matchScoreBefore : undefined,
-      matchScoreAfter: matchScoreAfter !== undefined ? matchScoreAfter : undefined,
       explanation: explanation || undefined,
     });
 

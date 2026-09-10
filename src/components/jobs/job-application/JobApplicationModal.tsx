@@ -14,7 +14,7 @@ import { AiButton } from "@/components/ui/AiButton";
 import { CREDIT_COST } from "@/lib/creditCosts";
 import { useAiCreditStore } from "@/store/useAiCreditStore";
 import { useAlertStore } from "@/store/useAlertStore";
-import type { MatchAnalysis } from "@/lib/ai";
+import type { JobMatchAnalysis } from "@/types/JobApplicationData";
 import type { TailorReport } from "@/types/TailorReport";
 import CoverLetterResultCard from "@/components/cover-letter/CoverLetterResultCard";
 import { useResumeStore } from "@/store/useResumeStore";
@@ -53,7 +53,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
 
   const [step, setStep] = useState(0);
   const [selection, setSelection] = useState<ResumeSelection | null>(null);
-  const [analysis, setAnalysis] = useState<MatchAnalysis | null>(null);
+  const [analysis, setAnalysis] = useState<JobMatchAnalysis | null>(null);
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisError, setAnalysisError] = useState("");
   const [tailoring, setTailoring] = useState(false);
@@ -147,7 +147,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Analysis failed");
         if (!cancelled) {
-          setAnalysis(data as MatchAnalysis);
+          setAnalysis(data as JobMatchAnalysis);
           cleanupScroll = delayedScrollIntoView("analysisReport", 250);
         }
       } catch (err) {
@@ -308,36 +308,35 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
     setSubmitting(true);
     setApplyError("");
     try {
-      const effectiveResumeId = tailoredResumeId || (selection?.mode === "saved" ? selection.selectedResumeId : undefined);
       const screeningAnswersPayload = (job.screeningQuestions || []).map((q) => ({
         questionId: q.id,
         question: q.question,
         answer: screeningAnswers[q.id] || "",
       }));
-      let customResumeUrl: string | undefined;
-      let resumeIdToSend = effectiveResumeId;
-      if (selection?.mode === "upload" && !tailoredResumeId) {
-        customResumeUrl = "upload-placeholder";
-        resumeIdToSend = undefined;
+      const jobMatchAnalysis = tailoredReport?.matchAnalysis ?? analysis;
+      if (!jobMatchAnalysis) throw new Error("Missing match analysis");
+      const effectiveResumeId = tailoredResumeId || (selection?.mode === "saved" ? selection.selectedResumeId : undefined);
+      const resumeType = effectiveResumeId ? "platform" : "uploaded";
+      const formData = new FormData();
+      formData.append("resumeType", resumeType);
+      if (effectiveResumeId) formData.append("resumeId", effectiveResumeId);
+      formData.append("jobMatchAnalysis", JSON.stringify(jobMatchAnalysis));
+      formData.append("screeningAnswers", JSON.stringify(screeningAnswersPayload));
+      if (coverLetterText) formData.append("coverLetterText", coverLetterText);
+      formData.append("source", "platform");
+      if (resumeType === "uploaded" && selection?.mode === "upload") {
+        if (selection.selectedFile && selection.selectedFile.type.startsWith("image/")) {
+          formData.append("resumeFile", selection.selectedFile);
+        } else if (selection.pdfCanvasRefs.length > 0) {
+          for (const canvas of selection.pdfCanvasRefs) {
+            const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
+            if (blob) formData.append("resumeFile", blob, "page.png");
+          }
+        }
       }
       const res = await fetch(`/api/jobs/${job._id}/apply`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          resumeId: resumeIdToSend,
-          tailoredResumeId: tailoredResumeId || undefined,
-          resumeSnapshot: selection?.selectedSavedResume?.content,
-          tailoredResumeSnapshot: tailoredReport?.tailoredResume,
-          matchScore: analysis?.score,
-          tailoredMatchScore: tailoredReport?.matchScoreAfter,
-          analysisReport: analysis,
-          tailorReport: tailoredReport,
-          coverLetterText: coverLetterText || undefined,
-          coverLetterGenerated,
-          screeningAnswers: screeningAnswersPayload,
-          customResumeUrl,
-          source: "platform",
-        }),
+        body: formData,
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to submit application");
@@ -352,10 +351,10 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
   if (!open) return null;
 
   const tier = analysis ? getTier(analysis.score) : null;
-  const finalScore = tailoredReport?.matchScoreAfter ?? analysis?.score ?? 0;
+  const finalScore = tailoredReport?.matchAnalysis.score ?? analysis?.score ?? 0;
   const finalTier = getTier(finalScore);
-  const tailoredTier = tailoredReport ? getTier(tailoredReport.matchScoreAfter) : null;
-  const tailoredDiff = tailoredReport && analysis ? tailoredReport.matchScoreAfter - analysis.score : 0;
+  const tailoredTier = tailoredReport ? getTier(tailoredReport.matchAnalysis.score) : null;
+  const tailoredDiff = tailoredReport && analysis ? tailoredReport.matchAnalysis.score - analysis.score : 0;
   const offPlatformType = job.applicationType === "external_link" || job.applicationType === "email";
 
   const handleConfirmOffPlatform = async () => {
@@ -363,36 +362,35 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
     setSubmitting(true);
     setApplyError("");
     try {
-      const effectiveResumeId = tailoredResumeId || (selection?.mode === "saved" ? selection.selectedResumeId : undefined);
       const screeningAnswersPayload = (job.screeningQuestions || []).map((q) => ({
         questionId: q.id,
         question: q.question,
         answer: screeningAnswers[q.id] || "",
       }));
-      let customResumeUrl: string | undefined;
-      let resumeIdToSend = effectiveResumeId;
-      if (selection?.mode === "upload" && !tailoredResumeId) {
-        customResumeUrl = "upload-placeholder";
-        resumeIdToSend = undefined;
+      const jobMatchAnalysis = tailoredReport?.matchAnalysis ?? analysis;
+      if (!jobMatchAnalysis) throw new Error("Missing match analysis");
+      const effectiveResumeId = tailoredResumeId || (selection?.mode === "saved" ? selection.selectedResumeId : undefined);
+      const resumeType = effectiveResumeId ? "platform" : "uploaded";
+      const formData = new FormData();
+      formData.append("resumeType", resumeType);
+      if (effectiveResumeId) formData.append("resumeId", effectiveResumeId);
+      formData.append("jobMatchAnalysis", JSON.stringify(jobMatchAnalysis));
+      formData.append("screeningAnswers", JSON.stringify(screeningAnswersPayload));
+      if (coverLetterText) formData.append("coverLetterText", coverLetterText);
+      formData.append("source", "off_platform");
+      if (resumeType === "uploaded" && selection?.mode === "upload") {
+        if (selection.selectedFile && selection.selectedFile.type.startsWith("image/")) {
+          formData.append("resumeFile", selection.selectedFile);
+        } else if (selection.pdfCanvasRefs.length > 0) {
+          for (const canvas of selection.pdfCanvasRefs) {
+            const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
+            if (blob) formData.append("resumeFile", blob, "page.png");
+          }
+        }
       }
       const res = await fetch(`/api/jobs/${job._id}/apply`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          resumeId: resumeIdToSend,
-          tailoredResumeId: tailoredResumeId || undefined,
-          resumeSnapshot: selection?.selectedSavedResume?.content,
-          tailoredResumeSnapshot: tailoredReport?.tailoredResume,
-          matchScore: analysis?.score,
-          tailoredMatchScore: tailoredReport?.matchScoreAfter,
-          analysisReport: analysis,
-          tailorReport: tailoredReport,
-          coverLetterText: coverLetterText || undefined,
-          coverLetterGenerated,
-          screeningAnswers: screeningAnswersPayload,
-          customResumeUrl,
-          source: "off_platform",
-        }),
+        body: formData,
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to confirm");
@@ -503,7 +501,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
                     </div>
                     <div className={styles.scoreBox}>
                       <span className={styles.scoreLabel}>Tailored</span>
-                      <ScoreCircle score={tailoredReport.matchScoreAfter} />
+                      <ScoreCircle score={tailoredReport.matchAnalysis.score} />
                     </div>
                   </div>
                   <p style={{ fontSize: "var(--text-sm)", color: "var(--gray-700)", lineHeight: 1.5 }}>{tailoredReport.explanation}</p>
@@ -513,7 +511,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
                       <ul className={styles.bulletList}>{tailoredReport.keyChanges.map((c: string, i: number) => <li key={i}>{c}</li>)}</ul>
                     </div>
                   )}
-                  <div className={styles.successBanner}><CheckCircle2 size={16} /> Tailored resume saved and selected — new score {tailoredReport.matchScoreAfter}%</div>
+                  <div className={styles.successBanner}><CheckCircle2 size={16} /> Tailored resume saved and selected — new score {tailoredReport.matchAnalysis.score}%</div>
                   {applyError && <div className={styles.errorBanner}>{applyError}</div>}
                   <AiButton variant="primary" disabled={tailoring} onClick={handleTailor} cost={CREDIT_COST.resumeTailor} fullWidth>
                     {tailoring ? <><Loader2 size={16} className={styles.spinner} /> Tailoring...</> : "Regenerate tailored resume"}

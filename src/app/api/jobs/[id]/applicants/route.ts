@@ -44,15 +44,13 @@ export async function GET(
 
     const applicants = await JobApplication.find({ jobId: job._id, status: { $ne: "withdrawn" } })
       .sort({ createdAt: -1 })
-      .populate("applicantId", "name email image location jobTitle phone")
-      .populate("resumeId", "title targetRole content updatedAt")
-      .populate("tailoredResumeId", "title targetRole content updatedAt");
+      .populate("applicantId", "name email image location jobTitle phone");
 
     const mapped = applicants.map((a: any) => ({
       ...a.toObject(),
       user: a.applicantId,
-      aiMatchScore: a.matchScore,
-      aiMatchAnalysis: a.analysisReport?.verdict || "",
+      aiMatchScore: a.jobMatchAnalysis?.score ?? a.matchScore ?? 0,
+      aiMatchAnalysis: a.jobMatchAnalysis?.verdict || a.analysisReport?.verdict || "",
       coverLetterText: a.coverLetterText,
       screeningAnswers: a.screeningAnswers,
     }));

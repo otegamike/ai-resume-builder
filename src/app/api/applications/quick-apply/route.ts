@@ -98,8 +98,6 @@ export async function POST(request: Request) {
       resumeId: savedResume._id,
       coverLetterId: savedCoverLetter._id,
       optimizations: report.keyChanges,
-      matchScoreBefore: report.matchScoreBefore,
-      matchScoreAfter: report.matchScoreAfter,
       explanation: report.explanation,
     });
 

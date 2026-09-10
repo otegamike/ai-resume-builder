@@ -92,7 +92,7 @@ function ApplicationCard({ application, onClick }: { application: any; onClick: 
   const title = job.title || application.role || "Job";
   const companyName = company.name || job.companyName || application.company || "";
   const status: string = application.status || "submitted";
-  const matchScore: number | undefined = application.tailoredMatchScore ?? application.matchScore ?? application.analysisReport?.score;
+  const matchScore: number | undefined = application.jobMatchAnalysis?.score ?? application.analysisReport?.score ?? application.matchScore;
   const appliedAt: string = application.createdAt || application.appliedDate || "";
 
   return (

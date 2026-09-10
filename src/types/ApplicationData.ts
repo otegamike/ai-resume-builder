@@ -30,8 +30,6 @@ export interface ApplicationItem {
   coverLetterId?: string;
   jobUrl?: string;
   optimizations?: string[];
-  matchScoreBefore?: number;
-  matchScoreAfter?: number;
   explanation?: string;
   coverLetterContent?: string;
   renderedResumeSrcDoc?: string;

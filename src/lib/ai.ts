@@ -2,7 +2,10 @@ import Groq from "groq-sdk";
 import { AtsReport } from "@/types/AtsReport";
 import { ResumeContent } from "@/types/ResumeData";
 import { TailorReport } from "@/types/TailorReport";
+import type { JobMatchAnalysis } from "@/types/JobApplicationData";
 import { logAiUsage } from "@/lib/logAiUsage";
+
+export type MatchAnalysis = JobMatchAnalysis;
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -36,7 +39,7 @@ export interface CoverLetterResult {
   inferredCompany: string;
 }
 
-const emptyResumeContent: ResumeContent = {
+export const emptyResumeContent: ResumeContent = {
   personalInfo: {
     name: "",
     fullname: { firstName: "", otherNames: "" },
@@ -170,11 +173,10 @@ function normalizeAtsReport(report: Partial<AtsReport>, extractedText: string): 
 
 function normalizeTailorReport(report: Partial<TailorReport>): TailorReport {
   return {
-    matchScoreBefore: Math.max(0, Math.min(100, Number(report.matchScoreBefore) || 0)),
-    matchScoreAfter: Math.max(0, Math.min(100, Number(report.matchScoreAfter) || 0)),
     explanation: report.explanation || "CV tailored for the job.",
     keyChanges: normalizeStringList(report.keyChanges),
     tailoredResume: normalizeResumeContent(report.tailoredResume),
+    matchAnalysis: normalizeMatchAnalysis(report.matchAnalysis || {}),
   };
 }
 
@@ -481,8 +483,7 @@ const TAILOR_PROMPT = (
 ) => `
 You are an expert recruiter and professional resume writer. Your task is to tailor the candidate's resume/CV to perfectly align with the provided job description and requirements.
 
-Analyze the resume/CV against the job description. First, evaluate how well the current resume matches the job description and calculate a 'before' compatibility score (0-100).
-Then, perform the tailoring and optimize the resume content for the job, calculating an 'after' compatibility score (0-100) representing how well the tailored resume matches the job description.
+Analyze the resume/CV against the job description. Then, perform the tailoring and optimize the resume content for the job.
 
 Target job information (optional):
 - Target Job Title: ${targetTitle || "Not specified"}
@@ -495,9 +496,6 @@ Target job information (optional):
 4. **Tailor Experience Bullets**: Rewrite and restructure the candidate's experience description bullet points to emphasize relevant projects, results, and skills. Inject relevant keywords and action verbs. Keep the bullet points concise.
 5. **Tailor Skills**: Re-organize and filter the skills (whether flat or categorized) to prioritize key terms and technologies mentioned in the job description that the candidate actually possesses or can be inferred to possess from their experience. You can also add new skills if they are relevant to the job description and can be inferred from the candidate's experience or are closely related to existing skills. Preserve the original skill format — if the resume has categorized skills, return categorized skills; if flat, return flat.
 6. **Tailor Projects**: Highlight the most relevant projects that align with the target role. Update project descriptions to emphasize relevant technologies and outcomes.
-7. **Assign Compatibility Scores**: 
-   - 'matchScoreBefore': compatibility score (0-100) of the original resume.
-   - 'matchScoreAfter': compatibility score (0-100) of the tailored resume.
 
 ## SKILL FORMAT RULES
 - If the resume has flat skills[], use skills[] in the output (set skillCategorized to false)
@@ -506,8 +504,6 @@ Target job information (optional):
 
 ## REQUIRED JSON SCHEMA
 {
-  "matchScoreBefore": 45,
-  "matchScoreAfter": 85,
   "explanation": "Brief paragraph summarizing why this resume is a strong fit for the role after tailoring, and where the candidate's strengths align best.",
   "keyChanges": [
     "Rewrote summary to emphasize React and GraphQL experience requested in the job post.",
@@ -537,6 +533,16 @@ Target job information (optional):
     "skills": ["string"],
     "skillCategories": [ { "category": "string", "skills": ["string"] } ],
     "skillCategorized": false
+  },
+  "matchAnalysis": {
+    "score": 85,
+    "missingKeywords": ["string"],
+    "missingSkills": ["string"],
+    "strengths": ["string"],
+    "weaknesses": ["string"],
+    "gaps": ["string"],
+    "suggestions": ["string"],
+    "verdict": "string"
   }
 }
 
@@ -632,7 +638,7 @@ STRICT GROUNDED RULES — do not hallucinate:
 - Experience bullets may be reworded to foreground verifiable achievements and the missing keywords that are actually evidenced. Do not fabricate metrics.
 - Preserve id values stable. Preserve skillCategorized flag and shape (flat vs categorized).
 - Tailor summary to 2-3 sentences foregrounding strengths that align to the job, using only truthful claims.
-- Assign matchScoreBefore = prior score (${analysis.score}), and calculate matchScoreAfter for the tailored version.
+- After tailoring, re-analyze the tailored resume against the job description and produce matchAnalysis (score 0-100 plus missingKeywords/missingSkills/strengths/weaknesses/gaps/suggestions/verdict) for the TAILORED version.
 
 ${TAILOR_PROMPT(resumeText, knownResumeBlock, jobDescription).replace("You are an expert recruiter and professional resume writer.", "Follow the grounded rules above while tailoring.")}
 `;
@@ -1172,17 +1178,6 @@ export async function parseJobAdFromText(extractedText: string): Promise<ParsedJ
     parsed = parseJsonObject<Partial<ParsedJobAd>>(raw);
   }
   return normalizeParsedJobAd(parsed);
-}
-
-export interface MatchAnalysis {
-  score: number;
-  missingKeywords: string[];
-  missingSkills: string[];
-  strengths: string[];
-  weaknesses: string[];
-  gaps: string[];
-  suggestions: string[];
-  verdict: string;
 }
 
 const RESUME_JOB_MATCH_PROMPT = (resumeText: string, jobText: string) => `

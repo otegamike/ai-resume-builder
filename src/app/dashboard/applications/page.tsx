@@ -260,11 +260,19 @@ export default function ApplicationsPage() {
       const data = await res.json();
 
       setReport({
-        matchScoreBefore: data.matchScoreBefore ?? 0,
-        matchScoreAfter: data.matchScoreAfter ?? 0,
         explanation: data.explanation ?? "",
         keyChanges: data.optimizations ?? [],
         tailoredResume: data.tailoredResume,
+        matchAnalysis: {
+          score: data.matchAnalysis?.score ?? data.matchScoreAfter ?? 0,
+          missingKeywords: data.matchAnalysis?.missingKeywords ?? [],
+          missingSkills: data.matchAnalysis?.missingSkills ?? [],
+          strengths: data.matchAnalysis?.strengths ?? [],
+          weaknesses: data.matchAnalysis?.weaknesses ?? [],
+          gaps: data.matchAnalysis?.gaps ?? [],
+          suggestions: data.matchAnalysis?.suggestions ?? [],
+          verdict: data.matchAnalysis?.verdict ?? data.explanation ?? "",
+        },
       });
       setCoverLetter(data.coverLetter ?? "");
       setSavedResumeId(data.resumeId ?? null);

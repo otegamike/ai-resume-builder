@@ -7,7 +7,6 @@ import {
   InputExtractionError,
   resolveResumeInput,
 } from "@/lib/inputExtraction";
-
 void JobAd;
 
 export const runtime = "nodejs";
@@ -54,12 +53,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     if (!jobText.trim()) return NextResponse.json({ error: "Job has no readable content" }, { status: 422 });
 
     const formData = await req.formData();
-    const { resumeText, resumeId, upload } = await resolveResumeInput(formData, authUser);
-    const resumeIdForTailor = resumeId ?? null;
-    
+    const { resumeText } = await resolveResumeInput(formData, authUser);
+
     const analysis = await analyzeResumeJobMatch(resumeText, jobText);
 
-    return NextResponse.json({ ...analysis, resumeIdForTailor });
+    return NextResponse.json(analysis);
   } catch (error) {
     if (error instanceof InputExtractionError) {
       return NextResponse.json({ error: error.message }, { status: error.status });

@@ -20,14 +20,6 @@ export interface JobMatchAnalysis {
   verdict: string;
 }
 
-export interface TailorSnapshot {
-  matchScoreBefore: number;
-  matchScoreAfter: number;
-  explanation: string;
-  keyChanges: string[];
-  tailoredResume: ResumeContent;
-}
-
 export interface JobApplication  {
   _id: string;
   jobId: string;
@@ -37,8 +29,7 @@ export interface JobApplication  {
   resumeType: 'platform' | 'uploaded';
   resume: ResumeDocument;
   uploadedResume?: UploadedResume;
-  matchScore: number;
-  analysisForEmployer: JobMatchAnalysis;
+  jobMatchAnalysis: JobMatchAnalysis;
   coverLetterText?: string;
   screeningAnswers: { questionId: string; question: string; answer: string }[];
   source: "platform" | "off_platform";

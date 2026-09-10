@@ -1,9 +1,9 @@
 import { ResumeContent } from "./ResumeData";
+import type { JobMatchAnalysis } from "./JobApplicationData";
 
 export interface TailorReport {
-  matchScoreBefore: number;
-  matchScoreAfter: number;
   explanation: string;
   keyChanges: string[];
   tailoredResume: ResumeContent;
+  matchAnalysis: JobMatchAnalysis;
 }

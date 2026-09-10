@@ -25,8 +25,6 @@ export interface IApplication extends Document {
   coverLetterId?: Types.ObjectId;
   jobUrl?: string;
   optimizations?: string[];
-  matchScoreBefore?: number;
-  matchScoreAfter?: number;
   explanation?: string;
 
   // Job Board & Employer additions
@@ -59,8 +57,6 @@ const ApplicationSchema: Schema = new Schema<IApplication>(
     coverLetterId: { type: Schema.Types.ObjectId, ref: "CoverLetter" },
     jobUrl: { type: String, default: "" },
     optimizations: [{ type: String }],
-    matchScoreBefore: { type: Number },
-    matchScoreAfter: { type: Number },
     explanation: { type: String, default: "" },
 
     // Job Board additions
