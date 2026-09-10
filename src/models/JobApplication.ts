@@ -1,57 +1,31 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
-import { ResumeContent } from "@/types/ResumeData";
+import { ResumeDocumentSchema, type IResumeDocument } from "./Resume";
+import { JobApplication, JobMatchAnalysis } from "@/types/JobApplicationData";
+import { IUploadedResumeDocument, uploadedResumeDocumentSchema } from "./UploadedResume";
 
-export type JobApplicationStatus =
-  | "submitted"
-  | "under_review"
-  | "shortlisted"
-  | "interviewing"
-  | "offered"
-  | "rejected"
-  | "withdrawn";
 
-export interface MatchAnalysisSnapshot {
-  score: number;
-  missingKeywords: string[];
-  missingSkills: string[];
-  strengths: string[];
-  weaknesses: string[];
-  gaps: string[];
-  suggestions: string[];
-  verdict: string;
-}
-
-export interface TailorSnapshot {
-  matchScoreBefore: number;
-  matchScoreAfter: number;
-  explanation: string;
-  keyChanges: string[];
-  tailoredResume: ResumeContent;
-}
-
-export interface IJobApplication extends Document {
+export interface IJobApplication extends Omit<JobApplication, '_id' | 'jobId' | 'applicantId' | 'companyId' | 'resume' | 'uploadedResume'> {
   _id: Types.ObjectId;
   jobId: Types.ObjectId;
   applicantId: Types.ObjectId;
   companyId: Types.ObjectId;
-  status: JobApplicationStatus;
-  resumeId?: Types.ObjectId;
-  tailoredResumeId?: Types.ObjectId;
-  resumeSnapshot?: ResumeContent;
-  tailoredResumeSnapshot?: ResumeContent;
-  matchScore: number;
-  tailoredMatchScore?: number;
-  analysisReport: MatchAnalysisSnapshot;
-  tailorReport?: TailorSnapshot;
-  coverLetterText?: string;
-  coverLetterGenerated: boolean;
-  screeningAnswers: { questionId: string; question: string; answer: string }[];
-  customResumeUrl?: string;
-  source: "platform" | "off_platform";
-  notes?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  resume: IResumeDocument;
+  uploadedResume?: IUploadedResumeDocument;
 }
+
+const JobMatchAnalysisSchema: Schema = new Schema<JobMatchAnalysis>(
+  {
+    score: { type: Number, required: true },
+    missingKeywords: { type: [String], default: [] },
+    missingSkills: { type: [String], default: [] },
+    strengths: { type: [String], default: [] },
+    weaknesses: { type: [String], default: [] },
+    gaps: { type: [String], default: [] },
+    suggestions: { type: [String], default: [] },
+    verdict: { type: String, default: "" },
+  },
+  { _id: false }
+);
 
 const JobApplicationSchema: Schema = new Schema<IJobApplication>(
   {
@@ -64,16 +38,11 @@ const JobApplicationSchema: Schema = new Schema<IJobApplication>(
       default: "submitted",
       index: true,
     },
-    resumeId: { type: Schema.Types.ObjectId, ref: "Resume" },
-    tailoredResumeId: { type: Schema.Types.ObjectId, ref: "Resume" },
-    resumeSnapshot: { type: Schema.Types.Mixed },
-    tailoredResumeSnapshot: { type: Schema.Types.Mixed },
+    resume: { type: ResumeDocumentSchema, default: () => ({}) },
+    uploadedResume: { type: uploadedResumeDocumentSchema,  default: () => ({})  },
     matchScore: { type: Number, required: true },
-    tailoredMatchScore: { type: Number },
-    analysisReport: { type: Schema.Types.Mixed, required: true },
-    tailorReport: { type: Schema.Types.Mixed },
+    analysisForEmployer: { type: JobMatchAnalysisSchema, required: true },
     coverLetterText: { type: String, default: "" },
-    coverLetterGenerated: { type: Boolean, default: false },
     screeningAnswers: {
       type: [
         {
@@ -84,7 +53,6 @@ const JobApplicationSchema: Schema = new Schema<IJobApplication>(
       ],
       default: [],
     },
-    customResumeUrl: { type: String, default: "" },
     source: { type: String, enum: ["platform", "off_platform"], default: "platform", index: true },
     notes: { type: String, default: "" },
   },

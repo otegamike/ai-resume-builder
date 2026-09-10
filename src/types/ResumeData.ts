@@ -49,10 +49,22 @@ export interface ResumeContent {
   skillCategorized?: boolean;
 }
 
-export interface ResumeDocument {
-  _id: string;
+export interface ResumeObj {
   title: string;
-  updatedAt: string;
   template: string;
   content: ResumeContent;
+}
+
+export interface ResumeDocument extends ResumeObj {
+  _id: string;
+  updatedAt: string;
+}
+
+export interface UploadedResume {
+  resumeId: string 
+  pages: string[]
+}
+
+export interface UploadedResumeDocument extends UploadedResume {
+  _id: string;
 }
