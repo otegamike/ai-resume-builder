@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { analyzeResumeForAts, extractResumeTextFromImages } from "@/lib/ai";
+import { analyzeResumeForAts } from "@/lib/ai";
 import { getAuthenticatedUser } from "@/lib/authUser";
-import {
-  assertSupportedUpload,
-  fileToDataUrl,
-} from "@/lib/resumeImprover";
 import { deductCredits, InsufficientCreditsError } from "@/lib/creditUtils";
+import {
+  InputExtractionError,
+  resolveUploadOnlyResumeInput,
+} from "@/lib/inputExtraction";
 
 export const runtime = "nodejs";
 
@@ -19,31 +19,15 @@ export async function POST(request: Request) {
     const newAiCredits = await deductCredits(String(authUser.userObjectId), "atsAnalysisUpload");
 
     const formData = await request.formData();
-    const entries = formData.getAll("file");
-    const files = entries.filter((f): f is File => f instanceof File);
-
-    if (files.length === 0) {
-      return NextResponse.json({ error: "No resume file provided" }, { status: 400 });
-    }
-
-    for (const f of files) {
-      assertSupportedUpload(f);
-    }
-
-    const dataUrls = await Promise.all(files.map(fileToDataUrl));
-    const extractedText = await extractResumeTextFromImages(dataUrls);
-
-    if (!extractedText.trim()) {
-      return NextResponse.json(
-        { error: "Could not extract readable text from this resume." },
-        { status: 422 }
-      );
-    }
+    const extractedText = await resolveUploadOnlyResumeInput(formData, "file");
 
     const report = await analyzeResumeForAts(extractedText);
 
     return NextResponse.json({ ...report, newAiCredits });
   } catch (error) {
+    if (error instanceof InputExtractionError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     if (error instanceof InsufficientCreditsError) {
       return NextResponse.json(
         { error: error.message, creditsRemaining: error.creditsRemaining, cost: error.cost },

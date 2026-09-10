@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/authUser";
-import { parseResumeContent, extractResumeTextFromImages } from "@/lib/ai";
-import { assertSupportedUpload, fileToDataUrl } from "@/lib/resumeImprover";
+import { parseResumeContent } from "@/lib/ai";
 import dbConnect from "@/lib/db";
 import Resume from "@/models/Resume";
 import User from "@/models/User";
 import { templateDefinitions } from "@/lib/templateCatalog";
 import { getRandomTemplateId } from "@/utils/templateUtils";
+import {
+  InputExtractionError,
+  resolveUploadOnlyResumeInput,
+} from "@/lib/inputExtraction";
 
 export const runtime = "nodejs";
 
@@ -18,26 +21,7 @@ export async function POST(request: Request) {
     }
 
     const formData = await request.formData();
-    const entries = formData.getAll("file");
-    const files = entries.filter((f): f is File => f instanceof File);
-
-    if (files.length === 0) {
-      return NextResponse.json({ error: "No resume file provided" }, { status: 400 });
-    }
-
-    for (const f of files) {
-      assertSupportedUpload(f);
-    }
-
-    const dataUrls = await Promise.all(files.map(fileToDataUrl));
-    const extractedText = await extractResumeTextFromImages(dataUrls);
-
-    if (!extractedText.trim()) {
-      return NextResponse.json(
-        { error: "Could not extract readable text from this resume." },
-        { status: 422 }
-      );
-    }
+    const extractedText = await resolveUploadOnlyResumeInput(formData, "file");
 
     let parsedContent;
     try {
@@ -85,6 +69,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ resumeId: savedResume._id }, { status: 201 });
   } catch (error) {
+    if (error instanceof InputExtractionError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     const message = error instanceof Error ? error.message : "Failed to process uploaded resume";
     if (message.includes("not supported") || message.includes("Upload") || message.includes("10MB")) {
       return NextResponse.json({ error: message }, { status: 400 });

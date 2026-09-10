@@ -1,24 +1,18 @@
 import { NextResponse } from "next/server";
-import { getAuthenticatedUser, buildResumeOwnerQuery } from "@/lib/authUser";
-import {
-  tailorResume,
-  generateCoverLetter,
-  extractTextFromJobImage,
-  extractResumeTextFromImages,
-} from "@/lib/ai";
-import {
-  resumeContentToText,
-  fileToDataUrl,
-  assertSupportedUpload,
-} from "@/lib/resumeImprover";
+import { getAuthenticatedUser } from "@/lib/authUser";
+import { tailorResume, generateCoverLetter } from "@/lib/ai";
 import dbConnect from "@/lib/db";
 import Resume from "@/models/Resume";
 import CoverLetter from "@/models/CoverLetter";
 import Application from "@/models/Application";
-import { ResumeContent } from "@/types/ResumeData";
 import { templateDefinitions } from "@/lib/templateCatalog";
 import { getRandomTemplateId } from "@/utils/templateUtils";
 import { deductCredits, InsufficientCreditsError } from "@/lib/creditUtils";
+import {
+  InputExtractionError,
+  resolveJobInput,
+  resolveResumeInput,
+} from "@/lib/inputExtraction";
 
 export const runtime = "nodejs";
 
@@ -33,77 +27,11 @@ export async function POST(request: Request) {
 
     const formData = await request.formData();
     const resumeMode = formData.get("resumeMode") as string;
-    const jobMode = formData.get("jobMode") as string;
     const targetCompany = (formData.get("targetCompany") as string) || "";
     const targetRole = (formData.get("targetRole") as string) || "";
 
-    // 1. Extract Resume Text
-    let resumeText = "";
-    let existingResume: ResumeContent | undefined = undefined;
-
-    if (resumeMode === "saved") {
-      const resumeId = formData.get("resumeId") as string;
-      if (!resumeId) {
-        return NextResponse.json({ error: "No saved resume ID provided" }, { status: 400 });
-      }
-
-      await dbConnect();
-      const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId, authUser.legacyUserId);
-      const resume = await Resume.findOne({ _id: resumeId, ...ownerQuery });
-
-      if (!resume) {
-        return NextResponse.json({ error: "Resume not found" }, { status: 404 });
-      }
-
-      existingResume = resume.content;
-      resumeText = resumeContentToText(resume.content);
-    } else if (resumeMode === "upload") {
-      const resumeFiles = formData.getAll("resumeFile").filter((f): f is File => f instanceof File);
-      if (resumeFiles.length === 0) {
-        return NextResponse.json({ error: "No resume file uploaded" }, { status: 400 });
-      }
-      for (const f of resumeFiles) {
-        assertSupportedUpload(f);
-      }
-
-      const dataUrls = await Promise.all(resumeFiles.map(fileToDataUrl));
-      resumeText = await extractResumeTextFromImages(dataUrls);
-    } else {
-      return NextResponse.json({ error: "Invalid resume mode specified" }, { status: 400 });
-    }
-
-    if (!resumeText.trim()) {
-      return NextResponse.json(
-        { error: "Could not extract readable text from the resume." },
-        { status: 422 }
-      );
-    }
-
-    // 2. Extract Job Description Text
-    let jobDescriptionText = "";
-
-    if (jobMode === "text") {
-      jobDescriptionText = (formData.get("jobText") as string) || "";
-    } else if (jobMode === "image") {
-      const jobImageFile = formData.get("jobImage") as File | null;
-      if (!jobImageFile) {
-        return NextResponse.json({ error: "No job description image uploaded" }, { status: 400 });
-      }
-      if (!jobImageFile.type.startsWith("image/")) {
-        return NextResponse.json({ error: "Job description file must be an image" }, { status: 400 });
-      }
-      const dataUrl = await fileToDataUrl(jobImageFile);
-      jobDescriptionText = await extractTextFromJobImage(dataUrl);
-    } else {
-      return NextResponse.json({ error: "Invalid job context mode specified" }, { status: 400 });
-    }
-
-    if (!jobDescriptionText.trim()) {
-      return NextResponse.json(
-        { error: "Job description is empty or could not be read." },
-        { status: 400 }
-      );
-    }
+    const { resumeText, existingResume } = await resolveResumeInput(formData, authUser);
+    const jobDescriptionText = await resolveJobInput(formData);
 
     // 3. Run AI calls in parallel
     const [report, coverLetterResult] = await Promise.all([
@@ -190,6 +118,9 @@ export async function POST(request: Request) {
       newAiCredits,
     });
   } catch (error) {
+    if (error instanceof InputExtractionError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     if (error instanceof InsufficientCreditsError) {
       return NextResponse.json(
         { error: error.message, creditsRemaining: error.creditsRemaining, cost: error.cost },
