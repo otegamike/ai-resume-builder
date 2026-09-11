@@ -123,26 +123,26 @@ export default function EmployerJobDetailPage() {
         </div>
         {!job.hideSalary && job.salaryMin && (
           <div className={styles.salaryBox}>
-            <span className={styles.salaryLabel}>Salary</span>
+            <span className={styles.salaryLabel}>Salary Range</span>
             <span className={styles.salaryValue}>{job.salaryCurrency || "USD"} {job.salaryMin.toLocaleString()}{job.salaryMax ? ` - ${job.salaryMax.toLocaleString()}` : ""} {job.salaryPeriod || "yearly"}</span>
           </div>
         )}
-      </div>
 
       <p className={styles.truncatedDesc}>{plainDesc.slice(0, 220)}{plainDesc.length > 220 ? "…" : ""}</p>
-
       <div className={styles.statsRow}>
         <span>Views: <strong>{job.viewsCount ?? 0}</strong></span>
         <span>Applicants: <strong>{applicants.length}</strong></span>
-        <span>Status: <strong>{job.status}</strong></span>
+        <span>Status:  <strong style={{ color: job.status === "active" ? "#047857" : "#b45309" }}>{job.status}</strong></span>
         {job.isFeatured && <span className={styles.featuredBadge}>Featured</span>}
       </div>
+      </div>
+      
 
       <div className={styles.sectionHeader}>
-        <h2 className={styles.sectionTitle}>Applicants — {filtered.length} {activeFilter !== "All" ? `(${activeFilter})` : ""}</h2>
+        <h2 className={styles.sectionTitle}>Applicants ({filtered.length}) {activeFilter !== "All" ? `(${activeFilter})` : ""}</h2>
       </div>
 
-      <div className={styles.chipRow}>
+      <div className={`${styles.chipRow} hideScrollbar`}>
         {STATUS_CHIPS.map((label) => (
           <button
             key={label}
@@ -161,7 +161,7 @@ export default function EmployerJobDetailPage() {
           {filtered.map((app) => (
             <div key={app._id} className={styles.applicantRow} onClick={() => setSelectedApp(app)} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && setSelectedApp(app)}>
               <div>
-                <strong>{app.user?.name || app.applicantId?.name || "Candidate"}</strong>
+                <strong className={styles.name}>{app.user?.name || app.applicantId?.name || "Candidate"}</strong>
                 <div style={{ fontSize: "var(--text-xs)", color: "var(--gray-500)" }}>{app.user?.email || app.applicantId?.email || ""}</div>
               </div>
               <span className={styles.statusPill}>{app.status.replace("_", " ").toUpperCase()}</span>
