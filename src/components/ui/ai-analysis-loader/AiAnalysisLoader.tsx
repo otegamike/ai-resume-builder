@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import bgStyles from "@/app/auth/login/animated-bg.module.css";
 import styles from "./AiAnalysisLoader.module.css";
+import AnimatedCirclesBackground from "../animated-circles-background/AnimatedCirclesBackground";
 
 const ANALYSIS_MESSAGES = [
   "Comparing experience to job description...",
@@ -58,7 +59,7 @@ export default function AiAnalysisLoader({ messages, intervalMs = 2200 }: Props)
 
   return (
     <div className={styles.wrapper}>
-      <div className={`${bgStyles.animated_circles_bg} ${styles.bg}`} ></div>
+      <AnimatedCirclesBackground density='high' motion={true} className={styles.bg}></AnimatedCirclesBackground>
       <div className={`${styles.container}`} role="status" aria-live="polite" aria-busy="true">
         <div>
           <div className={styles.textBlock}>
