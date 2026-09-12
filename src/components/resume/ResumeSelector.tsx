@@ -17,6 +17,7 @@ import { isProTemplate } from "@/lib/templateCatalog";
 import { MAX_PDF_PAGES_PER_PLAN } from "@/lib/creditCosts";
 import { useTemplateStore } from "@/store/useTemplateStore";
 import { useResumeStore } from "@/store/useResumeStore";
+import AiAnalysisLoader from "@/components/ui/ai-analysis-loader/AiAnalysisLoader";
 import styles from "./ResumeSelector.module.css";
 
 export interface SavedResume {
@@ -41,9 +42,11 @@ interface ResumeSelectorProps {
   onSelectionChange: (selection: ResumeSelection | null) => void;
   className?: string;
   uploadOnly?: boolean;
+  animatedLoader?: boolean;
+  showLoader?: boolean;
 }
 
-export default function ResumeSelector({ onSelectionChange, className, uploadOnly }: ResumeSelectorProps) {
+export default function ResumeSelector({ onSelectionChange, className, uploadOnly, showLoader, animatedLoader }: ResumeSelectorProps) {
   const { data: session } = useSession();
   const plan = session?.user?.subscriptionPlan || "free";
   const maxPdfPages = MAX_PDF_PAGES_PER_PLAN[plan] ?? 2;
@@ -221,16 +224,23 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
     if (selectedSavedResume) {
       return (
         <div className={`${styles.previewBox} ${styles.previewBoxActive}`}>
-          {templates.length > 0 ? (
-            <div className={styles.selectedPreviewFrame}>
-              <ResumeComponent
-                resumeContent={selectedSavedResume.content}
-                templateId={normalizeTemplateId(selectedSavedResume.template)}
-              />
-            </div>
-          ) : (
-            <span className={styles.uploadTitle}>{selectedSavedResume.title}</span>
-          )}
+          <div className={styles.previewWrapper}>
+            {templates.length > 0 ? (
+              <div className={styles.selectedPreviewFrame}>
+                <ResumeComponent
+                  resumeContent={selectedSavedResume.content}
+                  templateId={normalizeTemplateId(selectedSavedResume.template)}
+                />
+              </div>
+            ) : (
+              <span className={styles.uploadTitle}>{selectedSavedResume.title}</span>
+            )}
+            {animatedLoader && showLoader && (
+              <div className={styles.loadingComponent}>
+                <AiAnalysisLoader />
+              </div>
+            )}
+          </div>
           <div className={styles.selectedInfo}>
             <span className={styles.uploadTitle}>{selectedSavedResume.title}</span>
             <button type="button" className={styles.changeButton} onClick={clearSelection}>

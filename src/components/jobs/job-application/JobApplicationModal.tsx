@@ -435,9 +435,8 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
               <h3 className={styles.stepTitle}>Select your resume</h3>
               <p className={styles.stepSubtitle}>Choose a saved resume or upload a PDF/image. We’ll analyze how well it matches this job.</p>
 
-              <ResumeSelector onSelectionChange={handleSelectionChange} />
+              <ResumeSelector onSelectionChange={handleSelectionChange} showLoader={true} animatedLoader={analysisLoading} />
 
-              {analysisLoading && <AiAnalysisLoader />}
 
               {analysisError && <div className={styles.errorBanner} style={{ marginTop: "1rem" }}>{analysisError}</div>}
 

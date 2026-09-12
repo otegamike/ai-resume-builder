@@ -57,17 +57,20 @@ export default function AiAnalysisLoader({ messages, intervalMs = 2200 }: Props)
   }, [pool.length, intervalMs]);
 
   return (
-    <div className={`${bgStyles.animated_circles_bg} ${styles.container}`} role="status" aria-live="polite" aria-busy="true">
-      <div>
-        <div className={styles.textBlock}>
-          <p className={styles.title}>AI is analyzing your match</p>
-          <p key={index} className={styles.message}>
-            {pool[index]}
-          </p>
-          <div className={styles.dots} aria-hidden="true">
-            <span className={styles.dot} />
-            <span className={styles.dot} />
-            <span className={styles.dot} />
+    <div className={styles.wrapper}>
+      <div className={`${bgStyles.animated_circles_bg} ${styles.bg}`} ></div>
+      <div className={`${styles.container}`} role="status" aria-live="polite" aria-busy="true">
+        <div>
+          <div className={styles.textBlock}>
+            <p className={styles.title}>AI is analyzing your match</p>
+            <p key={index} className={styles.message}>
+              {pool[index]}
+            </p>
+            <div className={styles.dots} aria-hidden="true">
+              <span className={styles.dot} />
+              <span className={styles.dot} />
+              <span className={styles.dot} />
+            </div>
           </div>
         </div>
       </div>
