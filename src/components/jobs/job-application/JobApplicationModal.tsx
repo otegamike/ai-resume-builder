@@ -437,7 +437,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
 
               <ResumeSelector onSelectionChange={handleSelectionChange} />
 
-              {!analysisLoading && <AiAnalysisLoader />}
+              {analysisLoading && <AiAnalysisLoader />}
 
               {analysisError && <div className={styles.errorBanner} style={{ marginTop: "1rem" }}>{analysisError}</div>}
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { Sparkles } from "lucide-react";
+import bgStyles from "@/app/auth/login/animated-bg.module.css";
 import styles from "./AiAnalysisLoader.module.css";
 
 const ANALYSIS_MESSAGES = [
@@ -57,26 +57,18 @@ export default function AiAnalysisLoader({ messages, intervalMs = 2200 }: Props)
   }, [pool.length, intervalMs]);
 
   return (
-    <div className={styles.container} role="status" aria-live="polite" aria-busy="true">
-      <div className={styles.visual}>
-        <div className={styles.ringOuter} />
-        <div className={styles.ringInner} />
-        <div className={styles.orb}>
-          <Sparkles className={styles.sparkIcon} />
-        </div>
-      </div>
-      <div className={styles.textBlock}>
-        <p className={styles.title}>AI is analyzing your match</p>
-        <p key={index} className={styles.message}>
-          {pool[index]}
-        </p>
-        <div className={styles.dots} aria-hidden="true">
-          <span className={styles.dot} />
-          <span className={styles.dot} />
-          <span className={styles.dot} />
-        </div>
-        <div className={styles.progressBar}>
-          <div className={styles.progressFill} />
+    <div className={`${bgStyles.animated_circles_bg} ${styles.container}`} role="status" aria-live="polite" aria-busy="true">
+      <div>
+        <div className={styles.textBlock}>
+          <p className={styles.title}>AI is analyzing your match</p>
+          <p key={index} className={styles.message}>
+            {pool[index]}
+          </p>
+          <div className={styles.dots} aria-hidden="true">
+            <span className={styles.dot} />
+            <span className={styles.dot} />
+            <span className={styles.dot} />
+          </div>
         </div>
       </div>
     </div>
