@@ -74,6 +74,16 @@ src/app/dashboard/jobs/page.tsx // slim shell: tab buttons + {activeTab==="find"
 
 * Do not use `style={{ ... }}` or `style="..."` in components except `src/templates_formatted/**` (generated HTML). The codebase still has ~150 `style=` hits inside tab files from before this rule — new code must avoid adding more.
 * Every visual rule is a named class in the `*.module.css` file that sits next to its component. Use `className={styles.myClass}` and tokens `var(--space-*, --gray-*, --primary-*)`.
+* Don't write long css blocks in one line like 
+.salaryLabel { display: block; font-size: var(--text-xs); color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.05em; }
+instead format all CSS rules with standard multiline expansion (one property per line). like
+.salaryLabel { 
+  display: block; 
+  font-size: var(--text-xs); 
+  color: var(--gray-500); 
+  text-transform: uppercase; 
+  letter-spacing: 0.05em; 
+}
 
 # Reusable Logic — hooks vs colocated
 

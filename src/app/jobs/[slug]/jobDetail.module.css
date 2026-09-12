@@ -145,7 +145,7 @@
 
 .headerActions { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-4); }
 
-.salaryBox { text-align: right; }
+.salaryBox { padding-top: var(--space-4) }
 .salaryLabel { display: block; font-size: var(--text-xs); color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.05em; }
 .salaryValue { font-size: var(--text-base); font-weight: var(--font-bold); color: var(--success); }
 

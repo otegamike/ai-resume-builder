@@ -228,11 +228,8 @@ export default function JobDetailPage({ params }: { params: Promise<{ slug: stri
                 <span><Briefcase size={15} /> {job.jobType}</span>
                 <span><Clock size={15} /> Posted {new Date(job.createdAt).toLocaleDateString()}</span>
               </div>
-            </div>
-          </div>
 
-          <div className={detailStyles.headerActions}>
-            {!job.hideSalary && job.salaryMin && (
+              {!job.hideSalary && job.salaryMin && (
               <div className={detailStyles.salaryBox}>
                 <span className={detailStyles.salaryLabel}>Salary Range</span>
                 <span className={detailStyles.salaryValue}>
@@ -241,6 +238,11 @@ export default function JobDetailPage({ params }: { params: Promise<{ slug: stri
                 </span>
               </div>
             )}
+            </div>
+          </div>
+
+          <div className={detailStyles.headerActions}>
+            
 
             <div className={detailStyles.shareActions}>
               <button type="button" onClick={handleShare} className={detailStyles.secondaryAction}>

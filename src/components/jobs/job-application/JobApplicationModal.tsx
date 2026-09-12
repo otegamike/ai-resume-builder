@@ -10,6 +10,7 @@ import ResumeViewer from "@/components/resume/ResumeViewer";
 import viewerStyles from "@/components/resume/ResumeViewer.module.css";
 import { normalizeTemplateId } from "@/lib/templateRenderer";
 import ScoreCircle from "@/components/ui/score-circle/ScoreCircle";
+import AiAnalysisLoader from "@/components/ui/ai-analysis-loader/AiAnalysisLoader";
 import { AiButton } from "@/components/ui/AiButton";
 import { CREDIT_COST } from "@/lib/creditCosts";
 import { useAiCreditStore } from "@/store/useAiCreditStore";
@@ -436,11 +437,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
 
               <ResumeSelector onSelectionChange={handleSelectionChange} />
 
-              {analysisLoading && (
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "1rem", color: "var(--gray-500)", fontSize: "var(--text-sm)" }}>
-                  <Loader2 size={16} className={styles.spinner} /> Analyzing match...
-                </div>
-              )}
+              {!analysisLoading && <AiAnalysisLoader />}
 
               {analysisError && <div className={styles.errorBanner} style={{ marginTop: "1rem" }}>{analysisError}</div>}
 
