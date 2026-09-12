@@ -224,7 +224,7 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
     if (selectedSavedResume) {
       return (
         <div className={`${styles.previewBox} ${styles.previewBoxActive}`}>
-          <div className={styles.previewWrapper}>
+          <AnimatedLoader showLoader={showLoader} animatedLoader={animatedLoader}>
             {templates.length > 0 ? (
               <div className={styles.selectedPreviewFrame}>
                 <ResumeComponent
@@ -235,12 +235,7 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
             ) : (
               <span className={styles.uploadTitle}>{selectedSavedResume.title}</span>
             )}
-            {animatedLoader && showLoader && (
-              <div className={styles.loadingComponent}>
-                <AiAnalysisLoader />
-              </div>
-            )}
-          </div>
+          </AnimatedLoader>
           <div className={styles.selectedInfo}>
             <span className={styles.uploadTitle}>{selectedSavedResume.title}</span>
             <button type="button" className={styles.changeButton} onClick={clearSelection}>
@@ -297,11 +292,13 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
     if (isImageSelected) {
       return (
         <div className={`${styles.previewBox} ${styles.previewBoxActive}`}>
-          <img
-            src={URL.createObjectURL(selectedFile)}
-            alt="Resume preview"
-            className={styles.imgPreview}
-          />
+          <AnimatedLoader showLoader={showLoader} animatedLoader={animatedLoader}>
+            <img
+              src={URL.createObjectURL(selectedFile)}
+              alt="Resume preview"
+              className={styles.imgPreview}
+            />
+          </AnimatedLoader>
           <div className={styles.selectedInfo}>
             <span className={styles.uploadTitle}>{selectedFile.name}</span>
             <button type="button" className={styles.changeButton} onClick={clearFile}>
@@ -315,11 +312,13 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
     if (hasPdfPreview) {
       return (
         <div className={`${styles.previewBox} ${styles.previewBoxActive}`}>
-          <div className={styles.pdfPreviewContainer}>
-            {pdfPreviewUrls.map((url, i) => (
-              <img key={i} src={url} alt={`PDF page ${i + 1}`} className={styles.pdfCanvas} />
-            ))}
-          </div>
+          <AnimatedLoader showLoader={showLoader} animatedLoader={animatedLoader}>
+            <div className={styles.pdfPreviewContainer}>
+              {pdfPreviewUrls.map((url, i) => (
+                <img key={i} src={url} alt={`PDF page ${i + 1}`} className={styles.pdfCanvas} />
+              ))}
+            </div>
+          </AnimatedLoader>
           <div className={styles.selectedInfo}>
             <span className={styles.uploadTitle}>{selectedFile?.name}</span>
             <button type="button" className={styles.changeButton} onClick={clearFile}>
@@ -401,6 +400,25 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
           {error}
         </div>
       )}
+    </div>
+  );
+}
+
+interface AnimatedLoaderProps {
+  showLoader?: boolean;
+  animatedLoader?: boolean;
+  children: React.ReactNode;
+}
+
+function AnimatedLoader({ showLoader, animatedLoader, children }: AnimatedLoaderProps) {
+  return (
+    <div className={styles.previewWrapper}>
+      {children}
+      {animatedLoader && showLoader && (
+          <div className={styles.loadingComponent}>
+            <AiAnalysisLoader />
+          </div>
+        )}
     </div>
   );
 }
