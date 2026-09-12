@@ -10,7 +10,6 @@ import ResumeViewer from "@/components/resume/ResumeViewer";
 import viewerStyles from "@/components/resume/ResumeViewer.module.css";
 import { normalizeTemplateId } from "@/lib/templateRenderer";
 import ScoreCircle from "@/components/ui/score-circle/ScoreCircle";
-import AiAnalysisLoader from "@/components/ui/ai-analysis-loader/AiAnalysisLoader";
 import { AiButton } from "@/components/ui/AiButton";
 import { CREDIT_COST } from "@/lib/creditCosts";
 import { useAiCreditStore } from "@/store/useAiCreditStore";
