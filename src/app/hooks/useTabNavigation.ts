@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useState, type ComponentType } from "react";
-import { FileText, Image, Briefcase, GraduationCap, Code, Layout, FileCheck, FolderGit2 } from "lucide-react";
+import { FileText, Image, Briefcase, GraduationCap, Code, Layout, FileCheck, FolderGit2, Palette } from "lucide-react";
 import { scrollIntoView } from "@/utils/scrollIntoview";
 
-export type Tab = "headshot" | "personal" | "summary" | "experience" | "education" | "projects" | "skills" | "finish";
+export type Tab = "headshot" | "personal" | "summary" | "experience" | "education" | "projects" | "skills" | "template" | "finish";
 
 interface TabItem {
   id: Tab;
@@ -20,6 +20,7 @@ export const TAB_ARRAY: TabItem[] = [
   { id: "projects", icon: FolderGit2, label: "Projects" },
   { id: "skills", icon: Code, label: "Skills" },
   { id: "summary", icon: Layout, label: "Summary" },
+  { id: "template", icon: Palette, label: "Template" },
   { id: "finish", icon: FileCheck, label: "Finish" },
 ];
 

@@ -47,6 +47,7 @@ const ExperienceTab = dynamic(() => import("./form-nav/ExperienceTab"), { ssr: f
 const EducationTab = dynamic(() => import("./form-nav/EducationTab"), { ssr: false, loading: () => <FormTabSkeleton /> });
 const ProjectsTab = dynamic(() => import("./form-nav/ProjectsTab"), { ssr: false, loading: () => <FormTabSkeleton /> });
 const SkillsTab = dynamic(() => import("./form-nav/SkillsTab"), { ssr: false, loading: () => <FormTabSkeleton /> });
+const TemplateTab = dynamic(() => import("./form-nav/TemplateTab"), { ssr: false, loading: () => <FormTabSkeleton /> });
 const FinishTab = dynamic(() => import("./form-nav/FinishTab"), { ssr: false, loading: () => <FormTabSkeleton /> });
 const TemplateSelector = dynamic(() => import("./TemplateSelector"), { ssr: false });
 const AdminPdfViewer = dynamic(() => import("@/components/resume/AdminPdfViewer"), { ssr: false });
@@ -553,6 +554,9 @@ export default function ResumeEditor() {
                   skillsError={skillsError}
                   setSkillsError={setSkillsError}
                 />
+              )}
+              {activeTab === "template" && (
+                <TemplateTab selectedTemplate={selectedTemplate} toggleTemplatePicker={toggleTemplatePicker} />
               )}
               {activeTab === "finish" && (
                 <FinishTab changeTab={changeTab} />
