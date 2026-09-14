@@ -3,15 +3,14 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { Plus, Edit, Trash2, Loader2, Crown } from "lucide-react";
+import { Plus, Edit, Trash2, Loader2, Pin } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import ResumeIframe from "@/components/resume/ResumeIframe";
-import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
-import { isProTemplate } from "@/lib/templateCatalog";
 import styles from "./page.module.css";
-import { useTemplateStore } from "@/store/useTemplateStore";
 import { useResumeStore } from "@/store/useResumeStore";
 import { useAlertStore } from "@/store/useAlertStore";
+import { useUserStore } from "@/store/useUserStore";
+import { ResumeContent } from "@/types/ResumeData";
+import ResumeComponent from "@/components/resume/ResumeComponent";
 
 export default function ResumesPage() {
   const { status } = useSession();
@@ -20,24 +19,43 @@ export default function ResumesPage() {
   const error = useResumeStore((state) => state.error);
   const fetchResumes = useResumeStore((state) => state.fetchResumes);
   const deleteResumeFromStore = useResumeStore((state) => state.deleteResume);
-  const templates = useTemplateStore((state) => state.templates);
+  const pinnedResumeId = useUserStore((state) => state.pinnedResumeId);
+  const fetchPinnedResume = useUserStore((state) => state.fetchPinnedResume);
+  const setPinnedResume = useUserStore((state) => state.setPinnedResume);
 
   useEffect(() => {
     if (status === "loading") return;
-    
+
     if (status !== "authenticated") {
       window.location.href = "/";
       return;
     }
 
     fetchResumes();
-  }, [status, fetchResumes]);
+    fetchPinnedResume();
+  }, [status, fetchResumes, fetchPinnedResume]);
 
   const deleteResume = async (id: string) => {
     const confirmed = await useAlertStore.getState().showConfirmDialog("Are you sure you want to delete this resume?");
     if (!confirmed) return;
     await deleteResumeFromStore(id);
+    if (pinnedResumeId === id) {
+      await setPinnedResume(null);
+    }
   };
+
+  const pinResume = async (id: string) => {
+    const next = pinnedResumeId === id ? null : id;
+    await setPinnedResume(next);
+  };
+
+  const sortedResumes = pinnedResumeId
+    ? [...resumes].sort((a, b) => {
+        if (a._id === pinnedResumeId) return -1;
+        if (b._id === pinnedResumeId) return 1;
+        return 0;
+      })
+    : resumes;
 
   if (status === "loading" || loading) {
     return (
@@ -81,47 +99,55 @@ export default function ResumesPage() {
           </div>
         </Link>
 
-        {resumes.map((resume) => {
-          const templateId = normalizeTemplateId(resume.template);
-          const templateDef = templates.find(t => t.id === templateId) || templates[0];
-          const isPro = isProTemplate(templateId);
-          const renderedTemplate = templateDef?.html && resume.content 
-            ? buildTemplateSrcDoc(templateDef.html, resume.content) 
-            : '';
-
+        {sortedResumes.map((resume) => {
           return (
-            <div key={resume._id} className={styles.resumeCard}>
-              {isPro && (
-                <span className={styles.proBadge}>
-                  <Crown size={11} /> Pro
-                </span>
-              )}
-              <div className={styles.previewArea}>
-                {renderedTemplate ? (
-                  <ResumeIframe
-                    renderedTemplate={renderedTemplate}
-                    type="preview"
-                  />
-                ) : (
-                  <div className={styles.previewPlaceholder}>
-                    <div className={`${styles.previewLine} ${styles.previewLineHalf}`} style={{ backgroundColor: 'var(--gray-200)', height: '0.5rem' }}></div>
-                    <div className={`${styles.previewLine} ${styles.previewLineFull}`} style={{ backgroundColor: 'var(--gray-200)', height: '0.25rem' }}></div>
-                    <div className={`${styles.previewLine} ${styles.previewLineFull}`} style={{ backgroundColor: 'var(--gray-200)', height: '0.25rem' }}></div>
-                    <div className={`${styles.previewLine} ${styles.previewLineThreeQuarters}`} style={{ backgroundColor: 'var(--gray-200)', height: '0.25rem' }}></div>
-                  </div>
-                )}
-              </div>
+            <ResumeCardComponent
+              key={resume._id}
+              _id={resume._id}
+              title={resume.title}
+              template={resume.template}
+              resumeContent={resume.content}
+              updatedAt={resume.updatedAt}
+              isPinned={resume._id === pinnedResumeId}
+              deleteResume={deleteResume}
+              pinResume={pinResume}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+interface ResumeCardComponentProps {
+  _id: string;
+  title: string;
+  template: string;
+  resumeContent: ResumeContent;
+  updatedAt: string;
+  isPinned?: boolean;
+  deleteResume: (id: string) => Promise<void>;
+  pinResume: (id: string) => Promise<void>;
+}
+
+function ResumeCardComponent({resumeContent, _id, template, updatedAt, title, isPinned, deleteResume, pinResume  } : ResumeCardComponentProps) {
+  return (
+    <div key={_id} className={`${styles.resumeCard} ${isPinned ? styles.pinned : ""}`}>
+              <ResumeComponent
+                resumeContent={resumeContent}
+                templateId={template}
+              />
               
               <div className={styles.cardFooter}>
               <div>
-                <h3 className={styles.resumeTitle}>{resume.title}</h3>
+                <h3 className={styles.resumeTitle}>{title}</h3>
                 <div className={styles.resumeMeta}>
-                  {new Date(resume.updatedAt).toLocaleDateString()}
+                  {new Date(updatedAt).toLocaleDateString()}
                 </div>
               </div>
               
               <div className={styles.actions}>
-                <Link href={`/editor/${resume._id}`}>
+                <Link href={`/editor/${_id}`}>
                   <Button variant="ghost" size="sm" className={styles.actionButton}>
                     <Edit className={styles.actionButtonSvg} />
                   </Button>
@@ -130,15 +156,32 @@ export default function ResumesPage() {
                   variant="ghost" 
                   size="sm" 
                   className={`${styles.actionButton} ${styles.deleteButton}`}
-                  onClick={() => deleteResume(resume._id)}
+                  onClick={() => deleteResume(_id)}
                 >
                   <Trash2 className={styles.actionButtonSvg} />
                 </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className={`${styles.actionButton}`}
+                  onClick={() => pinResume(_id)}
+                >
+                  <Pin fill={isPinned?'var(--neutral-700)': 'transparent'} className={styles.actionButtonSvg} />
+                </Button>
               </div>
+              {isPinned && (
+                <div className={styles.pinnedIndicator}> 
+                  <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className={`${styles.actionButton}`}
+                  onClick={() => pinResume(_id)}
+                >
+                  <Pin fill='var(--neutral-200)' className={styles.actionButtonSvg} />
+                </Button>
+                </div>
+              )}
             </div>
           </div>
-        )})}
-      </div>
-    </div>
-  );
+  )
 }

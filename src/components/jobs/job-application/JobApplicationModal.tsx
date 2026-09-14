@@ -5,10 +5,7 @@ import Link from "next/link";
 import { Check, Loader2, Send, CheckCircle2, AlertTriangle, ArrowRight, ArrowLeft, ExternalLink, Mail, ZoomIn } from "lucide-react";
 import { motion } from "motion/react";
 import ResumeSelector, { ResumeSelection } from "@/components/resume/ResumeSelector";
-import ResumeComponent from "@/components/resume/ResumeComponent";
-import ResumeViewer from "@/components/resume/ResumeViewer";
 import viewerStyles from "@/components/resume/ResumeViewer.module.css";
-import { normalizeTemplateId } from "@/lib/templateRenderer";
 import ScoreCircle from "@/components/ui/score-circle/ScoreCircle";
 import { AiButton } from "@/components/ui/AiButton";
 import { CREDIT_COST } from "@/lib/creditCosts";
@@ -20,6 +17,7 @@ import CoverLetterResultCard from "@/components/cover-letter/CoverLetterResultCa
 import { useResumeStore } from "@/store/useResumeStore";
 import styles from "./JobApplicationModal.module.css";
 import { delayedScrollIntoView } from "@/utils/scrollIntoview";
+import ResumePlusViewer from "@/components/resume/ResumePlusViewer";
 
 interface JobDetail {
   _id: string;
@@ -584,21 +582,13 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", alignItems: "center" }}>
                   <div className={viewerStyles.previewThumbnail} style={{ maxHeight: "320px" }}>
                     {selection?.mode === "saved" && selection.selectedSavedResume ? (
-                      <>
-                        <div style={{ maxHeight: "320px", overflow: "hidden", background: "white", padding: "0.25rem" }}>
-                          <ResumeComponent resumeContent={tailoredReport?.tailoredResume ?? selection.selectedSavedResume.content} templateId={normalizeTemplateId(selection.selectedSavedResume.template)} />
-                        </div>
-                        <button type="button" className={viewerStyles.viewBtn} onClick={() => setViewerOpen(true)}>
-                          <ZoomIn size={12} /> View
-                        </button>
-                        <ResumeViewer
-                          isOpen={viewerOpen}
-                          onClose={() => setViewerOpen(false)}
-                          resumeContent={tailoredReport?.tailoredResume ?? selection.selectedSavedResume.content}
-                          templateId={normalizeTemplateId(selection.selectedSavedResume.template)}
-                          title={`${selection.selectedSavedResume.title || "Resume"}${tailoredReport ? " — Tailored" : ""}`}
-                        />
-                      </>
+
+                      <ResumePlusViewer 
+                        title = {`${selection.selectedSavedResume.title || "Resume"}${tailoredReport ? " — Tailored" : ""}`}
+                        templateId={selection.selectedSavedResume.template}
+                        content={tailoredReport?.tailoredResume ?? selection.selectedSavedResume.content}
+                      />
+  
                     ) : selection?.mode === "upload" && selection.selectedFile ? (
                       selection.selectedFile.type.startsWith("image/") ? (
                         <img src={URL.createObjectURL(selection.selectedFile)} alt="Resume preview" style={{ width: "100%", objectFit: "contain" }} />

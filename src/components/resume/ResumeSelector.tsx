@@ -8,15 +8,15 @@ import {
   FileText,
   Loader2,
   Sparkles,
-  Crown,
+  Pin,
 } from "lucide-react";
 import ResumeComponent from "./ResumeComponent";
 import { normalizeTemplateId } from "@/lib/templateRenderer";
 import { ResumeContent } from "@/types/ResumeData";
-import { isProTemplate } from "@/lib/templateCatalog";
 import { MAX_PDF_PAGES_PER_PLAN } from "@/lib/creditCosts";
 import { useTemplateStore } from "@/store/useTemplateStore";
 import { useResumeStore } from "@/store/useResumeStore";
+import { useUserStore } from "@/store/useUserStore";
 import AiAnalysisLoader from "@/components/ui/ai-analysis-loader/AiAnalysisLoader";
 import styles from "./ResumeSelector.module.css";
 
@@ -55,7 +55,17 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
   const resumes = useResumeStore((state) => state.resumes);
   const loadingResumes = useResumeStore((state) => state.isLoading);
   const storeFetchResumes = useResumeStore((state) => state.fetchResumes);
+  const pinnedResumeId = useUserStore((state) => state.pinnedResumeId);
+  const fetchPinnedResume = useUserStore((state) => state.fetchPinnedResume);
   const [error, setError] = useState("");
+
+  const sortedResumes = pinnedResumeId
+    ? [...resumes].sort((a, b) => {
+        if (a._id === pinnedResumeId) return -1;
+        if (b._id === pinnedResumeId) return 1;
+        return 0;
+      })
+    : resumes;
 
   const [selectedResumeId, setSelectedResumeId] = useState("");
   const [selectedSavedResume, setSelectedSavedResume] = useState<SavedResume | null>(null);
@@ -74,7 +84,8 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
     storeFetchResumes().catch((err) => {
       setError(err instanceof Error ? err.message : "Failed to load resume options");
     });
-  }, [storeFetchResumes]);
+    fetchPinnedResume();
+  }, [storeFetchResumes, fetchPinnedResume, uploadOnly]);
 
   // Update parent when selection changes
   useEffect(() => {
@@ -248,25 +259,20 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
 
     return (
       <div className={styles.horizontalScroll}>
-        {resumes.map((resume) => {
-          const templateId = normalizeTemplateId(resume.template);
-          const isPro = isProTemplate(templateId);
+        {sortedResumes.map((resume) => {
+          const isPinned = resume._id === pinnedResumeId;
           return (
             <div
               key={resume._id}
-              className={styles.resumeCard}
+              className={`${styles.resumeCard} ${isPinned ? styles.pinned : ""}`}
               onClick={() => selectSavedResume(resume)}
             >
-              {isPro && (
-                <span className={styles.proBadge}>
-                  <Crown size={10} /> Pro
-                </span>
-              )}
+              {isPinned && <Pin fill="var(--neutral-200)" className={styles.actionButtonSvg} />}
               <div className={styles.cardPreview}>
                 {templates.length > 0 ? (
                   <ResumeComponent
                     resumeContent={resume.content}
-                    templateId={templateId}
+                    templateId={resume.template}
                   />
                 ) : (
                   <div

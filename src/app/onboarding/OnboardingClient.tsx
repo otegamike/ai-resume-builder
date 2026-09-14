@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
@@ -59,6 +59,12 @@ export default function OnboardingClient() {
   const [location, setLocation] = useState("");
   const [phone, setPhone] = useState("");
 
+  useEffect(() => {
+    if (session?.user?.name && !name) {
+      setName(session.user.name);
+    }
+  }, [session?.user?.name, name]);
+
   // Step 2 state
   const [goals, setGoals] = useState<string[]>([]);
 
@@ -116,6 +122,7 @@ export default function OnboardingClient() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          name: name.trim(),
           jobTitle,
           location,
           phone,
@@ -143,6 +150,12 @@ export default function OnboardingClient() {
     setError("");
     try {
       const formData = new FormData();
+      formData.append("name", name.trim());
+      formData.append("jobTitle", jobTitle);
+      formData.append("location", location);
+      formData.append("phone", phone);
+      formData.append("primaryGoal", JSON.stringify(goals));
+      formData.append("targetField", targetField);
 
       if (resumeSelection.selectedFile && resumeSelection.selectedFile.type.startsWith("image/")) {
         formData.append("file", resumeSelection.selectedFile);

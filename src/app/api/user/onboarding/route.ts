@@ -12,18 +12,23 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { jobTitle, location, phone, primaryGoal, targetField, hasExistingResume } = body;
+    const { name, jobTitle, location, phone, primaryGoal, targetField, hasExistingResume } = body;
+
+    const update: Record<string, unknown> = {
+      jobTitle: jobTitle ?? "",
+      location: location ?? "",
+      phone: phone ?? "",
+      primaryGoal: Array.isArray(primaryGoal) ? primaryGoal : [],
+      targetField: targetField ?? "",
+      hasExistingResume: !!hasExistingResume,
+      hasCompletedOnboarding: true,
+    };
+    if (typeof name === "string" && name.trim().length > 0) {
+      update.name = name.trim();
+    }
 
     await User.findByIdAndUpdate(authUser.userObjectId, {
-      $set: {
-        jobTitle: jobTitle ?? "",
-        location: location ?? "",
-        phone: phone ?? "",
-        primaryGoal: Array.isArray(primaryGoal) ? primaryGoal : [],
-        targetField: targetField ?? "",
-        hasExistingResume: !!hasExistingResume,
-        hasCompletedOnboarding: true,
-      },
+      $set: update,
     });
 
     return NextResponse.json({ ok: true });

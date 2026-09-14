@@ -21,15 +21,14 @@ import {
   ChevronDown,
   ChevronUp,
   ArrowRight,
-  Crown,
+  Pin,
 } from "lucide-react";
-import ResumeIframe from "@/components/resume/ResumeIframe";
-import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
-import { isProTemplate } from "@/lib/templateCatalog";
 
-import { useTemplateStore } from "@/store/useTemplateStore";
 import { useResumeStore } from "@/store/useResumeStore";
+import { useUserStore } from "@/store/useUserStore";
+
 import styles from "./page.module.css";
+import ResumeComponent from "@/components/resume/ResumeComponent";
 
 interface DashboardStats {
   counts: {
@@ -61,13 +60,22 @@ export default function OverviewPage() {
   const [loading, setLoading] = useState(true);
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
   const createDropdownRef = useRef<HTMLDivElement>(null);
-  const allTemplates = useTemplateStore((state) => state.templates);
   const storeResumes = useResumeStore((state) => state.resumes);
   const storeLoading = useResumeStore((state) => state.isLoading);
   const storeFetchResumes = useResumeStore((state) => state.fetchResumes);
+  const pinnedResumeId = useUserStore((state) => state.pinnedResumeId);
+  const fetchPinnedResume = useUserStore((state) => state.fetchPinnedResume);
   const storeCredits = useAiCreditStore((s) => s.credits);
   const fetchCredits = useAiCreditStore((s) => s.fetchCredits);
   const plan = (session?.user?.subscriptionPlan ?? "free") as keyof typeof MAX_CREDITS_PER_PLAN
+
+  const sortedResumes = pinnedResumeId
+    ? [...storeResumes].sort((a, b) => {
+        if (a._id === pinnedResumeId) return -1;
+        if (b._id === pinnedResumeId) return 1;
+        return 0;
+      })
+    : storeResumes;
 
   useEffect(() => {
     if (!showCreateDropdown) return;
@@ -113,7 +121,8 @@ export default function OverviewPage() {
   useEffect(() => {
     if (status !== "authenticated") return;
     storeFetchResumes();
-  }, [status, storeFetchResumes]);
+    fetchPinnedResume();
+  }, [status, storeFetchResumes, fetchPinnedResume]);
 
   const activeApplications = stats?.counts.applicationsByStatus
     ? Object.entries(stats.counts.applicationsByStatus)
@@ -313,35 +322,23 @@ export default function OverviewPage() {
           </div>
         ) : (
           <div className={styles.myResumesScroll}>
-            {storeResumes.slice(0, 4).map((resume) => {
-              const templateId = normalizeTemplateId(resume.template);
-              const templateDef = allTemplates.find((t) => t.id === templateId) || allTemplates[0];
-              const isPro = isProTemplate(templateId);
-              const renderedTemplate = templateDef?.html && resume.content
-                ? buildTemplateSrcDoc(templateDef.html, resume.content)
-                : "";
+            {sortedResumes.slice(0, 4).map((resume) => {
+              const isPinned = resume._id === pinnedResumeId;
               return (
                 <Link
                   key={resume._id}
                   href={`/editor/${resume._id}`}
-                  className={styles.myResumesCard}
+                  className={`${styles.myResumesCard} ${isPinned ? styles.pinned : ""}`}
                 >
-                  {isPro && (
-                    <span className={styles.proBadge}>
-                      <Crown size={10} /> Pro
-                    </span>
-                  )}
-                  <div className={styles.myResumesCardPreview}>
-                    {renderedTemplate ? (
-                      <ResumeIframe renderedTemplate={renderedTemplate} type="preview" />
-                    ) : (
-                      <div className={styles.myResumesCardNoPreview}>No preview</div>
-                    )}
-                  </div>
-                  <div className={styles.myResumesCardTitle}>{resume.title}</div>
+                  {isPinned && <Pin fill="var(--neutral-200)" className={styles.actionButtonSvg} />}
+                  <ResumeComponent
+                    resumeContent={resume.content}
+                    templateId={resume.template}
+                    renderOpts={{ showProStatus: true }}
+                  />
                 </Link>
-              );
-            })}
+              )}
+           )}
             <Link href="/dashboard/resumes" className={styles.myResumesArrowCard}>
               <ArrowRight className={styles.myResumesArrowIcon} />
               <span>View All</span>

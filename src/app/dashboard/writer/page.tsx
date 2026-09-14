@@ -18,13 +18,13 @@ import JobDescriptionInput from "@/components/job-description/JobDescriptionInpu
 import { Button } from "@/components/ui/Button";
 import { AiButton } from "@/components/ui/AiButton";
 import ResumeSelector, { ResumeSelection } from "@/components/resume/ResumeSelector";
+import { useResumeStore } from "@/store/useResumeStore";
 import CoverLetterResultCard from "@/components/cover-letter/CoverLetterResultCard";
 import CoverLetterHistory from "@/components/cover-letter/CoverLetterHistory";
 import { CoverLetterItem } from "@/types/CoverLetterData";
 import { CREDIT_COST } from "@/lib/creditCosts";
 import { useAiCreditStore } from "@/store/useAiCreditStore";
 import { useAlertStore } from "@/store/useAlertStore";
-import { useResumeStore } from "@/store/useResumeStore";
 import styles from "./page.module.css";
 
 type PageView = "form" | "result" | "history";
@@ -59,7 +59,6 @@ export default function WriterPage() {
   const [clSaving, setClSaving] = useState(false);
   const [clError, setClError] = useState("");
   const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
-  const storeFetchResumes = useResumeStore((state) => state.fetchResumes);
   const getResumeById = useResumeStore((state) => state.getResumeById);
 
   // ── Result view state ──
@@ -316,16 +315,6 @@ export default function WriterPage() {
     setPageView("form");
   }
 
-  // ── Auth loading ──
-  if (authStatus === "loading") {
-    return (
-      <div className={styles.loadingContainer}>
-        <Loader2 className={styles.loadingIcon} />
-      </div>
-    );
-  }
-
-  // Update sender info when resume selection changes
   const handleResumeChange = useCallback((selection: ResumeSelection | null) => {
     setResumeSelection(selection);
     if (selection?.mode === "saved" && selection.selectedResumeId) {
@@ -334,6 +323,14 @@ export default function WriterPage() {
   }, [populateSenderInfo]);
 
   const canGenerate = !!resumeSelection && job.hasJobContext && !clGenerating;
+
+  if (authStatus === "loading") {
+    return (
+      <div className={styles.loadingContainer}>
+        <Loader2 className={styles.loadingIcon} />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -386,19 +383,46 @@ export default function WriterPage() {
       {/* ── View: Form ── */}
       {pageView === "form" && (
         <div className={styles.tabContent}>
-          <section className={styles.panel}>
-            <div className={styles.sectionHeader}>
-              <h2 className={styles.formSectionTitle}>Select your base resume</h2>
+          <section className={styles.guideCard}>
+            <h2 className={styles.guideTitle}>How it works</h2>
+            <div className={styles.guideSteps}>
+              <div className={styles.step}>
+                <span className={styles.stepNumber}>1</span>
+                <div>
+                  <h3>Provide Job Details</h3>
+                  <p>Paste the job post text or upload a screenshot. Add optional metadata for better context.</p>
+                </div>
+              </div>
+              <div className={styles.step}>
+                <span className={styles.stepNumber}>2</span>
+                <div>
+                  <h3>Choose Resume</h3>
+                  <p>Pick a saved CV or upload a PDF/Image of your resume.</p>
+                </div>
+              </div>
+              <div className={styles.step}>
+                <span className={styles.stepNumber}>3</span>
+                <div>
+                  <h3>Generate Cover Letter</h3>
+                  <p>Review the generated letter and save it to your workspace.</p>
+                </div>
+              </div>
             </div>
-            <ResumeSelector onSelectionChange={handleResumeChange} />
+          </section>
 
-            <hr className={styles.divider} />
-
+          <section className={styles.panel}>
             <div className={styles.sectionHeader}>
               <h2 className={styles.formSectionTitle}>Job Description</h2>
             </div>
 
             <JobDescriptionInput job={job} disabled={clGenerating} />
+
+            <hr className={styles.divider} />
+
+            <div className={styles.sectionHeader}>
+              <h2 className={styles.formSectionTitle}>Select your base resume</h2>
+            </div>
+            <ResumeSelector onSelectionChange={handleResumeChange} animatedLoader showLoader={clGenerating} />
 
             <div className={styles.collapsibleSection}>
               <button

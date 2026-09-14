@@ -93,12 +93,6 @@ export default function DashboardShell({
               Writer
             </span>
           </Link>
-          <Link href="/dashboard/applications" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/applications")}`}>
-            <Briefcase className={styles.navIcon} />
-            <span className={styles.navLinkText}>
-              Applications
-            </span>
-          </Link>
           <Link href="/dashboard/jobs" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/jobs")}`}>
             <Search className={styles.navIcon} />
             <span className={styles.navLinkText}>

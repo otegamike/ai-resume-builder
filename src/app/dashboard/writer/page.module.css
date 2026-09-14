@@ -58,6 +58,63 @@
   height: 1rem;
 }
 
+.guideCard {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4) var(--space-5);
+  box-shadow: var(--shadow-sm);
+}
+
+.guideTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  text-transform: uppercase;
+  color: var(--primary-900);
+  margin-bottom: var(--space-3);
+  letter-spacing: 0.02em;
+}
+
+.guideSteps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+}
+
+.step {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.stepNumber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-full);
+  background: var(--primary-50);
+  color: var(--primary-1);
+  font-weight: var(--font-bold);
+  font-size: var(--text-xs);
+  flex-shrink: 0;
+  border: 1px solid var(--primary-200);
+}
+
+.step h3 {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--neutral-800);
+}
+
+.step p {
+  font-size: var(--text-xs);
+  color: var(--gray-500);
+  line-height: 1.4;
+  margin-top: var(--space-1);
+}
+
 .tabContent {
   display: flex;
   flex-direction: column;
@@ -398,6 +455,13 @@
 }
 
 /* ── Responsive ── */
+
+@media (width < 960px) {
+  .guideSteps {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+}
 
 @media (width < 760px) {
   .container {

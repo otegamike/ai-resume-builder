@@ -24,6 +24,7 @@ export default function AdminDashboardPage() {
   const [timeline, setTimeline] = useState<Timeline | null>(null);
   const [aiUsage, setAiUsage] = useState<AiUsageStats | null>(null);
   const [primaryGoals, setPrimaryGoals] = useState<PrimaryGoalStats | null>(null);
+  const [recentUsers, setRecentUsers] = useState<Array<{ _id: string; name: string; email: string; image?: string; createdAt: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -37,11 +38,12 @@ export default function AdminDashboardPage() {
 
     const fetchData = async () => {
       try {
-        const [statsRes, timelineRes, aiUsageRes, primaryGoalsRes] = await Promise.all([
+        const [statsRes, timelineRes, aiUsageRes, primaryGoalsRes, recentUsersRes] = await Promise.all([
           fetch("/api/admin/stats"),
           fetch("/api/admin/stats/timeline"),
           fetch("/api/admin/stats/ai-usage"),
           fetch("/api/admin/stats/primary-goals"),
+          fetch("/api/admin/recent-users"),
         ]);
 
         if (!statsRes.ok || !timelineRes.ok) {
@@ -70,6 +72,11 @@ export default function AdminDashboardPage() {
 
         if (primaryGoalsRes.ok) {
           setPrimaryGoals(await primaryGoalsRes.json());
+        }
+
+        if (recentUsersRes.ok) {
+          const data = await recentUsersRes.json();
+          setRecentUsers(data.users ?? []);
         }
       } catch {
         setError("Failed to load admin data");
@@ -161,6 +168,30 @@ export default function AdminDashboardPage() {
         <StatCard label="Total Resumes" value={stats.totalResumes} />
         <StatCard label="Visits Today" value={stats.visitsToday} />
         <StatCard label="Active Users (30d)" value={stats.activeUsers} />
+      </div>
+
+      <div className={styles.chartSection}>
+        <h2 className={styles.chartTitle}>Recently Joined — Last 5 Users</h2>
+        <div className={styles.recentList}>
+          {recentUsers.length === 0 ? (
+            <p className={styles.noData}>No users yet.</p>
+          ) : (
+            recentUsers.map((u) => (
+              <div key={u._id} className={styles.recentItem}>
+                {u.image ? (
+                  <img src={u.image} alt={u.name} className={styles.recentAvatar} />
+                ) : (
+                  <div className={styles.recentAvatarFallback}>{u.name?.charAt(0)?.toUpperCase() || "?"}</div>
+                )}
+                <div className={styles.recentInfo}>
+                  <span className={styles.recentName}>{u.name || "Unnamed"}</span>
+                  <span className={styles.recentEmail}>{u.email}</span>
+                </div>
+                <span className={styles.recentDate}>{new Date(u.createdAt).toLocaleDateString()}</span>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       <div className={styles.chartSection}>

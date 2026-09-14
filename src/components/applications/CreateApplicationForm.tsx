@@ -64,15 +64,15 @@ export default function CreateApplicationForm({
           <div className={styles.step}>
             <span className={styles.stepNumber}>1</span>
             <div>
-              <h3>Select Resume</h3>
-              <p>Pick a saved CV or upload a PDF/Image of your resume.</p>
+              <h3>Add Job Details</h3>
+              <p>Paste the job description or upload a screenshot. Add optional metadata.</p>
             </div>
           </div>
           <div className={styles.step}>
             <span className={styles.stepNumber}>2</span>
             <div>
-              <h3>Add Job Details</h3>
-              <p>Paste the job description or upload a screenshot. Add optional metadata.</p>
+              <h3>Select Resume</h3>
+              <p>Pick a saved CV or upload a PDF/Image of your resume.</p>
             </div>
           </div>
           <div className={styles.step}>
@@ -87,17 +87,17 @@ export default function CreateApplicationForm({
 
       <section className={styles.panel}>
         <div className={styles.sectionHeader}>
-          <h2 className={styles.formSectionTitle}>Select your base resume</h2>
-        </div>
-        <ResumeSelector onSelectionChange={onSelectionChange} />
-
-        <hr className={styles.divider} />
-
-        <div className={styles.sectionHeader}>
           <h2 className={styles.formSectionTitle}>Job Description</h2>
         </div>
 
         <JobDescriptionInput job={job} disabled={isBusy} />
+
+        <hr className={styles.divider} />
+
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.formSectionTitle}>Select your base resume</h2>
+        </div>
+        <ResumeSelector onSelectionChange={onSelectionChange} animatedLoader showLoader={isBusy} />
 
         <div className={styles.collapsibleSection}>
           <button

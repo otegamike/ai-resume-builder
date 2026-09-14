@@ -33,6 +33,7 @@ export interface IUser {
   hasExistingResume: boolean;
   accountType?: "candidate" | "employer" | "both";
   organizationId?: Types.ObjectId;
+  pinnedResume?: string;
 }
 
 const UserSchema: Schema = new Schema<IUser>(
@@ -70,6 +71,7 @@ const UserSchema: Schema = new Schema<IUser>(
     hasExistingResume: { type: Boolean, default: false },
     accountType: { type: String, enum: ["candidate", "employer", "both"], default: "candidate" },
     organizationId: { type: Schema.Types.ObjectId, ref: "Company" },
+    pinnedResume: { type: String, default: "" },
   },
   { timestamps: true }
 );

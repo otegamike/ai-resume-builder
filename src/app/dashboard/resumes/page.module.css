@@ -112,6 +112,10 @@
   box-shadow: var(--shadow-md);
 }
 
+.pinned {
+  border: 2px solid var(--neutral-700);
+}
+
 .previewArea {
   flex: 1;
   display: flex;
@@ -214,8 +218,26 @@
   transition: opacity 0.4s ease;
 }
 
+.pinnedIndicator {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  display: flex;
+  border-radius: var(--radius-md);
+  opacity: 1;
+  transition: opacity 0.4s ease;
+
+  .pinButton:hover {
+    background-color: transparent;
+  }
+}
+
 .resumeCard:hover .actions {
   opacity: 1;
+}
+
+.resumeCard:hover .pinnedIndicator {
+  opacity: 0;
 }
 
 .actionButton {

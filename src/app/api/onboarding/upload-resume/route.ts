@@ -24,11 +24,35 @@ export async function POST(request: Request) {
       extractedText,
     });
 
+    const name = formData.get("name")?.toString().trim() || "";
+    const jobTitle = formData.get("jobTitle")?.toString() || "";
+    const location = formData.get("location")?.toString() || "";
+    const phone = formData.get("phone")?.toString() || "";
+    const targetField = formData.get("targetField")?.toString() || "";
+    let primaryGoal: string[] = [];
+    const rawGoal = formData.get("primaryGoal")?.toString() || "";
+    if (rawGoal) {
+      try {
+        const parsed = JSON.parse(rawGoal);
+        if (Array.isArray(parsed)) primaryGoal = parsed.filter((v) => typeof v === "string");
+      } catch {
+        primaryGoal = rawGoal ? [rawGoal] : [];
+      }
+    }
+
+    const update: Record<string, unknown> = {
+      jobTitle,
+      location,
+      phone,
+      targetField,
+      primaryGoal,
+      hasExistingResume: true,
+      hasCompletedOnboarding: true,
+    };
+    if (name) update.name = name;
+
     await User.findByIdAndUpdate(authUser.userObjectId, {
-      $set: {
-        hasExistingResume: true,
-        hasCompletedOnboarding: true,
-      },
+      $set: update,
     });
 
     return NextResponse.json({ resumeId: savedResume._id }, { status: 201 });

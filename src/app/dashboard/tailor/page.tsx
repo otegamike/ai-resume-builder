@@ -203,15 +203,15 @@ export default function TailorResumePage() {
           <div className={styles.step}>
             <span className={styles.stepNumber}>1</span>
             <div>
-              <h3>Choose Resume</h3>
-              <p>Pick a saved CV or upload a PDF/Image of your resume.</p>
+              <h3>Provide Job Details</h3>
+              <p>Paste the job post text or upload a screenshot. Add optional metadata for better context.</p>
             </div>
           </div>
           <div className={styles.step}>
             <span className={styles.stepNumber}>2</span>
             <div>
-              <h3>Provide Job Details</h3>
-              <p>Paste the job post text or upload a screenshot. Add optional metadata for better context.</p>
+              <h3>Choose Resume</h3>
+              <p>Pick a saved CV or upload a PDF/Image of your resume.</p>
             </div>
           </div>
           <div className={styles.step}>
@@ -230,19 +230,9 @@ export default function TailorResumePage() {
           <form className={styles.form} onSubmit={handleTailorSubmit}>
             <div className={styles.sectionHeader}>
               <span className={styles.sectionNumber}>Step 1:</span>
-              <h2 className={styles.formSectionTitle}>Select your base resume</h2>
-            </div>
-            
-            <ResumeSelector onSelectionChange={setSelection} />
-
-            <hr className={styles.divider} />
-
-            <div className={styles.sectionHeader}>
-              <span className={styles.sectionNumber}>Step 2:</span>
               <h2 className={styles.formSectionTitle}>Enter target job description</h2>
             </div>
 
-            {/* Optional Metadata */}
             <div className={styles.metadataRow}>
               <div className={styles.field}>
                 <label htmlFor="targetTitle" className={styles.label}>
@@ -279,6 +269,15 @@ export default function TailorResumePage() {
               disabled={isBusy}
               textareaId="jobText"
             />
+
+            <hr className={styles.divider} />
+
+            <div className={styles.sectionHeader}>
+              <span className={styles.sectionNumber}>Step 2:</span>
+              <h2 className={styles.formSectionTitle}>Select your base resume</h2>
+            </div>
+
+            <ResumeSelector onSelectionChange={setSelection} animatedLoader showLoader={isBusy} />
 
             <div className={styles.actions}>
               <div className={styles.progress}>
