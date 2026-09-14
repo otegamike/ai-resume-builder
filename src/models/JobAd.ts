@@ -1,53 +1,24 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
+import type { JobAd, ScreeningQuestion } from "@/types/JobAdData";
 
-export type JobType = "full-time" | "part-time" | "contract" | "freelance" | "internship";
-export type WorkplaceType = "on-site" | "remote" | "hybrid";
-export type ExperienceLevel = "entry" | "mid" | "senior" | "lead" | "executive";
-export type JobAdStatus = "draft" | "pending_review" | "active" | "rejected" | "paused" | "closed" | "expired";
-export type ApplicationType = "on_platform" | "external_link" | "email";
-export type ScreeningQuestionType = "text" | "textarea" | "dropdown" | "checkbox";
+export type {
+  JobType,
+  WorkplaceType,
+  ExperienceLevel,
+  JobAdStatus,
+  ApplicationType,
+  ScreeningQuestionType,
+  ScreeningQuestion,
+  JobAd,
+} from "@/types/JobAdData";
 
-export interface IScreeningQuestion {
-  id: string;
-  question: string;
-  type: ScreeningQuestionType;
-  options?: string[];
-  required: boolean;
-}
+export type IScreeningQuestion = ScreeningQuestion;
 
-export interface IJobAd extends Document {
+export interface IJobAd extends Omit<JobAd, "_id" | "companyId" | "postedBy" | "screeningQuestions">, Document {
   _id: Types.ObjectId;
-  title: string;
-  slug: string;
   companyId: Types.ObjectId;
   postedBy: Types.ObjectId;
-  isFeatured: boolean;
-  isPinned: boolean;
-  jobType: JobType;
-  workplaceType: WorkplaceType;
-  location: string;
-  category: string;
-  experienceLevel: ExperienceLevel;
-  salaryMin?: number;
-  salaryMax?: number;
-  salaryCurrency: string;
-  salaryPeriod: "yearly" | "monthly" | "hourly";
-  hideSalary: boolean;
-  description: string;
-  requirements: string[];
-  benefits: string[];
-  skillsRequired: string[];
-  screeningQuestions: IScreeningQuestion[];
-  status: JobAdStatus;
-  rejectionReason?: string;
-  applicationType: ApplicationType;
-  externalUrl?: string;
-  contactEmail?: string;
-  viewsCount: number;
-  applicationsCount: number;
-  expiresAt?: Date;
-  createdAt: Date;
-  updatedAt: Date;
+  screeningQuestions: ScreeningQuestion[];
 }
 
 const ScreeningQuestionSchema = new Schema(
@@ -95,6 +66,7 @@ const JobAdSchema: Schema = new Schema<IJobAd>(
     salaryCurrency: { type: String, default: "USD" },
     salaryPeriod: { type: String, enum: ["yearly", "monthly", "hourly"], default: "yearly" },
     hideSalary: { type: Boolean, default: false },
+    summary: { type: String, default: "", trim: true, maxlength: 280 },
     description: { type: String, required: true },
     requirements: [{ type: String }],
     benefits: [{ type: String }],

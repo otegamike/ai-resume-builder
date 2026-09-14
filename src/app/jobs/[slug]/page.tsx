@@ -12,7 +12,6 @@ import {
   Clock,
   ExternalLink,
   Link2,
-  Loader2,
   Mail,
   MapPin,
   Share2,
@@ -176,9 +175,10 @@ export default function JobDetailPage({ params }: { params: Promise<{ slug: stri
 
   if (loading || status === "loading") {
     return (
-      <div className={detailStyles.loadingContainer}>
-        <Loader2 size={36} />
-        <p>Loading job details...</p>
+      <div className={detailStyles.container}>
+        <div className={detailStyles.wrapper}>
+          <JobDetailSkeleton />
+        </div>
       </div>
     );
   }
@@ -339,5 +339,73 @@ export default function JobDetailPage({ params }: { params: Promise<{ slug: stri
 
       {showApplyModal && <JobApplicationModal job={job} open={showApplyModal} onClose={() => setShowApplyModal(false)} />}
     </div>
+  );
+}
+
+function JobDetailSkeleton() {
+  return (
+    <>
+      <div className={detailStyles.skeletonBackLink} />
+      <div className={detailStyles.skeletonHeaderCard}>
+        <div className={detailStyles.skeletonHeaderLeft}>
+          <div className={detailStyles.skeletonCompanyRow}>
+            <div className={detailStyles.skeletonCompanyName} />
+            <div className={detailStyles.skeletonVerified} />
+          </div>
+          <div className={detailStyles.skeletonTitle} />
+          <div className={detailStyles.skeletonMetaRow}>
+            <div className={detailStyles.skeletonMeta} />
+            <div className={detailStyles.skeletonMeta} />
+            <div className={detailStyles.skeletonMeta} />
+          </div>
+          <div className={`${detailStyles.skeletonSalaryBox} ${detailStyles.skeletonSalaryBoxLeft}`}>
+            <div className={detailStyles.skeletonSalaryLabel} />
+            <div className={detailStyles.skeletonSalaryValue} />
+          </div>
+        </div>
+        <div className={detailStyles.skeletonHeaderActionsCol}>
+          <div className={detailStyles.skeletonShareRow}>
+            <div className={detailStyles.skeletonShareBtn} />
+            <div className={detailStyles.skeletonShareBtn} />
+          </div>
+          <div className={detailStyles.skeletonApplyBtn} />
+        </div>
+      </div>
+      <div className={detailStyles.skeletonBodyGrid}>
+        <div className={detailStyles.skeletonMainContent}>
+          <div className={detailStyles.skeletonSectionTitle} />
+          <div className={detailStyles.skeletonParagraph}>
+            <div className={detailStyles.skeletonLine} />
+            <div className={detailStyles.skeletonLine} />
+            <div className={detailStyles.skeletonLine} />
+            <div className={`${detailStyles.skeletonLine} ${detailStyles.skeletonLineShort}`} />
+          </div>
+          <div className={detailStyles.skeletonSectionTitle} />
+          <div className={detailStyles.skeletonParagraph}>
+            <div className={detailStyles.skeletonLine} />
+            <div className={detailStyles.skeletonLine} />
+            <div className={`${detailStyles.skeletonLine} ${detailStyles.skeletonLineShort}`} />
+          </div>
+          <div className={detailStyles.skeletonSectionTitle} />
+          <div className={detailStyles.skeletonSkillsRow}>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className={detailStyles.skeletonSkill} />
+            ))}
+          </div>
+        </div>
+        <div className={detailStyles.skeletonCompanyCard}>
+          <div className={detailStyles.skeletonCompanyTitle} />
+          <div className={detailStyles.skeletonParagraph}>
+            <div className={detailStyles.skeletonLine} />
+            <div className={detailStyles.skeletonLine} />
+            <div className={`${detailStyles.skeletonLine} ${detailStyles.skeletonLineShort}`} />
+          </div>
+          <div className={detailStyles.skeletonParagraph}>
+            <div className={detailStyles.skeletonLine} />
+            <div className={detailStyles.skeletonLine} />
+          </div>
+        </div>
+      </div>
+    </>
   );
 }

@@ -59,6 +59,7 @@ export default function DashboardJobEditorPage({ params }: { params: Promise<{ i
   const [salaryCurrencyCustom, setSalaryCurrencyCustom] = useState("");
   const [salaryPeriod, setSalaryPeriod] = useState("yearly");
   const [hideSalary, setHideSalary] = useState(false);
+  const [summary, setSummary] = useState("");
   const [description, setDescription] = useState("");
   const [requirementsText, setRequirementsText] = useState("");
   const [skillsText, setSkillsText] = useState("");
@@ -117,6 +118,7 @@ export default function DashboardJobEditorPage({ params }: { params: Promise<{ i
         }
         setSalaryPeriod(job.salaryPeriod || "yearly");
         setHideSalary(Boolean(job.hideSalary));
+        setSummary(typeof job.summary === "string" ? job.summary.slice(0, 280) : "");
         setDescription(job.description || "");
         setRequirementsText(Array.isArray(job.requirements) ? job.requirements.join("\n") : "");
         setSkillsText(Array.isArray(job.skillsRequired) ? job.skillsRequired.join(", ") : "");
@@ -167,6 +169,7 @@ export default function DashboardJobEditorPage({ params }: { params: Promise<{ i
       }
     }
     if (fields.salaryPeriod) setSalaryPeriod(fields.salaryPeriod);
+    if (fields.summary) setSummary(fields.summary.slice(0, 280));
     if (fields.description) setDescription(fields.description);
     if (fields.requirements.length) setRequirementsText(fields.requirements.join("\n"));
     if (fields.skillsRequired.length) setSkillsText(fields.skillsRequired.join(", "));
@@ -239,6 +242,7 @@ export default function DashboardJobEditorPage({ params }: { params: Promise<{ i
           salaryCurrency: effectiveCurrency,
           salaryPeriod,
           hideSalary,
+          summary: summary.trim().slice(0, 280),
           description,
           requirements: splitLines(requirementsText),
           skillsRequired: skillsText.split(",").map((skill) => skill.trim()).filter(Boolean),
@@ -517,6 +521,23 @@ export default function DashboardJobEditorPage({ params }: { params: Promise<{ i
           <div className={styles.field} style={{ marginTop: "var(--space-4)" }}>
             <label className={styles.label}>Required Skills (comma-separated)</label>
             <input className={styles.input} value={skillsText} onChange={(e) => setSkillsText(e.target.value)} placeholder="React, TypeScript, MongoDB" />
+          </div>
+        </section>
+
+        <section className={styles.formCard}>
+          <div className={styles.formSectionHeader}>
+            <h2>JobSummary</h2>
+          </div>
+          <div className={styles.field}>
+            <label className={styles.label}>Write a short summary for when the job is shared on social media or in link previews. (optional <span style={{ color: summary.length > 250 ? "var(--red-500)" : "var(--text-secondary)" }}>{summary.length}/280</span>)  </label>
+            <textarea
+              className={styles.textarea}
+              rows={5}
+              maxLength={280}
+              value={summary}
+              onChange={(e) => setSummary(e.target.value.slice(0, 280))}
+              placeholder="e.g. Hiring Senior React Engineer (Remote) — 5+ years building Next.js apps, $120k/yr, join a fast-moving team."
+            />
           </div>
         </section>
 

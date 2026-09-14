@@ -42,8 +42,273 @@
 .name {
     color: var(--text-primary);
 }
+.nameRow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.newBadgeSm {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #c2410c;
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  padding: 0.15rem 0.4rem;
+  border-radius: 9999px;
+  text-transform: lowercase;
+}
 .statusPill { font-size: var(--text-xs); font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 9999px; background: var(--gray-100); color: var(--gray-700); }
 .scorePill { background: #ecfdf5; color: #047857; font-size: var(--text-xs); font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 9999px; }
 .emptyState { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-xl); padding: var(--space-8); text-align: center; color: var(--gray-500); }
 .loadingRow { display: flex; justify-content: center; padding: var(--space-6); }
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeletonBackLink {
+  height: 0.85rem;
+  width: 7rem;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.skeletonBar,
+.skeletonPill,
+.skeletonTextBlock {
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.skeletonHeaderCard {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  box-shadow: var(--shadow-sm);
+}
+
+.skeletonHeaderTop {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-6);
+}
+
+.skeletonHeaderLeft {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex: 1;
+}
+
+.skeletonCompanyRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.skeletonCompanyName {
+  height: 0.75rem;
+  width: 6rem;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.skeletonVerified {
+  height: 1.1rem;
+  width: 3.5rem;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.skeletonTitle {
+  height: 1.25rem;
+  width: 55%;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.skeletonMetaRow {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.skeletonMeta {
+  height: 0.75rem;
+  width: 7rem;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.skeletonSalaryBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: flex-end;
+  min-width: 8rem;
+}
+
+.skeletonSalaryLabel {
+  height: 0.65rem;
+  width: 5rem;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.skeletonSalaryValue {
+  height: 1rem;
+  width: 8rem;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.skeletonDesc {
+  height: 2.5rem;
+  width: 100%;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.skeletonStatsRow {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.skeletonStat {
+  height: 0.75rem;
+  width: 5rem;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.skeletonSectionTitle {
+  height: 1rem;
+  width: 8rem;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.skeletonChipRow {
+  display: flex;
+  gap: var(--space-2);
+  overflow: hidden;
+}
+
+.skeletonChip {
+  height: 1.5rem;
+  width: 5rem;
+  flex-shrink: 0;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 9999px;
+}
+
+.skeletonApplicantRow {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.skeletonApplicantLeft {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+}
+
+.skeletonApplicantNameRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.skeletonName {
+  height: 0.9rem;
+  width: 8rem;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.skeletonBadge {
+  height: 1rem;
+  width: 2rem;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 9999px;
+}
+
+.skeletonEmail {
+  height: 0.65rem;
+  width: 10rem;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.skeletonApplicantRight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.skeletonStatusPill {
+  height: 1.25rem;
+  width: 4rem;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 9999px;
+}
+
+.skeletonScorePill {
+  height: 1.25rem;
+  width: 4.5rem;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 9999px;
+}
+
 @media (width < 760px) { .container { padding: var(--space-6); } .headerCard { flex-direction: column; }  .salaryBox {text-align: left;}}

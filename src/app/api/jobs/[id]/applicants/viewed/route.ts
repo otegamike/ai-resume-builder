@@ -5,20 +5,13 @@ import dbConnect from "@/lib/db";
 import JobAd from "@/models/JobAd";
 import JobApplication from "@/models/JobApplication";
 import User from "@/models/User";
-import Resume from "@/models/Resume";
-import CoverLetter from "@/models/CoverLetter";
-
 
 void JobAd;
 void JobApplication;
 void User;
-void Resume;
-void CoverLetter;
 
-
-
-export async function GET(
-  req: Request,
+export async function POST(
+  _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -26,37 +19,26 @@ export async function GET(
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
     const { id } = await params;
     await dbConnect();
-
     const currentUser = await User.findById(session.user.id);
     const job = await JobAd.findById(id);
-
     if (!job) {
       return NextResponse.json({ error: "Job ad not found" }, { status: 404 });
     }
-
     const isOwner =
       currentUser?.organizationId &&
       String(job.companyId) === String(currentUser.organizationId);
-
     if (!currentUser?.isAdmin && !isOwner) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-
-    const applicants = await JobApplication.find({ jobId: job._id, status: { $ne: "withdrawn" } })
-      .sort({ createdAt: -1 })
-      .populate("applicantId", "name email image location jobTitle phone");
-
-    const mapped = applicants.map((a: any) => { 
-      const { applicantId: applicantInformation, ...applicationData } = a.toObject();
-      return { applicantInformation, ...applicationData };
-    })
-
-    return NextResponse.json({ job, applicants: mapped });
+    await JobApplication.updateMany(
+      { jobId: job._id, viewedByEmployer: { $ne: true } },
+      { $set: { viewedByEmployer: true, viewedAt: new Date() } }
+    );
+    return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error("Error fetching applicants:", error);
-    return NextResponse.json({ error: "Failed to fetch applicants" }, { status: 500 });
+    console.error("Error marking viewed:", error);
+    return NextResponse.json({ error: "Failed to mark viewed" }, { status: 500 });
   }
 }

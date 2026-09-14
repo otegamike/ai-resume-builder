@@ -100,15 +100,28 @@ export async function GET(req: Request) {
     let jobsWithLiveCount: typeof jobs = jobs;
     if (mine && jobs.length > 0) {
       const ids = jobs.map((j: any) => j._id);
-      const counts = await JobApplication.aggregate([
-        { $match: { jobId: { $in: ids } } },
-        { $group: { _id: "$jobId", count: { $sum: 1 } } },
+      const [counts, newCounts] = await Promise.all([
+        JobApplication.aggregate([
+          { $match: { jobId: { $in: ids } } },
+          { $group: { _id: "$jobId", count: { $sum: 1 } } },
+        ]),
+        JobApplication.aggregate([
+          { $match: { jobId: { $in: ids }, viewedByEmployer: { $ne: true }, status: { $ne: "withdrawn" } } },
+          { $group: { _id: "$jobId", count: { $sum: 1 }, latestAt: { $max: "$createdAt" } } },
+        ]),
       ]);
       const map = new Map<string, number>(counts.map((c: any) => [String(c._id), c.count]));
+      const newMap = new Map<string, { count: number; latestAt: Date }>(
+        newCounts.map((c: any) => [String(c._id), { count: c.count, latestAt: c.latestAt }])
+      );
       jobsWithLiveCount = jobs.map((j: any) => {
         const obj = j.toObject ? j.toObject() : { ...j };
         const live = map.get(String(j._id));
         if (typeof live === "number") obj.applicationsCount = live;
+        const n = newMap.get(String(j._id));
+        obj.newApplicationsCount = n?.count ?? 0;
+        obj.hasNewApplicants = (n?.count ?? 0) > 0;
+        obj.latestNewAt = n?.latestAt ?? null;
         return obj;
       }) as typeof jobs;
     }
@@ -157,6 +170,7 @@ export async function POST(req: Request) {
       salaryCurrency,
       salaryPeriod,
       hideSalary,
+      summary,
       description,
       requirements,
       benefits,
@@ -274,6 +288,7 @@ export async function POST(req: Request) {
       salaryCurrency: salaryCurrency || "USD",
       salaryPeriod: salaryPeriod || "yearly",
       hideSalary: !!hideSalary,
+      summary: typeof summary === "string" ? summary.trim().slice(0, 280) : "",
       description: description.trim(),
       requirements: Array.isArray(requirements) ? requirements : [],
       benefits: Array.isArray(benefits) ? benefits : [],

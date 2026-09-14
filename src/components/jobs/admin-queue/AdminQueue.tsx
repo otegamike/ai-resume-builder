@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, CheckCircle } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 import styles from "./AdminQueue.module.css";
 
 interface JobItem {
@@ -55,7 +55,11 @@ export default function AdminQueue() {
       </div>
 
       {loadingAdmin ? (
-        <div className={styles.emptyState}><Loader2 size={32} style={{ margin: "0 auto 1rem" }} /><p>Loading Moderation Queue...</p></div>
+        <div className={styles.jobsGrid}>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <AdminJobCardSkeleton key={i} />
+          ))}
+        </div>
       ) : adminJobs.length === 0 ? (
         <div className={styles.emptyState}><CheckCircle size={40} color="#10b981" style={{ margin: "0 auto 1rem" }} /><h3>Moderation Queue Clear</h3><p style={{ marginTop: "0.5rem" }}>No job submissions in this queue.</p></div>
       ) : (
@@ -86,6 +90,27 @@ function AdminJobCard({ job, onModerate }: { job: JobItem; onModerate: (id: stri
         <div style={{ display: "flex", gap: "0.5rem" }}>
           {job.status !== "active" && <button onClick={() => onModerate(job._id, "approve")} style={{ background: "#10b981", color: "white", border: "none", padding: "0.3rem 0.75rem", borderRadius: "6px", fontSize: "var(--text-xs)", fontWeight: "bold", cursor: "pointer" }}>Approve Ad</button>}
           {job.status !== "rejected" && <button onClick={() => { const reason = prompt("Rejection Reason:", "Violates community guidelines or scam alert."); if (reason) onModerate(job._id, "reject", reason); }} style={{ background: "#ef4444", color: "white", border: "none", padding: "0.3rem 0.75rem", borderRadius: "6px", fontSize: "var(--text-xs)", fontWeight: "bold", cursor: "pointer" }}>Reject / Flag Scam</button>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AdminJobCardSkeleton() {
+  return (
+    <div className={styles.skeletonCard}>
+      <div className={styles.skeletonHeader}>
+        <div className={styles.skeletonHeaderLeft}>
+          <div className={styles.skeletonTitle} />
+          <div className={styles.skeletonCompany} />
+        </div>
+      </div>
+      <div className={styles.skeletonDesc} />
+      <div className={styles.skeletonFooter}>
+        <div className={styles.skeletonStatus} />
+        <div className={styles.skeletonActions}>
+          <div className={styles.skeletonAction} />
+          <div className={styles.skeletonAction} />
         </div>
       </div>
     </div>

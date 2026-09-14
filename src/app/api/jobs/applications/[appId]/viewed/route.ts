@@ -3,13 +3,15 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import JobApplication from "@/models/JobApplication";
+import JobAd from "@/models/JobAd";
 import User from "@/models/User";
 
 void JobApplication;
+void JobAd;
 void User;
 
-export async function PUT(
-  req: Request,
+export async function POST(
+  _req: Request,
   { params }: { params: Promise<{ appId: string }> }
 ) {
   try {
@@ -17,48 +19,32 @@ export async function PUT(
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
     const { appId } = await params;
     await dbConnect();
-
     const currentUser = await User.findById(session.user.id);
     const application = await JobApplication.findById(appId);
-
     if (!application) {
       return NextResponse.json({ error: "Application not found" }, { status: 404 });
     }
-
+    const job = await JobAd.findById(application.jobId);
+    if (!job) {
+      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    }
     const isOwner =
       currentUser?.organizationId &&
-      application.companyId &&
-      String(application.companyId) === String(currentUser.organizationId);
-
+      String(job.companyId) === String(currentUser.organizationId);
     if (!currentUser?.isAdmin && !isOwner) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-
-    const { status, notes } = await req.json();
-
-    const allowed = ["submitted", "under_review", "shortlisted", "interviewing", "offered", "rejected", "withdrawn"];
-    if (status && !allowed.includes(status)) {
-      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+    if (application.viewedByEmployer) {
+      return NextResponse.json({ success: true, alreadyViewed: true });
     }
-
-    if (status) {
-      application.status = status;
-      (application as any).viewedByEmployer = true;
-      (application as any).viewedAt = new Date();
-    }
-
-    if (notes !== undefined) {
-      application.notes = notes;
-    }
-
+    application.viewedByEmployer = true;
+    application.viewedAt = new Date();
     await application.save();
-
-    return NextResponse.json({ success: true, application });
-  } catch (error: any) {
-    console.error("Error updating application status:", error);
-    return NextResponse.json({ error: "Failed to update application status" }, { status: 500 });
+    return NextResponse.json({ success: true });
+  } catch (error: unknown) {
+    console.error("Error marking application viewed:", error);
+    return NextResponse.json({ error: "Failed to mark viewed" }, { status: 500 });
   }
 }

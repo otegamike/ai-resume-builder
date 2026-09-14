@@ -1027,6 +1027,7 @@ export interface ParsedJobAd {
   salaryMax: number | null;
   salaryCurrency: string;
   salaryPeriod: string;
+  summary: string;
   description: string;
   requirements: string[];
   benefits: string[];
@@ -1046,13 +1047,14 @@ const JOB_PARSE_PROMPT = (text: string) => `
 You are a precise job-ad extractor. You ONLY output raw valid JSON. Never use markdown code fences. Never add explanations before or after the JSON object. Your entire response must be parseable by JSON.parse().
 
 CRITICAL RULES — preserve wording:
-- Extract fields VERBATIM from the source text. Do NOT reword, summarize, paraphrase, or invent.
+- Extract fields VERBATIM from the source text. Do NOT reword, summarize, paraphrase, or invent. Exception: summary is generated (see below).
 - Do NOT add information that is not explicitly present in the source. If a field is not in the source, return "" for strings, [] for arrays, or null for salary numbers.
- - For description, requirements, benefits, skillsRequired: copy the original phrasing exactly as it appears, only splitting into array items where needed. Do not add buzzwords or extra duties.
+  - For description, requirements, benefits, skillsRequired: copy the original phrasing exactly as it appears, only splitting into array items where needed. Do not add buzzwords or extra duties.
 - Preserve original sentence structure and wording for description. Convert plain text description to simple HTML paragraphs: wrap each paragraph in <p>...</p>, keep line breaks. Do not invent HTML you did not see.
 - For enums, map to the closest allowed value but still base it on source text: category must be one of ["Engineering","Design","Product","Marketing","Sales","HR","Finance","Other"] (default "Other"), jobType one of ["full-time","part-time","contract","freelance","internship"] (default "full-time"), workplaceType one of ["remote","hybrid","on-site"] (default "remote"), experienceLevel one of ["entry","mid","senior","lead","executive"] (default "mid"), applicationType one of ["on_platform","external_link","email"] (default "on_platform").
 - For applicationType: set to "external_link" ONLY if source contains a verbatim apply URL (e.g. "Apply at https://..." ), "email" ONLY if it contains a verbatim apply email (e.g. "send CV to jobs@..."), otherwise "on_platform". Copy URL/email verbatim when present; never invent. If neither URL nor email is present, return "" for both externalUrl and contactEmail.
 - For salary: recognize patterns like "$90K - $120K", "$90,000", "₦2,000,000", "£35k per annum", "€45/hr", "NGN 500k–800k", "2,000 USD per month". Extract salaryMin as first number, salaryMax as second number or null if single value, salaryCurrency from symbol ($→USD, £→GBP, €→EUR, ₦→NGN, ₹→INR) or code (USD, NGN, GBP, EUR) normalized to uppercase 3-letter code, salaryPeriod from keywords "per year|annum|yearly→yearly, per month|monthly→monthly, per hour|hourly|/hr→hourly". If text says "Competitive" or "Negotiable" return nulls and leave currency as "USD".
+- For summary: generate a single tweet-length plain-text summary (max 280 chars) suitable for sharing on Twitter/X. Include role + key skill/location if present. Keep it catchy and concise. Do NOT use HTML.
 
 Return ONLY a JSON object with this exact schema — no markdown, no explanation:
 {
@@ -1066,6 +1068,7 @@ Return ONLY a JSON object with this exact schema — no markdown, no explanation
   "salaryMax": 140000 | null,
   "salaryCurrency": "USD",
   "salaryPeriod": "yearly | monthly | hourly",
+  "summary": "string — tweet-length (max 280 chars) plain-text share summary",
   "description": "<p>verbatim description html</p>",
   "requirements": ["verbatim requirement line 1"],
   "benefits": ["verbatim benefit line 1"],
@@ -1112,6 +1115,9 @@ function normalizeParsedJobAd(raw: Partial<ParsedJobAd>): ParsedJobAd {
   const periodMap: Record<string, string> = { "per annum": "yearly", annum: "yearly", annual: "yearly", "per year": "yearly", yearly: "yearly", "per month": "monthly", monthly: "monthly", "per hour": "hourly", hourly: "hourly", "/hr": "hourly", "per hr": "hourly" };
   let salaryPeriod = periodMap[salaryPeriodRaw] ?? (validPeriods.includes(salaryPeriodRaw) ? salaryPeriodRaw : "yearly");
   if (salaryMin === null && salaryMax !== null) { salaryMin = salaryMax; salaryMax = null; }
+  const rawCompanyName = typeof raw.companyName === "string" ? raw.companyName.trim() : "";
+  const companyName = rawCompanyName || "Unspecified Company";
+  const summary = typeof raw.summary === "string" ? raw.summary.trim().slice(0, 280) : "";
   return {
     title: typeof raw.title === "string" ? raw.title.trim() : "",
     category: validCategories.includes(raw.category as string) ? raw.category as string : "Other",
@@ -1123,11 +1129,12 @@ function normalizeParsedJobAd(raw: Partial<ParsedJobAd>): ParsedJobAd {
     salaryMax,
     salaryCurrency,
     salaryPeriod,
+    summary,
     description: typeof raw.description === "string" ? raw.description.trim() : "",
     requirements: normalizeStringList(raw.requirements),
     benefits: normalizeStringList(raw.benefits),
     skillsRequired: normalizeStringList(raw.skillsRequired),
-    companyName: typeof raw.companyName === "string" ? raw.companyName.trim() : "",
+    companyName,
     companyWebsite: typeof raw.companyWebsite === "string" ? raw.companyWebsite.trim() : "",
     companyLogo: typeof raw.companyLogo === "string" ? raw.companyLogo.trim() : "",
     companyLocation: typeof raw.companyLocation === "string" ? raw.companyLocation.trim() : "",

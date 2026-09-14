@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Clock, Loader2, Briefcase } from "lucide-react";
+import { Clock, Briefcase } from "lucide-react";
 import styles from "./ApplicationHistory.module.css";
 import ApplicationDetailModal from "./ApplicationDetailModal";
 
@@ -53,8 +53,10 @@ export default function ApplicationHistory() {
 
   if (loading) {
     return (
-      <div className={styles.loadingRow}>
-        <Loader2 size={24} className="loading_icon" />
+      <div className={styles.list}>
+        {Array.from({ length: 3 }).map((_, i) => (
+          <ApplicationCardSkeleton key={i} />
+        ))}
       </div>
     );
   }
@@ -110,6 +112,27 @@ function ApplicationCard({ application, onClick }: { application: any; onClick: 
         {appliedAt && <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}><Clock size={12} /> {formatDate(appliedAt)}</span>}
       </div>
       {application.coverLetterText && <p style={{ fontSize: "var(--text-xs)", color: "var(--gray-600)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{application.coverLetterText.slice(0, 80)}…</p>}
+    </div>
+  );
+}
+
+function ApplicationCardSkeleton() {
+  return (
+    <div className={styles.skeletonCard}>
+      <div className={styles.skeletonHeader}>
+        <div className={styles.skeletonHeaderLeft}>
+          <div className={styles.skeletonTitle} />
+          <div className={styles.skeletonCompany} />
+        </div>
+        <div className={styles.skeletonPill} />
+      </div>
+      <div className={styles.skeletonMetaRow}>
+        <div className={styles.skeletonMeta} />
+        <div className={styles.skeletonMeta} />
+        <div className={styles.skeletonMeta} />
+      </div>
+      <div className={styles.skeletonSnippet} />
+      <div className={styles.skeletonSnippetShort} />
     </div>
   );
 }

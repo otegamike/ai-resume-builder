@@ -80,6 +80,7 @@ export async function PUT(
     if (body.salaryCurrency) job.salaryCurrency = body.salaryCurrency;
     if (body.salaryPeriod) job.salaryPeriod = body.salaryPeriod;
     if (body.hideSalary !== undefined) job.hideSalary = body.hideSalary;
+    if (body.summary !== undefined) job.summary = String(body.summary).trim().slice(0, 280);
     if (body.description) job.description = body.description;
     if (Array.isArray(body.requirements)) job.requirements = body.requirements;
     if (Array.isArray(body.benefits)) job.benefits = body.benefits;

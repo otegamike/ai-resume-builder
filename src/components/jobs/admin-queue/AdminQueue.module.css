@@ -7,3 +7,95 @@
 .companyName { font-size: var(--text-xs); color: var(--gray-500); font-weight: var(--font-medium); }
 .cardFooter { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--gray-100); padding-top: var(--space-3); font-size: var(--text-xs); color: var(--gray-500); }
 .emptyState { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-xl); padding: var(--space-8); text-align: center; color: var(--gray-500); box-shadow: var(--shadow-sm); }
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeletonCard {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.skeletonHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.skeletonHeaderLeft {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+}
+
+.skeletonTitle {
+  height: 1rem;
+  width: 55%;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.skeletonCompany {
+  height: 0.75rem;
+  width: 45%;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.skeletonDesc {
+  height: 3rem;
+  width: 100%;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.skeletonFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--gray-100);
+  padding-top: var(--space-3);
+}
+
+.skeletonStatus {
+  height: 0.75rem;
+  width: 5rem;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.skeletonActions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.skeletonAction {
+  height: 1.75rem;
+  width: 4.5rem;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}

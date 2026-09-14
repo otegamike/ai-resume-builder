@@ -6,15 +6,19 @@ import JobApplicationDetails from "@/components/jobs/job-application/JobApplicat
 import DropDown from "@/components/ui/dropdown/Dropdown";
 import { Button } from "@/components/ui/Button";
 
-const STATUS_OPTIONS = ["submitted", "under_review", "shortlisted", "interviewing", "offered", "rejected", "withdrawn"];
+import { JobApplicationStatus, JobApplication, ApplicantUser } from "@/types/JobApplicationData";
 
-export default function EmployerApplicantModal({ application, open, onClose, onStatusChange }: { application: any | null; open: boolean; onClose: () => void; onStatusChange?: (id: string, status: string) => void }) {
-  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+type EmployerApplication = Omit<JobApplication, "applicantId"> & { applicantInformation: ApplicantUser; applicantId: ApplicantUser | string };
+
+const STATUS_OPTIONS: JobApplicationStatus[] = ["submitted", "under_review", "shortlisted", "interviewing", "offered", "rejected", "withdrawn"];
+
+export default function EmployerApplicantModal({ application, open, onClose, onStatusChange }: { application: EmployerApplication | null; open: boolean; onClose: () => void; onStatusChange?: (id: string, status: JobApplicationStatus) => void }) {
+  const [selectedStatus, setSelectedStatus] = useState<JobApplicationStatus | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   if (!open || !application) return null;
 
-  const currentStatus: string = application.status || "submitted";
+  const currentStatus: JobApplicationStatus = application.status || "submitted";
   const pendingStatus = selectedStatus ?? currentStatus;
 
   const handleSubmit = async () => {
@@ -28,10 +32,10 @@ export default function EmployerApplicantModal({ application, open, onClose, onS
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to update status");
-      onStatusChange?.(application._id, pendingStatus);
+      onStatusChange?.(application._id, pendingStatus as JobApplicationStatus);
       setSelectedStatus(null);
-    } catch (e: any) {
-      alert(e.message || "Failed to update");
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : "Failed to update");
     } finally {
       setSubmitting(false);
     }
@@ -48,7 +52,7 @@ export default function EmployerApplicantModal({ application, open, onClose, onS
           <JobApplicationDetails application={application} />
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "1rem", borderTop: "1px solid var(--gray-200)", paddingTop: "1rem" }}>
             <label style={{ fontSize: "var(--text-xs)", fontWeight: 600, color: "var(--gray-700)" }}>Update status</label>
-            <DropDown defaultOption={currentStatus} options={STATUS_OPTIONS} selectedOption={pendingStatus} updateSelectedOption={setSelectedStatus} fullwidth />
+            <DropDown defaultOption={currentStatus} options={STATUS_OPTIONS} selectedOption={pendingStatus} updateSelectedOption={(v) => setSelectedStatus(v as JobApplicationStatus)} fullwidth />
           </div>
         </div>
         <div className={styles.footer}>

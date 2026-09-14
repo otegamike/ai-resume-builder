@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Building2, DollarSign, Sparkles, Users, Briefcase, MapPin, Loader2, ArrowRight, Pencil, FileText } from "lucide-react";
@@ -24,6 +24,10 @@ interface JobItem {
   rejectionReason?: string;
   viewsCount: number;
   applicationsCount: number;
+  hasNewApplicants?: boolean;
+  newApplicationsCount?: number;
+  latestNewAt?: string | null;
+  createdAt?: string;
 }
 
 export default function EmployerHub({ isEmployer }: { isEmployer: boolean }) {
@@ -59,6 +63,21 @@ export default function EmployerHub({ isEmployer }: { isEmployer: boolean }) {
     if (isEmployer) fetchEmployerJobs();
     else setLoadingJobs(false);
   }, [isEmployer]);
+
+  const sortedJobs = useMemo(() => {
+    return [...employerJobs].sort((a, b) => {
+      const aNew = a.hasNewApplicants ? 1 : 0;
+      const bNew = b.hasNewApplicants ? 1 : 0;
+      if (bNew !== aNew) return bNew - aNew;
+      if (aNew && bNew && a.latestNewAt && b.latestNewAt) {
+        return new Date(b.latestNewAt).getTime() - new Date(a.latestNewAt).getTime();
+      }
+      const aTime = a.latestNewAt ? new Date(a.latestNewAt).getTime() : a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.latestNewAt ? new Date(b.latestNewAt).getTime() : b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      if (bNew && aNew && bTime !== aTime) return bTime - aTime;
+      return 0;
+    });
+  }, [employerJobs]);
 
   const handleRegisterOrg = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -157,7 +176,11 @@ export default function EmployerHub({ isEmployer }: { isEmployer: boolean }) {
       </div>
 
       {loadingJobs ? (
-        <div className={styles.emptyState}><Loader2 size={32} style={{ margin: "0 auto 1rem" }} /><p>Loading your job ads...</p></div>
+        <div className={styles.jobsGrid}>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <EmployerJobCardSkeleton key={i} />
+          ))}
+        </div>
       ) : employerJobs.length === 0 ? (
         <div className={styles.emptyState}>
           <Briefcase size={40} style={{ margin: "0 auto 1rem", opacity: 0.5 }} />
@@ -167,7 +190,7 @@ export default function EmployerHub({ isEmployer }: { isEmployer: boolean }) {
         </div>
       ) : (
         <div className={styles.jobsGrid}>
-          {employerJobs.map((job) => (
+          {sortedJobs.map((job) => (
             <EmployerJobCard key={job._id} job={job} onViewApplicants={handleViewApplicants} />
           ))}
         </div>
@@ -181,7 +204,11 @@ export default function EmployerHub({ isEmployer }: { isEmployer: boolean }) {
               <button onClick={() => setViewingApplicantsJobId(null)} className={styles.closeBtn}>&times;</button>
             </div>
             {loadingApplicants ? (
-              <div style={{ textAlign: "center", padding: "2rem" }}><Loader2 size={24} /></div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <ApplicantRowSkeleton key={i} />
+                ))}
+              </div>
             ) : applicantsList.length === 0 ? (
               <div style={{ textAlign: "center", padding: "2rem", color: "var(--gray-500)" }}>No applications yet.</div>
             ) : (
@@ -225,14 +252,19 @@ function salaryText(job: JobItem): string | null {
 function EmployerJobCard({ job, onViewApplicants }: { job: JobItem; onViewApplicants: (id: string) => void }) {
   const router = useRouter();
   const plainDesc = job.description ? job.description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() : "";
+  const newCount = job.newApplicationsCount ?? 0;
+  const hasNew = !!job.hasNewApplicants && newCount > 0;
   return (
-    <div className={styles.jobCard}>
+    <div className={`${styles.jobCard} ${hasNew ? styles.jobCardNew : ""}`}>
       <div className={styles.cardHeader}>
         <div>
           <h3 className={styles.jobTitle}>{job.title}</h3>
           <div className={styles.companyName}>{job.category} • {job.jobType} • {job.location}</div>
         </div>
-        {job.isFeatured && <span className={styles.featuredBadge}>Featured</span>}
+        <div className={styles.badgesRow}>
+          {hasNew && <span className={styles.newBadge}>{newCount} new</span>}
+          {job.isFeatured && <span className={styles.featuredBadge}>Featured</span>}
+        </div>
       </div>
       <div className={styles.tagsRow}>
         <span className={styles.tag}><MapPin size={13} /> {job.location} ({job.workplaceType ?? "remote"})</span>
@@ -256,6 +288,54 @@ function EmployerJobCard({ job, onViewApplicants }: { job: JobItem; onViewApplic
       {job.rejectionReason && (
         <div style={{ fontSize: "var(--text-xs)", color: "#dc2626", background: "#fef2f2", padding: "0.5rem", borderRadius: "4px" }}>Admin Note: {job.rejectionReason}</div>
       )}
+    </div>
+  );
+}
+
+function EmployerJobCardSkeleton() {
+  return (
+    <div className={styles.skeletonCard}>
+      <div className={styles.skeletonHeader}>
+        <div className={styles.skeletonHeaderLeft}>
+          <div className={styles.skeletonTitle} />
+          <div className={styles.skeletonCompany} />
+        </div>
+        <div className={styles.skeletonBadgesRow}>
+          <div className={styles.skeletonBadge} />
+        </div>
+      </div>
+      <div className={styles.skeletonTagsRow}>
+        <div className={styles.skeletonTag} />
+        <div className={styles.skeletonTagShort} />
+        <div className={styles.skeletonTag} />
+      </div>
+      <div className={styles.skeletonDesc} />
+      <div className={styles.skeletonFooter}>
+        <div className={styles.skeletonFooterLeft} />
+        <div className={styles.skeletonFooterActions}>
+          <div className={styles.skeletonAction} />
+          <div className={styles.skeletonAction} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ApplicantRowSkeleton() {
+  return (
+    <div className={styles.skeletonModalCard}>
+      <div className={styles.skeletonModalHeader}>
+        <div className={styles.skeletonModalHeaderLeft}>
+          <div className={styles.skeletonModalName} />
+          <div className={styles.skeletonModalEmail} />
+        </div>
+        <div className={styles.skeletonModalPill} />
+      </div>
+      <div className={styles.skeletonModalBody} />
+      <div className={styles.skeletonModalFooter}>
+        <div className={styles.skeletonModalFooterLeft} />
+        <div className={styles.skeletonModalSelect} />
+      </div>
     </div>
   );
 }

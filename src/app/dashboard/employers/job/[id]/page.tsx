@@ -3,9 +3,15 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, MapPin, Briefcase, Clock, CheckCircle2, Loader2, DollarSign } from "lucide-react";
+import { ArrowLeft, MapPin, Briefcase, Clock, CheckCircle2 } from "lucide-react";
 import styles from "./page.module.css";
 import EmployerApplicantModal from "@/components/jobs/employer-applicants/EmployerApplicantModal";
+import { JobApplication, JobApplicationStatus, ApplicantUser } from "@/types/JobApplicationData";
+
+interface JobApplicationData extends Omit<JobApplication, "applicantId"> {
+  applicantInformation: ApplicantUser;
+  applicantId: ApplicantUser | string;
+}
 
 interface JobItem {
   _id: string;
@@ -47,11 +53,11 @@ export default function EmployerJobDetailPage() {
   const id = params.id;
   const router = useRouter();
   const [job, setJob] = useState<JobItem | null>(null);
-  const [applicants, setApplicants] = useState<any[]>([]);
+  const [applicants, setApplicants] = useState<JobApplicationData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeFilter, setActiveFilter] = useState<string>("All");
-  const [selectedApp, setSelectedApp] = useState<any | null>(null);
+  const [selectedApp, setSelectedApp] = useState<JobApplicationData | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -62,8 +68,8 @@ export default function EmployerJobDetailPage() {
       if (!res.ok) throw new Error(data.error || "Failed to load");
       setJob(data.job);
       setApplicants(data.applicants || []);
-    } catch (e: any) {
-      setError(e.message || "Failed to load");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to load");
     } finally {
       setLoading(false);
     }
@@ -73,10 +79,21 @@ export default function EmployerJobDetailPage() {
     fetchData();
   }, [fetchData]);
 
-  const handleStatusChange = (appId: string, newStatus: string) => {
-    setApplicants((prev) => prev.map((a) => (a._id === appId ? { ...a, status: newStatus } : a)));
-    setSelectedApp((prev: any) => (prev && prev._id === appId ? { ...prev, status: newStatus } : prev));
+  const handleStatusChange = (appId: string, newStatus: JobApplicationStatus) => {
+    setApplicants((prev) => prev.map((a) => (a._id === appId ? { ...a, status: newStatus, viewedByEmployer: true } : a)));
+    setSelectedApp((prev) => (prev && prev._id === appId ? { ...prev, status: newStatus, viewedByEmployer: true } : prev));
   };
+
+  const handleOpenApplicant = useCallback((app: JobApplicationData) => {
+    setSelectedApp(app);
+    if (app.viewedByEmployer) return;
+    setApplicants((prev) => prev.map((a) => (a._id === app._id ? { ...a, viewedByEmployer: true } : a)));
+    setSelectedApp((prev) => (prev && prev._id === app._id ? { ...prev, viewedByEmployer: true } : prev));
+    fetch(`/api/jobs/applications/${app._id}/viewed`, { method: "POST" }).catch(() => {
+      setApplicants((prev) => prev.map((a) => (a._id === app._id ? { ...a, viewedByEmployer: false } : a)));
+      setSelectedApp((prev) => (prev && prev._id === app._id ? { ...prev, viewedByEmployer: false } : prev));
+    });
+  }, []);
 
   const filtered = applicants.filter((a) => {
     if (activeFilter === "All") return a.status !== "withdrawn";
@@ -89,7 +106,7 @@ export default function EmployerJobDetailPage() {
   if (loading) {
     return (
       <div className={styles.container}>
-        <div className={styles.loadingRow}><Loader2 size={24} /></div>
+        <EmployerJobDetailSkeleton />
       </div>
     );
   }
@@ -159,19 +176,85 @@ export default function EmployerJobDetailPage() {
       ) : (
         <div className={styles.list}>
           {filtered.map((app) => (
-            <div key={app._id} className={styles.applicantRow} onClick={() => setSelectedApp(app)} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && setSelectedApp(app)}>
+            <div key={app._id} className={styles.applicantRow} onClick={() => handleOpenApplicant(app)} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && handleOpenApplicant(app)}>
               <div>
-                <strong className={styles.name}>{app.user?.name || app.applicantId?.name || "Candidate"}</strong>
-                <div style={{ fontSize: "var(--text-xs)", color: "var(--gray-500)" }}>{app.user?.email || app.applicantId?.email || ""}</div>
+                <div className={styles.nameRow}>
+                  <strong className={styles.name}>{app.applicantInformation?.name || (typeof app.applicantId === "object" ? app.applicantId.name : null) || "Candidate"}</strong>
+                  {!app.viewedByEmployer && <span className={styles.newBadgeSm}>new</span>}
+                </div>
+                <div style={{ fontSize: "var(--text-xs)", color: "var(--gray-500)" }}>{app.applicantInformation?.email || (typeof app.applicantId === "object" ? app.applicantId.email : "") || ""}</div>
               </div>
               <span className={styles.statusPill}>{app.status.replace("_", " ").toUpperCase()}</span>
-              {typeof app.aiMatchScore === "number" && <span className={styles.scorePill}>Match {app.aiMatchScore}%</span>}
+              {typeof app.jobMatchAnalysis?.score === "number" && <span className={styles.scorePill}>Match {app.jobMatchAnalysis.score}%</span>}
             </div>
           ))}
         </div>
       )}
 
       <EmployerApplicantModal application={selectedApp} open={!!selectedApp} onClose={() => setSelectedApp(null)} onStatusChange={handleStatusChange} />
+    </div>
+  );
+}
+
+function EmployerJobDetailSkeleton() {
+  return (
+    <>
+      <div className={styles.skeletonBackLink} />
+      <div className={styles.skeletonHeaderCard}>
+        <div className={styles.skeletonHeaderTop}>
+          <div className={styles.skeletonHeaderLeft}>
+            <div className={styles.skeletonCompanyRow}>
+              <div className={styles.skeletonCompanyName} />
+              <div className={styles.skeletonVerified} />
+            </div>
+            <div className={styles.skeletonTitle} />
+            <div className={styles.skeletonMetaRow}>
+              <div className={styles.skeletonMeta} />
+              <div className={styles.skeletonMeta} />
+              <div className={styles.skeletonMeta} />
+            </div>
+          </div>
+          <div className={styles.skeletonSalaryBox}>
+            <div className={styles.skeletonSalaryLabel} />
+            <div className={styles.skeletonSalaryValue} />
+          </div>
+        </div>
+        <div className={styles.skeletonDesc} />
+        <div className={styles.skeletonStatsRow}>
+          <div className={styles.skeletonStat} />
+          <div className={styles.skeletonStat} />
+          <div className={styles.skeletonStat} />
+        </div>
+      </div>
+      <div className={styles.skeletonSectionTitle} />
+      <div className={styles.skeletonChipRow}>
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className={styles.skeletonChip} />
+        ))}
+      </div>
+      <div className={styles.list}>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <ApplicantRowSkeleton key={i} />
+        ))}
+      </div>
+    </>
+  );
+}
+
+function ApplicantRowSkeleton() {
+  return (
+    <div className={styles.skeletonApplicantRow}>
+      <div className={styles.skeletonApplicantLeft}>
+        <div className={styles.skeletonApplicantNameRow}>
+          <div className={styles.skeletonName} />
+          <div className={styles.skeletonBadge} />
+        </div>
+        <div className={styles.skeletonEmail} />
+      </div>
+      <div className={styles.skeletonApplicantRight}>
+        <div className={styles.skeletonStatusPill} />
+        <div className={styles.skeletonScorePill} />
+      </div>
     </div>
   );
 }

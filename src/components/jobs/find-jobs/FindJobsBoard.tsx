@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
-import { Search, MapPin, Briefcase, CheckCircle2, Loader2 } from "lucide-react";
+import { Search, MapPin, Briefcase, CheckCircle2 } from "lucide-react";
 import DropDown from "@/components/ui/dropdown/Dropdown";
 import styles from "./FindJobsBoard.module.css";
 
@@ -145,10 +145,11 @@ export default function FindJobsBoard() {
 
       <div className={styles.jobsGrid}>
         {loading ? (
-          <div className={styles.emptyState}>
-            <Loader2 size={32} style={{ margin: "0 auto 1rem" }} className="loading_icon" />
-            <p>Loading active job postings...</p>
-          </div>
+          <>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <JobCardSkeleton key={i} />
+            ))}
+          </>
         ) : jobs.length === 0 ? (
           <div className={styles.emptyState}>
             <Briefcase size={40} style={{ margin: "0 auto 1rem", opacity: 0.5 }} />
@@ -162,9 +163,11 @@ export default function FindJobsBoard() {
             ))}
             <div ref={sentinelRef} className={styles.sentinel} />
             {loadingMore && (
-              <div className={styles.loadingMore}>
-                <Loader2 size={20} className="loading_icon" />
-              </div>
+              <>
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <JobCardSkeleton key={`more-${i}`} />
+                ))}
+              </>
             )}
             {!hasMore && jobs.length > 0 && (
               <p style={{ textAlign: "center", color: "var(--gray-400)", fontSize: "var(--text-xs)", padding: "1rem" }}>
@@ -222,5 +225,24 @@ function JobCard({ job }: { job: JobItem }) {
         )}
       </div>
     </Link>
+  );
+}
+
+function JobCardSkeleton() {
+  return (
+    <div className={styles.skeletonCard}>
+      <div className={styles.skeletonHeader}>
+        <div className={styles.skeletonHeaderLeft}>
+          <div className={styles.skeletonTitle} />
+          <div className={styles.skeletonCompany} />
+        </div>
+        <div className={styles.skeletonBadge} />
+      </div>
+      <div className={styles.skeletonTagsRow}>
+        <div className={styles.skeletonTag} />
+        <div className={styles.skeletonTagShort} />
+        <div className={styles.skeletonTag} />
+      </div>
+    </div>
   );
 }

@@ -55,6 +55,8 @@ const JobApplicationSchema: Schema = new Schema<IJobApplication>(
     },
     source: { type: String, enum: ["platform", "off_platform"], default: "platform", index: true },
     notes: { type: String, default: "" },
+    viewedByEmployer: { type: Boolean, default: false, index: true },
+    viewedAt: { type: Date, required: false },
   },
   { timestamps: true }
 );

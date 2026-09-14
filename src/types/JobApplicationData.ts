@@ -34,6 +34,17 @@ export interface JobApplication  {
   screeningAnswers: { questionId: string; question: string; answer: string }[];
   source: "platform" | "off_platform";
   notes?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  viewedByEmployer?: boolean;
+  viewedAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface ApplicantUser {
+  name: string;
+  email: string;
+  image?: string;
+  location?: string;
+  jobTitle?: string;
+  phone?: string;
 }
