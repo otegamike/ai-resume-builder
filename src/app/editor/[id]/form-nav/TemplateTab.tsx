@@ -21,16 +21,16 @@ export default function TemplateTab({ selectedTemplate, toggleTemplatePicker }: 
     <div className={styles.formSection}>
             <div className={styles.formSectionHeader}>
               <h2 className={styles.formSectionTitle}>Select Template</h2>
+              <Button onClick={() => toggleTemplatePicker(true)}>
+                <Palette className={styles.templateButtonIcon} />
+                {selectedTemplate ? "Change Template" : "Choose Template"}
+              </Button>
             </div>
         <div className={styles.templateTabContainer}>
-          <ResumeComponent templateId={selectedTemplate?.id || 'template1'} resumeContent={previewData} />
+          <ResumeComponent templateId={selectedTemplate?.id || 'template1'} resumeContent={previewData} renderOpts={{ showProStatus: true }} />
           <p className={styles.templateDescription}>
             {selectedTemplate?.description ?? "Choose a design that fits your style. You can change it anytime."}
           </p>
-          <Button onClick={() => toggleTemplatePicker(true)}>
-            <Palette className={styles.templateButtonIcon} />
-            {selectedTemplate ? "Change Template" : "Choose Template"}
-          </Button>
         </div>
       </div>
   );
