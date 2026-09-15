@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { Palette } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { buildTemplateSrcDoc, getTemplatePreviewData } from "@/lib/templateRenderer";
+import { getTemplatePreviewData } from "@/lib/templateRenderer";
 import type { TemplateDefinition } from "@/lib/templateCatalog";
 import ResumeComponent from "@/components/resume/ResumeComponent";
 import styles from "../page.module.css";
@@ -28,6 +28,7 @@ export default function TemplateTab({ selectedTemplate, toggleTemplatePicker }: 
             </div>
         <div className={styles.templateTabContainer}>
           <ResumeComponent templateId={selectedTemplate?.id || 'template1'} resumeContent={previewData} renderOpts={{ showProStatus: true }} />
+          <h3 className={styles.templateDescription}>{selectedTemplate?.name || ''}</h3>
           <p className={styles.templateDescription}>
             {selectedTemplate?.description ?? "Choose a design that fits your style. You can change it anytime."}
           </p>

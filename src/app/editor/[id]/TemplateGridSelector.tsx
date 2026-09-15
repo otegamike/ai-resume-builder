@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useRef, useEffect, useState } from "react"
+import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/Button"
 import { ChevronDown, ChevronUp, Palette, Lock, Crown } from "lucide-react"
 import { buildTemplateSrcDoc, getTemplatePreviewData } from "@/lib/templateRenderer"
@@ -8,6 +8,8 @@ import type { TemplateDefinition, TemplateId } from "@/lib/templateCatalog"
 import styles from "./templateGridSelector.module.css"
 import ResumeIframe from "@/components/resume/ResumeIframe"
 import { useAlertStore } from "@/store/useAlertStore"
+import Modal from "@/components/ui/modal/Modal"
+import editorStyles from './page.module.css'
 
 type TabId = "free" | "pro";
 
@@ -32,7 +34,6 @@ function TemplateGridSelector({
 }: TemplateGridSelectorProps) {
   const [activeTab, setActiveTab] = useState<TabId>("free");
   const previewData = useMemo(() => getTemplatePreviewData(), [])
-  const wrapperRef = useRef<HTMLDivElement>(null)
 
   const isProOrAbove = userPlan === "pro" || userPlan === "proPlus";
 
@@ -54,24 +55,6 @@ function TemplateGridSelector({
     }))
   }, [currentTemplates, previewData])
 
-  useEffect(() => {
-    if (!showTemplatePicker) return
-    const handleClickOutside = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        toggleTemplatePicker(false)
-      }
-    }
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") toggleTemplatePicker(false)
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    document.addEventListener("keydown", handleEscape)
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-      document.removeEventListener("keydown", handleEscape)
-    }
-  }, [showTemplatePicker, toggleTemplatePicker])
-
   const handleCardClick = (t: TemplateDefinition) => {
     if (t.tier === "pro" && !isProOrAbove) {
       useAlertStore.getState().addAlert("info", "Upgrade to Pro to access ATS-optimized templates");
@@ -81,8 +64,18 @@ function TemplateGridSelector({
   };
 
   return (
-    <div className={styles.wrapper} ref={wrapperRef}>
+    <>
       <Button
+        variant="light_outline"
+        className={styles.saveButton}
+        onClick={() => toggleTemplatePicker()}
+        aria-expanded={showTemplatePicker}
+        aria-haspopup="dialog"
+      >
+        <Palette color="var(--neutral-100)" className={editorStyles.saveIcon} />
+        <div className={editorStyles.buttonText}>{selectedTemplate?.name || "Template"}</div>
+      </Button>
+      {/* <Button
         variant="light_outline"
         size="sm"
         className={styles.triggerButton}
@@ -97,10 +90,15 @@ function TemplateGridSelector({
         ) : (
           <ChevronDown color="var(--neutral-100)" className={styles.triggerIcon} />
         )}
-      </Button>
+      </Button> */}
 
-      {showTemplatePicker && (
-        <div className={styles.panel} role="dialog" aria-label="Choose a template">
+      <Modal
+        open={showTemplatePicker}
+        onClose={() => toggleTemplatePicker(false)}
+        title={activeTab === "free" ? "Choose a Template" : "ATS-Optimized Templates"}
+        size="lg"
+      >
+        <div className={styles.modalContent}>
           <div className={styles.tabBar}>
             <button
               className={`${styles.tab} ${activeTab === "free" ? styles.tabActive : ""}`}
@@ -137,7 +135,7 @@ function TemplateGridSelector({
                   >
                     {t.tier === "pro" && <span className={styles.proBadge}><Crown size={10} /> Pro</span>}
                     <div className={`${styles.preview} ${isLocked ? styles.previewLocked : ""}`}>
-                      <ResumeIframe 
+                      <ResumeIframe
                         renderedTemplate={renderedTemplates[i].html}
                       />
                       {isLocked && (
@@ -156,8 +154,8 @@ function TemplateGridSelector({
             </div>
           </div>
         </div>
-      )}
-    </div>
+      </Modal>
+    </>
   )
 }
 

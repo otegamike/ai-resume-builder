@@ -18,6 +18,7 @@ import { useResumeStore } from "@/store/useResumeStore";
 import styles from "./JobApplicationModal.module.css";
 import { delayedScrollIntoView } from "@/utils/scrollIntoview";
 import ResumePlusViewer from "@/components/resume/ResumePlusViewer";
+import Modal from "@/components/ui/modal/Modal";
 
 interface JobDetail {
   _id: string;
@@ -346,8 +347,6 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
     }
   };
 
-  if (!open) return null;
-
   const tier = analysis ? getTier(analysis.score) : null;
   const finalScore = tailoredReport?.matchAnalysis.score ?? analysis?.score ?? 0;
   const finalTier = getTier(finalScore);
@@ -401,12 +400,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
   };
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.card} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.header}>
-          <h2 className={styles.title}>Apply to {job.title}</h2>
-          <button onClick={onClose} className={styles.closeBtn} aria-label="Close">&times;</button>
-        </div>
+    <Modal open={open} onClose={onClose} title={`Apply to ${job.title}`} size="md">
 
         <div className={styles.stepIndicator}>
           {Array.from({ length: totalSteps }).map((_, i) => (
@@ -663,7 +657,6 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
           </div>
           </>
         )}
-      </div>
-    </div>
+    </Modal>
   );
 }

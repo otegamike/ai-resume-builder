@@ -1423,7 +1423,7 @@ input.titleInput:focus {
   }
 
   input.titleInput {
-    width: min(9rem, 100%);
+    width: 100%;
     padding: 0 var(--space-2);
     font-size: var(--text-md);
   }

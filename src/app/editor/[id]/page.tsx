@@ -397,15 +397,7 @@ export default function ResumeEditor() {
             className={styles.titleInput}
             placeholder="Resume Title"
           />
-          <TemplateSelector
-            templateDefinitions={templateDefinitions}
-            template={templateId}
-            selectedTemplate={selectedTemplate}
-            changeTemplate={changeTemplate}
-            showTemplatePicker={showTemplatePicker}
-            toggleTemplatePicker={toggleTemplatePicker}
-            userPlan={session?.user?.subscriptionPlan}
-          />
+          
         </div>
 
         <div className={styles.navbarCenter} />
@@ -428,6 +420,17 @@ export default function ResumeEditor() {
               Save failed
             </span>
           )}
+
+
+          <TemplateSelector
+            templateDefinitions={templateDefinitions}
+            template={templateId}
+            selectedTemplate={selectedTemplate}
+            changeTemplate={changeTemplate}
+            showTemplatePicker={showTemplatePicker}
+            toggleTemplatePicker={toggleTemplatePicker}
+            userPlan={session?.user?.subscriptionPlan}
+          />
           <Button
             variant="light_outline"
             className={styles.saveButton}
