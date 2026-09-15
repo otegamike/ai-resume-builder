@@ -10,6 +10,12 @@ export function gettitleBarHeight() {
     return header?.offsetHeight || 0;
 }
 
+export function getHeightById(id: string, defaultValue: number = 0): number {
+    if (typeof document === 'undefined') return defaultValue;
+    const element = document.getElementById(id);
+    return element ? element.getBoundingClientRect().height : defaultValue;
+}
+
 export function getViewportHeight() {
     if (typeof window === 'undefined') return 0;
     const viewportHeight = window.innerHeight;
@@ -22,7 +28,12 @@ export function calculateEditorHeight() {
     return viewportHeight - headerHeight;
 }
 
-export function editorSectionHeight() {
+export function editorSectionHeightnNumber(): number {
     const height = calculateEditorHeight() - gettitleBarHeight();
-    return height? `${height-20}px` : "80vh";
+    return height-20
+}
+
+export function editorSectionHeight() {
+    const height = editorSectionHeightnNumber();
+    return height? `${height}px` : "80vh";
 }

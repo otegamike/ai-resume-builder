@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import dynamic from "next/dynamic";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
@@ -15,7 +15,7 @@ import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer
 import { TEMPLATE_PAGE, templateDefinitions, type TemplateDefinition, type TemplateId } from "@/lib/templateCatalog";
 import { getRandomTemplateId } from "@/utils/templateUtils";
 import styles from "./page.module.css";
-import { calculateEditorHeight, editorSectionHeight } from "@/utils/headerSize";
+import { calculateEditorHeight, editorSectionHeight, getHeightById, editorSectionHeightnNumber } from "@/utils/headerSize";
 
 function FormTabSkeleton() {
   return (
@@ -358,6 +358,8 @@ export default function ResumeEditor() {
 
   const editorHeight = useMemo(() => calculateEditorHeight(), []);
   const sectionHeight = useMemo(() => editorSectionHeight(), []);
+  const sectionHeightNumber = useMemo(() => editorSectionHeightnNumber(), []);
+  const closeButtonHeight = getHeightById('closeSectionButton', 45.52)
 
   if (status === "loading" || loading || templateDefinitions.length === 0) {
     return (
@@ -463,7 +465,7 @@ export default function ResumeEditor() {
 
       <div className={styles.mainWorkspaceContainer}>
         <main className={styles.mainWorkspace}>
-          <section className={`${isEditorTabOpen ? "" : styles.closeSection} ${styles.editorSection} hideScrollbar`} style={{ height: sectionHeight }}>
+          <section className={`${isEditorTabOpen ? "" : styles.closeSection} ${styles.editorSection} hideScrollbar`} style={{ height: sectionHeight, '--close-height': `-${sectionHeightNumber - closeButtonHeight}px` } as React.CSSProperties}>
             <div className={styles.formNav}>
               <div id="formNavBar" className={`${styles.formNavContent} hideScrollbar`}>
                 {TAB_ARRAY.map((tab) => {
@@ -562,7 +564,9 @@ export default function ResumeEditor() {
                 <FinishTab changeTab={changeTab} />
               )}
 
-              <div className={styles.navFormFooter}>
+              
+            </div>
+            <div className={styles.navFormFooter}>
                 {activeTab === "finish" ? (
                   <Button className={styles.finalExportButton} size="lg" onClick={() => exportPDF()}>
                     Export Resume
@@ -574,6 +578,7 @@ export default function ResumeEditor() {
 
                 <div
                   onClick={() => toggleEditorTab()}
+                  id='closeSectionButton'
                   className={`${styles.closeSectionButton} ${resume.summary ? styles.completed : ""}`}
                 >
                   {isEditorTabOpen ? "View Resume" : "Edit Resume"}
@@ -582,7 +587,6 @@ export default function ResumeEditor() {
                   </div>
                 </div>
               </div>
-            </div>
           </section>
 
           <section className={styles.previewSection}>
