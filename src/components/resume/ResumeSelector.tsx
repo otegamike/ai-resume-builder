@@ -264,10 +264,9 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
           return (
             <div
               key={resume._id}
-              className={`${styles.resumeCard} ${isPinned ? styles.pinned : ""}`}
+              className={styles.resumeCard}
               onClick={() => selectSavedResume(resume)}
             >
-              {isPinned && <Pin fill="var(--neutral-200)" className={styles.actionButtonSvg} />}
               <div className={styles.cardPreview}>
                 {templates.length > 0 ? (
                   <ResumeComponent
@@ -286,6 +285,7 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
                   </div>
                 )}
               </div>
+              {isPinned && <Pin className={styles.actionButtonSvg} style={{ fill: "var(--neutral-700)", color: "var(--neutral-700)" }} />}
               <div className={styles.cardTitle}>{resume.title}</div>
             </div>
           );

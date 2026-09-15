@@ -328,14 +328,14 @@ export default function OverviewPage() {
                 <Link
                   key={resume._id}
                   href={`/editor/${resume._id}`}
-                  className={`${styles.myResumesCard} ${isPinned ? styles.pinned : ""}`}
+                  className={styles.myResumesCard}
                 >
-                  {isPinned && <Pin fill="var(--neutral-200)" className={styles.actionButtonSvg} />}
                   <ResumeComponent
                     resumeContent={resume.content}
                     templateId={resume.template}
                     renderOpts={{ showProStatus: true }}
                   />
+                  {isPinned && <Pin className={styles.actionButtonSvg} style={{ fill: "var(--neutral-700)", color: "var(--neutral-700)" }} />}
                 </Link>
               )}
            )}

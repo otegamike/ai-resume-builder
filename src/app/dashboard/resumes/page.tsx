@@ -132,7 +132,7 @@ interface ResumeCardComponentProps {
 
 function ResumeCardComponent({resumeContent, _id, template, updatedAt, title, isPinned, deleteResume, pinResume  } : ResumeCardComponentProps) {
   return (
-    <div key={_id} className={`${styles.resumeCard} ${isPinned ? styles.pinned : ""}`}>
+    <div key={_id} className={styles.resumeCard}>
               <ResumeComponent
                 resumeContent={resumeContent}
                 templateId={template}
@@ -166,7 +166,7 @@ function ResumeCardComponent({resumeContent, _id, template, updatedAt, title, is
                   className={`${styles.actionButton}`}
                   onClick={() => pinResume(_id)}
                 >
-                  <Pin fill={isPinned?'var(--neutral-700)': 'transparent'} className={styles.actionButtonSvg} />
+                  <Pin className={styles.actionButtonSvg} style={{ fill: isPinned ? "var(--neutral-700)" : "transparent", color: "var(--neutral-700)" }} />
                 </Button>
               </div>
               {isPinned && (
@@ -177,7 +177,7 @@ function ResumeCardComponent({resumeContent, _id, template, updatedAt, title, is
                   className={`${styles.actionButton}`}
                   onClick={() => pinResume(_id)}
                 >
-                  <Pin fill='var(--neutral-200)' className={styles.actionButtonSvg} />
+                  <Pin className={styles.actionButtonSvg} style={{ fill: "var(--neutral-700)", color: "var(--neutral-700)" }} />
                 </Button>
                 </div>
               )}

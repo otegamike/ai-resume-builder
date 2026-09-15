@@ -112,10 +112,6 @@
   box-shadow: var(--shadow-md);
 }
 
-.pinned {
-  border: 2px solid var(--neutral-700);
-}
-
 .previewArea {
   flex: 1;
   display: flex;
@@ -226,6 +222,11 @@
   border-radius: var(--radius-md);
   opacity: 1;
   transition: opacity 0.4s ease;
+  z-index: 2;
+  transform: translateZ(0);
+  isolation: isolate;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.35)) drop-shadow(0 0 1px rgba(255, 255, 255, 0.9));
 
   .pinButton:hover {
     background-color: transparent;
