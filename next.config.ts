@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
       { source: "/employer/:path*", destination: "/dashboard/jobs", permanent: true },
       { source: "/dashboard/employer", destination: "/dashboard/employers", permanent: true },
       { source: "/dashboard/employer/:path*", destination: "/dashboard/employers", permanent: true },
+      { source: "/dashboard/improve", destination: "/dashboard/ai-tools", permanent: false },
+      { source: "/dashboard/improve/:path*", destination: "/dashboard/ai-tools", permanent: false },
+      { source: "/dashboard/tailor", destination: "/dashboard/ai-tools?tab=tailor", permanent: false },
+      { source: "/dashboard/tailor/:path*", destination: "/dashboard/ai-tools?tab=tailor", permanent: false },
     ];
   },
 };

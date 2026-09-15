@@ -32,8 +32,7 @@ const primaryLinks = [
 
 const secondaryLinks = [
   { href: "/dashboard/applications", label: "Applications" },
-  { href: "/dashboard/tailor", label: "Tailor" },
-  { href: "/dashboard/improve", label: "Improve" }
+  { href: "/dashboard/ai-tools", label: "AI Tools" },
 ];
 
 

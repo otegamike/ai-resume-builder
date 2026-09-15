@@ -4,7 +4,7 @@ import Link from "next/link";
 import React, { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { FileText, Settings, Plus, LayoutTemplate, PanelRightClose,  PanelRightOpen, LogOut, BarChart3, WandSparkles, Sparkles, Home, PenLine, Briefcase, Building2, Search, ShieldCheck } from "lucide-react";
+import { FileText, Settings, Plus, LayoutTemplate, PanelRightClose,  PanelRightOpen, LogOut, BarChart3, Sparkles, Home, PenLine, Briefcase, Building2, Search, ShieldCheck } from "lucide-react";
 import styles from "./layout.module.css";
 
 export default function DashboardShell({
@@ -105,16 +105,10 @@ export default function DashboardShell({
               Templates
             </span>
           </Link>
-          <Link href="/dashboard/improve" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/improve")}`}>
-            <WandSparkles className={styles.navIcon} />
-            <span className={styles.navLinkText}>
-              Improve
-            </span>
-          </Link>
-          <Link href="/dashboard/tailor" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/tailor")}`}>
+          <Link href="/dashboard/ai-tools" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/ai-tools")}`}>
             <Sparkles className={styles.navIcon} />
             <span className={styles.navLinkText}>
-              Tailor
+              AI Tools
             </span>
           </Link>
           <Link href="/dashboard/settings" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/settings")}`}>
