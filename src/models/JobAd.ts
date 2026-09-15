@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
 import type { JobAd, ScreeningQuestion } from "@/types/JobAdData";
+import { DEFAULT_JOB_CATEGORY } from "@/lib/jobCategories";
 
 export type {
   JobType,
@@ -55,7 +56,7 @@ const JobAdSchema: Schema = new Schema<IJobAd>(
       default: "remote",
     },
     location: { type: String, default: "Remote" },
-    category: { type: String, default: "General", index: true },
+    category: { type: String, default: DEFAULT_JOB_CATEGORY, index: true },
     experienceLevel: {
       type: String,
       enum: ["entry", "mid", "senior", "lead", "executive"],

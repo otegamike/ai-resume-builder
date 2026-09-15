@@ -29,6 +29,7 @@ import { useUserStore } from "@/store/useUserStore";
 
 import styles from "./page.module.css";
 import ResumeComponent from "@/components/resume/ResumeComponent";
+import JobsForYou from "@/components/dashboard/jobs-for-you/JobsForYou";
 
 interface DashboardStats {
   counts: {
@@ -368,6 +369,8 @@ export default function OverviewPage() {
           ))}
         </div>
       </section>
+
+      <JobsForYou />
 
       <section className={styles.activitySection}>
         <h2 className={styles.sectionTitle}>

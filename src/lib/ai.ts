@@ -4,6 +4,7 @@ import { ResumeContent } from "@/types/ResumeData";
 import { TailorReport } from "@/types/TailorReport";
 import type { JobMatchAnalysis } from "@/types/JobApplicationData";
 import { logAiUsage } from "@/lib/logAiUsage";
+import { JOB_CATEGORIES, DEFAULT_JOB_CATEGORY } from "@/lib/jobCategories";
 
 export type MatchAnalysis = JobMatchAnalysis;
 
@@ -1051,7 +1052,7 @@ CRITICAL RULES — preserve wording:
 - Do NOT add information that is not explicitly present in the source. If a field is not in the source, return "" for strings, [] for arrays, or null for salary numbers.
   - For description, requirements, benefits, skillsRequired: copy the original phrasing exactly as it appears, only splitting into array items where needed. Do not add buzzwords or extra duties.
 - Preserve original sentence structure and wording for description. Convert plain text description to simple HTML paragraphs: wrap each paragraph in <p>...</p>, keep line breaks. Do not invent HTML you did not see.
-- For enums, map to the closest allowed value but still base it on source text: category must be one of ["Engineering","Design","Product","Marketing","Sales","HR","Finance","Other"] (default "Other"), jobType one of ["full-time","part-time","contract","freelance","internship"] (default "full-time"), workplaceType one of ["remote","hybrid","on-site"] (default "remote"), experienceLevel one of ["entry","mid","senior","lead","executive"] (default "mid"), applicationType one of ["on_platform","external_link","email"] (default "on_platform").
+- For enums, map to the closest allowed value but still base it on source text: category must be one of ${JSON.stringify(JOB_CATEGORIES)} (default "Other"), jobType one of ["full-time","part-time","contract","freelance","internship"] (default "full-time"), workplaceType one of ["remote","hybrid","on-site"] (default "remote"), experienceLevel one of ["entry","mid","senior","lead","executive"] (default "mid"), applicationType one of ["on_platform","external_link","email"] (default "on_platform").
 - For applicationType: set to "external_link" ONLY if source contains a verbatim apply URL (e.g. "Apply at https://..." ), "email" ONLY if it contains a verbatim apply email (e.g. "send CV to jobs@..."), otherwise "on_platform". Copy URL/email verbatim when present; never invent. If neither URL nor email is present, return "" for both externalUrl and contactEmail.
 - For salary: recognize patterns like "$90K - $120K", "$90,000", "₦2,000,000", "£35k per annum", "€45/hr", "NGN 500k–800k", "2,000 USD per month". Extract salaryMin as first number, salaryMax as second number or null if single value, salaryCurrency from symbol ($→USD, £→GBP, €→EUR, ₦→NGN, ₹→INR) or code (USD, NGN, GBP, EUR) normalized to uppercase 3-letter code, salaryPeriod from keywords "per year|annum|yearly→yearly, per month|monthly→monthly, per hour|hourly|/hr→hourly". If text says "Competitive" or "Negotiable" return nulls and leave currency as "USD".
 - For summary: generate a single tweet-length plain-text summary (max 280 chars) suitable for sharing on Twitter/X. Include role + key skill/location if present. Keep it catchy and concise. Do NOT use HTML.
@@ -1059,7 +1060,7 @@ CRITICAL RULES — preserve wording:
 Return ONLY a JSON object with this exact schema — no markdown, no explanation:
 {
   "title": "string — job title verbatim",
-  "category": "Engineering | Design | Product | Marketing | Sales | HR | Finance | Other",
+  "category": "${JOB_CATEGORIES.join(" | ")}",
   "jobType": "full-time | part-time | contract | freelance | internship",
   "workplaceType": "remote | hybrid | on-site",
   "location": "string — location verbatim or Remote if not stated",
@@ -1088,7 +1089,7 @@ Source job ad text to extract from:
 ${text}`;
 
 function normalizeParsedJobAd(raw: Partial<ParsedJobAd>): ParsedJobAd {
-  const validCategories = ["Engineering", "Design", "Product", "Marketing", "Sales", "HR", "Finance", "Other"];
+  const validCategories = [...JOB_CATEGORIES] as unknown as string[];
   const validJobTypes = ["full-time", "part-time", "contract", "freelance", "internship"];
   const validWorkplace = ["remote", "hybrid", "on-site"];
   const validExp = ["entry", "mid", "senior", "lead", "executive"];
@@ -1120,7 +1121,7 @@ function normalizeParsedJobAd(raw: Partial<ParsedJobAd>): ParsedJobAd {
   const summary = typeof raw.summary === "string" ? raw.summary.trim().slice(0, 280) : "";
   return {
     title: typeof raw.title === "string" ? raw.title.trim() : "",
-    category: validCategories.includes(raw.category as string) ? raw.category as string : "Other",
+    category: validCategories.includes(raw.category as string) ? raw.category as string : DEFAULT_JOB_CATEGORY,
     jobType: validJobTypes.includes(raw.jobType as string) ? raw.jobType as string : "full-time",
     workplaceType: validWorkplace.includes(raw.workplaceType as string) ? raw.workplaceType as string : "remote",
     location: typeof raw.location === "string" && raw.location.trim() ? raw.location.trim() : "Remote",

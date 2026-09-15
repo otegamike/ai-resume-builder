@@ -6,6 +6,7 @@ import JobAd from "@/models/JobAd";
 import Company from "@/models/Company";
 import User from "@/models/User";
 import JobApplication from "@/models/JobApplication";
+import { DEFAULT_JOB_CATEGORY } from "@/lib/jobCategories";
 
 void JobAd;
 void Company;
@@ -281,7 +282,7 @@ export async function POST(req: Request) {
       jobType: jobType || "full-time",
       workplaceType: workplaceType || "remote",
       location: location || "Remote",
-      category: category || "General",
+      category: category || DEFAULT_JOB_CATEGORY,
       experienceLevel: experienceLevel || "mid",
       salaryMin: salaryMin ? Number(salaryMin) : undefined,
       salaryMax: salaryMax ? Number(salaryMax) : undefined,

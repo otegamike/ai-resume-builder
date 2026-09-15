@@ -28,7 +28,9 @@ export async function POST(request: Request) {
     const jobTitle = formData.get("jobTitle")?.toString() || "";
     const location = formData.get("location")?.toString() || "";
     const phone = formData.get("phone")?.toString() || "";
-    const targetField = formData.get("targetField")?.toString() || "";
+    const industry = formData.get("industry")?.toString() || "";
+    const targetRole = formData.get("targetRole")?.toString() || formData.get("targetField")?.toString() || "";
+    const targetField = targetRole || industry;
     let primaryGoal: string[] = [];
     const rawGoal = formData.get("primaryGoal")?.toString() || "";
     if (rawGoal) {
@@ -45,6 +47,8 @@ export async function POST(request: Request) {
       location,
       phone,
       targetField,
+      industry,
+      targetRole,
       primaryGoal,
       hasExistingResume: true,
       hasCompletedOnboarding: true,

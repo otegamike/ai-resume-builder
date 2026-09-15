@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { Search, MapPin, Briefcase, CheckCircle2 } from "lucide-react";
 import DropDown from "@/components/ui/dropdown/Dropdown";
+import { JOB_CATEGORIES_WITH_ALL } from "@/lib/jobCategories";
 import styles from "./FindJobsBoard.module.css";
 
 interface JobCompany {
@@ -29,7 +30,7 @@ interface JobItem {
   isFeatured: boolean;
 }
 
-const CATEGORIES = ["All", "Engineering", "Design", "Product", "Marketing", "Sales", "HR", "Finance", "Other"];
+const CATEGORIES = [...JOB_CATEGORIES_WITH_ALL] as unknown as string[];
 
 export default function FindJobsBoard() {
   const [jobs, setJobs] = useState<JobItem[]>([]);

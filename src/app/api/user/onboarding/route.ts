@@ -12,14 +12,18 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, jobTitle, location, phone, primaryGoal, targetField, hasExistingResume } = body;
+    const { name, jobTitle, location, phone, primaryGoal, targetField, industry, targetRole, hasExistingResume } = body;
+    const resolvedIndustry = typeof industry === "string" ? industry : "";
+    const resolvedTargetRole = typeof targetRole === "string" ? targetRole : (typeof targetField === "string" ? targetField : "");
 
     const update: Record<string, unknown> = {
       jobTitle: jobTitle ?? "",
       location: location ?? "",
       phone: phone ?? "",
       primaryGoal: Array.isArray(primaryGoal) ? primaryGoal : [],
-      targetField: targetField ?? "",
+      targetField: resolvedTargetRole || resolvedIndustry || targetField || "",
+      industry: resolvedIndustry,
+      targetRole: resolvedTargetRole,
       hasExistingResume: !!hasExistingResume,
       hasCompletedOnboarding: true,
     };

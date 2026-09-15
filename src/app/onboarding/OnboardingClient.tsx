@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import ResumeSelector from "@/components/resume/ResumeSelector";
 import type { ResumeSelection } from "@/components/resume/ResumeSelector";
+import { JOB_CATEGORIES } from "@/lib/jobCategories";
 import styles from "./page.module.css";
 import bgStyles from "@/app/auth/login/animated-bg.module.css";
 
@@ -69,7 +70,8 @@ export default function OnboardingClient() {
   const [goals, setGoals] = useState<string[]>([]);
 
   // Step 3 state
-  const [targetField, setTargetField] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [targetRole, setTargetRole] = useState("");
 
   // Step 4 state
   const [mode, setMode] = useState<"upload" | "scratch" | null>(null);
@@ -127,7 +129,8 @@ export default function OnboardingClient() {
           location,
           phone,
           primaryGoal: goals,
-          targetField,
+          industry,
+          targetRole,
           hasExistingResume: false,
         }),
       });
@@ -155,7 +158,8 @@ export default function OnboardingClient() {
       formData.append("location", location);
       formData.append("phone", phone);
       formData.append("primaryGoal", JSON.stringify(goals));
-      formData.append("targetField", targetField);
+      formData.append("industry", industry);
+      formData.append("targetRole", targetRole);
 
       if (resumeSelection.selectedFile && resumeSelection.selectedFile.type.startsWith("image/")) {
         formData.append("file", resumeSelection.selectedFile);
@@ -285,24 +289,39 @@ export default function OnboardingClient() {
               </div>
             </div>
 
-            {/* Step 2: Target Role */}
+            {/* Step 2: Industry + Target Role */}
             <div className={`${styles.stepContent} ${step === 2 ? styles.stepActive : ""}`}>
               <div className={styles.stepHeader}>
                 <div className={styles.stepBadge}>Step 3</div>
                 <h2 className={styles.stepTitle}>What role are you after?</h2>
                 <p className={styles.stepSubtitle}>
-                  Tell us the job title or industry you&apos;re targeting. This helps us tailor suggestions.
+                  Tell us the industry and job title you&apos;re targeting. This helps us find the right jobs for you.
                 </p>
               </div>
               <div className={styles.formFields}>
                 <div className={styles.fieldGroup}>
-                  <label className={styles.fieldLabel}>Target role / industry</label>
+                  <label className={styles.fieldLabel}>Industry</label>
+                  <select
+                    className={styles.fieldInput}
+                    value={industry}
+                    onChange={(e) => setIndustry(e.target.value)}
+                  >
+                    <option value="">Select an industry</option>
+                    {JOB_CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>Target role</label>
                   <input
                     className={styles.fieldInput}
                     type="text"
-                    placeholder="e.g. Frontend Developer, Product Manager, Data Science"
-                    value={targetField}
-                    onChange={(e) => setTargetField(e.target.value)}
+                    placeholder="e.g. Frontend Developer, Product Manager"
+                    value={targetRole}
+                    onChange={(e) => setTargetRole(e.target.value)}
                   />
                 </div>
               </div>

@@ -17,6 +17,7 @@ import {
 import TipTapEditor from "@/components/blog/TipTapEditor";
 import JobAutofillSection from "@/components/jobs/JobAutofillSection";
 import type { ParsedJobAd } from "@/lib/ai";
+import { JOB_CATEGORIES } from "@/lib/jobCategories";
 import styles from "../jobs.module.css";
 
 type ApplicationType = "on_platform" | "external_link" | "email";
@@ -30,7 +31,7 @@ interface ScreeningQuestion {
   required: boolean;
 }
 
-const CATEGORIES = ["Engineering", "Design", "Product", "Marketing", "Sales", "HR", "Finance", "Other"];
+const CATEGORIES = [...JOB_CATEGORIES] as unknown as string[];
 
 const createQuestion = (): ScreeningQuestion => ({
   id: crypto.randomUUID(),

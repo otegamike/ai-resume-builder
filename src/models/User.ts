@@ -30,6 +30,8 @@ export interface IUser {
   phone: string;
   primaryGoal: string[];
   targetField: string;
+  industry: string;
+  targetRole: string;
   hasExistingResume: boolean;
   accountType?: "candidate" | "employer" | "both";
   organizationId?: Types.ObjectId;
@@ -68,6 +70,8 @@ const UserSchema: Schema = new Schema<IUser>(
     phone: { type: String, default: "" },
     primaryGoal: [{ type: String }],
     targetField: { type: String, default: "" },
+    industry: { type: String, default: "" },
+    targetRole: { type: String, default: "" },
     hasExistingResume: { type: Boolean, default: false },
     accountType: { type: String, enum: ["candidate", "employer", "both"], default: "candidate" },
     organizationId: { type: Schema.Types.ObjectId, ref: "Company" },
