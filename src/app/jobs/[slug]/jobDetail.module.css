@@ -168,6 +168,17 @@
 
 .secondaryAction:hover { background: var(--primary-50); border-color: var(--primary-200); color: var(--primary-900); }
 
+.secondaryAction:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.shareError {
+  font-size: var(--text-xs);
+  color: var(--error, #dc2626);
+  text-align: right;
+}
+
 .bodyGrid { display: grid; grid-template-columns: 1fr 320px; gap: var(--space-6); }
 
 .mainContent { width: 100%; padding: var(--space-6); }
