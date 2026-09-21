@@ -12,7 +12,7 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 // Use a capable model for structured JSON output
 const ATS_MODEL = "openai/gpt-oss-120b"; // good for structured JSON output
-const VISION_MODEL = "qwen/qwen3.6-27b";
+const VISION_MODEL = "qwen/qwen3.8-27b";
 const GENERATION_MODEL = "openai/gpt-oss-20b"; // fine for simple text gen
 const LONG_CONTEXT_MODEL = "groq/compound"; // for long cover letters, etc.
 
@@ -189,6 +189,52 @@ function assertApiKey() {
   }
 }
 
+export class GroqCallError extends Error {
+  status?: number;
+  feature: string;
+  cause?: unknown;
+
+  constructor(message: string, opts: { status?: number; feature?: string; cause?: unknown } = {}) {
+    super(message);
+    this.name = "GroqCallError";
+    this.status = opts.status;
+    this.feature = opts.feature ?? "unspecified";
+    this.cause = opts.cause;
+  }
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isRetriableGroqError(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  const record = err as Record<string, unknown>;
+  const status =
+    typeof record.status === "number"
+      ? record.status
+      : typeof (record as { statusCode?: unknown }).statusCode === "number"
+        ? (record as { statusCode?: number }).statusCode
+        : undefined;
+  if (status !== undefined) {
+    if ([429, 500, 502, 503, 504].includes(status)) return true;
+    if (status >= 400 && status < 500) return false;
+  }
+  const code = typeof record.code === "string" ? record.code : "";
+  if (["ECONNRESET", "ETIMEDOUT", "ENOTFOUND", "ECONNREFUSED"].includes(code)) return true;
+  const message = typeof record.message === "string" ? record.message : "";
+  if (/timeout|econnreset|etimedout|fetch failed|network/i.test(message)) return true;
+  return false;
+}
+
+function getGroqErrorStatus(err: unknown): number | undefined {
+  if (!err || typeof err !== "object") return undefined;
+  const record = err as Record<string, unknown>;
+  if (typeof record.status === "number") return record.status;
+  if (typeof (record as { statusCode?: unknown }).statusCode === "number") return (record as { statusCode?: number }).statusCode;
+  return undefined;
+}
+
 async function callGroq(
   prompt: string,
   options: {
@@ -207,35 +253,75 @@ async function callGroq(
     feature = "unspecified",
   } = options;
 
-  const start = Date.now();
-  const completion = await groq.chat.completions.create({
-    model,
-    temperature,
-    max_completion_tokens: maxTokens,
-    messages: [
-      { role: "system", content: systemInstruction },
-      { role: "user", content: prompt },
-    ],
-  });
-  const latencyMs = Date.now() - start;
+  const maxRetries = 2;
+  const backoffs = [500, 1000];
 
-  const choice = completion.choices[0];
-  const truncated = choice?.finish_reason === "length";
-  if (truncated) console.warn("Groq response truncated by max_completion_tokens");
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const start = Date.now();
+    try {
+      const completion = await groq.chat.completions.create({
+        model,
+        temperature,
+        max_completion_tokens: maxTokens,
+        messages: [
+          { role: "system", content: systemInstruction },
+          { role: "user", content: prompt },
+        ],
+      });
+      const latencyMs = Date.now() - start;
 
-  logAiUsage({
-    feature,
-    model,
-    promptTokens: completion.usage?.prompt_tokens ?? 0,
-    completionTokens: completion.usage?.completion_tokens ?? 0,
-    totalTokens: completion.usage?.total_tokens ?? 0,
-    queueTimeMs: completion.usage?.queue_time ? Math.round(completion.usage.queue_time * 1000) : undefined,
-    latencyMs,
-    truncated,
-    finishReason: choice?.finish_reason ?? "unknown",
-  });
+      const choice = completion.choices[0];
+      const truncated = choice?.finish_reason === "length";
+      if (truncated) console.warn("Groq response truncated by max_completion_tokens");
 
-  return { content: choice?.message?.content?.trim() || "", truncated };
+      logAiUsage({
+        feature,
+        model,
+        promptTokens: completion.usage?.prompt_tokens ?? 0,
+        completionTokens: completion.usage?.completion_tokens ?? 0,
+        totalTokens: completion.usage?.total_tokens ?? 0,
+        queueTimeMs: completion.usage?.queue_time ? Math.round(completion.usage.queue_time * 1000) : undefined,
+        latencyMs,
+        truncated,
+        finishReason: choice?.finish_reason ?? "unknown",
+        error: false,
+      });
+
+      return { content: choice?.message?.content?.trim() || "", truncated };
+    } catch (err: unknown) {
+      const latencyMs = Date.now() - start;
+      const retriable = isRetriableGroqError(err);
+      const status = getGroqErrorStatus(err);
+      const message = err instanceof Error ? err.message : String(err);
+
+      if (retriable && attempt < maxRetries) {
+        console.warn(`Groq call failed (attempt ${attempt + 1}/${maxRetries + 1}) for ${feature}: ${message} — retrying...`);
+        await sleep(backoffs[attempt] ?? 1000);
+        continue;
+      }
+
+      logAiUsage({
+        feature,
+        model,
+        promptTokens: 0,
+        completionTokens: 0,
+        totalTokens: 0,
+        latencyMs,
+        truncated: false,
+        finishReason: "error",
+        error: true,
+        errorMessage: message.slice(0, 500),
+      });
+
+      throw new GroqCallError(message || "Groq API call failed", {
+        status,
+        feature,
+        cause: err,
+      });
+    }
+  }
+
+  throw new GroqCallError("Groq API call failed after retries", { feature });
 }
 
 async function callGroqVision(
@@ -243,38 +329,147 @@ async function callGroqVision(
   dataUrl: string,
   feature: string
 ): Promise<string> {
-  const start = Date.now();
-  const completion = await groq.chat.completions.create({
-    model: VISION_MODEL,
-    temperature: 0.1,
-    max_completion_tokens: 4096,
-    messages: [
-      {
-        role: "user",
-        content: [
-          { type: "text", text: prompt },
-          { type: "image_url", image_url: { url: dataUrl } },
+  const maxRetries = 2;
+  const backoffs = [500, 1000];
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const start = Date.now();
+    try {
+      const completion = await groq.chat.completions.create({
+        model: VISION_MODEL,
+        temperature: 0.1,
+        max_completion_tokens: 4096,
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: prompt },
+              { type: "image_url", image_url: { url: dataUrl } },
+            ],
+          },
         ],
-      },
-    ],
-  });
-  const latencyMs = Date.now() - start;
+      });
+      const latencyMs = Date.now() - start;
 
-  const choice = completion.choices[0];
+      const choice = completion.choices[0];
 
-  logAiUsage({
-    feature,
-    model: VISION_MODEL,
-    promptTokens: completion.usage?.prompt_tokens ?? 0,
-    completionTokens: completion.usage?.completion_tokens ?? 0,
-    totalTokens: completion.usage?.total_tokens ?? 0,
-    queueTimeMs: completion.usage?.queue_time ? Math.round(completion.usage.queue_time * 1000) : undefined,
-    latencyMs,
-    truncated: choice?.finish_reason === "length",
-    finishReason: choice?.finish_reason ?? "unknown",
-  });
+      logAiUsage({
+        feature,
+        model: VISION_MODEL,
+        promptTokens: completion.usage?.prompt_tokens ?? 0,
+        completionTokens: completion.usage?.completion_tokens ?? 0,
+        totalTokens: completion.usage?.total_tokens ?? 0,
+        queueTimeMs: completion.usage?.queue_time ? Math.round(completion.usage.queue_time * 1000) : undefined,
+        latencyMs,
+        truncated: choice?.finish_reason === "length",
+        finishReason: choice?.finish_reason ?? "unknown",
+        error: false,
+      });
 
-  return choice?.message?.content?.trim() || "";
+      return choice?.message?.content?.trim() || "";
+    } catch (err: unknown) {
+      const latencyMs = Date.now() - start;
+      const retriable = isRetriableGroqError(err);
+      const status = getGroqErrorStatus(err);
+      const message = err instanceof Error ? err.message : String(err);
+
+      if (retriable && attempt < maxRetries) {
+        console.warn(`Groq vision call failed (attempt ${attempt + 1}/${maxRetries + 1}) for ${feature}: ${message} — retrying...`);
+        await sleep(backoffs[attempt] ?? 1000);
+        continue;
+      }
+
+      logAiUsage({
+        feature,
+        model: VISION_MODEL,
+        promptTokens: 0,
+        completionTokens: 0,
+        totalTokens: 0,
+        latencyMs,
+        truncated: false,
+        finishReason: "error",
+        error: true,
+        errorMessage: message.slice(0, 500),
+      });
+
+      throw new GroqCallError(message || "Groq vision API call failed", {
+        status,
+        feature,
+        cause: err,
+      });
+    }
+  }
+
+  throw new GroqCallError("Groq vision API call failed after retries", { feature });
+}
+
+async function callGroqJson<T>(
+  prompt: string,
+  options: {
+    model?: string;
+    systemInstruction?: string;
+    temperature?: number;
+    maxTokens?: number;
+    feature: string;
+    parse: (raw: string) => T;
+    retryMaxTokens?: number;
+    retryModel?: string;
+  }
+): Promise<{ parsed: T; raw: string }> {
+  const { parse, retryMaxTokens = 8000, retryModel, ...groqOptions } = options;
+
+  const first = await callGroq(prompt, groqOptions);
+  let raw = first.content;
+  const truncated = first.truncated;
+
+  try {
+    const parsed = parse(raw);
+    return { parsed, raw };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+
+    if (truncated) {
+      console.warn(`First ${groqOptions.feature} response truncated, retrying with larger budget...`);
+      ({ content: raw } = await callGroq(prompt, {
+        ...groqOptions,
+        model: retryModel ?? groqOptions.model,
+        temperature: 0,
+        maxTokens: retryMaxTokens,
+      }));
+    } else {
+      console.warn(`First ${groqOptions.feature} parse failed (${message}), retrying with stern nudge...`);
+      ({ content: raw } = await callGroq(
+        `Your previous response was not valid JSON. Return ONLY the raw JSON object, no markdown, no explanation.\n\n${prompt}`,
+        {
+          ...groqOptions,
+          temperature: 0,
+        }
+      ));
+    }
+
+    try {
+      const parsed = parse(raw);
+      return { parsed, raw };
+    } catch (retryErr) {
+      const retryMessage = retryErr instanceof Error ? retryErr.message : String(retryErr);
+      logAiUsage({
+        feature: groqOptions.feature,
+        model: (retryModel ?? groqOptions.model) ?? GENERATION_MODEL,
+        promptTokens: 0,
+        completionTokens: 0,
+        totalTokens: 0,
+        latencyMs: 0,
+        truncated: false,
+        finishReason: "parse_error",
+        error: true,
+        errorMessage: `JSON parse failed after retry: ${retryMessage} — raw: ${raw.slice(0, 200)}`.slice(0, 500),
+      });
+      throw new GroqCallError(`AI returned unparseable JSON after retry for ${groqOptions.feature}: ${retryMessage}`, {
+        feature: groqOptions.feature,
+        cause: retryErr,
+      });
+    }
+  }
 }
 
 // ─── ATS Analysis ─────────────────────────────────────────────────────────────
@@ -392,42 +587,14 @@ export async function analyzeResumeForAts(
 
   const prompt = ATS_PROMPT(extractedText, knownResumeBlock);
 
-  let { content: raw, truncated } = await callGroq(prompt, {
+  const { parsed } = await callGroqJson<Partial<AtsReport>>(prompt, {
     model: ATS_MODEL,
     systemInstruction: ATS_SYSTEM_INSTRUCTION,
     temperature: 0.1,
     maxTokens: 4096,
     feature: "ats_analysis",
+    parse: (raw) => parseJsonObject<Partial<AtsReport>>(raw),
   });
-
-  let parsed: Partial<AtsReport>;
-  try {
-    parsed = parseJsonObject<Partial<AtsReport>>(raw);
-  } catch {
-    if (truncated) {
-      console.warn("First ATS response truncated, retrying with larger budget...");
-      ({ content: raw } = await callGroq(prompt, {
-        model: ATS_MODEL,
-        systemInstruction: ATS_SYSTEM_INSTRUCTION,
-        temperature: 0,
-        maxTokens: 8000,
-        feature: "ats_analysis",
-      }));
-    } else {
-      console.warn("First ATS parse failed, retrying with stern nudge...");
-      ({ content: raw } = await callGroq(
-        `Your previous response was not valid JSON. Return ONLY the raw JSON object, no markdown, no explanation.\n\n${prompt}`,
-        {
-          model: ATS_MODEL,
-          systemInstruction: ATS_SYSTEM_INSTRUCTION,
-          temperature: 0,
-          maxTokens: 4096,
-          feature: "ats_analysis",
-        }
-      ));
-    }
-    parsed = parseJsonObject<Partial<AtsReport>>(raw);
-  }
 
   return normalizeAtsReport(parsed, extractedText);
 }
@@ -575,42 +742,14 @@ export async function tailorResume(
     targetCompany
   );
 
-  let { content: raw, truncated } = await callGroq(prompt, {
+  const { parsed } = await callGroqJson<Partial<TailorReport>>(prompt, {
     model: ATS_MODEL,
     systemInstruction: TAILOR_SYSTEM_INSTRUCTION,
     temperature: 0.1,
     maxTokens: 4096,
     feature: "tailor",
+    parse: (raw) => parseJsonObject<Partial<TailorReport>>(raw),
   });
-
-  let parsed: Partial<TailorReport>;
-  try {
-    parsed = parseJsonObject<Partial<TailorReport>>(raw);
-  } catch {
-    if (truncated) {
-      console.warn("First tailor response truncated, retrying with larger budget...");
-      ({ content: raw } = await callGroq(prompt, {
-        model: ATS_MODEL,
-        systemInstruction: TAILOR_SYSTEM_INSTRUCTION,
-        temperature: 0,
-        maxTokens: 8000,
-        feature: "tailor",
-      }));
-    } else {
-      console.warn("First tailor parse failed, retrying with stern nudge...");
-      ({ content: raw } = await callGroq(
-        `Your previous response was not valid JSON. Return ONLY the raw JSON object, no markdown, no explanation.\n\n${prompt}`,
-        {
-          model: ATS_MODEL,
-          systemInstruction: TAILOR_SYSTEM_INSTRUCTION,
-          temperature: 0,
-          maxTokens: 4096,
-          feature: "tailor",
-        }
-      ));
-    }
-    parsed = parseJsonObject<Partial<TailorReport>>(raw);
-  }
 
   return normalizeTailorReport(parsed);
 }
@@ -653,33 +792,14 @@ export async function tailorResumeGrounded(
   assertApiKey();
   const knownResumeBlock = existingResume ? `\nExisting structured resume JSON:\n${JSON.stringify(existingResume, null, 2)}` : "";
   const prompt = GROUNDED_TAILOR_PROMPT(resumeText, knownResumeBlock, jobDescription, analysis);
-  let { content: raw, truncated } = await callGroq(prompt, {
+  const { parsed } = await callGroqJson<Partial<TailorReport>>(prompt, {
     model: ATS_MODEL,
     systemInstruction: TAILOR_SYSTEM_INSTRUCTION,
     temperature: 0.1,
     maxTokens: 4096,
     feature: "tailor_grounded",
+    parse: (raw) => parseJsonObject<Partial<TailorReport>>(raw),
   });
-  let parsed: Partial<TailorReport>;
-  try {
-    parsed = parseJsonObject<Partial<TailorReport>>(raw);
-  } catch {
-    if (truncated) {
-      ({ content: raw } = await callGroq(prompt, {
-        model: ATS_MODEL,
-        systemInstruction: TAILOR_SYSTEM_INSTRUCTION,
-        temperature: 0,
-        maxTokens: 8000,
-        feature: "tailor_grounded",
-      }));
-    } else {
-      ({ content: raw } = await callGroq(
-        `Your previous response was not valid JSON. Return ONLY the raw JSON object, no markdown, no explanation.\n\n${prompt}`,
-        { model: ATS_MODEL, systemInstruction: TAILOR_SYSTEM_INSTRUCTION, temperature: 0, maxTokens: 4096, feature: "tailor_grounded" }
-      ));
-    }
-    parsed = parseJsonObject<Partial<TailorReport>>(raw);
-  }
   return normalizeTailorReport(parsed);
 }
 
@@ -739,7 +859,7 @@ export async function generateSkillsSuggestions(jobTitle: string): Promise<strin
     .filter((s) => s.length > 0);
 }
 
-export async function generateCategorizedSkills(jobTitle: string): Promise<any[]> {
+export async function generateCategorizedSkills(jobTitle: string): Promise<{ category: string; skills: string[] }[]> {
   const { content } = await callGroq(
     `Generate 3-5 categories of skills for a ${jobTitle} with 3-5 skills each.
      Return ONLY a valid JSON array of objects with keys "category" and "skills" (array of strings).
@@ -920,45 +1040,18 @@ export async function generateCoverLetter(
     knownResumeBlock
   );
 
-  let { content: raw, truncated } = await callGroq(prompt, {
+  const { parsed, raw } = await callGroqJson<Partial<CoverLetterResult>>(prompt, {
     model: GENERATION_MODEL,
     systemInstruction: COVER_LETTER_SYSTEM_INSTRUCTION,
     temperature: 0.3,
     maxTokens: 3072,
     feature: "cover_letter",
+    parse: (raw) => parseJsonObject<Partial<CoverLetterResult>>(raw),
+    retryMaxTokens: 6000,
+    retryModel: LONG_CONTEXT_MODEL,
   });
 
   console.log("raw cover letter", raw);
-
-  let parsed: Partial<CoverLetterResult>;
-  try {
-    parsed = parseJsonObject<Partial<CoverLetterResult>>(raw);
-  } catch {
-    if (truncated) {
-      console.warn("First cover letter response truncated, retrying with larger budget...");
-      ({ content: raw } = await callGroq(prompt, {
-        model: LONG_CONTEXT_MODEL,
-        systemInstruction: COVER_LETTER_SYSTEM_INSTRUCTION,
-        temperature: 0,
-        maxTokens: 6000,
-        feature: "cover_letter",
-      }));
-    } else {
-      console.warn("First cover letter parse failed, retrying with stern nudge...");
-      ({ content: raw } = await callGroq(
-        `Your previous response was not valid JSON. Return ONLY the raw JSON object, no markdown, no explanation.\n\n${prompt}`,
-        {
-          model: GENERATION_MODEL,
-          systemInstruction: COVER_LETTER_SYSTEM_INSTRUCTION,
-          temperature: 0,
-          maxTokens: 3072,
-          feature: "cover_letter",
-        }
-      ));
-    }
-    console.log("raw cover letter", raw);
-    parsed = parseJsonObject<Partial<CoverLetterResult>>(raw);
-  }
 
   return {
     content: parsed.content || "",
@@ -1117,10 +1210,10 @@ function normalizeParsedJobAd(raw: Partial<ParsedJobAd>): ParsedJobAd {
   const symbolToCode: Record<string, string> = { "$": "USD", "£": "GBP", "€": "EUR", "₦": "NGN", "₹": "INR" };
   if (symbolToCode[salaryCurrencyRaw]) salaryCurrencyRaw = symbolToCode[salaryCurrencyRaw];
   if (salaryCurrencyRaw.length === 1 && symbolToCode[salaryCurrencyRaw]) salaryCurrencyRaw = symbolToCode[salaryCurrencyRaw];
-  let salaryCurrency = salaryCurrencyRaw ? salaryCurrencyRaw.toUpperCase().slice(0, 3) : "USD";
-  let salaryPeriodRaw = typeof raw.salaryPeriod === "string" ? raw.salaryPeriod.trim().toLowerCase() : "";
+  const salaryCurrency = salaryCurrencyRaw ? salaryCurrencyRaw.toUpperCase().slice(0, 3) : "USD";
+  const salaryPeriodRaw = typeof raw.salaryPeriod === "string" ? raw.salaryPeriod.trim().toLowerCase() : "";
   const periodMap: Record<string, string> = { "per annum": "yearly", annum: "yearly", annual: "yearly", "per year": "yearly", yearly: "yearly", "per month": "monthly", monthly: "monthly", "per hour": "hourly", hourly: "hourly", "/hr": "hourly", "per hr": "hourly" };
-  let salaryPeriod = periodMap[salaryPeriodRaw] ?? (validPeriods.includes(salaryPeriodRaw) ? salaryPeriodRaw : "yearly");
+  const salaryPeriod = periodMap[salaryPeriodRaw] ?? (validPeriods.includes(salaryPeriodRaw) ? salaryPeriodRaw : "yearly");
   if (salaryMin === null && salaryMax !== null) { salaryMin = salaryMax; salaryMax = null; }
   const rawCompanyName = typeof raw.companyName === "string" ? raw.companyName.trim() : "";
   const companyName = rawCompanyName || "Unspecified Company";
@@ -1158,39 +1251,16 @@ export async function parseJobAdFromText(extractedText: string): Promise<ParsedJ
   if (!extractedText.trim()) {
     return normalizeParsedJobAd({});
   }
-  let { content: raw, truncated } = await callGroq(JOB_PARSE_PROMPT(extractedText), {
+  const { parsed } = await callGroqJson<Partial<ParsedJobAd>>(JOB_PARSE_PROMPT(extractedText), {
     model: LONG_CONTEXT_MODEL,
     systemInstruction: PARSER_SYSTEM_INSTRUCTION,
     temperature: 0,
     maxTokens: 4096,
     feature: "job_parse",
+    parse: (raw) => parseJsonObject<Partial<ParsedJobAd>>(raw),
+    retryMaxTokens: 8000,
+    retryModel: ATS_MODEL,
   });
-  let parsed: Partial<ParsedJobAd>;
-  try {
-    parsed = parseJsonObject<Partial<ParsedJobAd>>(raw);
-  } catch {
-    if (truncated) {
-      ({ content: raw } = await callGroq(JOB_PARSE_PROMPT(extractedText), {
-        model: ATS_MODEL,
-        systemInstruction: PARSER_SYSTEM_INSTRUCTION,
-        temperature: 0,
-        maxTokens: 8000,
-        feature: "job_parse",
-      }));
-    } else {
-      ({ content: raw } = await callGroq(
-        `Your previous response was not valid JSON. Return ONLY the raw JSON object, no markdown, no explanation.\n\n${JOB_PARSE_PROMPT(extractedText)}`,
-        {
-          model: ATS_MODEL,
-          systemInstruction: PARSER_SYSTEM_INSTRUCTION,
-          temperature: 0,
-          maxTokens: 4096,
-          feature: "job_parse",
-        }
-      ));
-    }
-    parsed = parseJsonObject<Partial<ParsedJobAd>>(raw);
-  }
   return normalizeParsedJobAd(parsed);
 }
 
@@ -1216,7 +1286,7 @@ export async function generateJobShareSummary(jobText: string): Promise<string> 
   assertApiKey();
   const text = jobText.trim().slice(0, 4000);
   if (!text) return "";
-  let { content: raw } = await callGroq(JOB_SHARE_SUMMARY_PROMPT(text), {
+  const { content: raw } = await callGroq(JOB_SHARE_SUMMARY_PROMPT(text), {
     model: GENERATION_MODEL,
     systemInstruction: "You are a helpful assistant. Return only the requested summary text, no JSON, no markdown.",
     temperature: 0.5,
@@ -1281,33 +1351,15 @@ export async function analyzeResumeJobMatch(resumeText: string, jobAdText: strin
   if (!resumeText.trim() || !jobAdText.trim()) {
     return normalizeMatchAnalysis({ score: 0, verdict: "Provide both resume and job ad to analyze." });
   }
-  let { content: raw, truncated } = await callGroq(RESUME_JOB_MATCH_PROMPT(resumeText, jobAdText), {
+  const { parsed } = await callGroqJson<Partial<MatchAnalysis>>(RESUME_JOB_MATCH_PROMPT(resumeText, jobAdText), {
     model: ATS_MODEL,
     systemInstruction: PARSER_SYSTEM_INSTRUCTION,
     temperature: 0,
     maxTokens: 2048,
     feature: "job_match_analysis",
+    parse: (raw) => parseJsonObject<Partial<MatchAnalysis>>(raw),
+    retryMaxTokens: 4096,
   });
-  let parsed: Partial<MatchAnalysis>;
-  try {
-    parsed = parseJsonObject<Partial<MatchAnalysis>>(raw);
-  } catch {
-    if (truncated) {
-      ({ content: raw } = await callGroq(RESUME_JOB_MATCH_PROMPT(resumeText, jobAdText), {
-        model: ATS_MODEL,
-        systemInstruction: PARSER_SYSTEM_INSTRUCTION,
-        temperature: 0,
-        maxTokens: 4096,
-        feature: "job_match_analysis",
-      }));
-    } else {
-      ({ content: raw } = await callGroq(
-        `Your previous response was not valid JSON. Return ONLY the raw JSON object, no markdown, no explanation.\n\n${RESUME_JOB_MATCH_PROMPT(resumeText, jobAdText)}`,
-        { model: ATS_MODEL, systemInstruction: PARSER_SYSTEM_INSTRUCTION, temperature: 0, maxTokens: 2048, feature: "job_match_analysis" }
-      ));
-    }
-    parsed = parseJsonObject<Partial<MatchAnalysis>>(raw);
-  }
   return normalizeMatchAnalysis(parsed);
 }
 
@@ -1315,42 +1367,14 @@ export async function parseResumeContent(extractedText: string): Promise<ResumeC
   assertApiKey();
   if (!extractedText.trim()) return { ...emptyResumeContent };
 
-  let { content: raw, truncated } = await callGroq(RESUME_PARSE_PROMPT(extractedText), {
+  const { parsed } = await callGroqJson<Partial<ResumeContent>>(RESUME_PARSE_PROMPT(extractedText), {
     model: ATS_MODEL,
     systemInstruction: PARSER_SYSTEM_INSTRUCTION,
     temperature: 0.1,
     maxTokens: 4096,
     feature: "resume_parse",
+    parse: (raw) => parseJsonObject<Partial<ResumeContent>>(raw),
   });
-
-  let parsed: Partial<ResumeContent>;
-  try {
-    parsed = parseJsonObject<Partial<ResumeContent>>(raw);
-  } catch {
-    if (truncated) {
-      console.warn("First parse response truncated, retrying with larger budget...");
-      ({ content: raw } = await callGroq(RESUME_PARSE_PROMPT(extractedText), {
-        model: ATS_MODEL,
-        systemInstruction: PARSER_SYSTEM_INSTRUCTION,
-        temperature: 0,
-        maxTokens: 8000,
-        feature: "resume_parse",
-      }));
-    } else {
-      console.warn("First parseResumeContent attempt failed, retrying...");
-      ({ content: raw } = await callGroq(
-        `Your previous response was not valid JSON. Return ONLY the raw JSON object, no markdown, no explanation.\n\n${RESUME_PARSE_PROMPT(extractedText)}`,
-        {
-          model: ATS_MODEL,
-          systemInstruction: PARSER_SYSTEM_INSTRUCTION,
-          temperature: 0,
-          maxTokens: 4096,
-          feature: "resume_parse",
-        }
-      ));
-    }
-    parsed = parseJsonObject<Partial<ResumeContent>>(raw);
-  }
 
   return normalizeResumeContent(parsed);
 }

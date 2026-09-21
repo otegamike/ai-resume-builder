@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Types } from "mongoose";
+import mongoose, { Schema, Types } from "mongoose";
 
 export interface IAiUsageEvent {
   _id: Types.ObjectId;
@@ -11,6 +11,8 @@ export interface IAiUsageEvent {
   latencyMs: number;
   truncated: boolean;
   finishReason: string;
+  error: boolean;
+  errorMessage?: string;
   userId?: Types.ObjectId;
   createdAt: Date;
 }
@@ -26,6 +28,8 @@ const AiUsageEventSchema: Schema = new Schema<IAiUsageEvent>(
     latencyMs: { type: Number, required: true },
     truncated: { type: Boolean, default: false },
     finishReason: { type: String },
+    error: { type: Boolean, default: false, index: true },
+    errorMessage: { type: String },
     userId: { type: Schema.Types.ObjectId, ref: "User", index: true },
   },
   { timestamps: { createdAt: true, updatedAt: false } }

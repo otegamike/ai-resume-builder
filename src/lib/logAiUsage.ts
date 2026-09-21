@@ -12,12 +12,16 @@ export async function logAiUsage(data: {
   latencyMs: number;
   truncated: boolean;
   finishReason: string;
+  error?: boolean;
+  errorMessage?: string;
   userId?: string;
 }) {
   try {
     await dbConnect();
     await AiUsageEvent.create({
       ...data,
+      error: data.error ?? false,
+      errorMessage: data.errorMessage?.slice(0, 500),
       userId: data.userId ? new mongoose.Types.ObjectId(data.userId) : undefined,
     });
   } catch (err) {
