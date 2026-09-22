@@ -5,6 +5,7 @@ import Resume from '@/models/Resume';
 import { getAuthenticatedUser, buildResumeOwnerQuery } from '@/lib/authUser';
 import { templateDefinitions } from "@/lib/templateCatalog";
 import { getRandomTemplateId } from "@/utils/templateUtils";
+import { recordActivity } from "@/lib/activityService";
 
 export async function GET(request: NextRequest) {
   try {
@@ -61,6 +62,19 @@ export async function POST(request: NextRequest) {
     });
 
     const savedResume = await resume.save();
+
+    recordActivity({
+      actorId: authUser.userObjectId,
+      actorEmail: authUser.user.email || "",
+      actorName: authUser.user.name || "",
+      type: "resume_created",
+      title: `Created resume "${title}"`,
+      detail: `Created resume "${title}"`,
+      entityType: "resume",
+      entityId: savedResume._id as any,
+      metadata: { title },
+    }).catch((err) => console.error("Failed to record resume_created:", err));
+
     const savedResumeObj = savedResume.toObject();
     return NextResponse.json(savedResumeObj, { status: 201 });
   } catch (error) {

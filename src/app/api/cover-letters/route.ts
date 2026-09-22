@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import CoverLetter from "@/models/CoverLetter";
 import { getAuthenticatedUser } from "@/lib/authUser";
+import { recordActivity } from "@/lib/activityService";
 
 export async function GET() {
   try {
@@ -50,6 +51,19 @@ export async function POST(request: NextRequest) {
     });
 
     const saved = await coverLetter.save();
+
+    recordActivity({
+      actorId: authUser.userObjectId,
+      actorEmail: authUser.user.email || "",
+      actorName: authUser.user.name || "",
+      type: "cover_letter_created",
+      title: `Created cover letter "${title}"`,
+      detail: `Created cover letter "${title}"`,
+      entityType: "coverLetter",
+      entityId: saved._id as any,
+      metadata: { title, targetCompany, targetRole },
+    }).catch((err) => console.error("Failed to record cover_letter_created:", err));
+
     return NextResponse.json(saved, { status: 201 });
   } catch (error) {
     console.error("Error creating cover letter:", error);

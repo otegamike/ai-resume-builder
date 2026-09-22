@@ -6,6 +6,7 @@ import {
   resolveUploadOnlyResumeInput,
 } from "@/lib/inputExtraction";
 import { createResumeFromExtractedText } from "@/lib/resumeService";
+import { recordActivity } from "@/lib/activityService";
 
 export const runtime = "nodejs";
 
@@ -58,6 +59,18 @@ export async function POST(request: Request) {
     await User.findByIdAndUpdate(authUser.userObjectId, {
       $set: update,
     });
+
+    recordActivity({
+      actorId: authUser.userObjectId,
+      actorEmail: authUser.user.email || "",
+      actorName: authUser.user.name || "",
+      type: "onboarding_completed",
+      title: "Completed onboarding",
+      detail: `Imported resume and completed onboarding`,
+      entityType: "user",
+      entityId: authUser.userObjectId as any,
+      metadata: { resumeId: String(savedResume._id), targetRole, industry },
+    }).catch((err) => console.error("Failed to record onboarding_completed:", err));
 
     return NextResponse.json({ resumeId: savedResume._id }, { status: 201 });
   } catch (error) {

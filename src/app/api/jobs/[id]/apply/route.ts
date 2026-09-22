@@ -11,6 +11,7 @@ import { getAuthenticatedUser } from "@/lib/authUser";
 import { extractResumeTextFromImages, parseResumeContent } from "@/lib/ai";
 import { createResume } from "@/lib/resumeService";
 import { fileToDataUrl } from "@/lib/resumeImprover";
+import { recordActivity } from "@/lib/activityService";
 
 void JobAd;
 void JobApplication;
@@ -253,6 +254,37 @@ export async function POST(
     const newApplication = await JobApplication.create(doc);
 
     await JobAd.updateOne({ _id: job._id }, { $inc: { applicationsCount: 1 } });
+
+    const employerId = (job.postedBy as unknown as Types.ObjectId) || null;
+    const applicantName = authUser.user.name || authUser.user.email || "Someone";
+    const companyName =
+      (job.companyId as unknown as { name?: string })?.name || "a company";
+    const jobTitle = job.title || "a job";
+
+    recordActivity({
+      actorId: authUser.userObjectId,
+      actorEmail: authUser.user.email || "",
+      actorName: authUser.user.name || "",
+      type: "application_submitted",
+      title: `${applicantName} applied to ${jobTitle}`,
+      detail: `${applicantName} applied to ${jobTitle} at ${companyName}`,
+      entityType: "jobApplication",
+      entityId: newApplication._id as Types.ObjectId,
+      metadata: {
+        jobId: String(job._id),
+        jobTitle,
+        companyId: String(companyId),
+        companyName,
+        applicationId: String(newApplication._id),
+        slug: (job as any).slug,
+      },
+      notifyRecipientIds: employerId
+        ? [employerId as Types.ObjectId, authUser.userObjectId]
+        : [authUser.userObjectId],
+      notificationType: "application_submitted",
+      notificationBody: `${applicantName} applied to ${jobTitle}`,
+      notificationLink: `/jobs/${(job as any).slug || String(job._id)}`,
+    }).catch((err) => console.error("Failed to record application_submitted:", err));
 
     return NextResponse.json(
       {

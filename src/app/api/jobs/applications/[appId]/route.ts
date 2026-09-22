@@ -4,7 +4,10 @@ import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import JobApplication from "@/models/JobApplication";
 import User from "@/models/User";
+import JobAd from "@/models/JobAd";
+import { recordActivity } from "@/lib/activityService";
 
+void JobAd;
 void JobApplication;
 void User;
 
@@ -55,6 +58,31 @@ export async function PUT(
     }
 
     await application.save();
+
+    if (status && application.applicantId) {
+      const jobForStatus = await JobAd.findById(application.jobId).select("title slug").catch(() => null);
+      const jobTitleForStatus = jobForStatus?.title || "your application";
+      recordActivity({
+        actorId: currentUser._id as any,
+        actorEmail: currentUser.email || "",
+        actorName: currentUser.name || "",
+        type: "application_status_changed",
+        title: `Application moved to ${status} for ${jobTitleForStatus}`,
+        detail: `Application for ${jobTitleForStatus} moved to ${status}`,
+        entityType: "jobApplication",
+        entityId: application._id as any,
+        metadata: {
+          jobId: String(application.jobId),
+          applicationId: String(application._id),
+          newStatus: status,
+          jobTitle: jobTitleForStatus,
+        },
+        notifyRecipientIds: [application.applicantId as any],
+        notificationType: "application_status_changed",
+        notificationBody: `Your application for ${jobTitleForStatus} is now ${status}`,
+        notificationLink: jobForStatus?.slug ? `/jobs/${jobForStatus.slug}` : "",
+      }).catch((err) => console.error("Failed to record application_status_changed:", err));
+    }
 
     return NextResponse.json({ success: true, application });
   } catch (error: any) {

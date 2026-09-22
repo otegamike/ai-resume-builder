@@ -14,6 +14,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import useMediaQuery from '@/app/hooks/useMediaQuery';
 import { Avatar } from "@/components/ui/Avatar/Avatar";
+import NotificationBell from "@/components/notifications/NotificationBell";
 
 export default function Header() {
   const [mounted, setMounted] = useState(false);
@@ -64,6 +65,10 @@ export default function Header() {
               <NavBarCTA status={status} hideCTA={isMenuOpen} onClick={closeMenu} hideDashboard/>
             )}
             
+            {mounted && isSignedIn && !isMenuOpen && (
+              <NotificationBell />
+            )}
+
             {mounted && isSignedIn && !isMenuOpen && (
               <Avatar
                 src={session?.user?.image}

@@ -4,6 +4,7 @@ import Resume from '@/models/Resume';
 import { getAuthenticatedUser, buildResumeOwnerQuery } from '@/lib/authUser';
 import { templateDefinitions } from "@/lib/templateCatalog";
 import { getRandomTemplateId } from "@/utils/templateUtils";
+import { recordActivity } from "@/lib/activityService";
 
 export async function GET(
   _request: NextRequest,
@@ -78,6 +79,18 @@ export async function PUT(
       return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
     }
 
+    recordActivity({
+      actorId: authUser.userObjectId,
+      actorEmail: authUser.user.email || "",
+      actorName: authUser.user.name || "",
+      type: "resume_updated",
+      title: `Updated resume "${title}"`,
+      detail: `Updated resume "${title}"`,
+      entityType: "resume",
+      entityId: resume._id as any,
+      metadata: { title },
+    }).catch((err) => console.error("Failed to record resume_updated:", err));
+
     return NextResponse.json(resume);
   } catch (error) {
     console.error('Error updating resume:', error);
@@ -103,6 +116,18 @@ export async function DELETE(
     if (!resume) {
       return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
     }
+
+    recordActivity({
+      actorId: authUser.userObjectId,
+      actorEmail: authUser.user.email || "",
+      actorName: authUser.user.name || "",
+      type: "resume_deleted",
+      title: `Deleted resume "${resume.title}"`,
+      detail: `Deleted resume "${resume.title}"`,
+      entityType: "resume",
+      entityId: resume._id as any,
+      metadata: { title: resume.title },
+    }).catch((err) => console.error("Failed to record resume_deleted:", err));
 
     return NextResponse.json({ message: 'Resume deleted successfully' });
   } catch (error) {

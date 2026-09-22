@@ -5,6 +5,7 @@ import dbConnect from "@/lib/db";
 import JobAd from "@/models/JobAd";
 import Company from "@/models/Company";
 import User from "@/models/User";
+import { recordActivity } from "@/lib/activityService";
 
 void JobAd;
 void Company;
@@ -67,6 +68,7 @@ export async function PUT(
     }
 
     const body = await req.json();
+    const previousStatus = job.status;
 
     // Allowed updates
     if (body.title) job.title = body.title.trim();
@@ -128,6 +130,29 @@ export async function PUT(
 
     await job.save();
 
+    const jobStatusChanged = body.status && body.status !== previousStatus;
+    recordActivity({
+      actorId: currentUser._id as any,
+      actorEmail: currentUser.email || "",
+      actorName: currentUser.name || "",
+      type: jobStatusChanged ? "job_status_changed" : "job_updated",
+      title: jobStatusChanged
+        ? `Job "${job.title}" status changed to ${job.status}`
+        : `Updated job "${job.title}"`,
+      detail: jobStatusChanged
+        ? `Status changed from ${previousStatus} to ${job.status} for ${job.title}`
+        : `Updated job ${job.title}`,
+      entityType: "jobAd",
+      entityId: job._id as any,
+      metadata: { slug: job.slug, previousStatus, newStatus: job.status },
+      notifyRecipientIds: jobStatusChanged && job.postedBy && String(job.postedBy) !== String(currentUser._id)
+        ? [job.postedBy as any]
+        : undefined,
+      notificationType: jobStatusChanged ? "job_status_changed" : undefined,
+      notificationBody: jobStatusChanged ? `Your job "${job.title}" is now ${job.status}` : undefined,
+      notificationLink: job.slug ? `/jobs/${job.slug}` : undefined,
+    }).catch((err) => console.error("Failed to record job activity:", err));
+
     return NextResponse.json({ success: true, job });
   } catch (error: any) {
     console.error("Error updating job ad:", error);
@@ -166,6 +191,18 @@ export async function DELETE(
     // Soft delete by setting status to closed or removing
     job.status = "closed";
     await job.save();
+
+    recordActivity({
+      actorId: currentUser._id as any,
+      actorEmail: currentUser.email || "",
+      actorName: currentUser.name || "",
+      type: "job_status_changed",
+      title: `Closed job "${job.title}"`,
+      detail: `Closed job "${job.title}"`,
+      entityType: "jobAd",
+      entityId: job._id as any,
+      metadata: { slug: job.slug, previousStatus: "active", newStatus: "closed" },
+    }).catch((err) => console.error("Failed to record job closed:", err));
 
     return NextResponse.json({ success: true, message: "Job ad closed successfully" });
   } catch (error: any) {
