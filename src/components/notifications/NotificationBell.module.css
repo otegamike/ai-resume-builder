@@ -13,9 +13,9 @@
   height: 36px;
   border-radius: 50%;
   border: 1px solid var(--gray-200);
-  background: var(--white);
+  background-color: transparent;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition:  background-color 0.15s, border-color 0.15s;
 }
 
 .bellButton:hover {
@@ -47,20 +47,30 @@
 }
 
 .dropdown {
+  --top: var(--header-height, 50px);
+
   position: absolute;
-  top: calc(100% + 10px);
+  top: var(--top);
   right: 0;
   width: 380px;
   max-width: calc(100vw - 24px);
-  max-height: 480px;
+  box-shadow: var(--shadow-lg);
+  max-height: calc(100vh - 60px);
   display: flex;
   flex-direction: column;
   background-color: var(--neutral-50);
   border: 1px solid var(--gray-200);
   border-radius: 12px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
-  z-index: 100;
+  z-index: 0;
   overflow: hidden;
+  transform: translateY(-120%);
+  opacity: 0;
+  transition: transform 0.35s ease-in-out, opacity 0.35s ease-in-out;
+}
+
+.panelOpen {
+  transform: translateY(0);
+  opacity: 1;
 }
 
 .dropdownHeader {

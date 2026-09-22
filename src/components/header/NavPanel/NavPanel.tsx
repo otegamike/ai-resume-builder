@@ -14,11 +14,14 @@ import { getHeaderHeight } from '@/utils/headerSize'
 import AiCredits from '@/components/ui/ai-credit/AiCredits'
 import { useAiCreditStore } from '@/store/useAiCreditStore'
 import { formatPlan, MAX_CREDITS_PER_PLAN } from '@/lib/creditCosts'
+import { NotificationPanel } from '@/components/notifications/NotificationBell'
 
 interface NavPanelProps {
   session: Session | null
   isOpen: boolean
   toggleMenu: (menuState?: boolean) => void
+  isNotificationPanelOpen: boolean
+  toggleNotificationPanel: (notificationPanelState?: 'open' | 'close') => void
   status: "authenticated" | "loading" | "unauthenticated"
 }
 
@@ -37,7 +40,7 @@ const secondaryLinks = [
 
 
 
-function NavPanel({ session, isOpen, toggleMenu, status }: NavPanelProps) {
+function NavPanel({ session, isOpen, isNotificationPanelOpen, toggleNotificationPanel, toggleMenu, status }: NavPanelProps) {
   const pathname = usePathname();
   const [panelRight, setPanelRight] = useState(0);
   const [panelTop, setPanelTop] = useState(0);
@@ -73,6 +76,8 @@ function NavPanel({ session, isOpen, toggleMenu, status }: NavPanelProps) {
     toggleMenu(false)
   }
 
+  const panelStyle = { right: `calc(${panelRight}px - 1rem)`,"--header-height": `${panelTop}px`} as React.CSSProperties;
+
   return (
     <>
       <div
@@ -81,7 +86,16 @@ function NavPanel({ session, isOpen, toggleMenu, status }: NavPanelProps) {
         onClick={handleOverlayClick}
         aria-hidden="true"
       />
-      <div className={`${styles.panel} ${isOpen ? styles.panelOpen : ''}`} style={{ right: `calc(${panelRight}px - 1rem)`,"--header-height": `${panelTop}px`} as React.CSSProperties}>
+
+      {/* Notification Panel */}
+      <NotificationPanel 
+        panelStyle={panelStyle}
+        isNotificationPanelOpen={isNotificationPanelOpen}
+        toggleNotificationPanel={toggleNotificationPanel}
+      />
+
+      {/* Nav Panel */}
+      <div className={`${styles.panel} ${isOpen ? styles.panelOpen : ''}`} style={panelStyle}>
         <div className={styles.content}>
           <div className={styles.userSection}>
             <Avatar
@@ -150,3 +164,4 @@ function NavPanel({ session, isOpen, toggleMenu, status }: NavPanelProps) {
 }
 
 export default NavPanel
+

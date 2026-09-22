@@ -30,9 +30,14 @@ export default function Header() {
   const isMobile = useMediaQuery(640); // Example breakpoint for mobile devices
 
   const [ isMenuOpen, setIsMenuOpen ] = useState<boolean>(false);
+  const [ isNotificationPanelOpen, setNotificationPanelState ] = useState<boolean>(false);
 
   const toggleMenu = (menuState?: boolean) => {
     setIsMenuOpen(prevState => menuState !== undefined ? menuState : !prevState); 
+  }
+
+  const toggleNotificationPanel = (notificationPanelState?: 'open' | 'close') => {
+    setIsMenuOpen(prevState => notificationPanelState ? notificationPanelState === 'open'? true : false : !prevState ); 
   }
 
   const menuPanelProps: MenuPanelProps = {
@@ -66,7 +71,7 @@ export default function Header() {
             )}
             
             {mounted && isSignedIn && !isMenuOpen && (
-              <NotificationBell />
+              <NotificationBell isNotificationPanelOpen={isNotificationPanelOpen} toggleNotificationPanel={toggleNotificationPanel} />
             )}
 
             {mounted && isSignedIn && !isMenuOpen && (
@@ -91,6 +96,8 @@ export default function Header() {
         session={session}
         isOpen={isMenuOpen}
         toggleMenu={toggleMenu}
+        isNotificationPanelOpen={isNotificationPanelOpen}
+        toggleNotificationPanel={toggleNotificationPanel}
         status={status}
       />
     </header>

@@ -6,94 +6,71 @@ import { useSession } from "next-auth/react";
 import { Bell, CheckCheck, Loader2 } from "lucide-react";
 import { useNotificationStore } from "@/store/useNotificationStore";
 import styles from "./NotificationBell.module.css";
+import formatRelativeTime from "@/utils/formatRelativeTime";
 
-function formatRelativeTime(dateStr: string): string {
-  const now = Date.now();
-  const date = new Date(dateStr).getTime();
-  const diffMs = now - date;
-  const diffMins = Math.floor(diffMs / 60000);
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours}h ago`;
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return new Date(dateStr).toLocaleDateString();
+interface NotificationBellProps {
+  isNotificationPanelOpen?: boolean
+  toggleNotificationPanel: (notificationPanelState?: 'open' | 'close') => void
 }
 
-export default function NotificationBell() {
+export default function NotificationBell({isNotificationPanelOpen, toggleNotificationPanel }: NotificationBellProps) {
   const { status } = useSession();
   const isSignedIn = status === "authenticated";
-  const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  const notifications = useNotificationStore((s) => s.notifications);
   const unreadCount = useNotificationStore((s) => s.unreadCount);
-  const isLoading = useNotificationStore((s) => s.isLoading);
-  const fetchNotifications = useNotificationStore((s) => s.fetchNotifications);
   const fetchUnreadCount = useNotificationStore((s) => s.fetchUnreadCount);
-  const markAsRead = useNotificationStore((s) => s.markAsRead);
-  const markAllRead = useNotificationStore((s) => s.markAllRead);
 
   useEffect(() => {
     if (!isSignedIn) return;
     fetchUnreadCount();
-  }, [isSignedIn, fetchUnreadCount]);
-
-  useEffect(() => {
-    if (!isSignedIn) return;
-    const onFocus = () => fetchUnreadCount();
-    const onVisibility = () => {
-      if (document.visibilityState === "visible") fetchUnreadCount();
-    };
-    window.addEventListener("focus", onFocus);
-    document.addEventListener("visibilitychange", onVisibility);
-    return () => {
-      window.removeEventListener("focus", onFocus);
-      document.removeEventListener("visibilitychange", onVisibility);
-    };
-  }, [isSignedIn, fetchUnreadCount]);
-
-  useEffect(() => {
-    if (!open || !isSignedIn) return;
-    fetchNotifications({ reset: true });
-    fetchUnreadCount();
-  }, [open, isSignedIn, fetchNotifications, fetchUnreadCount]);
-
-  useEffect(() => {
-    if (!open) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [open]);
+  }, [isNotificationPanelOpen, isSignedIn, fetchUnreadCount]);
 
   if (!isSignedIn) return null;
 
-  const recent = notifications.slice(0, 8);
-
   return (
-    <div className={styles.container} ref={containerRef}>
+    <div className={styles.container}>
       <button
         className={styles.bellButton}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => toggleNotificationPanel()}
         aria-label="Notifications"
-        aria-expanded={open}
       >
         <Bell className={styles.bellIcon} size={20} />
         {unreadCount > 0 && (
           <span className={styles.badge}>{unreadCount > 99 ? "99+" : unreadCount}</span>
         )}
       </button>
+    </div>
+  );
+}
 
-      {open && (
-        <div className={styles.dropdown}>
+interface NotificationPanelProps {
+  isNotificationPanelOpen: boolean
+  toggleNotificationPanel: (notificationPanelState?: 'open' | 'close') => void
+  panelStyle: React.CSSProperties
+}
+
+export function NotificationPanel({isNotificationPanelOpen, toggleNotificationPanel, panelStyle}: NotificationPanelProps) {
+  const { status } = useSession();
+  const isSignedIn = status === "authenticated";
+  const fetchNotifications = useNotificationStore((s) => s.fetchNotifications);
+  const notifications = useNotificationStore((s) => s.notifications);
+  const markAllRead = useNotificationStore((s) => s.markAllRead);
+  const isLoading = useNotificationStore((s) => s.isLoading);
+  const markAsRead = useNotificationStore((s) => s.markAsRead);
+
+  useEffect(() => {
+    if (!isSignedIn) return;
+    fetchNotifications();
+  }, [isSignedIn, fetchNotifications]);
+
+  
+  const recent = notifications.slice(0, 8);
+
+  return (
+    <div className={`${styles.dropdown} ${isNotificationPanelOpen ? styles.panelOpen : ''}`} style={panelStyle}>
           <div className={styles.dropdownHeader}>
             <h3 className={styles.dropdownTitle}>Notifications</h3>
-            {unreadCount > 0 && (
+            {notifications.length > 0 && (
               <button className={styles.markAllButton} onClick={() => markAllRead()}>
                 <CheckCheck size={14} />
                 Mark all read
@@ -132,7 +109,7 @@ export default function NotificationBell() {
                     <Link
                       href={n.link}
                       className={styles.itemLink}
-                      onClick={() => setOpen(false)}
+                      onClick={() => toggleNotificationPanel('close')}
                     >
                       View
                     </Link>
@@ -143,12 +120,10 @@ export default function NotificationBell() {
           </div>
 
           <div className={styles.dropdownFooter}>
-            <Link href="/dashboard/notifications" className={styles.viewAllLink} onClick={() => setOpen(false)}>
+            <Link href="/dashboard/notifications" className={styles.viewAllLink} onClick={() => toggleNotificationPanel('close')}>
               View all notifications
             </Link>
           </div>
         </div>
-      )}
-    </div>
-  );
+  )
 }
