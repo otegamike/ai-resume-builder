@@ -17,9 +17,13 @@ import {
 } from "recharts";
 import styles from "./page.module.css";
 import type { Stats, Timeline, AiUsageStats, PrimaryGoalStats } from "@/types/Stats";
+import AdminActivitiesTab from "@/components/admin/activities-tab/AdminActivitiesTab";
+
+type AdminTab = "overview" | "activities";
 
 export default function AdminDashboardPage() {
   const { data: session, status } = useSession();
+  const [activeTab, setActiveTab] = useState<AdminTab>("overview");
   const [stats, setStats] = useState<Stats | null>(null);
   const [timeline, setTimeline] = useState<Timeline | null>(null);
   const [aiUsage, setAiUsage] = useState<AiUsageStats | null>(null);
@@ -161,6 +165,27 @@ export default function AdminDashboardPage() {
         <h1 className={styles.title}>Admin Dashboard</h1>
         <p className={styles.subtitle}>Key metrics and growth trends for your site.</p>
       </div>
+
+      <div className={styles.tabNavigation}>
+        <button
+          className={`${styles.tabBtn} ${activeTab === "overview" ? styles.activeTab : ""}`}
+          onClick={() => setActiveTab("overview")}
+        >
+          Overview
+        </button>
+        <button
+          className={`${styles.tabBtn} ${activeTab === "activities" ? styles.activeTab : ""}`}
+          onClick={() => setActiveTab("activities")}
+        >
+          Activities
+        </button>
+      </div>
+
+      {activeTab === "activities" && <AdminActivitiesTab />}
+
+      {activeTab === "overview" && (
+        <>
+
 
       <div className={styles.statsGrid}>
         <StatCard label="Total Users" value={stats.totalUsers} />
@@ -386,6 +411,8 @@ export default function AdminDashboardPage() {
               )}
             </div>
           </div>
+        </>
+      )}
         </>
       )}
     </div>

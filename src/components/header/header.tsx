@@ -14,6 +14,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import useMediaQuery from '@/app/hooks/useMediaQuery';
 import { Avatar } from "@/components/ui/Avatar/Avatar";
+import NotificationBell from "@/components/notifications/NotificationBell";
 
 export default function Header() {
   const [mounted, setMounted] = useState(false);
@@ -29,9 +30,16 @@ export default function Header() {
   const isMobile = useMediaQuery(640); // Example breakpoint for mobile devices
 
   const [ isMenuOpen, setIsMenuOpen ] = useState<boolean>(false);
+  const [ isNotificationPanelOpen, setNotificationPanelState ] = useState<boolean>(false);
 
   const toggleMenu = (menuState?: boolean) => {
+    setNotificationPanelState(false);
     setIsMenuOpen(prevState => menuState !== undefined ? menuState : !prevState); 
+  }
+
+  const toggleNotificationPanel = (notificationPanelState?: 'open' | 'close') => {
+    setIsMenuOpen(false);
+    setNotificationPanelState(prevState => notificationPanelState ? notificationPanelState === 'open'? true : false : !prevState ); 
   }
 
   const menuPanelProps: MenuPanelProps = {
@@ -65,6 +73,10 @@ export default function Header() {
             )}
             
             {mounted && isSignedIn && !isMenuOpen && (
+              <NotificationBell isNotificationPanelOpen={isNotificationPanelOpen} toggleNotificationPanel={toggleNotificationPanel} />
+            )}
+
+            {mounted && isSignedIn && !isMenuOpen && (
               <Avatar
                 src={session?.user?.image}
                 alt={session?.user?.name || session?.user?.email || "User"}
@@ -86,6 +98,8 @@ export default function Header() {
         session={session}
         isOpen={isMenuOpen}
         toggleMenu={toggleMenu}
+        isNotificationPanelOpen={isNotificationPanelOpen}
+        toggleNotificationPanel={toggleNotificationPanel}
         status={status}
       />
     </header>

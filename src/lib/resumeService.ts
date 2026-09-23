@@ -8,6 +8,7 @@ import { templateDefinitions } from "@/lib/templateCatalog";
 import { getRandomTemplateId } from "@/utils/templateUtils";
 import { emptyResumeContent, parseResumeContent } from "@/lib/ai";
 import type { ResumeContent } from "@/types/ResumeData";
+import { recordActivity } from "@/lib/activityService";
 
 void Resume;
 
@@ -39,6 +40,17 @@ export async function createResume(params: CreateResumeParams): Promise<IResume 
   });
 
   const saved = await resume.save();
+
+  recordActivity({
+    actorId: authUser.userObjectId,
+    type: "resume_created",
+    title: `Created resume "${title}"`,
+    detail: `Created resume "${title}"`,
+    entityType: "resume",
+    entityId: saved._id as Types.ObjectId,
+    metadata: { title, template: resolvedTemplate },
+  }).catch((err) => console.error("Failed to record resume_created activity:", err));
+
   return saved as unknown as IResume & { _id: Types.ObjectId };
 }
 

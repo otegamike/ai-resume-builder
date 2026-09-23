@@ -90,6 +90,22 @@ export default function JobDetailClient({ params }: { params: Promise<{ slug: st
   const [alreadyApplied, setAlreadyApplied] = useState(false);
   const [alreadyAppliedStatus, setAlreadyAppliedStatus] = useState<string | null>(null);
 
+  const handleOpenApplyModal = () => {
+    setShowApplyModal(true);
+    if (job?._id) {
+      const storageKey = `application_started_${job._id}`;
+      try {
+        if (typeof window !== "undefined" && sessionStorage.getItem(storageKey)) return;
+        sessionStorage.setItem(storageKey, "1");
+      } catch {}
+      fetch("/api/activities/track-started", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jobId: job._id }),
+      }).catch(() => {});
+    }
+  };
+
   useEffect(() => {
     if (!job || !isSignedIn) return;
     let cancelled = false;
@@ -323,7 +339,7 @@ export default function JobDetailClient({ params }: { params: Promise<{ slug: st
                 </span>
               </>
             ) : (
-              <button onClick={() => setShowApplyModal(true)} className={detailStyles.applyBtn} id="open-apply-modal-btn">
+              <button onClick={handleOpenApplyModal} className={detailStyles.applyBtn} id="open-apply-modal-btn">
                 Apply Now <Send size={16} />
               </button>
             )}
@@ -371,7 +387,7 @@ export default function JobDetailClient({ params }: { params: Promise<{ slug: st
                   <span style={{ fontSize: "var(--text-xs)", color: "var(--gray-500)" }}>You already applied to this job{alreadyAppliedStatus ? ` — ${alreadyAppliedStatus.replace("_", " ")}` : ""}.</span>
                 </div>
               ) : (
-                <button onClick={() => setShowApplyModal(true)} className={detailStyles.applyBtn} style={{ margin: "0 auto" }}>
+                <button onClick={handleOpenApplyModal} className={detailStyles.applyBtn} style={{ margin: "0 auto" }}>
                   Apply Now <Send size={16} />
                 </button>
               )}

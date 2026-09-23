@@ -5,6 +5,7 @@ import dbConnect from "@/lib/db";
 import JobAd from "@/models/JobAd";
 import Company from "@/models/Company";
 import User from "@/models/User";
+import { recordActivity } from "@/lib/activityService";
 
 void JobAd;
 void Company;
@@ -66,6 +67,8 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Job ad not found" }, { status: 404 });
     }
 
+    const previousStatus = job.status;
+
     if (action === "approve") {
       job.status = "active";
       job.rejectionReason = "";
@@ -81,6 +84,27 @@ export async function PATCH(req: Request) {
 
     if (isVerifiedCompany !== undefined && job.companyId) {
       await Company.updateOne({ _id: job.companyId }, { isVerified: isVerifiedCompany });
+    }
+
+    const moderator = await User.findById(session.user.id).catch(() => null);
+    const statusChanged = action === "approve" || action === "reject";
+    if (statusChanged) {
+      const newStatus = job.status;
+      recordActivity({
+        actorId: moderator?._id as any || job.postedBy as any,
+        actorEmail: moderator?.email || "",
+        actorName: moderator?.name || "",
+        type: "job_status_changed",
+        title: `Admin ${action === "approve" ? "approved" : "rejected"} job "${job.title}"`,
+        detail: `Job "${job.title}" ${action === "approve" ? "approved" : "rejected"} by admin`,
+        entityType: "jobAd",
+        entityId: job._id as any,
+        metadata: { slug: job.slug, previousStatus, newStatus, action, rejectionReason: job.rejectionReason },
+        notifyRecipientIds: job.postedBy ? [job.postedBy as any] : [],
+        notificationType: "job_status_changed",
+        notificationBody: `Your job "${job.title}" was ${action === "approve" ? "approved and published" : "rejected"}`,
+        notificationLink: `/dashboard/employers/job/${String(job._id)}`,
+      }).catch((err) => console.error("Failed to record admin moderate:", err));
     }
 
     return NextResponse.json({

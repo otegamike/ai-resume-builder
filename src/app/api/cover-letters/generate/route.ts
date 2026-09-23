@@ -9,6 +9,7 @@ import {
   resolveJobInput,
   resolveResumeInput,
 } from "@/lib/inputExtraction";
+import { recordActivity } from "@/lib/activityService";
 
 export const runtime = "nodejs";
 
@@ -61,6 +62,18 @@ export async function POST(request: Request) {
     });
 
     const saved = await coverLetter.save();
+
+    recordActivity({
+      actorId: authUser.userObjectId,
+      actorEmail: authUser.user.email || "",
+      actorName: authUser.user.name || "",
+      type: "cover_letter_generated",
+      title: `Generated cover letter for ${targetRole || "role"}${targetCompany ? ` at ${targetCompany}` : ""}`,
+      detail: title,
+      entityType: "coverLetter",
+      entityId: saved._id as any,
+      metadata: { title, targetCompany, targetRole },
+    }).catch((err) => console.error("Failed to record cover_letter_generated:", err));
 
     return NextResponse.json({
       id: saved._id,

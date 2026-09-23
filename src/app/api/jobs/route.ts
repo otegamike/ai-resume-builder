@@ -7,6 +7,7 @@ import Company from "@/models/Company";
 import User from "@/models/User";
 import JobApplication from "@/models/JobApplication";
 import { DEFAULT_JOB_CATEGORY } from "@/lib/jobCategories";
+import { recordActivity } from "@/lib/activityService";
 
 void JobAd;
 void Company;
@@ -300,6 +301,18 @@ export async function POST(req: Request) {
       externalUrl: externalUrl || "",
       contactEmail: contactEmail || "",
     });
+
+    recordActivity({
+      actorId: currentUser._id as any,
+      actorEmail: currentUser.email || "",
+      actorName: currentUser.name || "",
+      type: "job_created",
+      title: `Posted job "${title.trim()}"`,
+      detail: `${company.name} — ${title.trim()} (${initialStatus})`,
+      entityType: "jobAd",
+      entityId: newJob._id as any,
+      metadata: { title: title.trim(), slug, companyId: String(company._id), companyName: company.name, status: initialStatus },
+    }).catch((err) => console.error("Failed to record job_created:", err));
 
     return NextResponse.json(
       {

@@ -11,12 +11,15 @@ import { getAuthenticatedUser } from "@/lib/authUser";
 import { extractResumeTextFromImages, parseResumeContent } from "@/lib/ai";
 import { createResume } from "@/lib/resumeService";
 import { fileToDataUrl } from "@/lib/resumeImprover";
+import { recordActivity } from "@/lib/activityService";
+import Notification from "@/models/Notification";
 
 void JobAd;
 void JobApplication;
 void Company;
 void Resume;
 void UploadedResume;
+void Notification;
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -254,11 +257,73 @@ export async function POST(
 
     await JobAd.updateOne({ _id: job._id }, { $inc: { applicationsCount: 1 } });
 
+    const employerId = (job.postedBy as unknown as Types.ObjectId) || null;
+    const applicantName = authUser.user.name || authUser.user.email || "Someone";
+    const companyName =
+      (job.companyId as unknown as { name?: string })?.name || "a company";
+    const jobTitle = job.title || "a job";
+
+    const perRecipientNotifications: Array<{
+      recipientId: Types.ObjectId;
+      type: "application_submitted";
+      title: string;
+      body: string;
+      link: string;
+    }> = [];
+
+    if (employerId) {
+      perRecipientNotifications.push({
+        recipientId: employerId as Types.ObjectId,
+        type: "application_submitted",
+        title: `${applicantName} applied for ${jobTitle}`,
+        body: `${applicantName} applied for ${jobTitle}`,
+        link: `/dashboard/employers/job/${String(job._id)}`,
+      });
+    }
+
+    perRecipientNotifications.push({
+      recipientId: authUser.userObjectId,
+      type: "application_submitted",
+      title: `Application sent for ${jobTitle}`,
+      body: `Your job application to ${jobTitle} has been sent and is under review.`,
+      link: `/dashboard/jobs?tab=history`,
+    });
+
+    await recordActivity({
+      actorId: authUser.userObjectId,
+      actorEmail: authUser.user.email || "",
+      actorName: authUser.user.name || "",
+      type: "application_submitted",
+      title: `${applicantName} applied to ${jobTitle}`,
+      detail: `${applicantName} applied to ${jobTitle} at ${companyName}`,
+      entityType: "jobApplication",
+      entityId: newApplication._id as Types.ObjectId,
+      metadata: {
+        jobId: String(job._id),
+        jobTitle,
+        companyId: String(companyId),
+        companyName,
+        applicationId: String(newApplication._id),
+        slug: (job as any).slug,
+      },
+      notificationType: "application_submitted",
+      perRecipientNotifications,
+    }).catch((err) => console.error("Failed to record application_submitted:", err));
+
+    let unreadCount: number | undefined;
+    try {
+      unreadCount = await Notification.countDocuments({
+        recipientId: authUser.userObjectId,
+        isRead: false,
+      });
+    } catch {}
+
     return NextResponse.json(
       {
         success: true,
         application: newApplication,
         message: "Application submitted successfully!",
+        unreadCount,
       },
       { status: 201 }
     );

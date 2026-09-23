@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Company from "@/models/Company";
 import User from "@/models/User";
+import { recordActivity } from "@/lib/activityService";
 
 void Company;
 void User;
@@ -70,6 +71,18 @@ export async function POST(req: Request) {
     existingUser.organizationId = newCompany._id;
     existingUser.accountType = existingUser.accountType === "candidate" ? "both" : existingUser.accountType || "employer";
     await existingUser.save();
+
+    recordActivity({
+      actorId: existingUser._id as any,
+      actorEmail: existingUser.email || "",
+      actorName: existingUser.name || "",
+      type: "organization_registered",
+      title: `Registered organization "${name.trim()}"`,
+      detail: `Registered organization "${name.trim()}"`,
+      entityType: "company",
+      entityId: newCompany._id as any,
+      metadata: { companyName: name.trim(), slug: newCompany.slug },
+    }).catch((err) => console.error("Failed to record organization_registered:", err));
 
     return NextResponse.json({ success: true, company: newCompany }, { status: 201 });
   } catch (error: any) {

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Search, Building2, Clock, ArrowRight } from "lucide-react";
+import { Search, Building2, Clock } from "lucide-react";
 import styles from "./jobs.module.css";
 import FindJobsBoard from "@/components/jobs/find-jobs/FindJobsBoard";
 import ApplicationHistory from "@/components/jobs/application-history/ApplicationHistory";
@@ -13,7 +14,16 @@ export default function UnifiedJobsPage() {
   const userAccountType = (session?.user as any)?.accountType ?? "candidate";
   const userOrgId = (session?.user as any)?.organizationId;
   const isEmployer = userAccountType === "employer" || userAccountType === "both" || !!userOrgId;
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<"find" | "history">("find");
+
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam === "history" || tabParam === "find") {
+      setActiveTab(tabParam);
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+  }, [searchParams]);
 
   return (
     <div className={styles.container}>

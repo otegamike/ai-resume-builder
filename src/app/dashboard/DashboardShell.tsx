@@ -4,7 +4,7 @@ import Link from "next/link";
 import React, { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { FileText, Settings, Plus, LayoutTemplate, PanelRightClose,  PanelRightOpen, LogOut, BarChart3, Sparkles, Home, PenLine, Briefcase, Building2, Search, ShieldCheck } from "lucide-react";
+import { FileText, Settings, Plus, LayoutTemplate, PanelRightClose,  PanelRightOpen, LogOut, BarChart3, Sparkles, Home, PenLine, Building2, Search } from "lucide-react";
 import styles from "./layout.module.css";
 
 export default function DashboardShell({
@@ -129,7 +129,7 @@ export default function DashboardShell({
             <Link href="/dashboard/admin" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/admin")}`}>
               <BarChart3 className={styles.navIcon} />
               <span className={styles.navLinkText}>
-                Admin Stats
+                Admin
               </span>
             </Link>
           )}
