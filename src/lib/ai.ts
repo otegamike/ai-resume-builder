@@ -14,7 +14,7 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const ATS_MODEL = "openai/gpt-oss-120b"; // good for structured JSON output
 const VISION_MODEL = "qwen/qwen3.8-27b";
 const GENERATION_MODEL = "openai/gpt-oss-20b"; // fine for simple text gen
-const LONG_CONTEXT_MODEL = "groq/compound"; // for long cover letters, etc.
+const LONG_CONTEXT_MODEL = "openai/gpt-oss-120b"; // for long cover letters, etc.
 
 
 const ATS_SYSTEM_INSTRUCTION =
