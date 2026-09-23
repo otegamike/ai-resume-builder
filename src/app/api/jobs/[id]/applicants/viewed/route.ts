@@ -60,7 +60,7 @@ export async function POST(
           notifyRecipientIds: applicantIds,
           notificationType: "application_viewed_by_employer",
           notificationBody: `An employer viewed your application for ${job.title}`,
-          notificationLink: `/jobs/${job.slug}`,
+          notificationLink: `/dashboard/jobs?tab=history`,
         }).catch((err) => console.error("Failed to record viewedByEmployer:", err));
       }
     }

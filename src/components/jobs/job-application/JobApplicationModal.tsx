@@ -10,6 +10,7 @@ import ScoreCircle from "@/components/ui/score-circle/ScoreCircle";
 import { AiButton } from "@/components/ui/AiButton";
 import { CREDIT_COST } from "@/lib/creditCosts";
 import { useAiCreditStore } from "@/store/useAiCreditStore";
+import { useNotificationStore } from "@/store/useNotificationStore";
 import { useAlertStore } from "@/store/useAlertStore";
 import type { JobMatchAnalysis } from "@/types/JobApplicationData";
 import type { TailorReport } from "@/types/TailorReport";
@@ -339,6 +340,11 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to submit application");
+      if (typeof data.unreadCount === "number") {
+        useNotificationStore.getState().setUnreadCount(data.unreadCount);
+      } else {
+        useNotificationStore.getState().incrementUnreadCount(1);
+      }
       setSuccess(true);
     } catch (err) {
       setApplyError(err instanceof Error ? err.message : "Failed to submit application");
@@ -391,6 +397,11 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to confirm");
+      if (typeof data.unreadCount === "number") {
+        useNotificationStore.getState().setUnreadCount(data.unreadCount);
+      } else {
+        useNotificationStore.getState().incrementUnreadCount(1);
+      }
       setSuccess(true);
     } catch (err) {
       setApplyError(err instanceof Error ? err.message : "Failed to confirm");

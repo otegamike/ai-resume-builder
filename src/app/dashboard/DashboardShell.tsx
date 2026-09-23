@@ -4,7 +4,7 @@ import Link from "next/link";
 import React, { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { FileText, Settings, Plus, LayoutTemplate, PanelRightClose,  PanelRightOpen, LogOut, BarChart3, Sparkles, Home, PenLine, Briefcase, Building2, Search, ShieldCheck, Bell, Activity } from "lucide-react";
+import { FileText, Settings, Plus, LayoutTemplate, PanelRightClose,  PanelRightOpen, LogOut, BarChart3, Sparkles, Home, PenLine, Building2, Search } from "lucide-react";
 import styles from "./layout.module.css";
 
 export default function DashboardShell({
@@ -111,18 +111,6 @@ export default function DashboardShell({
               AI Tools
             </span>
           </Link>
-          <Link href="/dashboard/notifications" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/notifications")}`}>
-            <Bell className={styles.navIcon} />
-            <span className={styles.navLinkText}>
-              Notifications
-            </span>
-          </Link>
-          <Link href="/dashboard/activities" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/activities")}`}>
-            <Activity className={styles.navIcon} />
-            <span className={styles.navLinkText}>
-              Activities
-            </span>
-          </Link>
           <Link href="/dashboard/settings" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/settings")}`}>
             <Settings className={styles.navIcon} />
             <span className={styles.navLinkText}>
@@ -141,15 +129,7 @@ export default function DashboardShell({
             <Link href="/dashboard/admin" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/admin")}`}>
               <BarChart3 className={styles.navIcon} />
               <span className={styles.navLinkText}>
-                Admin Stats
-              </span>
-            </Link>
-          )}
-          {isAdmin && (
-            <Link href="/dashboard/admin/activities" onClick={closeSidebar} className={`${styles.navLink} ${isActive("/dashboard/admin/activities")}`}>
-              <ShieldCheck className={styles.navIcon} />
-              <span className={styles.navLinkText}>
-                Admin Activities
+                Admin
               </span>
             </Link>
           )}

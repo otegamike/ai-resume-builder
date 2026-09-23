@@ -15,6 +15,34 @@
   transition: padding-left 0.3s ease;
 }
 
+.tabNavigation {
+  display: flex;
+  gap: var(--space-2);
+  border-bottom: 1px solid var(--gray-200);
+  padding-bottom: var(--space-2);
+}
+
+.tabBtn {
+  padding: 8px 16px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--gray-600);
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 9999px;
+  cursor: pointer;
+}
+
+.tabBtn:hover {
+  background: var(--gray-50);
+}
+
+.activeTab {
+  color: var(--white);
+  background: var(--primary-1);
+  border-color: var(--primary-1);
+}
+
 .title {
   font-size: var(--text-2xl);
   font-weight: var(--font-bold);

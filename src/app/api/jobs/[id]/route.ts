@@ -150,7 +150,7 @@ export async function PUT(
         : undefined,
       notificationType: jobStatusChanged ? "job_status_changed" : undefined,
       notificationBody: jobStatusChanged ? `Your job "${job.title}" is now ${job.status}` : undefined,
-      notificationLink: job.slug ? `/jobs/${job.slug}` : undefined,
+      notificationLink: jobStatusChanged ? `/dashboard/employers/job/${String(job._id)}` : undefined,
     }).catch((err) => console.error("Failed to record job activity:", err));
 
     return NextResponse.json({ success: true, job });

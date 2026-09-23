@@ -79,8 +79,8 @@ export async function PUT(
         },
         notifyRecipientIds: [application.applicantId as any],
         notificationType: "application_status_changed",
-        notificationBody: `Your application for ${jobTitleForStatus} is now ${status}`,
-        notificationLink: jobForStatus?.slug ? `/jobs/${jobForStatus.slug}` : "",
+        notificationBody: `Your application for ${jobTitleForStatus} is now ${String(status).replace(/_/g, " ")}`,
+        notificationLink: `/dashboard/jobs?tab=history`,
       }).catch((err) => console.error("Failed to record application_status_changed:", err));
     }
 

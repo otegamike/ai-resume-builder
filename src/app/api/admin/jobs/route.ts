@@ -103,7 +103,7 @@ export async function PATCH(req: Request) {
         notifyRecipientIds: job.postedBy ? [job.postedBy as any] : [],
         notificationType: "job_status_changed",
         notificationBody: `Your job "${job.title}" was ${action === "approve" ? "approved and published" : "rejected"}`,
-        notificationLink: job.slug ? `/jobs/${job.slug}` : "",
+        notificationLink: `/dashboard/employers/job/${String(job._id)}`,
       }).catch((err) => console.error("Failed to record admin moderate:", err));
     }
 

@@ -42,7 +42,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       notifyRecipientIds: employerIdWithdraw ? [employerIdWithdraw] : [],
       notificationType: "application_withdrawn",
       notificationBody: `${authUser.user.name || authUser.user.email || "An applicant"} withdrew from ${jobForWithdraw?.title || "a job"}`,
-      notificationLink: jobForWithdraw?.slug ? `/jobs/${jobForWithdraw.slug}` : "",
+      notificationLink: `/dashboard/employers/job/${String(app.jobId)}`,
     }).catch((err) => console.error("Failed to record application_withdrawn:", err));
 
     return NextResponse.json({ success: true, application: app });

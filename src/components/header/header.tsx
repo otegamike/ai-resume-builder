@@ -33,11 +33,13 @@ export default function Header() {
   const [ isNotificationPanelOpen, setNotificationPanelState ] = useState<boolean>(false);
 
   const toggleMenu = (menuState?: boolean) => {
+    setNotificationPanelState(false);
     setIsMenuOpen(prevState => menuState !== undefined ? menuState : !prevState); 
   }
 
   const toggleNotificationPanel = (notificationPanelState?: 'open' | 'close') => {
-    setIsMenuOpen(prevState => notificationPanelState ? notificationPanelState === 'open'? true : false : !prevState ); 
+    setIsMenuOpen(false);
+    setNotificationPanelState(prevState => notificationPanelState ? notificationPanelState === 'open'? true : false : !prevState ); 
   }
 
   const menuPanelProps: MenuPanelProps = {

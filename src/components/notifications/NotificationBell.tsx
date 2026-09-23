@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Bell, CheckCheck, Loader2 } from "lucide-react";
@@ -13,7 +13,7 @@ interface NotificationBellProps {
   toggleNotificationPanel: (notificationPanelState?: 'open' | 'close') => void
 }
 
-export default function NotificationBell({isNotificationPanelOpen, toggleNotificationPanel }: NotificationBellProps) {
+export default function NotificationBell({isNotificationPanelOpen: _isNotificationPanelOpen, toggleNotificationPanel }: NotificationBellProps) {
   const { status } = useSession();
   const isSignedIn = status === "authenticated";
 
@@ -23,7 +23,17 @@ export default function NotificationBell({isNotificationPanelOpen, toggleNotific
   useEffect(() => {
     if (!isSignedIn) return;
     fetchUnreadCount();
-  }, [isNotificationPanelOpen, isSignedIn, fetchUnreadCount]);
+    const onFocus = () => fetchUnreadCount();
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") fetchUnreadCount();
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [isSignedIn, fetchUnreadCount]);
 
   if (!isSignedIn) return null;
 
@@ -61,7 +71,7 @@ export function NotificationPanel({isNotificationPanelOpen, toggleNotificationPa
   useEffect(() => {
     if (!isSignedIn) return;
     fetchNotifications();
-  }, [isSignedIn, fetchNotifications]);
+  }, [isSignedIn, isNotificationPanelOpen, fetchNotifications]);
 
   
   const recent = notifications.slice(0, 8);
@@ -109,7 +119,7 @@ export function NotificationPanel({isNotificationPanelOpen, toggleNotificationPa
                     <Link
                       href={n.link}
                       className={styles.itemLink}
-                      onClick={() => toggleNotificationPanel('close')}
+                      onClick={() => { if (!n.isRead) markAsRead(n._id); toggleNotificationPanel('close')} }
                     >
                       View
                     </Link>

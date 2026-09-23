@@ -49,7 +49,7 @@ function NavPanel({ session, isOpen, isNotificationPanelOpen, toggleNotification
   const updatePanelPosition = useCallback(() => {
     setPanelRight(getDistanceFromRight('hamburger-container'))
     setPanelTop(getHeaderHeight())
-  }, [isOpen])
+  }, [isOpen, isNotificationPanelOpen])
 
   useEffect(() => {
     updatePanelPosition()
@@ -69,6 +69,7 @@ function NavPanel({ session, isOpen, isNotificationPanelOpen, toggleNotification
 
   const handleOverlayClick = () => {
     toggleMenu(false)
+    toggleNotificationPanel('close')
   }
 
   const handleSignOut = () => {
@@ -81,7 +82,7 @@ function NavPanel({ session, isOpen, isNotificationPanelOpen, toggleNotification
   return (
     <>
       <div
-        className={`${styles.overlay} ${isOpen ? styles.overlayVisible : ''}`}
+        className={`${styles.overlay} ${(isOpen || isNotificationPanelOpen) ? styles.overlayVisible : ''}`}
         style={{"--header-height": `${panelTop}px`} as React.CSSProperties}
         onClick={handleOverlayClick}
         aria-hidden="true"

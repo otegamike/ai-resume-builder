@@ -95,7 +95,6 @@ export default function NotificationsPage() {
       <div className={styles.header}>
         <div className={styles.headerLeft}>
           <h1 className={styles.title}>
-            <Bell size={22} className={styles.titleIcon} />
             Notifications
           </h1>
           <p className={styles.subtitle}>

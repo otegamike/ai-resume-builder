@@ -11,6 +11,9 @@ interface NotificationState {
   nextCursor: string | null;
   fetchNotifications: (opts?: { cursor?: string | null; reset?: boolean; isRead?: boolean | null; type?: string | null }) => Promise<void>;
   fetchUnreadCount: () => Promise<void>;
+  setUnreadCount: (count: number) => void;
+  incrementUnreadCount: (delta?: number) => void;
+  addNotification: (notification: Notification) => void;
   markAsRead: (id: string) => Promise<void>;
   markAllRead: () => Promise<void>;
 }
@@ -70,6 +73,17 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       set({ unreadCount: data.count ?? 0 });
     } catch {}
   },
+
+  setUnreadCount: (count: number) => set({ unreadCount: Math.max(0, count) }),
+
+  incrementUnreadCount: (delta = 1) =>
+    set((s) => ({ unreadCount: Math.max(0, s.unreadCount + delta) })),
+
+  addNotification: (notification: Notification) =>
+    set((s) => ({
+      notifications: [notification, ...s.notifications],
+      unreadCount: notification.isRead ? s.unreadCount : s.unreadCount + 1,
+    })),
 
   markAsRead: async (id: string) => {
     const previous = get().notifications;

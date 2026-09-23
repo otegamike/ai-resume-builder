@@ -10,6 +10,14 @@ import type { NotificationType } from "@/types/NotificationData";
 void Activity;
 void Notification;
 
+export interface PerRecipientNotification {
+  recipientId: Types.ObjectId;
+  type?: NotificationType;
+  title?: string;
+  body?: string;
+  link?: string;
+}
+
 export interface RecordActivityParams {
   actorId: Types.ObjectId;
   actorEmail?: string;
@@ -24,6 +32,7 @@ export interface RecordActivityParams {
   notificationType?: NotificationType;
   notificationLink?: string;
   notificationBody?: string;
+  perRecipientNotifications?: PerRecipientNotification[];
 }
 
 export async function recordActivity(params: RecordActivityParams) {
@@ -41,6 +50,7 @@ export async function recordActivity(params: RecordActivityParams) {
     notificationType,
     notificationLink,
     notificationBody,
+    perRecipientNotifications,
   } = params;
 
   await dbConnect();
@@ -66,7 +76,39 @@ export async function recordActivity(params: RecordActivityParams) {
     metadata: metadata || {},
   });
 
-  if (notifyRecipientIds && notifyRecipientIds.length > 0 && notificationType) {
+  if (perRecipientNotifications && perRecipientNotifications.length > 0) {
+    const seen = new Set<string>();
+    const docs: Array<{
+      recipientId: Types.ObjectId;
+      activityId: Types.ObjectId;
+      type: NotificationType;
+      title: string;
+      body: string;
+      link: string;
+      isRead: boolean;
+      readAt: null;
+    }> = [];
+    for (const n of perRecipientNotifications) {
+      const key = String(n.recipientId);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const t = (n.type || notificationType) as NotificationType | undefined;
+      if (!t) continue;
+      docs.push({
+        recipientId: new Types.ObjectId(key),
+        activityId: activity._id,
+        type: t,
+        title: n.title || title,
+        body: n.body || notificationBody || detail || "",
+        link: n.link || notificationLink || "",
+        isRead: false,
+        readAt: null,
+      });
+    }
+    if (docs.length > 0) {
+      await Notification.insertMany(docs);
+    }
+  } else if (notifyRecipientIds && notifyRecipientIds.length > 0 && notificationType) {
     const uniqueIds = Array.from(
       new Set(notifyRecipientIds.map((id) => String(id)))
     ).map((id) => new Types.ObjectId(id));
