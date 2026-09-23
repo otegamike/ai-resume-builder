@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "motion/react";
 import styles from "./Modal.module.css";
 
 type ModalSize = "sm" | "md" | "lg";
@@ -13,6 +14,7 @@ interface ModalProps {
   size?: ModalSize;
   closeOnOverlayClick?: boolean;
   showCloseButton?: boolean;
+  dismissible?: boolean;
   children: React.ReactNode;
 }
 
@@ -29,6 +31,7 @@ export default function Modal({
   size = "md",
   closeOnOverlayClick = true,
   showCloseButton = true,
+  dismissible = true,
   children,
 }: ModalProps) {
   useEffect(() => {
@@ -36,42 +39,72 @@ export default function Modal({
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape" && dismissible) onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
     };
-  }, [open, onClose]);
+  }, [open, onClose, dismissible]);
 
-  if (!open || typeof document === "undefined") return null;
+  if (typeof document === "undefined") return null;
+
+  const overlayVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1 },
+    exit: { opacity: 0 },
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, scale: 0.96, y: 8 },
+    visible: { opacity: 1, scale: 1, y: 0 },
+    exit: { opacity: 0, scale: 0.96, y: 8 },
+  };
+
+  const canCloseOnOverlay = dismissible && closeOnOverlayClick;
+  const canShowCloseButton = dismissible && showCloseButton;
+  const showHeader = Boolean(title || canShowCloseButton);
 
   return createPortal(
-    <div
-      className={styles.overlay}
-      onClick={closeOnOverlayClick ? onClose : undefined}
-      role="dialog"
-      aria-modal="true"
-      aria-label={title}
-    >
-      <div
-        className={`${styles.card} ${sizeClass[size]}`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {(title || showCloseButton) && (
-          <div className={styles.header}>
-            {title ? <h2 className={styles.title}>{title}</h2> : <span />}
-            {showCloseButton && (
-              <button onClick={onClose} className={styles.closeBtn} aria-label="Close">
-                &times;
-              </button>
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className={styles.overlay}
+          onClick={canCloseOnOverlay ? onClose : undefined}
+          role="dialog"
+          aria-modal="true"
+          aria-label={title}
+          variants={overlayVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          transition={{ duration: 0.2, ease: "easeOut" }}
+        >
+          <motion.div
+            className={`${styles.card} ${sizeClass[size]}`}
+            onClick={(e) => e.stopPropagation()}
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            transition={{ type: "spring", stiffness: 340, damping: 28, mass: 0.8 }}
+          >
+            {showHeader && (
+              <div className={styles.header}>
+                {title ? <h2 className={styles.title}>{title}</h2> : <span />}
+                {canShowCloseButton && (
+                  <button onClick={onClose} className={styles.closeBtn} aria-label="Close">
+                    &times;
+                  </button>
+                )}
+              </div>
             )}
-          </div>
-        )}
-        <div className={styles.body}>{children}</div>
-      </div>
-    </div>,
+            <div className={styles.body}>{children}</div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
     document.body
   );
 }

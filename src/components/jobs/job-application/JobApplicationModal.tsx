@@ -659,7 +659,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
                   ) : job.applicationType === "email" && job.contactEmail ? (
                     <a href={`mailto:${job.contactEmail}`} className={styles.primaryBtn}><Mail size={16} /> Email {job.contactEmail}</a>
                   ) : null}
-                  <button type="button" onClick={handleConfirmOffPlatform} className={styles.backBtn} disabled={submitting}>{submitting ? <><Loader2 size={16} className={styles.spinner} /> Sending...</> : "I've Applied — Confirm"}</button>
+                  <button type="button" onClick={handleConfirmOffPlatform} className={styles.backBtn} disabled={submitting}>{submitting ? <><Loader2 size={16} className={styles.spinner} /> Sending...</> : "I've Applied"}</button>
                 </div>
               ) : (
                 <button type="button" onClick={(e) => handleApply(e as any)} className={styles.primaryBtn} disabled={submitting}>{submitting ? <><Loader2 size={16} className={styles.spinner} /> Sending...</> : <><Send size={16} /> Send application</>}</button>

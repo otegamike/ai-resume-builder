@@ -1,4 +1,5 @@
 import FindJobsBoard from "@/components/jobs/find-jobs/FindJobsBoard";
+import OnboardingOverlay from "@/components/onboarding/OnboardingOverlay/OnboardingOverlay";
 import styles from "./page.module.css";
 
 export default function JobsPage() {
@@ -9,6 +10,7 @@ export default function JobsPage() {
         <p className={styles.subtitle}>Browse active openings from verified employers. Search by title, skills, or location.</p>
       </header>
       <FindJobsBoard />
+      <OnboardingOverlay />
     </div>
   );
 }

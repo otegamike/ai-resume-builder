@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import detailStyles from "./jobDetail.module.css";
 import JobApplicationModal from "@/components/jobs/job-application/JobApplicationModal";
+import OnboardingOverlay from "@/components/onboarding/OnboardingOverlay/OnboardingOverlay";
 
 interface JobCompany {
   _id: string;
@@ -409,6 +410,7 @@ export default function JobDetailClient({ params }: { params: Promise<{ slug: st
       </div>
 
       {showApplyModal && <JobApplicationModal job={job} open={showApplyModal} onClose={() => setShowApplyModal(false)} />}
+      {!showApplyModal && <OnboardingOverlay />}
     </div>
   );
 }
