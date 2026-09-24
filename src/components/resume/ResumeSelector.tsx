@@ -18,6 +18,7 @@ import { useTemplateStore } from "@/store/useTemplateStore";
 import { useResumeStore } from "@/store/useResumeStore";
 import { useUserStore } from "@/store/useUserStore";
 import AiAnalysisLoader from "@/components/ui/ai-analysis-loader/AiAnalysisLoader";
+import UploadedResumeComponent from "./UploadedResume";
 import styles from "./ResumeSelector.module.css";
 
 export interface SavedResume {
@@ -319,11 +320,7 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
       return (
         <div className={`${styles.previewBox} ${styles.previewBoxActive}`}>
           <AnimatedLoader showLoader={showLoader} animatedLoader={animatedLoader}>
-            <div className={styles.pdfPreviewContainer}>
-              {pdfPreviewUrls.map((url, i) => (
-                <img key={i} src={url} alt={`PDF page ${i + 1}`} className={styles.pdfCanvas} />
-              ))}
-            </div>
+            <UploadedResumeComponent resumePages={pdfPreviewUrls} preview={false} />
           </AnimatedLoader>
           <div className={styles.selectedInfo}>
             <span className={styles.uploadTitle}>{selectedFile?.name}</span>

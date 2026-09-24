@@ -248,7 +248,6 @@
 
 .pdfPreviewContainer {
   width: 100%;
-  max-height: 400px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -259,7 +258,6 @@
 
 .pdfCanvas {
   width: 100%;
-  max-width: 340px;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
 }

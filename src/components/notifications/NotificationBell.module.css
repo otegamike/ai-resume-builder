@@ -52,10 +52,10 @@
   position: absolute;
   top: calc(var(--top) + var(--space-1));
   right: 0;
-  width: 380px;
-  max-width: calc(100vw -  (2 * var(--space-1)));
+  width: 400px;
+  max-width: calc(100% -  (2 * var(--space-1)));
   box-shadow: var(--shadow-lg);
-  max-height: calc(100vh - 60px);
+  max-height: calc(80vh - 60px);
   display: flex;
   flex-direction: column;
   background-color: var(--neutral-50);
@@ -273,6 +273,6 @@
 
 @media (width < 640px) {
   .dropdown {
-    width: calc(100vw -  (2 * var(--space-1)));
+    width: calc(100% -  (2 * var(--space-1)));
   }
 }

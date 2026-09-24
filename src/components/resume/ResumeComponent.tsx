@@ -40,10 +40,17 @@ function ResumeComponent({ resumeContent, templateId, renderOpts }: ResumeCompon
         </span>
       )}
       
-      <ResumeIframe
-        renderedTemplate={renderedTemplate}
-        type="preview"
-      />
+      {renderedTemplate !== '' ?
+        <ResumeIframe
+          renderedTemplate={renderedTemplate}
+          type="preview"
+          editorMode={renderOpts?.editorMode}
+        />
+        :
+        <p style={{ padding: "2rem", textAlign: "center", color: "var(--gray-500)" }}>
+          No preview available
+        </p>
+      }
     </div>
   );
 }

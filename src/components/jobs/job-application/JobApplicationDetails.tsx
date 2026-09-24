@@ -1,14 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { CheckCircle2, ZoomIn } from "lucide-react";
-import ResumeComponent from "@/components/resume/ResumeComponent";
-import ResumeViewer from "@/components/resume/ResumeViewer";
 import viewerStyles from "@/components/resume/ResumeViewer.module.css";
 import { normalizeTemplateId } from "@/lib/templateRenderer";
 import ScoreCircle from "@/components/ui/score-circle/ScoreCircle";
 import styles from "./JobApplicationDetails.module.css";
 import modalStyles from "./JobApplicationModal.module.css";
+import ResumePlusViewer, {UploadedResumePlusViewer} from "@/components/resume/ResumePlusViewer";
+
 
 function getTier(score: number): { label: string; hint: string; cls: string } {
   if (score >= 95) return { label: "Perfect match", hint: "Ready to apply — your resume is an excellent fit.", cls: modalStyles.tierPerfect };
@@ -35,7 +33,6 @@ export default function JobApplicationDetails({ application }: JobApplicationDet
   const screeningAnswers: { questionId: string; question: string; answer: string }[] = application.screeningAnswers || [];
   const coverLetter: string = application.coverLetterText || "";
   const status: string = application.status || "submitted";
-  const [viewerOpen, setViewerOpen] = useState(false);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -52,31 +49,11 @@ export default function JobApplicationDetails({ application }: JobApplicationDet
 
       <div className={styles.grid} style={{ alignItems: "center" }}>
         <div className={viewerStyles.previewThumbnail} style={{ maxHeight: "320px" }}>
-          {resumeContent ? (
-            <>
-              <div style={{ maxHeight: "320px", overflow: "hidden", background: "white", padding: "0.25rem" }}>
-                <ResumeComponent resumeContent={resumeContent} templateId={normalizedId} />
-              </div>
-              <button type="button" className={viewerStyles.viewBtn} onClick={() => setViewerOpen(true)}>
-                <ZoomIn size={12} /> View
-              </button>
-              <ResumeViewer
-                isOpen={viewerOpen}
-                onClose={() => setViewerOpen(false)}
-                resumeContent={resumeContent}
-                templateId={normalizedId}
-                title={job?.title || "Resume"}
-              />
-            </>
-          ) : application.uploadedResume?.pages?.length ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-              {application.uploadedResume.pages.map((url: string, i: number) => (
-                <img key={i} src={url} alt={`Resume page ${i + 1}`} style={{ width: "100%", borderRadius: "6px" }} />
-              ))}
-            </div>
-          ) : (
-            <p style={{ fontSize: "var(--text-xs)", color: "var(--gray-500)", padding: "1rem", textAlign: "center" }}>No resume preview</p>
-          )}
+          {resumeContent ? 
+             <ResumePlusViewer templateId={normalizedId} content={resumeContent} /> 
+            : application.uploadedResume?.pages?.length > 0 && 
+            <UploadedResumePlusViewer pages={application.uploadedResume.pages} />
+          }
         </div>
         <div className={styles.scoreCol} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", minWidth: "120px" }}>
           <ScoreCircle score={score} />
