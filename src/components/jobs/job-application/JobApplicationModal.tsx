@@ -422,12 +422,41 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
         </div>
 
         {success ? (
-          <div className={styles.successState}>
-            <CheckCircle2 size={48} />
-            <h3>Application sent</h3>
-            <p>Your application has been sent — the employer received your resume.</p>
-            <button onClick={onClose} className={styles.primaryBtn}>Close</button>
-          </div>
+          offPlatformType ? (
+            <div className={styles.successState}>
+              <CheckCircle2 size={48} />
+              <h3>Application saved — continue off-platform</h3>
+              <p>
+                Your application was saved here so we can track it. You&apos;re now heading off-platform to finish applying directly with the employer.
+              </p>
+              <div className={styles.continueActions}>
+                {job.applicationType === "external_link" && job.externalUrl ? (
+                  <a href={job.externalUrl} target="_blank" rel="noopener noreferrer" className={styles.primaryBtn}>
+                    <ExternalLink size={16} /> Continue to Company Site
+                  </a>
+                ) : job.applicationType === "email" && job.contactEmail ? (
+                  <a href={`mailto:${job.contactEmail}?subject=${encodeURIComponent(`Application for ${job.title}`)}`} className={styles.primaryBtn}>
+                    <Mail size={16} /> Continue to Email
+                  </a>
+                ) : null}
+                <button onClick={onClose} className={styles.backBtn}>
+                  Close
+                </button>
+              </div>
+              {job.applicationType === "external_link" && job.externalUrl ? (
+                <span className={styles.continueHint}>{job.externalUrl}</span>
+              ) : job.applicationType === "email" && job.contactEmail ? (
+                <span className={styles.continueHint}>{job.contactEmail}</span>
+              ) : null}
+            </div>
+          ) : (
+            <div className={styles.successState}>
+              <CheckCircle2 size={48} />
+              <h3>Application sent</h3>
+              <p>Your application has been sent — the employer received your resume.</p>
+              <button onClick={onClose} className={styles.primaryBtn}>Close</button>
+            </div>
+          )
         ) : (
           <>
           <div ref={cardRef} data-steps-wrapper data-scroll-container className={styles.stepsWrapper}>
@@ -653,14 +682,43 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
             )}
             {step === 2 && (
               offPlatformType ? (
-                <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
-                  {job.applicationType === "external_link" && job.externalUrl ? (
-                    <a href={job.externalUrl} target="_blank" rel="noopener noreferrer" className={styles.primaryBtn}><ExternalLink size={16} /> Apply on Company Site</a>
-                  ) : job.applicationType === "email" && job.contactEmail ? (
-                    <a href={`mailto:${job.contactEmail}`} className={styles.primaryBtn}><Mail size={16} /> Email {job.contactEmail}</a>
-                  ) : null}
-                  <button type="button" onClick={handleConfirmOffPlatform} className={styles.backBtn} disabled={submitting}>{submitting ? <><Loader2 size={16} className={styles.spinner} /> Sending...</> : "I've Applied"}</button>
-                </div>
+                job.applicationType === "external_link" && job.externalUrl ? (
+                  <button type="button" onClick={handleConfirmOffPlatform} className={styles.primaryBtn} disabled={submitting}>
+                    {submitting ? (
+                      <>
+                        <Loader2 size={16} className={styles.spinner} /> Sending...
+                      </>
+                    ) : (
+                      <>
+                        <ExternalLink size={16} /> Apply on Company Site
+                      </>
+                    )}
+                  </button>
+                ) : job.applicationType === "email" && job.contactEmail ? (
+                  <button type="button" onClick={handleConfirmOffPlatform} className={styles.primaryBtn} disabled={submitting}>
+                    {submitting ? (
+                      <>
+                        <Loader2 size={16} className={styles.spinner} /> Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Mail size={16} /> Email {job.contactEmail}
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <button type="button" onClick={handleConfirmOffPlatform} className={styles.primaryBtn} disabled={submitting}>
+                    {submitting ? (
+                      <>
+                        <Loader2 size={16} className={styles.spinner} /> Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send size={16} /> Confirm Application
+                      </>
+                    )}
+                  </button>
+                )
               ) : (
                 <button type="button" onClick={(e) => handleApply(e as any)} className={styles.primaryBtn} disabled={submitting}>{submitting ? <><Loader2 size={16} className={styles.spinner} /> Sending...</> : <><Send size={16} /> Send application</>}</button>
               )

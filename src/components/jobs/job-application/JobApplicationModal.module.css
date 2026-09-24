@@ -182,6 +182,22 @@
 .successState { text-align: center; padding: var(--space-8) var(--space-4); display: flex; flex-direction: column; align-items: center; gap: var(--space-3); color: var(--gray-500); }
 .successState h3 { color: var(--primary-900); font-size: var(--text-lg); font-weight: var(--font-bold); }
 
+.continueActions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-top: var(--space-2);
+}
+
+.continueHint {
+  font-size: var(--text-xs);
+  color: var(--gray-500);
+  word-break: break-all;
+  max-width: 100%;
+}
+
 .spinner { animation: spin 1s linear infinite; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 

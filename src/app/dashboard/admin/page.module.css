@@ -34,13 +34,17 @@
 }
 
 .tabBtn:hover {
-  background: var(--gray-50);
+  background: var(--primary-100);
 }
 
 .activeTab {
   color: var(--white);
-  background: var(--primary-1);
+  background: var(--primary-500);
   border-color: var(--primary-1);
+}
+
+.activeTab:hover {
+  background: var(--primary-1);
 }
 
 .title {
@@ -214,4 +218,12 @@
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+
+@media (width < 760px) {
+  .container {
+    padding: var(--space-4);
+    padding-left: var(--space-8);
+  }
 }
