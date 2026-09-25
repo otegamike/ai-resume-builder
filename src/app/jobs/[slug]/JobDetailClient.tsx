@@ -18,6 +18,7 @@ import {
   Loader2,
 } from "lucide-react";
 import detailStyles from "./jobDetail.module.css";
+import { buildJobShareText } from "@/utils/buildJobShareText";
 import JobApplicationModal from "@/components/jobs/job-application/JobApplicationModal";
 import OnboardingOverlay from "@/components/onboarding/OnboardingOverlay/OnboardingOverlay";
 
@@ -187,19 +188,39 @@ export default function JobDetailClient({ params }: { params: Promise<{ slug: st
 
   const handleShare = async () => {
     if (!job) return;
+    const shareText = buildJobShareText(
+      {
+        title: job.title,
+        companyName: job.companyId?.name,
+        location: job.location,
+        jobType: job.jobType,
+        workplaceType: job.workplaceType,
+        description: job.description,
+        requirements: job.requirements,
+        skillsRequired: job.skillsRequired,
+        benefits: job.benefits,
+      },
+      shortUrl
+    );
     if (navigator.share) {
       try {
         await navigator.share({
           title: job.title,
-          text: job.summary ? job.summary : `View this ${job.title} role on AgenticApp.cv.`,
+          text: shareText,
           url: shortUrl,
         });
         return;
-      } catch (err: any) {
-        if (err?.name === "AbortError") return;
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name === "AbortError") return;
       }
     }
-    await copyJobLink();
+    try {
+      await navigator.clipboard.writeText(shareText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
   };
 
   const handleShareToX = async () => {

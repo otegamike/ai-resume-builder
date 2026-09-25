@@ -18,6 +18,8 @@ import CoverLetterResultCard from "@/components/cover-letter/CoverLetterResultCa
 import { useResumeStore } from "@/store/useResumeStore";
 import styles from "./JobApplicationModal.module.css";
 import { delayedScrollIntoView } from "@/utils/scrollIntoview";
+import { maskEmail } from "@/utils/maskEmail";
+import { buildJobApplyMailto } from "@/utils/buildJobApplyMailto";
 import ResumePlusViewer from "@/components/resume/ResumePlusViewer";
 import Modal from "@/components/ui/modal/Modal";
 
@@ -427,7 +429,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
               <CheckCircle2 size={48} />
               <h3>Application saved — continue off-platform</h3>
               <p>
-                Your application was saved here so we can track it. You&apos;re now heading off-platform to finish applying directly with the employer.
+                Your application was saved here. You&apos;re now heading off-platform to finish applying directly with the employer.
               </p>
               <div className={styles.continueActions}>
                 {job.applicationType === "external_link" && job.externalUrl ? (
@@ -435,7 +437,15 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
                     <ExternalLink size={16} /> Continue to Company Site
                   </a>
                 ) : job.applicationType === "email" && job.contactEmail ? (
-                  <a href={`mailto:${job.contactEmail}?subject=${encodeURIComponent(`Application for ${job.title}`)}`} className={styles.primaryBtn}>
+                  <a
+                    href={buildJobApplyMailto({
+                      email: job.contactEmail,
+                      jobTitle: job.title,
+                      applicantName: senderInfo.name,
+                      coverLetter: coverLetterText,
+                    })}
+                    className={styles.primaryBtn}
+                  >
                     <Mail size={16} /> Continue to Email
                   </a>
                 ) : null}
@@ -695,15 +705,15 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
                     )}
                   </button>
                 ) : job.applicationType === "email" && job.contactEmail ? (
-                  <button type="button" onClick={handleConfirmOffPlatform} className={styles.primaryBtn} disabled={submitting}>
+                  <button type="button" onClick={handleConfirmOffPlatform} className={`${styles.primaryBtn} ${styles.emailApplyBtn}`} disabled={submitting}>
                     {submitting ? (
                       <>
                         <Loader2 size={16} className={styles.spinner} /> Sending...
                       </>
                     ) : (
-                      <>
-                        <Mail size={16} /> Email {job.contactEmail}
-                      </>
+                        <span className={styles.emailBtnLabel}>
+                          <Mail size={16} /> Email {maskEmail(job.contactEmail)}
+                        </span>
                     )}
                   </button>
                 ) : (
