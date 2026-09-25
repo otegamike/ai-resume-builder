@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: "/",
+        allow: ["/", "/api/og/"],
         disallow: [
           "/dashboard",
           "/editor",
@@ -15,6 +15,6 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: "https://agenticapp.cv/sitemap.xml",
+    sitemap: "https://www.agenticapp.cv/sitemap.xml",
   };
 }

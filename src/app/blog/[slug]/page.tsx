@@ -20,7 +20,8 @@ void Post;
 
 export const revalidate = 3600;
 
-const BASE_URL = "https://agenticapp.cv";
+const rawBase = process.env.NEXT_PUBLIC_SITE_URL || "https://www.agenticapp.cv";
+const BASE_URL = rawBase.replace(/^https:\/\/agenticapp\.cv/, "https://www.agenticapp.cv");
 
 export async function generateStaticParams() {
   try {

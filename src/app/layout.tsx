@@ -37,7 +37,7 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://agenticapp.cv"),
+  metadataBase: new URL("https://www.agenticapp.cv"),
   title: {
     default: "AgenticApp.cv | AI Resume Builder & ATS Score Checker",
     template: "%s | AgenticApp.cv",
@@ -52,13 +52,13 @@ export const metadata: Metadata = {
     "job application tracker",
   ],
   alternates: {
-    canonical: "https://agenticapp.cv",
+    canonical: "https://www.agenticapp.cv",
   },
   openGraph: {
     type: "website",
     siteName: "AgenticApp.cv",
     locale: "en_US",
-    url: "https://agenticapp.cv",
+    url: "https://www.agenticapp.cv",
     title: "AgenticApp.cv | AI Resume Builder & ATS Score Checker",
     description:
       "Free AI resume builder & ATS checker. Create ATS-friendly resumes, get an instant compatibility score, generate tailored cover letters, and track every application in one place.",

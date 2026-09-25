@@ -22,7 +22,7 @@ export const metadata = {
   description:
     "Expert advice on building ATS-optimized resumes, writing cover letters that get responses, and mastering your job search with AgenticApp.cv.",
   alternates: {
-    canonical: "https://agenticapp.cv/blog",
+    canonical: "https://www.agenticapp.cv/blog",
   },
 };
 

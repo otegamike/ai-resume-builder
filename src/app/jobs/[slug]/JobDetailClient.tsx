@@ -349,6 +349,7 @@ export default function JobDetailClient({ params }: { params: Promise<{ slug: st
 
         <div className={detailStyles.bodyGrid}>
           <main className={detailStyles.mainContent}>
+            {/* <img src={`/api/og/job?slug=${encodeURIComponent(slug)}`} width='100%' alt="Company Logo" /> */}
             <section className={detailStyles.section}>
               <h2 className={detailStyles.sectionTitle}>Job Description</h2>
               <div className={detailStyles.descriptionText} dangerouslySetInnerHTML={{ __html: descriptionHtml }} />

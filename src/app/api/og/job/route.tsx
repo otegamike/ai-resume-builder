@@ -153,7 +153,7 @@ export async function GET(req: Request) {
               gap: "8px",
             }}
           >
-            <svg width="24" height="19" viewBox="0 0 110 89" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg width="35" height="28.22" viewBox="0 0 110 89" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
                 fillRule="evenodd"
                 clipRule="evenodd"
@@ -184,6 +184,9 @@ export async function GET(req: Request) {
     {
       width: 1200,
       height: 630,
+      headers: {
+        "Cache-Control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+      },
     }
   );
 }

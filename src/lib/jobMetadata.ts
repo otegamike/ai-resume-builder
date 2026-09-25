@@ -7,7 +7,8 @@ import Company from "@/models/Company";
 void JobAd;
 void Company;
 
-const BASE_URL = "https://agenticapp.cv";
+const rawBase = process.env.NEXT_PUBLIC_SITE_URL || "https://www.agenticapp.cv";
+const BASE_URL = rawBase.replace(/^https:\/\/agenticapp\.cv/, "https://www.agenticapp.cv");
 
 /**
  * Build the OG / Twitter / SEO metadata for a single job-ad page.

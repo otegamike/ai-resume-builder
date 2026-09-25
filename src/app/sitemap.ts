@@ -4,7 +4,8 @@ import Post from "@/models/Post";
 
 void Post;
 
-const BASE_URL = "https://agenticapp.cv";
+const rawBase = process.env.NEXT_PUBLIC_SITE_URL || "https://www.agenticapp.cv";
+const BASE_URL = rawBase.replace(/^https:\/\/agenticapp\.cv/, "https://www.agenticapp.cv");
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
