@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/authUser";
-import { parseJobAdFromText } from "@/lib/ai";
+import { aiContextFromAuthUser, parseJobAdFromText, GroqCallError, toAiErrorResponse } from "@/lib/ai";
 import {
   InputExtractionError,
   resolveJobParseInput,
@@ -26,14 +26,19 @@ export async function POST(request: Request) {
     }
 
     const formData = await request.formData();
-    const jobText = await resolveJobParseInput(formData);
+    const ctx = aiContextFromAuthUser(authUser);
+    const jobText = await resolveJobParseInput(formData, ctx);
 
-    const parsed = await parseJobAdFromText(jobText);
+    const parsed = await parseJobAdFromText(jobText, ctx);
 
     return NextResponse.json(parsed);
   } catch (error) {
     if (error instanceof InputExtractionError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof GroqCallError) {
+      const { status, error: message } = toAiErrorResponse(error, "Failed to parse job ad");
+      return NextResponse.json({ error: message }, { status });
     }
     console.error("Job parse error:", error);
     const message = error instanceof Error ? error.message : "Failed to parse job ad";

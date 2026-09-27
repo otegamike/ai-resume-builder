@@ -200,14 +200,14 @@
 
 .emailApplyBtn {
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.15rem;
 }
 
 .emailBtnContent {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.15rem;
 }
 

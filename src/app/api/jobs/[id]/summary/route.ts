@@ -5,7 +5,8 @@ import dbConnect from "@/lib/db";
 import JobAd from "@/models/JobAd";
 import Company from "@/models/Company";
 import User from "@/models/User";
-import { generateJobShareSummary } from "@/lib/ai";
+import { generateJobShareSummary, GroqCallError, toAiErrorResponse } from "@/lib/ai";
+import type { AiRequestContext } from "@/lib/ai";
 
 void JobAd;
 void Company;
@@ -57,7 +58,11 @@ export async function POST(
     }
 
     const jobText = parts.join("\n");
-    const summary = await generateJobShareSummary(jobText);
+    const ctx: AiRequestContext = {
+      userId: String(session.user.id),
+      userEmail: session.user.email || "",
+    };
+    const summary = await generateJobShareSummary(jobText, ctx);
 
     if (summary) {
       // Persist so next share is instant and job has a summary going forward
@@ -66,6 +71,10 @@ export async function POST(
 
     return NextResponse.json({ summary: (summary || "").slice(0, 280) });
   } catch (error: any) {
+    if (error instanceof GroqCallError) {
+      const { status, error: message } = toAiErrorResponse(error, "Failed to generate summary");
+      return NextResponse.json({ error: message }, { status });
+    }
     console.error("summary generation error:", error);
     return NextResponse.json({ error: error?.message || "Failed to generate summary" }, { status: 500 });
   }

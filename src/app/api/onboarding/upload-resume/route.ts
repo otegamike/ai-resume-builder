@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/authUser";
+import { aiContextFromAuthUser, GroqCallError, toAiErrorResponse } from "@/lib/ai";
 import User from "@/models/User";
 import {
   InputExtractionError,
@@ -18,11 +19,13 @@ export async function POST(request: Request) {
     }
 
     const formData = await request.formData();
-    const extractedText = await resolveUploadOnlyResumeInput(formData, "file");
+    const ctx = aiContextFromAuthUser(authUser);
+    const extractedText = await resolveUploadOnlyResumeInput(formData, ctx, "file");
 
     const savedResume = await createResumeFromExtractedText({
       authUser,
       extractedText,
+      ctx,
     });
 
     const name = formData.get("name")?.toString().trim() || "";
@@ -76,6 +79,10 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof InputExtractionError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof GroqCallError) {
+      const { status, error: message } = toAiErrorResponse(error, "Failed to process uploaded resume");
+      return NextResponse.json({ error: message }, { status });
     }
     const message = error instanceof Error ? error.message : "Failed to process uploaded resume";
     if (message.includes("not supported") || message.includes("Upload") || message.includes("10MB")) {

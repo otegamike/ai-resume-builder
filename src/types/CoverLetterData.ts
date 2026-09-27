@@ -10,3 +10,9 @@ export interface CoverLetterItem {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface CoverLetterResult {
+  content: string;
+  inferredRole: string;
+  inferredCompany: string;
+}

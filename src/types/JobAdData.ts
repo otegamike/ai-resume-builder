@@ -48,3 +48,30 @@ export interface JobAd {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+export interface ParsedJobAd {
+  title: string;
+  category: string;
+  jobType: string;
+  workplaceType: string;
+  location: string;
+  experienceLevel: string;
+  salaryMin: number | null;
+  salaryMax: number | null;
+  salaryCurrency: string;
+  salaryPeriod: string;
+  summary: string;
+  description: string;
+  requirements: string[];
+  benefits: string[];
+  skillsRequired: string[];
+  companyName: string;
+  companyWebsite: string;
+  companyLogo: string;
+  companyLocation: string;
+  companyIndustry: string;
+  companyDescription: string;
+  applicationType: string;
+  externalUrl: string;
+  contactEmail: string;
+}

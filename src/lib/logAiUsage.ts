@@ -15,6 +15,7 @@ export async function logAiUsage(data: {
   error?: boolean;
   errorMessage?: string;
   userId?: string;
+  userEmail?: string;
 }) {
   try {
     await dbConnect();
@@ -23,6 +24,7 @@ export async function logAiUsage(data: {
       error: data.error ?? false,
       errorMessage: data.errorMessage?.slice(0, 500),
       userId: data.userId ? new mongoose.Types.ObjectId(data.userId) : undefined,
+      userEmail: data.userEmail?.trim() || undefined,
     });
   } catch (err) {
     console.error("Failed to log AI usage", err);

@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import TipTapEditor from "@/components/blog/TipTapEditor";
 import JobAutofillSection from "@/components/jobs/JobAutofillSection";
-import type { ParsedJobAd } from "@/lib/ai";
+import type { ParsedJobAd } from "@/types/JobAdData";
 import { JOB_CATEGORIES } from "@/lib/jobCategories";
 import styles from "../jobs.module.css";
 

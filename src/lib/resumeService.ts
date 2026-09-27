@@ -7,6 +7,7 @@ import type { IResume } from "@/models/Resume";
 import { templateDefinitions } from "@/lib/templateCatalog";
 import { getRandomTemplateId } from "@/utils/templateUtils";
 import { emptyResumeContent, parseResumeContent } from "@/lib/ai";
+import type { AiRequestContext } from "@/lib/ai";
 import type { ResumeContent } from "@/types/ResumeData";
 import { recordActivity } from "@/lib/activityService";
 
@@ -57,6 +58,7 @@ export async function createResume(params: CreateResumeParams): Promise<IResume 
 export interface CreateResumeFromExtractedTextParams {
   authUser: AuthUserShape;
   extractedText: string;
+  ctx: AiRequestContext;
   title?: string;
   template?: string;
 }
@@ -64,11 +66,11 @@ export interface CreateResumeFromExtractedTextParams {
 export async function createResumeFromExtractedText(
   params: CreateResumeFromExtractedTextParams
 ): Promise<IResume & { _id: Types.ObjectId }> {
-  const { authUser, extractedText, title, template } = params;
+  const { authUser, extractedText, ctx, title, template } = params;
 
   let parsedContent: ResumeContent | null = null;
   try {
-    parsedContent = await parseResumeContent(extractedText);
+    parsedContent = await parseResumeContent(extractedText, ctx);
   } catch {
     parsedContent = null;
   }

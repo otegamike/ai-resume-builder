@@ -14,6 +14,7 @@ export interface IAiUsageEvent {
   error: boolean;
   errorMessage?: string;
   userId?: Types.ObjectId;
+  userEmail?: string;
   createdAt: Date;
 }
 
@@ -31,6 +32,7 @@ const AiUsageEventSchema: Schema = new Schema<IAiUsageEvent>(
     error: { type: Boolean, default: false, index: true },
     errorMessage: { type: String },
     userId: { type: Schema.Types.ObjectId, ref: "User", index: true },
+    userEmail: { type: String, index: true },
   },
   { timestamps: { createdAt: true, updatedAt: false } }
 );

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/authUser";
 import dbConnect from "@/lib/db";
 import JobAd from "@/models/JobAd";
-import { analyzeResumeJobMatch } from "@/lib/ai";
+import { aiContextFromAuthUser, analyzeResumeJobMatch, GroqCallError, toAiErrorResponse } from "@/lib/ai";
 import {
   InputExtractionError,
   resolveResumeInput,
@@ -53,14 +53,19 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     if (!jobText.trim()) return NextResponse.json({ error: "Job has no readable content" }, { status: 422 });
 
     const formData = await req.formData();
-    const { resumeText } = await resolveResumeInput(formData, authUser);
+    const ctx = aiContextFromAuthUser(authUser);
+    const { resumeText } = await resolveResumeInput(formData, authUser, ctx);
 
-    const analysis = await analyzeResumeJobMatch(resumeText, jobText);
+    const analysis = await analyzeResumeJobMatch(resumeText, jobText, ctx);
 
     return NextResponse.json(analysis);
   } catch (error) {
     if (error instanceof InputExtractionError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof GroqCallError) {
+      const { status, error: message } = toAiErrorResponse(error, "Failed to analyze match");
+      return NextResponse.json({ error: message }, { status });
     }
     console.error("Match analysis error:", error);
     const message = error instanceof Error ? error.message : "Failed to analyze match";

@@ -5,7 +5,7 @@ import { Sparkles, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { AiButton } from "@/components/ui/AiButton";
 import JobDescriptionInput from "@/components/job-description/JobDescriptionInput";
 import { useJobDescriptionInput } from "@/hooks/useJobDescriptionInput";
-import type { ParsedJobAd } from "@/lib/ai";
+import type { ParsedJobAd } from "@/types/JobAdData";
 import styles from "./JobAutofillSection.module.css";
 
 interface JobAutofillSectionProps {

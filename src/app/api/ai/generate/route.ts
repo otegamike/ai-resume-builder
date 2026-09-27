@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateSummary, generateExperienceBulletPoints, improveSummary, generateSkillsSuggestions, generateCategorizedSkills, categorizeExistingSkills, generateBlogMeta } from '@/lib/ai';
+import { aiContextFromAuthUser, generateSummary, generateExperienceBulletPoints, improveSummary, generateSkillsSuggestions, generateCategorizedSkills, categorizeExistingSkills, generateBlogMeta, GroqCallError, toAiErrorResponse } from '@/lib/ai';
 import { getAuthenticatedUser } from '@/lib/authUser';
 import { deductCredits, InsufficientCreditsError } from '@/lib/creditUtils';
 import type { AiFeature } from '@/lib/creditCosts';
@@ -45,33 +45,34 @@ export async function POST(request: NextRequest) {
     }
 
     const newAiCredits = await deductCredits(String(authUser.userObjectId), feature);
+    const ctx = aiContextFromAuthUser(authUser);
 
     let result: any;
 
     switch (type) {
       case 'generateSummary':
-        result = await generateSummary(data.jobTitle || '', data.experience || '3', data.skills || [], data.achivements || []);
+        result = await generateSummary(data.jobTitle || '', data.experience || '3', data.skills || [], data.achivements || [], ctx);
         break;
       case 'generateBulletPoints':
-        result = await generateExperienceBulletPoints(data.company || '', data.role || '', data.description || '');
+        result = await generateExperienceBulletPoints(data.company || '', data.role || '', data.description || '', ctx);
         break;
       case 'improveSummary':
-        result = await improveSummary(data.summary || '');
+        result = await improveSummary(data.summary || '', ctx);
         break;
       case 'generateSkills':
-        result = await generateSkillsSuggestions(data.jobTitle || '');
+        result = await generateSkillsSuggestions(data.jobTitle || '', ctx);
         break;
       case 'generateCategorizedSkills':
-        result = await generateCategorizedSkills(data.jobTitle || '');
+        result = await generateCategorizedSkills(data.jobTitle || '', ctx);
         break;
       case 'categorizeExistingSkills':
-        result = await categorizeExistingSkills(data.skills || []);
+        result = await categorizeExistingSkills(data.skills || [], ctx);
         break;
       case 'generateBlogMeta':
         if (!authUser.session?.user?.isAdmin) {
           return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
-        result = await generateBlogMeta(data.content || '');
+        result = await generateBlogMeta(data.content || '', ctx);
         break;
     }
 
@@ -86,6 +87,10 @@ export async function POST(request: NextRequest) {
         { error: error.message, creditsRemaining: error.creditsRemaining, cost: error.cost },
         { status: 402 }
       );
+    }
+    if (error instanceof GroqCallError) {
+      const { status, error: message } = toAiErrorResponse(error, 'AI generation failed');
+      return NextResponse.json({ error: message }, { status });
     }
     console.error('AI Generation error:', error);
     return NextResponse.json({ error: 'AI generation failed' }, { status: 500 });

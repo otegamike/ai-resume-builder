@@ -8,7 +8,7 @@ import Company from "@/models/Company";
 import Resume from "@/models/Resume";
 import UploadedResume from "@/models/UploadedResume";
 import { getAuthenticatedUser } from "@/lib/authUser";
-import { extractResumeTextFromImages, parseResumeContent } from "@/lib/ai";
+import { aiContextFromAuthUser, extractResumeTextFromImages, parseResumeContent, GroqCallError, toAiErrorResponse } from "@/lib/ai";
 import { createResume } from "@/lib/resumeService";
 import { fileToDataUrl } from "@/lib/resumeImprover";
 import { recordActivity } from "@/lib/activityService";
@@ -183,8 +183,9 @@ export async function POST(
       }
 
       const dataUrls = await Promise.all(uploadedFiles.map(fileToDataUrl));
-      const extractedText = await extractResumeTextFromImages(dataUrls);
-      const parsedContent = await parseResumeContent(extractedText || "");
+      const ctx = aiContextFromAuthUser(authUser);
+      const extractedText = await extractResumeTextFromImages(dataUrls, ctx);
+      const parsedContent = await parseResumeContent(extractedText || "", ctx);
 
       const newResume = await createResume({
         authUser,
@@ -331,6 +332,10 @@ export async function POST(
     const err = error as { code?: number; message?: string };
     if (err?.code === 11000) {
       return NextResponse.json({ error: "You have already submitted an application for this position" }, { status: 400 });
+    }
+    if (error instanceof GroqCallError) {
+      const { status, error: message } = toAiErrorResponse(error, "Failed to submit application");
+      return NextResponse.json({ error: message }, { status });
     }
     console.error("Error submitting job application:", error);
     const message = err?.message || "Failed to submit application";

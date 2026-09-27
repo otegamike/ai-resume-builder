@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/authUser";
-import { generateCoverLetter } from "@/lib/ai";
+import { aiContextFromAuthUser, generateCoverLetter, GroqCallError, toAiErrorResponse } from "@/lib/ai";
 import dbConnect from "@/lib/db";
 import CoverLetter from "@/models/CoverLetter";
 import { deductCredits, InsufficientCreditsError } from "@/lib/creditUtils";
@@ -21,19 +21,21 @@ export async function POST(request: Request) {
     }
 
     const newAiCredits = await deductCredits(String(authUser.userObjectId), "coverLetterGenerate");
+    const ctx = aiContextFromAuthUser(authUser);
 
     const formData = await request.formData();
     const resumeMode = formData.get("resumeMode") as string;
     const targetCompany = (formData.get("targetCompany") as string) || "";
     const targetRole = (formData.get("targetRole") as string) || "";
 
-    const { resumeText, existingResume } = await resolveResumeInput(formData, authUser);
-    const jobDescriptionText = await resolveJobInput(formData);
+    const { resumeText, existingResume } = await resolveResumeInput(formData, authUser, ctx);
+    const jobDescriptionText = await resolveJobInput(formData, ctx);
 
     // 3. Generate cover letter via AI
     const coverLetterResult = await generateCoverLetter(
       resumeText,
       jobDescriptionText,
+      ctx,
       targetCompany,
       targetRole,
       existingResume
@@ -93,6 +95,10 @@ export async function POST(request: Request) {
         { error: error.message, creditsRemaining: error.creditsRemaining, cost: error.cost },
         { status: 402 }
       );
+    }
+    if (error instanceof GroqCallError) {
+      const { status, error: message } = toAiErrorResponse(error, "Failed to generate cover letter");
+      return NextResponse.json({ error: message }, { status });
     }
     console.error("Cover letter generation error:", error);
     const message = error instanceof Error ? error.message : "Failed to generate cover letter";

@@ -4,8 +4,10 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import AiUsageEvent from "@/models/AiUsageEvent";
+import User from "@/models/User";
 
 void AiUsageEvent;
+void User;
 
 export async function GET(request: Request) {
   try {
@@ -45,6 +47,7 @@ export async function GET(request: Request) {
         { model: regex },
         { finishReason: regex },
         { errorMessage: regex },
+        { userEmail: regex },
       ];
     }
     if (cursor) {
@@ -78,6 +81,7 @@ export async function GET(request: Request) {
         error: boolean;
         errorMessage?: string;
         userId?: { _id: Types.ObjectId; name?: string; email?: string; image?: string } | Types.ObjectId;
+        userEmail?: string;
         createdAt: Date;
       };
       const populatedUser =
@@ -99,7 +103,7 @@ export async function GET(request: Request) {
         errorMessage: doc.errorMessage || null,
         userId: populatedUser ? String(populatedUser._id) : doc.userId ? String(doc.userId) : null,
         userName: populatedUser?.name || null,
-        userEmail: populatedUser?.email || null,
+        userEmail: doc.userEmail || populatedUser?.email || null,
         userImage: populatedUser?.image || null,
         createdAt: doc.createdAt.toISOString(),
       };

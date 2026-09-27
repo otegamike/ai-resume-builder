@@ -3,6 +3,7 @@ import "server-only";
 import { Types } from "mongoose";
 import { buildResumeOwnerQuery } from "@/lib/authUser";
 import { extractResumeTextFromImages, extractTextFromJobImage } from "@/lib/ai";
+import type { AiRequestContext } from "@/lib/ai";
 import dbConnect from "@/lib/db";
 import {
   assertSupportedUpload,
@@ -61,7 +62,7 @@ function getFileArray(formData: FormData, key: string): File[] {
   return formData.getAll(key).filter((f): f is File => f instanceof File);
 }
 
-async function extractUploadedResumeText(files: File[]): Promise<string> {
+async function extractUploadedResumeText(files: File[], ctx: AiRequestContext): Promise<string> {
   if (files.length === 0) {
     throw new InputExtractionError("No resume file uploaded", 400);
   }
@@ -69,7 +70,7 @@ async function extractUploadedResumeText(files: File[]): Promise<string> {
     assertSupportedUpload(file);
   }
   const dataUrls = await Promise.all(files.map(fileToDataUrl));
-  return extractResumeTextFromImages(dataUrls);
+  return extractResumeTextFromImages(dataUrls, ctx);
 }
 
 function assertNonEmptyTrimmed(value: string, errorMessage: string, status: number): void {
@@ -80,7 +81,8 @@ function assertNonEmptyTrimmed(value: string, errorMessage: string, status: numb
 
 export async function resolveResumeInput(
   formData: FormData,
-  authUser: AuthUserShape
+  authUser: AuthUserShape,
+  ctx: AiRequestContext
 ): Promise<ResolveResumeInputResult> {
   const resumeMode = getStringField(formData, RESUME_MODE_FIELD);
 
@@ -111,7 +113,7 @@ export async function resolveResumeInput(
 
   if (resumeMode === "upload") {
     const files = getFileArray(formData, RESUME_FILE_FIELD);
-    const resumeText = await extractUploadedResumeText(files);
+    const resumeText = await extractUploadedResumeText(files, ctx);
     assertNonEmptyTrimmed(resumeText, "Could not extract readable text from the resume.", 422);
     return { resumeText, upload: true };
   }
@@ -121,20 +123,21 @@ export async function resolveResumeInput(
 
 export async function resolveUploadOnlyResumeInput(
   formData: FormData,
+  ctx: AiRequestContext,
   fieldName: string = "file"
 ): Promise<string> {
   const files = getFileArray(formData, fieldName);
   if (files.length === 0) {
     throw new InputExtractionError("No resume file provided", 400);
   }
-  const extractedText = await extractUploadedResumeText(files);
+  const extractedText = await extractUploadedResumeText(files, ctx);
   assertNonEmptyTrimmed(extractedText, "Could not extract readable text from this resume.", 422);
   return extractedText;
 }
 
 export type JobInputMode = "text" | "image";
 
-export async function resolveJobInput(formData: FormData): Promise<string> {
+export async function resolveJobInput(formData: FormData, ctx: AiRequestContext): Promise<string> {
   const jobMode = getStringField(formData, JOB_MODE_FIELD);
 
   if (jobMode === "text") {
@@ -152,7 +155,7 @@ export async function resolveJobInput(formData: FormData): Promise<string> {
       throw new InputExtractionError("Job description file must be an image", 400);
     }
     const dataUrl = await fileToDataUrl(jobImageFile);
-    const jobText = await extractTextFromJobImage(dataUrl);
+    const jobText = await extractTextFromJobImage(dataUrl, ctx);
     assertNonEmptyTrimmed(jobText, "Job description is empty or could not be read.", 400);
     return jobText;
   }
@@ -160,7 +163,7 @@ export async function resolveJobInput(formData: FormData): Promise<string> {
   throw new InputExtractionError("Invalid job context mode", 400);
 }
 
-export async function resolveJobParseInput(formData: FormData): Promise<string> {
+export async function resolveJobParseInput(formData: FormData, ctx: AiRequestContext): Promise<string> {
   const jobMode = getStringField(formData, JOB_MODE_FIELD);
 
   if (jobMode === "text") {
@@ -179,7 +182,7 @@ export async function resolveJobParseInput(formData: FormData): Promise<string> 
       throw new InputExtractionError("Job file must be an image", 400);
     }
     const dataUrl = await fileToDataUrl(jobImageFile);
-    const jobText = await extractTextFromJobImage(dataUrl);
+    const jobText = await extractTextFromJobImage(dataUrl, ctx);
     assertNonEmptyTrimmed(jobText, "Could not extract text from image", 422);
     return jobText;
   }

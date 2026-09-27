@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { analyzeResumeForAts } from "@/lib/ai";
+import { aiContextFromAuthUser, analyzeResumeForAts, GroqCallError, toAiErrorResponse } from "@/lib/ai";
 import { buildResumeOwnerQuery, getAuthenticatedUser } from "@/lib/authUser";
 import dbConnect from "@/lib/db";
 import { resumeContentToText } from "@/lib/resumeImprover";
@@ -21,6 +21,7 @@ export async function POST(
     }
 
     const newAiCredits = await deductCredits(String(authUser.userObjectId), "atsAnalysisSaved");
+    const ctx = aiContextFromAuthUser(authUser);
 
     await dbConnect();
     const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId, authUser.legacyUserId);
@@ -38,7 +39,7 @@ export async function POST(
       );
     }
 
-    const report = await analyzeResumeForAts(extractedText, resume.content);
+    const report = await analyzeResumeForAts(extractedText, ctx, resume.content);
     return NextResponse.json({ ...report, newAiCredits });
   } catch (error) {
     if (error instanceof InsufficientCreditsError) {
@@ -46,6 +47,10 @@ export async function POST(
         { error: error.message, creditsRemaining: error.creditsRemaining, cost: error.cost },
         { status: 402 }
       );
+    }
+    if (error instanceof GroqCallError) {
+      const { status, error: message } = toAiErrorResponse(error, "Failed to analyze resume");
+      return NextResponse.json({ error: message }, { status });
     }
     console.error("Saved resume ATS analysis error:", error);
     return NextResponse.json(

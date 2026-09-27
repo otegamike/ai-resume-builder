@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { analyzeResumeForAts } from "@/lib/ai";
+import { aiContextFromAuthUser, analyzeResumeForAts, GroqCallError, toAiErrorResponse } from "@/lib/ai";
 import { getAuthenticatedUser } from "@/lib/authUser";
 import { deductCredits, InsufficientCreditsError } from "@/lib/creditUtils";
 import {
@@ -17,11 +17,12 @@ export async function POST(request: Request) {
     }
 
     const newAiCredits = await deductCredits(String(authUser.userObjectId), "atsAnalysisUpload");
+    const ctx = aiContextFromAuthUser(authUser);
 
     const formData = await request.formData();
-    const extractedText = await resolveUploadOnlyResumeInput(formData, "file");
+    const extractedText = await resolveUploadOnlyResumeInput(formData, ctx, "file");
 
-    const report = await analyzeResumeForAts(extractedText);
+    const report = await analyzeResumeForAts(extractedText, ctx);
 
     return NextResponse.json({ ...report, newAiCredits });
   } catch (error) {
@@ -33,6 +34,10 @@ export async function POST(request: Request) {
         { error: error.message, creditsRemaining: error.creditsRemaining, cost: error.cost },
         { status: 402 }
       );
+    }
+    if (error instanceof GroqCallError) {
+      const { status, error: message } = toAiErrorResponse(error, "Failed to analyze uploaded resume");
+      return NextResponse.json({ error: message }, { status });
     }
     const message =
       error instanceof Error ? error.message : "Failed to analyze uploaded resume";
