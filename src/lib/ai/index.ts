@@ -50,7 +50,7 @@ export {
   analyzeResumeJobMatch,
 } from "./jobs";
 
-// Canonical result shapes live in src/types. Re-exported here so existing
-// `@/lib/ai` imports keep working while consumers migrate.
+// Canonical result shapes live in src/types and are re-exported here so
+// `@/lib/ai` stays the single entry point for AI helpers and their shapes.
 export type { CoverLetterResult } from "@/types/CoverLetterData";
 export type { ParsedJobAd } from "@/types/JobAdData";

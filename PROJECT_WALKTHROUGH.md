@@ -32,7 +32,7 @@ Server-side responsibilities:
 - Session-to-user resolution in `src/lib/authUser.ts`.
 - MongoDB connection caching in `src/lib/db.ts`.
 - Template HTML loading in `src/lib/templateServer.ts`.
-- AI provider calls and normalization in `src/lib/ai.ts`.
+- AI provider calls and normalization in `src/lib/ai/`.
 - Resume PDF/image text extraction helpers in `src/lib/resumeImprover.ts`.
 - Route handlers in `src/app/api/**`.
 - Server-rendered settings pages that read the current session.
@@ -255,7 +255,7 @@ Both template routes run in the Node.js runtime because they read template files
 
 1. User triggers an AI action in the editor.
 2. `useAi()` posts to `/api/ai/generate`.
-3. Server calls Groq through `src/lib/ai.ts`.
+3. Server calls Groq through `src/lib/ai/`.
 4. Result is normalized and returned.
 5. Editor applies the generated text/list to resume state.
 6. Autosave persists the change when applicable.
@@ -292,7 +292,7 @@ Both template routes run in the Node.js runtime because they read template files
 
 ## 8) AI Workflows
 
-`src/lib/ai.ts` contains several workflow families:
+`src/lib/ai/` contains several workflow families:
 - Resume writing helpers for summaries, bullets, skills, and categorized skills.
 - ATS analysis that returns structured JSON.
 - Resume tailoring that returns structured JSON and normalized resume content.
