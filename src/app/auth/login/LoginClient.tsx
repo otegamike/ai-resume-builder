@@ -76,9 +76,11 @@ export default function LoginClient({ callbackUrl }: { callbackUrl: string }) {
     setContainerHeight(`${calculateEditorHeight()}px`);
   }, []);
 
-  if (status === "authenticated") {
-    router.replace(callbackUrl);
-  }
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace(callbackUrl);
+    }
+  }, [status, router, callbackUrl]);
 
   const onGoogle = async () => {
     setGoogleLoading(true);
@@ -119,12 +121,25 @@ export default function LoginClient({ callbackUrl }: { callbackUrl: string }) {
       }
 
       router.push(result?.url || callbackUrl);
+      return;
     } catch {
       setError("Authentication failed");
-    } finally {
       setSubmitting(false);
     }
   };
+
+  if (status === "authenticated") {
+    return (
+      <main className={`${bgStyles.animated_circles_bg} ${styles.formPanel}`}>
+        <div className={styles.card}>
+          <div className={styles.redirectWrap}>
+            <Loader2 className={styles.oauthBtnSpinner} aria-hidden="true" />
+            <p className={styles.subtitle}>Redirecting…</p>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <div className={styles.container} style={{ height: containerHeight }}>

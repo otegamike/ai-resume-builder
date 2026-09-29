@@ -109,6 +109,37 @@
   padding: var(--space-6);
 }
 
+.chartWrapperOverflowVisible {
+  overflow: visible;
+}
+
+.growthScrollContainer {
+  display: flex;
+  gap: var(--space-4);
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.growthCard {
+  flex: 0 0 340px;
+  min-width: 340px;
+  scroll-snap-align: start;
+  background-color: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-6);
+}
+
+.growthCardTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--gray-800);
+  margin: 0 0 var(--space-4) 0;
+}
+
 .noData {
   color: var(--gray-400);
   font-size: var(--text-sm);

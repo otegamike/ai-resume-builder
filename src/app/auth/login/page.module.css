@@ -511,3 +511,12 @@
   color: var(--neutral-400, #9ca3af);
   line-height: 1.5;
 }
+
+/* Redirecting placeholder shown while an authenticated session leaves login */
+.redirectWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem 0;
+}

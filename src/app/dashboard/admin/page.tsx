@@ -229,56 +229,28 @@ export default function AdminDashboardPage() {
 
       <div className={styles.chartSection}>
         <h2 className={styles.chartTitle}>Growth Trends — Last 30 Days</h2>
-        <div className={styles.chartWrapper}>
+        <div className={styles.growthScrollContainer}>
           {chartData && chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={320}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-200)" />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 11, fill: "var(--gray-500)" }}
-                  interval={4}
-                />
-                <YAxis tick={{ fontSize: 11, fill: "var(--gray-500)" }} allowDecimals={false} />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: "var(--radius-md)",
-                    border: "1px solid var(--gray-200)",
-                    fontSize: "var(--text-sm)",
-                  }}
-                />
-                <Legend
-                  wrapperStyle={{ fontSize: "var(--text-sm)", paddingTop: "var(--space-4)" }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="visits"
-                  stroke="#84b179"
-                  strokeWidth={2}
-                  dot={false}
-                  activeDot={{ r: 4 }}
-                  name="Visits"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="signups"
-                  stroke="#6a8e61"
-                  strokeWidth={2}
-                  dot={false}
-                  activeDot={{ r: 4 }}
-                  name="Sign Ups"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="resumes"
-                  stroke="#a78bfa"
-                  strokeWidth={2}
-                  dot={false}
-                  activeDot={{ r: 4 }}
-                  name="Resumes"
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <>
+              <GrowthTrendCard
+                title="Visits"
+                dataKey="visits"
+                color="#84b179"
+                data={chartData}
+              />
+              <GrowthTrendCard
+                title="Sign Ups"
+                dataKey="signups"
+                color="#6a8e61"
+                data={chartData}
+              />
+              <GrowthTrendCard
+                title="Resumes"
+                dataKey="resumes"
+                color="#a78bfa"
+                data={chartData}
+              />
+            </>
           ) : (
             <p className={styles.noData}>Not enough data to display chart yet.</p>
           )}
@@ -339,10 +311,10 @@ export default function AdminDashboardPage() {
 
           <div className={styles.chartSection}>
             <h2 className={styles.chartTitle}>AI Requests by Feature — Last 30 Days</h2>
-            <div className={styles.chartWrapper}>
+            <div className={`${styles.chartWrapper} ${styles.chartWrapperOverflowVisible}`}>
               {featureChartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={320}>
-                  <BarChart data={featureChartData}>
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart data={featureChartData} margin={{ bottom: 8 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-200)" />
                     <XAxis
                       dataKey="date"
@@ -351,10 +323,14 @@ export default function AdminDashboardPage() {
                     />
                     <YAxis tick={{ fontSize: 11, fill: "var(--gray-500)" }} allowDecimals={false} />
                     <Tooltip
+                      cursor={{ fill: "var(--gray-100)" }}
+                      wrapperStyle={{ zIndex: 1000 }}
                       contentStyle={{
                         borderRadius: "var(--radius-md)",
                         border: "1px solid var(--gray-200)",
                         fontSize: "var(--text-sm)",
+                        background: "var(--white)",
+                        boxShadow: "var(--shadow-md)",
                       }}
                     />
                     <Legend
@@ -423,6 +399,54 @@ export default function AdminDashboardPage() {
       )}
         </>
       )}
+    </div>
+  );
+}
+
+function GrowthTrendCard({
+  title,
+  dataKey,
+  color,
+  data,
+}: {
+  title: string;
+  dataKey: string;
+  color: string;
+  data: Array<Record<string, string | number>>;
+}) {
+  return (
+    <div className={styles.growthCard}>
+      <h3 className={styles.growthCardTitle}>{title}</h3>
+      <ResponsiveContainer width="100%" height={260}>
+        <LineChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-200)" />
+          <XAxis
+            dataKey="date"
+            tick={{ fontSize: 11, fill: "var(--gray-500)" }}
+            interval={4}
+          />
+          <YAxis tick={{ fontSize: 11, fill: "var(--gray-500)" }} allowDecimals={false} />
+          <Tooltip
+            contentStyle={{
+              borderRadius: "var(--radius-md)",
+              border: "1px solid var(--gray-200)",
+              fontSize: "var(--text-sm)",
+            }}
+          />
+          <Legend
+            wrapperStyle={{ fontSize: "var(--text-sm)", paddingTop: "var(--space-4)" }}
+          />
+          <Line
+            type="monotone"
+            dataKey={dataKey}
+            stroke={color}
+            strokeWidth={2}
+            dot={false}
+            activeDot={{ r: 4 }}
+            name={title}
+          />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   );
 }
