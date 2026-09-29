@@ -176,7 +176,7 @@
 /* ---------- Selected preview box ---------- */
 
 .previewBox {
-  min-height: 13rem;
+  aspect-ratio: 794 / 1123;
   border: 2px dashed var(--gray-300);
   border-radius: var(--radius-xl);
   display: flex;

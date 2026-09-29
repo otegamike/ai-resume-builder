@@ -2,7 +2,7 @@ import ResumeComponent from "./ResumeComponent"
 import ResumeViewer from "./ResumeViewer"
 import { ResumeContent } from "@/types/ResumeData"
 import { normalizeTemplateId } from "@/lib/templateRenderer"
-import viewerStyles from "@/components/resume/ResumeViewer.module.css";
+import styles from "@/components/resume/ResumePlusViewer.module.css";
 import { useState } from "react"
 import { ZoomIn } from "lucide-react"
 import UploadedResumeComponent from "./UploadedResume"
@@ -22,12 +22,14 @@ function ResumePlusViewer({title, templateId, content,  maxHeight}: ResumePlusVi
 
   return (
     <>
-        <div className={viewerStyles.resumeShell} style={ maxHeight? { maxHeight: maxHeight } : {}}>
+        <div className={styles.resumeShell} style={ maxHeight? { maxHeight: maxHeight } : {}}>
             <ResumeComponent resumeContent={content} templateId={normalizeTemplateId(templateId)} />
+            
+            <button type="button" className={styles.viewBtn} onClick={() => SetOpenView(true)}>
+                <ZoomIn size={12} /> View
+            </button>
         </div>
-        <button type="button" className={viewerStyles.viewBtn} onClick={() => SetOpenView(true)}>
-            <ZoomIn size={12} /> View
-        </button>
+        
         <ResumeViewer
             isOpen={openView}
             onClose={() => SetOpenView(false)}
@@ -53,12 +55,14 @@ export function UploadedResumePlusViewer({pages, title, maxHeight}: UploadedResu
 
   return (
     <>
-        <div className={viewerStyles.resumeShell} style={ maxHeight? { maxHeight: maxHeight } : {}}>
+        <div className={styles.resumeShell} style={ maxHeight? { maxHeight: maxHeight } : {}}>
             <UploadedResumeComponent resumePages={pages} preview={true}/>
+        
+            <button type="button" className={styles.viewBtn} onClick={() => SetOpenView(true)}>
+                <ZoomIn size={12} /> View
+            </button>
         </div>
-        <button type="button" className={viewerStyles.viewBtn} onClick={() => SetOpenView(true)}>
-            <ZoomIn size={12} /> View
-        </button>
+        
         <UploadedResumeViewer
             isOpen={openView}
             onClose={() => SetOpenView(false)}

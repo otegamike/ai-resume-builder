@@ -15,7 +15,6 @@ import {
   Share2,
   Send,
   Check,
-  Loader2,
 } from "lucide-react";
 import detailStyles from "./jobDetail.module.css";
 import { buildJobShareText } from "@/utils/buildJobShareText";
@@ -85,8 +84,6 @@ export default function JobDetailClient({ params }: { params: Promise<{ slug: st
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
-  const [sharingToX, setSharingToX] = useState(false);
-  const [shareError, setShareError] = useState("");
 
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [alreadyApplied, setAlreadyApplied] = useState(false);
@@ -223,36 +220,22 @@ export default function JobDetailClient({ params }: { params: Promise<{ slug: st
     }
   };
 
-  const handleShareToX = async () => {
+  const handleShareToX = () => {
     if (!job) return;
-    setSharingToX(true);
-    setShareError("");
-    try {
-      let summaryText = (job.summary || "").trim();
-      if (!summaryText) {
-        const res = await fetch(`/api/jobs/${job._id}/summary`, { method: "POST" });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to generate summary");
-        summaryText = (data.summary || "").trim();
-        if (summaryText) setJob((prev) => (prev ? { ...prev, summary: summaryText } : prev));
-      }
-      if (!summaryText) {
-        summaryText = `${job.title} at ${job.companyId?.name || ""}`.trim();
-      }
-      const suffix = `\n\nTo apply: ${shortUrl}`;
+    const summaryText = (job.summary || "").trim();
+    const callToAction = `Apply now 👇\n${shortUrl}`;
+    let tweetText = callToAction;
+    if (summaryText) {
+      const suffix = `\n\n${callToAction}`;
       const maxSummaryLen = 280 - suffix.length;
-      let tweetSummary = summaryText;
-      if (tweetSummary.length > maxSummaryLen) {
-        tweetSummary = tweetSummary.slice(0, Math.max(0, maxSummaryLen - 1)).trimEnd() + "…";
-      }
-      const tweetText = `${tweetSummary}${suffix}`;
-      const encoded = encodeURIComponent(tweetText);
-      window.open(`https://twitter.com/intent/tweet?text=${encoded}`, "_blank", "noopener,noreferrer");
-    } catch (err: any) {
-      setShareError(err?.message || "Failed to share to X");
-    } finally {
-      setSharingToX(false);
+      const tweetSummary =
+        summaryText.length > maxSummaryLen
+          ? summaryText.slice(0, Math.max(0, maxSummaryLen - 1)).trimEnd() + "…"
+          : summaryText;
+      tweetText = `${tweetSummary}${suffix}`;
     }
+    const encoded = encodeURIComponent(tweetText);
+    window.open(`https://twitter.com/intent/tweet?text=${encoded}`, "_blank", "noopener,noreferrer");
   };
 
   if (loading || status === "loading") {
@@ -332,20 +315,15 @@ export default function JobDetailClient({ params }: { params: Promise<{ slug: st
                 {copied ? <Check size={16} /> : <Link2 size={16} />}
                 {copied ? "Copied" : "Copy link"}
               </button>
-              {isAdmin && (
-                <button
-                  type="button"
-                  onClick={handleShareToX}
-                  className={detailStyles.secondaryAction}
-                  disabled={sharingToX}
-                  aria-label="Share to X"
-                >
-                  {sharingToX ? <Loader2 size={16} className="loading_icon" /> : ""}
-                  {sharingToX ? "…" : "X"}
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={handleShareToX}
+                className={`${detailStyles.secondaryAction} ${detailStyles.xShareAction}`}
+                aria-label="Share to X"
+              >
+                <XLogo size={16} />
+              </button>
             </div>
-            {shareError && <span className={detailStyles.shareError}>{shareError}</span>}
 
             {!isSignedIn ? (
               <Link href={signInUrl} className={detailStyles.applyBtn} id="sign-in-to-apply-btn">
@@ -370,7 +348,14 @@ export default function JobDetailClient({ params }: { params: Promise<{ slug: st
 
         <div className={detailStyles.bodyGrid}>
           <main className={detailStyles.mainContent}>
-            {/* <img src={`/api/og/job?slug=${encodeURIComponent(slug)}`} width='100%' alt="Company Logo" /> */}
+            {isAdmin && (
+              <img
+                src={`/api/og/job?slug=${encodeURIComponent(slug)}`}
+                width="100%"
+                alt="Job share card preview"
+                className={detailStyles.ogPreview}
+              />
+            )}
             <section className={detailStyles.section}>
               <h2 className={detailStyles.sectionTitle}>Job Description</h2>
               <div className={detailStyles.descriptionText} dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
@@ -502,5 +487,13 @@ function JobDetailSkeleton() {
         </div>
       </div>
     </>
+  );
+}
+
+function XLogo({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" />
+    </svg>
   );
 }

@@ -173,10 +173,15 @@
   cursor: not-allowed;
 }
 
-.shareError {
-  font-size: var(--text-xs);
-  color: var(--error, #dc2626);
-  text-align: right;
+.xShareAction {
+  width: fit-content;
+  flex: none;
+}
+
+.ogPreview {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-lg);
 }
 
 .bodyGrid { display: grid; grid-template-columns: 1fr 320px; gap: var(--space-6); }
@@ -574,6 +579,7 @@
   .headerActions, .salaryBox { align-items: flex-start; text-align: left; width: 100%; }
   .shareActions, .applyBtn { width: 100%; }
   .secondaryAction { flex: 1; justify-content: center; }
+  .xShareAction { flex: none; }
 }
 
 @media (max-width: 560px) {

@@ -20,7 +20,7 @@ import styles from "./JobApplicationModal.module.css";
 import { delayedScrollIntoView } from "@/utils/scrollIntoview";
 import { maskEmail } from "@/utils/maskEmail";
 import { buildJobApplyMailto } from "@/utils/buildJobApplyMailto";
-import ResumePlusViewer from "@/components/resume/ResumePlusViewer";
+import ResumePlusViewer, { UploadedResumePlusViewer } from "@/components/resume/ResumePlusViewer";
 import Modal from "@/components/ui/modal/Modal";
 
 interface JobDetail {
@@ -469,6 +469,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
           )
         ) : (
           <>
+
           <div ref={cardRef} data-steps-wrapper data-scroll-container className={styles.stepsWrapper}>
             <div className={`${styles.stepContent} ${step === 0 ? styles.stepActive : ""}`}>
               <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: step === 0 ? 1 : 0, x: step === 0 ? 0 : 16 }} transition={{ duration: 0.25 }} style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
@@ -565,7 +566,12 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
               </motion.div>
             </div>
 
+            {/* STEP 2 */}
+
             <div className={`${styles.stepContent} ${step === 1 ? styles.stepActive : ""}`}>
+
+              
+
               <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: step === 1 ? 1 : 0, x: step === 1 ? 0 : 16 }} transition={{ duration: 0.25 }} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div className={styles.stepBadge}>Step 2 of {totalSteps}</div>
               <h3 className={styles.stepTitle}>Additional information</h3>
@@ -614,6 +620,8 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
               </motion.div>
             </div>
 
+            {/* STEP 3 */}
+
             <div className={`${styles.stepContent} ${step === 2 ? styles.stepActive : ""}`}>
               <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: step === 2 ? 1 : 0, x: step === 2 ? 0 : 16 }} transition={{ duration: 0.25 }} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div className={styles.stepBadge}>Step 3 of {totalSteps}</div>
@@ -634,13 +642,14 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
                       />
   
                     ) : selection?.mode === "upload" && selection.selectedFile ? (
-                      selection.selectedFile.type.startsWith("image/") ? (
-                        <img src={URL.createObjectURL(selection.selectedFile)} alt="Resume preview" style={{ width: "100%", objectFit: "contain" }} />
-                      ) : (
-                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                          {selection.pdfPreviewUrls.map((url, i) => <img key={i} src={url} alt={`Preview ${i + 1}`} style={{ width: "100%", borderRadius: "6px" }} />)}
-                        </div>
-                      )
+                      <UploadedResumePlusViewer pages={selection.selectedFile.type.startsWith("image/")? [URL.createObjectURL(selection.selectedFile)] : selection.pdfPreviewUrls } />
+                      // selection.selectedFile.type.startsWith("image/") ? (
+                      //   <img src={URL.createObjectURL(selection.selectedFile)} alt="Resume preview" style={{ width: "100%", objectFit: "contain" }} />
+                      // ) : (
+                      //   <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                      //     {selection.pdfPreviewUrls.map((url, i) => <img key={i} src={url} alt={`Preview ${i + 1}`} style={{ width: "100%", borderRadius: "6px" }} />)}
+                      //   </div>
+                      // )
                     ) : (
                       <p style={{ fontSize: "var(--text-xs)", color: "var(--gray-500)", padding: "1rem", textAlign: "center" }}>No resume preview</p>
                     )}

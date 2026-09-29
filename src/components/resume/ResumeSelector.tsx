@@ -11,7 +11,7 @@ import {
   Pin,
 } from "lucide-react";
 import ResumeComponent from "./ResumeComponent";
-import { normalizeTemplateId } from "@/lib/templateRenderer";
+import ResumePlusViewer, { UploadedResumePlusViewer } from "./ResumePlusViewer";
 import { ResumeContent } from "@/types/ResumeData";
 import { MAX_PDF_PAGES_PER_PLAN } from "@/lib/creditCosts";
 import { useTemplateStore } from "@/store/useTemplateStore";
@@ -239,9 +239,10 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
           <AnimatedLoader showLoader={showLoader} animatedLoader={animatedLoader}>
             {templates.length > 0 ? (
               <div className={styles.selectedPreviewFrame}>
-                <ResumeComponent
-                  resumeContent={selectedSavedResume.content}
-                  templateId={normalizeTemplateId(selectedSavedResume.template)}
+                <ResumePlusViewer
+                  title={selectedSavedResume.title}
+                  content={selectedSavedResume.content}
+                  templateId={selectedSavedResume.template}
                 />
               </div>
             ) : (
@@ -320,7 +321,7 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
       return (
         <div className={`${styles.previewBox} ${styles.previewBoxActive}`}>
           <AnimatedLoader showLoader={showLoader} animatedLoader={animatedLoader}>
-            <UploadedResumeComponent resumePages={pdfPreviewUrls} preview={false} />
+            <UploadedResumePlusViewer pages={pdfPreviewUrls} title={selectedFile?.name} />
           </AnimatedLoader>
           <div className={styles.selectedInfo}>
             <span className={styles.uploadTitle}>{selectedFile?.name}</span>
