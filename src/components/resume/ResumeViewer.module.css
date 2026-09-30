@@ -8,6 +8,8 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-1);
+  overscroll-behavior: contain;
+  touch-action: none;
 }
 
 .card {
@@ -111,20 +113,47 @@
 .closeBtn:hover { color: var(--gray-700); }
 
 .scrollArea {
+  position: relative;
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  min-height: 0;
+  overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: contain;
+  cursor: grab;
   background: var(--gray-200);
-  padding: var(--space-8);
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
+}
+
+.scrollArea[data-dragging="true"] {
+  cursor: grabbing;
 }
 
 .zoomWrapper {
-  width: min(100%, 54rem);
-  transition: transform 0.2s ease;
-  transform-origin: top center;
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  /* Fixed page width matches TEMPLATE_PAGE.widthPx in
+  src/lib/templateCatalog.ts. A definite width is required so the
+  percentage-based resume canvas inside resolves instead of
+  collapsing under max-content. */
+  width: 794px;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.zoomWrapper * {
+  touch-action: none;
+}
+
+.zoomWrapper[data-interacting="true"] {
+  will-change: transform;
+}
+
+.zoomWrapper img {
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .previewThumbnail {
@@ -138,6 +167,5 @@
 
 
 @media (max-width: 560px) {
-  .scrollArea { padding: var(--space-4); }
   .header { padding: var(--space-3) var(--space-4); }
 }

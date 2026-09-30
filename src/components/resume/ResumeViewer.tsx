@@ -9,6 +9,7 @@ import styles from "./ResumeViewer.module.css";
 import ResumeExporter, { type ResumeExporterRef } from "./ResumeExporter";
 import ResumeComponent from "./ResumeComponent";
 import UploadedResumeComponent from "./UploadedResume";
+import { usePanZoom } from "@/hooks/usePanZoom";
 
 interface ResumeViewerProps {
   resumeContent: ResumeContent;
@@ -19,7 +20,7 @@ interface ResumeViewerProps {
   initialZoom?: number;
 }
 
-export default function ResumeViewer({ resumeContent, templateId, isOpen, onClose, title, initialZoom = 1.05}: ResumeViewerProps) {
+export default function ResumeViewer({ resumeContent, templateId, isOpen, onClose, title, initialZoom}: ResumeViewerProps) {
   const [isExporting, setIsExporting] = useState(false);
   const exporterRef = useRef<ResumeExporterRef>(null);
 
@@ -66,7 +67,7 @@ interface UploadedResumeViewerProps {
   initialZoom?: number;
 }
 
-export function UploadedResumeViewer({ pages, isOpen, onClose, title, initialZoom = 1.05}: UploadedResumeViewerProps) {
+export function UploadedResumeViewer({ pages, isOpen, onClose, title, initialZoom}: UploadedResumeViewerProps) {
  
   if (!isOpen || typeof document === "undefined") return null;
 
@@ -85,7 +86,7 @@ export function UploadedResumeViewer({ pages, isOpen, onClose, title, initialZoo
 interface ResumeViewercardProps {
   children: React.ReactNode;
   title: string;
-  initialZoom: number;
+  initialZoom?: number;
   handleDownload?: () => void;
   isOpen: boolean;
   isExporting?: boolean;
@@ -93,37 +94,32 @@ interface ResumeViewercardProps {
 }
 
 const ResumeViewercard = ({children, title, initialZoom, handleDownload, isExporting, onClose, isOpen }: ResumeViewercardProps) => {
-  const [zoom, setZoom] = useState<number>(initialZoom || 1.05);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  const { zoomIn, zoomOut, fit, zoomPercent, minZoomPercent, maxZoomPercent } = usePanZoom(
+    viewportRef,
+    contentRef,
+    { isOpen, initialZoom, onClose }
+  );
 
   useEffect(() => {
     if (!isOpen) return;
-    const prev = document.body.style.overflow;
+    const prevOverflow = document.body.style.overflow;
+    const prevPaddingRight = document.body.style.paddingRight;
+    const scrollbar = window.innerWidth - document.documentElement.clientWidth;
     document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      if (e.key === "+" || e.key === "=") setZoom((z) => Math.min(1.75, +(z + 0.1).toFixed(2)));
-      if (e.key === "-") setZoom((z) => Math.max(0.5, +(z - 0.1).toFixed(2)));
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = prev;
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [isOpen, onClose]);
-
-  useEffect(() => {
-    setZoom(initialZoom);
-  }, [initialZoom, isOpen]);
-
-  const handleWheel: React.WheelEventHandler<HTMLDivElement> = (e) => {
-    if (e.ctrlKey || e.metaKey) {
-      e.preventDefault();
-      setZoom((z) => {
-        const next = e.deltaY < 0 ? z + 0.05 : z - 0.05;
-        return Math.min(1.75, Math.max(0.5, +next.toFixed(2)));
-      });
+    if (scrollbar > 0) {
+      document.body.style.paddingRight = `${scrollbar}px`;
     }
-  };
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.paddingRight = prevPaddingRight;
+    };
+  }, [isOpen]);
+
+  const atMin = zoomPercent <= minZoomPercent;
+  const atMax = zoomPercent >= maxZoomPercent;
 
   return (
     <div className={styles.card} onClick={(e) => e.stopPropagation()}>
@@ -131,15 +127,15 @@ const ResumeViewercard = ({children, title, initialZoom, handleDownload, isExpor
           <span className={styles.headerTitle}>{title || "Resume Preview"}</span>
           <div className={styles.headerActions}>
             <div className={styles.zoomGroup}>
-              <button className={styles.zoomBtn} onClick={() => setZoom((z) => Math.max(0.5, +(z - 0.1).toFixed(2)))} disabled={zoom <= 0.5} aria-label="Zoom out">
+              <button className={styles.zoomBtn} onClick={zoomOut} disabled={atMin} aria-label="Zoom out">
                 <ZoomOut size={14} />
               </button>
-              <span className={styles.zoomLabel}>{Math.round(zoom * 100)}%</span>
-              <button className={styles.zoomBtn} onClick={() => setZoom((z) => Math.min(1.75, +(z + 0.1).toFixed(2)))} disabled={zoom >= 1.75} aria-label="Zoom in">
+              <span className={styles.zoomLabel}>{zoomPercent}%</span>
+              <button className={styles.zoomBtn} onClick={zoomIn} disabled={atMax} aria-label="Zoom in">
                 <ZoomIn size={14} />
               </button>
             </div>
-            <button className={styles.zoomBtn} onClick={() => setZoom(0.85)} aria-label="Fit">
+            <button className={styles.zoomBtn} onClick={fit} aria-label="Fit">
               Fit
             </button>
 
@@ -154,8 +150,8 @@ const ResumeViewercard = ({children, title, initialZoom, handleDownload, isExpor
             </button>
           </div>
         </div>
-        <div className={styles.scrollArea} onWheel={handleWheel}>
-          <div className={styles.zoomWrapper} style={{ transform: `scale(${zoom})`, transformOrigin: "top center" }}>
+        <div className={styles.scrollArea} ref={viewportRef}>
+          <div className={styles.zoomWrapper} ref={contentRef}>
             {children}
           </div>
         </div>

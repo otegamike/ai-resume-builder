@@ -39,9 +39,9 @@
 }
 
 .loadingContainer {
-    position: absolute;
-    left: 0;
-    top: 0;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
 
 .loadingContent {

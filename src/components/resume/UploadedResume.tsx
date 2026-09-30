@@ -11,7 +11,7 @@ function UploadedResumeComponent({ resumePages, preview }: UploadedResumeProps) 
   return (
     <div className={styles.pdfPreviewContainer}>
       {resumePages.slice(0, pagesToMap).map((url, i) => (
-        <img key={i} src={url} alt={`PDF page ${i + 1}`} className={styles.pdfCanvas} />
+        <img key={i} src={url} alt={`PDF page ${i + 1}`} className={styles.pdfCanvas} draggable={false} />
       ))}
     </div>
   )
