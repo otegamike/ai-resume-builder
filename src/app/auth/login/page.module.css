@@ -252,7 +252,7 @@
   box-shadow:
     0 2px 4px rgba(0,0,0,0.04),
     0 12px 40px rgba(0,0,0,0.07);
-  padding: 2.25rem 2rem;
+  padding: 3rem 2rem;
 }
 
 /* Heading */
@@ -512,7 +512,15 @@
   line-height: 1.5;
 }
 
+
 /* Redirecting placeholder shown while an authenticated session leaves login */
+.centerContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 0;
+}
+
 .redirectWrap {
   display: flex;
   align-items: center;

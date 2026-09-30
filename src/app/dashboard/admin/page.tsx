@@ -329,8 +329,9 @@ export default function AdminDashboardPage() {
                         borderRadius: "var(--radius-md)",
                         border: "1px solid var(--gray-200)",
                         fontSize: "var(--text-sm)",
-                        background: "var(--white)",
+                        backgroundColor: "hsl(220 14 97/ 0.6)",
                         boxShadow: "var(--shadow-md)",
+                        backdropFilter: 'blur(10px)',
                       }}
                     />
                     <Legend

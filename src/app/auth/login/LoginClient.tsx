@@ -130,7 +130,7 @@ export default function LoginClient({ callbackUrl }: { callbackUrl: string }) {
 
   if (status === "authenticated") {
     return (
-      <main className={`${bgStyles.animated_circles_bg} ${styles.formPanel}`}>
+      <main className={`${bgStyles.animated_circles_bg} ${styles.formPanel} ${styles.centerContent}`} style={{ height: containerHeight }}>
         <div className={styles.card}>
           <div className={styles.redirectWrap}>
             <Loader2 className={styles.oauthBtnSpinner} aria-hidden="true" />
@@ -182,17 +182,13 @@ export default function LoginClient({ callbackUrl }: { callbackUrl: string }) {
       </aside>
 
       {/* ── RIGHT FORM PANEL ────────────────────────────────────── */}
-      <main className={`${bgStyles.animated_circles_bg} ${styles.formPanel} `}>
+      <main className={`${bgStyles.animated_circles_bg} ${styles.formPanel} ${styles.centerContent} `}>
 
 
         <div className={styles.card}>
 
           {/* Heading */}
           <div className={styles.headingArea}>
-            <div className={styles.badge}>
-              <SparkleIcon />
-              {isSignUp ? "Get started free" : "Welcome back"}
-            </div>
             <h1 className={styles.title}>
               {isSignUp ? "Create your account" : "Sign in to your account"}
             </h1>

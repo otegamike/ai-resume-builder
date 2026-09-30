@@ -21,9 +21,10 @@ export default function LoginLoading() {
       <main className={styles.formPanel}>
         <div className={styles.card}>
           <div className={styles.headingArea}>
-            <div className={`${styles.pulse} ${styles.badge}`} />
-            <div className={`${styles.pulse} ${styles.title}`} />
-            <div className={`${styles.pulse} ${styles.subtitle}`} />
+            <h1 className={styles.title}>
+              Sign in to your account
+            </h1>
+            <p className={styles.subtitle}>Start building AI-powered resumes in minutes.</p>
           </div>
 
           <div className={`${styles.pulse} ${styles.oauthBtn}`} />
