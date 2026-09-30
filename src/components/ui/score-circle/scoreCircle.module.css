@@ -64,6 +64,20 @@
   color: #1f2937;
 }
 
+.score_circle_sm {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+}
+
+.score_circle_sm::before {
+  inset: 6px;
+}
+
+.score_text_sm {
+  font-size: 0.95rem;
+}
+
 /* ===================================================
    ANIMATION TIMELINES
    =================================================== */

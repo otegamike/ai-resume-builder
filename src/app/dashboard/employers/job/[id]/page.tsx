@@ -6,7 +6,17 @@ import Link from "next/link";
 import { ArrowLeft, MapPin, Briefcase, Clock, CheckCircle2 } from "lucide-react";
 import styles from "./page.module.css";
 import EmployerApplicantModal from "@/components/jobs/employer-applicants/EmployerApplicantModal";
+import ScoreCircle from "@/components/ui/score-circle/ScoreCircle";
 import { JobApplication, JobApplicationStatus, ApplicantUser } from "@/types/JobApplicationData";
+
+function formatAppliedDate(d: unknown) {
+  try {
+    if (!d) return "";
+    return new Date(d as string).toLocaleDateString();
+  } catch {
+    return "";
+  }
+}
 
 interface JobApplicationData extends Omit<JobApplication, "applicantId"> {
   applicantInformation: ApplicantUser;
@@ -176,22 +186,50 @@ export default function EmployerJobDetailPage() {
       ) : (
         <div className={styles.list}>
           {filtered.map((app) => (
-            <div key={app._id} className={styles.applicantRow} onClick={() => handleOpenApplicant(app)} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && handleOpenApplicant(app)}>
-              <div>
-                <div className={styles.nameRow}>
-                  <strong className={styles.name}>{app.applicantInformation?.name || (typeof app.applicantId === "object" ? app.applicantId.name : null) || "Candidate"}</strong>
-                  {!app.viewedByEmployer && <span className={styles.newBadgeSm}>new</span>}
-                </div>
-                <div style={{ fontSize: "var(--text-xs)", color: "var(--gray-500)" }}>{app.applicantInformation?.email || (typeof app.applicantId === "object" ? app.applicantId.email : "") || ""}</div>
-              </div>
-              <span className={styles.statusPill}>{app.status.replace("_", " ").toUpperCase()}</span>
-              {typeof app.jobMatchAnalysis?.score === "number" && <span className={styles.scorePill}>Match {app.jobMatchAnalysis.score}%</span>}
-            </div>
+            <ApplicantCard key={app._id} app={app} onOpen={() => handleOpenApplicant(app)} />
           ))}
         </div>
       )}
 
       <EmployerApplicantModal application={selectedApp} open={!!selectedApp} onClose={() => setSelectedApp(null)} onStatusChange={handleStatusChange} />
+    </div>
+  );
+}
+
+function ApplicantCard({ app, onOpen }: { app: JobApplicationData; onOpen: () => void }) {
+  const name = app.applicantInformation?.name || (typeof app.applicantId === "object" ? app.applicantId.name : null) || "Candidate";
+  const email = app.applicantInformation?.email || (typeof app.applicantId === "object" ? app.applicantId.email : "") || "";
+  const score = app.jobMatchAnalysis?.score;
+  const hasScore = typeof score === "number";
+  const appliedAt = formatAppliedDate((app as { createdAt?: unknown }).createdAt);
+
+  return (
+    <div className={styles.applicantRow} onClick={onOpen} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && onOpen()}>
+      <div className={styles.applicantMain}>
+        <div className={styles.nameRow}>
+          <strong className={styles.name}>{name}</strong>
+          {!app.viewedByEmployer && <span className={styles.newBadgeSm}>new</span>}
+        </div>
+        {email ? <div className={styles.applicantEmail}>{email}</div> : null}
+        <div className={styles.applicantMetaRow}>
+          <span className={styles.statusPill}>{app.status.replace("_", " ").toUpperCase()}</span>
+          {appliedAt && (
+            <span className={styles.applicantDate}>
+              <Clock size={12} /> {appliedAt}
+            </span>
+          )}
+        </div>
+      </div>
+      <div className={styles.applicantScoreBlock}>
+        {hasScore ? (
+          <>
+            <ScoreCircle score={score as number} size="sm" />
+            <span className={styles.applicantScoreLabel}>Match</span>
+          </>
+        ) : (
+          <span className={styles.applicantNoScore}>— No score</span>
+        )}
+      </div>
     </div>
   );
 }
@@ -250,11 +288,9 @@ function ApplicantRowSkeleton() {
           <div className={styles.skeletonBadge} />
         </div>
         <div className={styles.skeletonEmail} />
-      </div>
-      <div className={styles.skeletonApplicantRight}>
         <div className={styles.skeletonStatusPill} />
-        <div className={styles.skeletonScorePill} />
       </div>
+      <div className={styles.skeletonScoreCircle} />
     </div>
   );
 }

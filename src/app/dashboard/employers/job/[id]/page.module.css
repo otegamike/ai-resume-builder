@@ -37,9 +37,87 @@
 .chipRow { display: flex; gap: var(--space-2); overflow-x: auto; padding-bottom: var(--space-1); }
 .chip { background: white; border: 1px solid var(--gray-200); color: var(--gray-600); padding: var(--space-1) var(--space-3); border-radius: 9999px; font-size: var(--text-xs); cursor: pointer; white-space: nowrap; }
 .activeChip { background: var(--primary-50); border-color: var(--primary-600); color: var(--primary-900); }
-.list { display: flex; flex-direction: column; gap: var(--space-3); }
-.applicantRow { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: var(--space-4); display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); cursor: pointer; }
-.applicantRow:hover { border-color: var(--primary-300); }
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.applicantRow {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  cursor: pointer;
+}
+
+.applicantRow:hover {
+  border-color: var(--primary-300);
+}
+
+.applicantMain {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1;
+  min-width: 0;
+}
+
+.applicantEmail {
+  font-size: var(--text-xs);
+  color: var(--gray-500);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.applicantMetaRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+}
+
+.applicantDate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: var(--text-xs);
+  color: var(--gray-500);
+}
+
+.applicantScoreBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+  min-width: 64px;
+  padding-left: var(--space-4);
+  border-left: 1px solid var(--gray-100);
+  align-self: stretch;
+}
+
+.applicantScoreLabel {
+  font-size: var(--text-xs);
+  color: var(--gray-500);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.applicantNoScore {
+  font-size: var(--text-xs);
+  color: var(--gray-400);
+  white-space: nowrap;
+}
 .name {
     color: var(--text-primary);
 }
@@ -58,10 +136,38 @@
   border-radius: 9999px;
   text-transform: lowercase;
 }
-.statusPill { font-size: var(--text-xs); font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 9999px; background: var(--gray-100); color: var(--gray-700); }
-.scorePill { background: #ecfdf5; color: #047857; font-size: var(--text-xs); font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 9999px; }
-.emptyState { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-xl); padding: var(--space-8); text-align: center; color: var(--gray-500); }
-.loadingRow { display: flex; justify-content: center; padding: var(--space-6); }
+.statusPill {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  background: var(--gray-100);
+  color: var(--gray-700);
+}
+
+.scorePill {
+  background: #ecfdf5;
+  color: #047857;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+}
+
+.emptyState {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--gray-500);
+}
+
+.loadingRow {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-6);
+}
 
 @keyframes shimmer {
   0% {
@@ -303,6 +409,16 @@
   border-radius: 9999px;
 }
 
+.skeletonScoreCircle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
 .skeletonScorePill {
   height: 1.25rem;
   width: 4.5rem;
@@ -310,6 +426,16 @@
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
   border-radius: 9999px;
+}
+
+@media (max-width: 480px) {
+  .applicantScoreBlock {
+    min-width: 56px;
+    padding-left: var(--space-3);
+  }
+  .applicantEmail {
+    white-space: normal;
+  }
 }
 
 @media (width < 760px) { .container { padding: var(--space-6); } .headerCard { flex-direction: column; }  .salaryBox {text-align: left;}}

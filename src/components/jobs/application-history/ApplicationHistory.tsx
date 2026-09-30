@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Clock, Briefcase } from "lucide-react";
+import { Clock, Briefcase, MapPin } from "lucide-react";
 import styles from "./ApplicationHistory.module.css";
 import ApplicationDetailModal from "./ApplicationDetailModal";
+import ScoreCircle from "@/components/ui/score-circle/ScoreCircle";
 
 function formatDate(d: string) {
   try {
@@ -64,9 +65,9 @@ export default function ApplicationHistory() {
   if (applications.length === 0) {
     return (
       <div className={styles.emptyState}>
-        <Briefcase size={32} style={{ margin: "0 auto 0.75rem", opacity: 0.5 }} />
+        <Briefcase size={32} className={styles.emptyIcon} />
         <h3>No applications yet</h3>
-        <p style={{ marginTop: "0.25rem", fontSize: "var(--text-xs)" }}>Jobs you apply to will appear here.</p>
+        <p className={styles.emptyHint}>Jobs you apply to will appear here.</p>
       </div>
     );
   }
@@ -96,22 +97,35 @@ function ApplicationCard({ application, onClick }: { application: any; onClick: 
   const status: string = application.status || "submitted";
   const matchScore: number | undefined = application.jobMatchAnalysis?.score ?? application.analysisReport?.score ?? application.matchScore;
   const appliedAt: string = application.createdAt || application.appliedDate || "";
+  const location: string = company.location || job.location || "";
+  const hasScore = typeof matchScore === "number";
 
   return (
     <div className={styles.card} onClick={onClick} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && onClick()}>
-      <div className={styles.cardHeader}>
-        <div>
-          <div className={styles.jobTitle}>{title}</div>
-          <div className={styles.companyName}>{companyName}</div>
+      <div className={styles.cardMain}>
+        <div className={styles.cardHeader}>
+          <div className={styles.titleBlock}>
+            <div className={styles.jobTitle}>{title}</div>
+            <div className={styles.companyName}>{companyName}</div>
+          </div>
+          <span className={`${styles.statusPill} ${status === "withdrawn" ? styles.statusWithdrawn : styles.statusSubmitted}`}>{status.replace("_", " ").toUpperCase()}</span>
         </div>
-        <span className={`${styles.statusPill} ${status === "withdrawn" ? styles.statusWithdrawn : styles.statusSubmitted}`}>{status.replace("_", " ").toUpperCase()}</span>
+        <div className={styles.metaRow}>
+          {location ? <span className={styles.metaItem}><MapPin size={12} /> {location}</span> : null}
+          {appliedAt && <span className={styles.metaItem}><Clock size={12} /> {formatDate(appliedAt)}</span>}
+        </div>
+        {application.coverLetterText && <p className={styles.coverPreview}>{application.coverLetterText.slice(0, 80)}…</p>}
       </div>
-      <div className={styles.metaRow}>
-        {company.location || job.location ? <span>{company.location || job.location}</span> : null}
-        {typeof matchScore === "number" && <span>Match {matchScore}%</span>}
-        {appliedAt && <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}><Clock size={12} /> {formatDate(appliedAt)}</span>}
+      <div className={styles.scoreBlock}>
+        {hasScore ? (
+          <>
+            <ScoreCircle score={matchScore as number} size="sm" />
+            <span className={styles.scoreLabel}>Match</span>
+          </>
+        ) : (
+          <span className={styles.noScore}>— No score</span>
+        )}
       </div>
-      {application.coverLetterText && <p style={{ fontSize: "var(--text-xs)", color: "var(--gray-600)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{application.coverLetterText.slice(0, 80)}…</p>}
     </div>
   );
 }
@@ -119,20 +133,21 @@ function ApplicationCard({ application, onClick }: { application: any; onClick: 
 function ApplicationCardSkeleton() {
   return (
     <div className={styles.skeletonCard}>
-      <div className={styles.skeletonHeader}>
-        <div className={styles.skeletonHeaderLeft}>
-          <div className={styles.skeletonTitle} />
-          <div className={styles.skeletonCompany} />
+      <div className={styles.skeletonMain}>
+        <div className={styles.skeletonHeader}>
+          <div className={styles.skeletonHeaderLeft}>
+            <div className={styles.skeletonTitle} />
+            <div className={styles.skeletonCompany} />
+          </div>
+          <div className={styles.skeletonPill} />
         </div>
-        <div className={styles.skeletonPill} />
+        <div className={styles.skeletonMetaRow}>
+          <div className={styles.skeletonMeta} />
+          <div className={styles.skeletonMeta} />
+        </div>
+        <div className={styles.skeletonSnippet} />
       </div>
-      <div className={styles.skeletonMetaRow}>
-        <div className={styles.skeletonMeta} />
-        <div className={styles.skeletonMeta} />
-        <div className={styles.skeletonMeta} />
-      </div>
-      <div className={styles.skeletonSnippet} />
-      <div className={styles.skeletonSnippetShort} />
+      <div className={styles.skeletonScore} />
     </div>
   );
 }
