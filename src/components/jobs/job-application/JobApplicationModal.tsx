@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Check, Loader2, Send, CheckCircle2, AlertTriangle, ArrowRight, ArrowLeft, ExternalLink, Mail, ZoomIn } from "lucide-react";
 import { motion } from "motion/react";
 import ResumeSelector, { ResumeSelection } from "@/components/resume/ResumeSelector";
+import { buildResumeFormData } from "@/hooks/useResumeFormData";
 import viewerStyles from "@/components/resume/ResumeViewer.module.css";
 import ScoreCircle from "@/components/ui/score-circle/ScoreCircle";
 import { AiButton } from "@/components/ui/AiButton";
@@ -125,22 +126,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
       setAnalysisError("");
       setAnalysis(null);
       try {
-        const formData = new FormData();
-        formData.append("resumeMode", selection!.mode);
-        if (selection!.mode === "saved") {
-          formData.append("resumeId", selection!.selectedResumeId);
-        } else {
-          if (selection!.selectedFile && selection!.selectedFile.type.startsWith("image/")) {
-            formData.append("resumeFile", selection!.selectedFile);
-          } else if (selection!.pdfCanvasRefs.length > 0) {
-            for (const canvas of selection!.pdfCanvasRefs) {
-              const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
-              if (blob) formData.append("resumeFile", blob, "page.png");
-            }
-          } else {
-            throw new Error("Invalid resume file selection.");
-          }
-        }
+        const formData = buildResumeFormData(selection!);
 
         const res = await fetch(`/api/jobs/${job._id}/match-analysis`, {
           method: "POST",
@@ -170,20 +156,7 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
     setTailoring(true);
     setApplyError("");
     try {
-      const formData = new FormData();
-      formData.append("resumeMode", selection.mode);
-      if (selection.mode === "saved") {
-        formData.append("resumeId", selection.selectedResumeId);
-      } else {
-        if (selection.selectedFile && selection.selectedFile.type.startsWith("image/")) {
-          formData.append("resumeFile", selection.selectedFile);
-        } else if (selection.pdfCanvasRefs.length > 0) {
-          for (const canvas of selection.pdfCanvasRefs) {
-            const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
-            if (blob) formData.append("resumeFile", blob, "page.png");
-          }
-        }
-      }
+      const formData = buildResumeFormData(selection);
       formData.append("jobMode", "text");
       formData.append("jobText", `${job.title} ${(job as any).description || ""}`);
       formData.append("analysis", JSON.stringify(analysis));
@@ -228,25 +201,10 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
     setCoverLetterGenerating(true);
     setApplyError("");
     try {
-      const formData = new FormData();
-      formData.append("resumeMode", selection.mode);
+      const formData = buildResumeFormData(selection);
       const companyName = (job as any).companyName || "";
       formData.append("targetCompany", companyName);
       formData.append("targetRole", job.title);
-      if (selection.mode === "saved") {
-        formData.append("resumeId", selection.selectedResumeId);
-      } else {
-        if (selection.selectedFile && selection.selectedFile.type.startsWith("image/")) {
-          formData.append("resumeFile", selection.selectedFile);
-        } else if (selection.pdfCanvasRefs.length > 0) {
-          for (const canvas of selection.pdfCanvasRefs) {
-            const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
-            if (blob) formData.append("resumeFile", blob, "page.png");
-          }
-        } else {
-          throw new Error("Invalid resume file selection.");
-        }
-      }
       formData.append("jobMode", "text");
       formData.append("jobText", `${job.title} ${(job as any).description || ""}`);
       const res = await fetch("/api/cover-letters/generate", { method: "POST", body: formData });
@@ -327,13 +285,10 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
       if (coverLetterText) formData.append("coverLetterText", coverLetterText);
       formData.append("source", "platform");
       if (resumeType === "uploaded" && selection?.mode === "upload") {
-        if (selection.selectedFile && selection.selectedFile.type.startsWith("image/")) {
-          formData.append("resumeFile", selection.selectedFile);
-        } else if (selection.pdfCanvasRefs.length > 0) {
-          for (const canvas of selection.pdfCanvasRefs) {
-            const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
-            if (blob) formData.append("resumeFile", blob, "page.png");
-          }
+        if (selection.fileHash) formData.append("fileHash", selection.fileHash);
+        if (selection.uploadedResumeId) formData.append("uploadedResumeId", selection.uploadedResumeId);
+        if (!selection.fileHash && !selection.uploadedResumeId) {
+          throw new Error("Choose a PDF or image resume first.");
         }
       }
       const res = await fetch(`/api/jobs/${job._id}/apply`, {
@@ -384,13 +339,10 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
       if (coverLetterText) formData.append("coverLetterText", coverLetterText);
       formData.append("source", "off_platform");
       if (resumeType === "uploaded" && selection?.mode === "upload") {
-        if (selection.selectedFile && selection.selectedFile.type.startsWith("image/")) {
-          formData.append("resumeFile", selection.selectedFile);
-        } else if (selection.pdfCanvasRefs.length > 0) {
-          for (const canvas of selection.pdfCanvasRefs) {
-            const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
-            if (blob) formData.append("resumeFile", blob, "page.png");
-          }
+        if (selection.fileHash) formData.append("fileHash", selection.fileHash);
+        if (selection.uploadedResumeId) formData.append("uploadedResumeId", selection.uploadedResumeId);
+        if (!selection.fileHash && !selection.uploadedResumeId) {
+          throw new Error("Choose a PDF or image resume first.");
         }
       }
       const res = await fetch(`/api/jobs/${job._id}/apply`, {
@@ -642,14 +594,13 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
                       />
   
                     ) : selection?.mode === "upload" && selection.selectedFile ? (
-                      <UploadedResumePlusViewer pages={selection.selectedFile.type.startsWith("image/")? [URL.createObjectURL(selection.selectedFile)] : selection.pdfPreviewUrls } />
-                      // selection.selectedFile.type.startsWith("image/") ? (
-                      //   <img src={URL.createObjectURL(selection.selectedFile)} alt="Resume preview" style={{ width: "100%", objectFit: "contain" }} />
-                      // ) : (
-                      //   <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                      //     {selection.pdfPreviewUrls.map((url, i) => <img key={i} src={url} alt={`Preview ${i + 1}`} style={{ width: "100%", borderRadius: "6px" }} />)}
-                      //   </div>
-                      // )
+                      <UploadedResumePlusViewer resume={{
+                        _id: selection.uploadedResumeId ?? undefined,
+                        title: selection.uploadedTitle || selection.selectedFile.name || "Uploaded Resume",
+                        pages: selection.pdfPreviewUrls,
+                        fileHash: selection.fileHash,
+                        ...(selection.resumeContent ? { parsedResume: selection.resumeContent } : {}),
+                      }} />
                     ) : (
                       <p style={{ fontSize: "var(--text-xs)", color: "var(--gray-500)", padding: "1rem", textAlign: "center" }}>No resume preview</p>
                     )}

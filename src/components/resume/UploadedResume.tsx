@@ -1,16 +1,18 @@
 import styles from "./ResumeSelector.module.css";
+import type { UploadedResumeClient } from "@/types/ResumeData";
 
 interface UploadedResumeProps {
-  resumePages: string[];
+  resume: UploadedResumeClient;
   preview: boolean;
 }
 
-function UploadedResumeComponent({ resumePages, preview }: UploadedResumeProps) {
-  const pagesToMap = preview ? 1 : resumePages.length;
+function UploadedResumeComponent({ resume, preview }: UploadedResumeProps) {
+  const pages = resume.pages ?? [];
+  const pagesToMap = preview ? 1 : pages.length;
 
   return (
     <div className={styles.pdfPreviewContainer}>
-      {resumePages.slice(0, pagesToMap).map((url, i) => (
+      {pages.slice(0, pagesToMap).map((url, i) => (
         <img key={i} src={url} alt={`PDF page ${i + 1}`} className={styles.pdfCanvas} draggable={false} />
       ))}
     </div>

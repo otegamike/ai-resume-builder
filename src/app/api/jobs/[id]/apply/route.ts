@@ -9,6 +9,8 @@ import Resume from "@/models/Resume";
 import UploadedResume from "@/models/UploadedResume";
 import { getAuthenticatedUser } from "@/lib/authUser";
 import { aiContextFromAuthUser, extractResumeTextFromImages, parseResumeContent, GroqCallError, toAiErrorResponse } from "@/lib/ai";
+import { EXTRACTION_VERSION } from "@/lib/ai/client";
+import { FILE_HASH_PATTERN, MAX_PDF_PAGES } from "@/lib/pdfConstants";
 import { createResume } from "@/lib/resumeService";
 import { fileToDataUrl } from "@/lib/resumeImprover";
 import { recordActivity } from "@/lib/activityService";
@@ -80,11 +82,14 @@ export async function POST(
     let coverLetterText = "";
     let source: "platform" | "off_platform" = "platform";
     let uploadedFiles: File[] = [];
+    let fileHash: string | null = null;
 
     if (contentType.includes("application/json")) {
       const body = await req.json();
       resumeType = body.resumeType === "uploaded" ? "uploaded" : "platform";
       resumeId = body.resumeId || body.tailoredResumeId || null;
+      const jsonHash = typeof body.fileHash === "string" ? body.fileHash : null;
+      fileHash = jsonHash && FILE_HASH_PATTERN.test(jsonHash) ? jsonHash : null;
       jobMatchAnalysisRaw = body.jobMatchAnalysis ? JSON.stringify(body.jobMatchAnalysis) : body.analysisReport ? JSON.stringify(body.analysisReport) : null;
       screeningAnswersRaw = body.screeningAnswers ? JSON.stringify(body.screeningAnswers) : null;
       coverLetterText = body.coverLetterText || "";
@@ -93,6 +98,8 @@ export async function POST(
       const formData = await req.formData();
       resumeType = getStringField(formData, "resumeType") === "uploaded" ? "uploaded" : "platform";
       resumeId = getStringField(formData, "resumeId");
+      const hashRaw = getStringField(formData, "fileHash");
+      fileHash = hashRaw && FILE_HASH_PATTERN.test(hashRaw) ? hashRaw : null;
       jobMatchAnalysisRaw = getStringField(formData, "jobMatchAnalysis");
       if (!jobMatchAnalysisRaw) {
         const alt = getStringField(formData, "analysisReport");
@@ -169,34 +176,81 @@ export async function POST(
     let uploadedResumeDoc: { _id: Types.ObjectId; resumeId: Types.ObjectId; pages: string[] } | null = null;
 
     if (resumeType === "uploaded") {
-      if (uploadedFiles.length === 0) {
-        return NextResponse.json({ error: "No resume file uploaded" }, { status: 400 });
-      }
+      let cachedResume = fileHash
+        ? await UploadedResume.findOne({
+            userId: authUser.userObjectId,
+            fileHash,
+            extractionVersion: EXTRACTION_VERSION,
+            status: "done",
+          })
+        : null;
 
-      const pages: string[] = [];
-      for (const file of uploadedFiles) {
-        const dataUrl = await fileToDataUrl(file);
-        const result = await cloudinary.uploader.upload(dataUrl, {
-          folder: `applications/${String(authUser.userObjectId)}/${String(job._id)}`,
-        });
-        pages.push(result.secure_url);
-      }
+      let pages: string[] = [];
+      let parsedContent: unknown;
 
-      const dataUrls = await Promise.all(uploadedFiles.map(fileToDataUrl));
-      const ctx = aiContextFromAuthUser(authUser);
-      const extractedText = await extractResumeTextFromImages(dataUrls, ctx);
-      const parsedContent = await parseResumeContent(extractedText || "", ctx);
+      if (cachedResume && cachedResume.parsedResume) {
+        pages = (cachedResume.pages as string[]) ?? [];
+        parsedContent = cachedResume.parsedResume;
+      } else {
+        if (uploadedFiles.length === 0) {
+          return NextResponse.json({ error: "No resume file uploaded" }, { status: 400 });
+        }
+        if (uploadedFiles.length > MAX_PDF_PAGES) {
+          return NextResponse.json({ error: `Maximum of ${MAX_PDF_PAGES} pages supported` }, { status: 400 });
+        }
+
+        for (const file of uploadedFiles) {
+          const dataUrl = await fileToDataUrl(file);
+          const result = await cloudinary.uploader.upload(dataUrl, {
+            folder: `applications/${String(authUser.userObjectId)}/${String(job._id)}`,
+          });
+          pages.push(result.secure_url);
+        }
+
+        const dataUrls = await Promise.all(uploadedFiles.map(fileToDataUrl));
+        const ctx = aiContextFromAuthUser(authUser);
+        const extractedText = await extractResumeTextFromImages(dataUrls, ctx);
+        parsedContent = await parseResumeContent(extractedText || "", ctx);
+
+        if (fileHash) {
+          cachedResume = await UploadedResume.findOneAndUpdate(
+            { userId: authUser.userObjectId, fileHash, extractionVersion: EXTRACTION_VERSION },
+            {
+              $set: {
+                status: "done",
+                rawExtractedText: extractedText,
+                parsedResume: parsedContent,
+                pages,
+                pageCount: pages.length,
+                title: `Uploaded Resume - ${job.title} - ${new Date().toLocaleDateString()}`,
+              },
+            },
+            { upsert: true, new: true }
+          );
+        }
+      }
 
       const newResume = await createResume({
         authUser,
         title: `Uploaded Resume - ${job.title} - ${new Date().toLocaleDateString()}`,
-        content: parsedContent,
+        content: parsedContent as Parameters<typeof createResume>[0]["content"],
       });
 
-      const uploadedResume = await UploadedResume.create({
-        resumeId: newResume._id,
-        pages,
-      });
+      let uploadedResume = cachedResume;
+      if (uploadedResume) {
+        uploadedResume.resumeId = newResume._id;
+        if (!uploadedResume.title) {
+          uploadedResume.title = newResume.title;
+        }
+        await uploadedResume.save();
+      } else {
+        uploadedResume = await UploadedResume.create({
+          userId: authUser.userObjectId,
+          resumeId: newResume._id,
+          title: newResume.title,
+          pages,
+        });
+      }
 
       resumeDoc = {
         _id: newResume._id,

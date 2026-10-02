@@ -23,8 +23,8 @@ export const MAX_CREDITS_PER_PLAN = {
 
 export const MAX_PDF_PAGES_PER_PLAN: Record<string, number> = {
   free: 2,
-  pro: 4,
-  proPlus: 4,
+  pro: 3,
+  proPlus: 3,
 };
 
 export type AiFeature = keyof typeof CREDIT_COST;

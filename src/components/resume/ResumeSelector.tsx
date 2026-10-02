@@ -12,8 +12,10 @@ import {
 } from "lucide-react";
 import ResumeComponent from "./ResumeComponent";
 import ResumePlusViewer, { UploadedResumePlusViewer } from "./ResumePlusViewer";
-import { ResumeContent } from "@/types/ResumeData";
+import { ResumeContent, UploadedResumeClient } from "@/types/ResumeData";
 import { MAX_PDF_PAGES_PER_PLAN } from "@/lib/creditCosts";
+import { EXTRACTION_VERSION, MAX_PDF_BYTES, MAX_PDF_PAGES } from "@/lib/pdfConstants";
+import { hashFile } from "@/lib/hashFile";
 import { useTemplateStore } from "@/store/useTemplateStore";
 import { useResumeStore } from "@/store/useResumeStore";
 import { useUserStore } from "@/store/useUserStore";
@@ -37,6 +39,11 @@ export interface ResumeSelection {
   selectedFile: File | null;
   pdfCanvasRefs: HTMLCanvasElement[];
   pdfPreviewUrls: string[];
+  fileHash?: string;
+  resumeContent?: ResumeContent | null;
+  rawExtractedText?: string | null;
+  uploadedResumeId?: string | null;
+  uploadedTitle?: string | null;
 }
 
 interface ResumeSelectorProps {
@@ -50,12 +57,15 @@ interface ResumeSelectorProps {
 export default function ResumeSelector({ onSelectionChange, className, uploadOnly, showLoader, animatedLoader }: ResumeSelectorProps) {
   const { data: session } = useSession();
   const plan = session?.user?.subscriptionPlan || "free";
-  const maxPdfPages = MAX_PDF_PAGES_PER_PLAN[plan] ?? 2;
+  const maxPdfPages = Math.min(MAX_PDF_PAGES_PER_PLAN[plan] ?? 2, MAX_PDF_PAGES);
   const [mode, setMode] = useState<Mode>(uploadOnly ? "upload" : "saved");
   const templates = useTemplateStore((state) => state.templates);
   const resumes = useResumeStore((state) => state.resumes);
   const loadingResumes = useResumeStore((state) => state.isLoading);
   const storeFetchResumes = useResumeStore((state) => state.fetchResumes);
+  const uploadedResumes = useResumeStore((state) => state.uploadedResumes);
+  const loadingUploaded = useResumeStore((state) => state.isLoadingUploaded);
+  const storeFetchUploaded = useResumeStore((state) => state.fetchUploadedResumes);
   const pinnedResumeId = useUserStore((state) => state.pinnedResumeId);
   const fetchPinnedResume = useUserStore((state) => state.fetchPinnedResume);
   const [error, setError] = useState("");
@@ -76,6 +86,12 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
   const [pdfFileError, setPdfFileError] = useState("");
   const [isRenderingPdf, setIsRenderingPdf] = useState(false);
   const [pdfRenderProgress, setPdfRenderProgress] = useState(0);
+  const [isProcessingBackend, setIsProcessingBackend] = useState(false);
+  const [fileHash, setFileHash] = useState<string | null>(null);
+  const [cachedResumeContent, setCachedResumeContent] = useState<ResumeContent | null>(null);
+  const [cachedRawText, setCachedRawText] = useState<string | null>(null);
+  const [cachedUploadedResumeId, setCachedUploadedResumeId] = useState<string | null>(null);
+  const [cachedTitle, setCachedTitle] = useState<string | null>(null);
   
   const pdfCanvasRefs = useRef<HTMLCanvasElement[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -88,11 +104,14 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
     fetchPinnedResume();
   }, [storeFetchResumes, fetchPinnedResume, uploadOnly]);
 
+  useEffect(() => {
+    storeFetchUploaded().catch(() => undefined);
+  }, [storeFetchUploaded]);
+
   // Update parent when selection changes
   useEffect(() => {
-    const isImageSelected = !!selectedFile && selectedFile.type.startsWith("image/");
     const hasPdfPreview = pdfPreviewUrls.length > 0;
-    const isValid = mode === "saved" ? !!selectedSavedResume : (isImageSelected || hasPdfPreview);
+    const isValid = mode === "saved" ? !!selectedSavedResume : hasPdfPreview;
 
     if (isValid) {
       onSelectionChange({
@@ -102,11 +121,16 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
         selectedFile,
         pdfCanvasRefs: pdfCanvasRefs.current,
         pdfPreviewUrls,
+        fileHash: fileHash ?? undefined,
+        resumeContent: cachedResumeContent,
+        rawExtractedText: cachedRawText,
+        uploadedResumeId: cachedUploadedResumeId,
+        uploadedTitle: cachedTitle,
       });
     } else {
       onSelectionChange(null);
     }
-  }, [mode, selectedResumeId, selectedSavedResume, selectedFile, pdfPreviewUrls, onSelectionChange]);
+  }, [mode, selectedResumeId, selectedSavedResume, selectedFile, pdfPreviewUrls, fileHash, cachedResumeContent, cachedRawText, cachedUploadedResumeId, cachedTitle, onSelectionChange]);
 
   function switchMode(newMode: Mode) {
     setMode(newMode);
@@ -115,7 +139,13 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
     setPdfPreviewUrls([]);
     setPdfFileError("");
     setIsRenderingPdf(false);
+    setIsProcessingBackend(false);
     setPdfRenderProgress(0);
+    setFileHash(null);
+    setCachedResumeContent(null);
+    setCachedRawText(null);
+    setCachedUploadedResumeId(null);
+    setCachedTitle(null);
     pdfCanvasRefs.current = [];
     if (newMode === "upload") {
       setSelectedSavedResume(null);
@@ -128,11 +158,153 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
     setPdfPreviewUrls([]);
     setPdfFileError("");
     setIsRenderingPdf(false);
+    setIsProcessingBackend(false);
     setPdfRenderProgress(0);
+    setFileHash(null);
+    setCachedResumeContent(null);
+    setCachedRawText(null);
+    setCachedUploadedResumeId(null);
+    setCachedTitle(null);
     pdfCanvasRefs.current = [];
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  }
+
+  function applyExtractionData(
+    data: { pages?: unknown; resumeContent?: unknown; rawExtractedText?: unknown; uploadedResumeId?: unknown; title?: unknown },
+    hash: string | null,
+    fallbackTitle: string | null
+  ) {
+    const pages = Array.isArray(data.pages) ? (data.pages as string[]) : [];
+    const content = (data.resumeContent as ResumeContent) ?? null;
+    const text = typeof data.rawExtractedText === "string" ? data.rawExtractedText : null;
+    const recordId = typeof data.uploadedResumeId === "string" ? data.uploadedResumeId : null;
+    const title = typeof data.title === "string" ? data.title : fallbackTitle;
+    pdfCanvasRefs.current = [];
+    setPdfPreviewUrls(pages);
+    setCachedResumeContent(content);
+    setCachedRawText(text);
+    setCachedUploadedResumeId(recordId);
+    setCachedTitle(title);
+    if (recordId && content) {
+      useResumeStore.getState().upsertUploadedResume({
+        _id: recordId,
+        title: title || fallbackTitle || "Uploaded Resume",
+        pages,
+        fileHash: hash ?? undefined,
+        extractionVersion: EXTRACTION_VERSION,
+        status: "done",
+        parsedResume: content,
+      });
+    }
+  }
+
+  function selectUploadedResume(item: UploadedResumeClient) {
+    setSelectedFile(null);
+    setError("");
+    setPdfPreviewUrls([]);
+    setPdfFileError("");
+    pdfCanvasRefs.current = [];
+    if (item.parsedResume) {
+      applyExtractionData(
+        { pages: item.pages, resumeContent: item.parsedResume, uploadedResumeId: item._id, title: item.title },
+        item.fileHash ?? null,
+        item.title
+      );
+      return;
+    }
+    if (!item.fileHash) return;
+    setIsRenderingPdf(true);
+    setIsProcessingBackend(true);
+    (async () => {
+      const res = await fetch("/api/resume/lookup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileHash: item.fileHash }),
+      });
+      if (!res.ok) throw new Error("Failed to load uploaded resume");
+      const data = await res.json();
+      if (data?.status !== "done") throw new Error("Resume is no longer available");
+      setFileHash(item.fileHash ?? null);
+      applyExtractionData(data, item.fileHash ?? null, item.title);
+    })()
+      .catch(() => {
+        if (item._id) useResumeStore.getState().removeUploadedResume(item._id);
+        setPdfFileError("That resume is no longer available. Please upload it again.");
+      })
+      .finally(() => {
+        setIsRenderingPdf(false);
+        setIsProcessingBackend(false);
+      });
+  }
+
+  async function pollLookupForDone(hash: string, signal: AbortSignal): Promise<boolean> {
+    const deadline = Date.now() + 30000;
+    while (Date.now() < deadline) {
+      if (signal.aborted) return false;
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      if (signal.aborted) return false;
+      try {
+        const res = await fetch("/api/resume/lookup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fileHash: hash }),
+          signal,
+        });
+        if (!res.ok) continue;
+        const data = await res.json();
+        if (data?.status === "done") {
+          applyExtractionData(data, hash, null);
+          return true;
+        }
+        if (data?.status !== "pending") return false;
+      } catch {
+        if (signal.aborted) return false;
+      }
+    }
+    return false;
+  }
+
+  async function submitProcessFormData(formData: FormData, hash: string, fallbackTitle: string, signal: AbortSignal) {
+    setIsProcessingBackend(true);
+    try {
+      const res = await fetch("/api/resume/process", { method: "POST", body: formData, signal });
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 409 || data?.status === "pending") {
+        const done = await pollLookupForDone(hash, signal);
+        if (!done && !signal.aborted) {
+          setPdfFileError("Extraction is still running. Please reselect the file in a moment.");
+        }
+        return;
+      }
+      if (!res.ok) throw new Error(typeof data?.error === "string" ? data.error : "Failed to process resume");
+      applyExtractionData(data, hash, fallbackTitle);
+    } catch (err) {
+      if (signal.aborted) return;
+      throw err instanceof Error ? err : new Error("Failed to process resume");
+    } finally {
+      if (!signal.aborted) setIsProcessingBackend(false);
+    }
+  }
+
+  async function processPdfWithBackend(file: File, hash: string, canvases: HTMLCanvasElement[], signal: AbortSignal) {
+    const formData = new FormData();
+    formData.append("fileHash", hash);
+    formData.append("title", file.name);
+    for (const canvas of canvases) {
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
+      if (blob) formData.append("resumeFile", blob, "page.png");
+    }
+    await submitProcessFormData(formData, hash, file.name, signal);
+  }
+
+  async function processImageWithBackend(file: File, hash: string, signal: AbortSignal) {
+    const formData = new FormData();
+    formData.append("fileHash", hash);
+    formData.append("title", file.name);
+    formData.append("resumeFile", file);
+    await submitProcessFormData(formData, hash, file.name, signal);
   }
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
@@ -141,21 +313,84 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
     setError("");
     setPdfPreviewUrls([]);
     setPdfFileError("");
+    setFileHash(null);
+    setCachedResumeContent(null);
+    setCachedRawText(null);
+    setCachedUploadedResumeId(null);
+    setCachedTitle(null);
     pdfCanvasRefs.current = [];
 
-    if (file && file.type === "application/pdf") {
-      setIsRenderingPdf(true);
-      setPdfRenderProgress(0);
-      renderPdfPreview(file)
-        .catch((err) => {
-          setPdfFileError(err.message);
-          setSelectedFile(null);
-          if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-          }
-        })
-        .finally(() => setIsRenderingPdf(false));
+    const isPdf = !!file && file.type === "application/pdf";
+    const isImage = !!file && file.type.startsWith("image/");
+    if (!file || (!isPdf && !isImage)) return;
+
+    if (file.size > MAX_PDF_BYTES) {
+      setPdfFileError(`Please upload a PDF under 10 MB and up to ${maxPdfPages} pages.`);
+      setSelectedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
     }
+
+    const controller = new AbortController();
+    setIsRenderingPdf(true);
+    setPdfRenderProgress(0);
+    (async () => {
+      const hash = await hashFile(file);
+      if (controller.signal.aborted) return;
+      setFileHash(hash);
+      const cached = useResumeStore.getState().uploadedResumes.find(
+        (r) => r.fileHash === hash && r.extractionVersion === EXTRACTION_VERSION && r.status === "done"
+      );
+      if (cached?.parsedResume) {
+        applyExtractionData(
+          { pages: cached.pages, resumeContent: cached.parsedResume, uploadedResumeId: cached._id, title: cached.title },
+          hash,
+          file.name
+        );
+        return;
+      }
+      try {
+        const lookupRes = await fetch("/api/resume/lookup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fileHash: hash }),
+          signal: controller.signal,
+        });
+        if (lookupRes.ok) {
+          const lookup = await lookupRes.json();
+          if (lookup?.status === "done") {
+            applyExtractionData(lookup, hash, file.name);
+            return;
+          }
+          if (lookup?.status === "pending") {
+            const done = await pollLookupForDone(hash, controller.signal);
+            if (done) return;
+          }
+        }
+      } catch {
+        if (controller.signal.aborted) return;
+      }
+      if (isImage) {
+        await processImageWithBackend(file, hash, controller.signal);
+        return;
+      }
+      await renderPdfPreview(file);
+      if (controller.signal.aborted) return;
+      if (pdfCanvasRefs.current.length > 0) {
+        await processPdfWithBackend(file, hash, [...pdfCanvasRefs.current], controller.signal);
+      }
+    })()
+      .catch((err) => {
+        if (controller.signal.aborted) return;
+        setPdfFileError(err instanceof Error ? err.message : "Failed to process PDF");
+        setSelectedFile(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsRenderingPdf(false);
+      });
   }
 
   async function renderPdfPreview(file: File) {
@@ -169,7 +404,7 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
 
     if (pdf.numPages > maxPdfPages) {
       throw new Error(
-        `PDF has ${pdf.numPages} pages. Maximum of ${maxPdfPages} pages is supported.`
+        `Please upload a PDF under 10 MB and up to ${maxPdfPages} pages.`
       );
     }
 
@@ -208,7 +443,6 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
     setError("");
   }
 
-  const isImageSelected = !!selectedFile && selectedFile.type.startsWith("image/");
   const hasPdfPreview = pdfPreviewUrls.length > 0;
 
   function renderSavedModeContent() {
@@ -297,31 +531,17 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
   }
 
   function renderUploadContent() {
-    if (isImageSelected) {
-      return (
-        <div className={`${styles.previewBox} ${styles.previewBoxActive}`}>
-          <AnimatedLoader showLoader={showLoader} animatedLoader={animatedLoader}>
-            <img
-              src={URL.createObjectURL(selectedFile)}
-              alt="Resume preview"
-              className={styles.imgPreview}
-            />
-          </AnimatedLoader>
-          <div className={styles.selectedInfo}>
-            <span className={styles.uploadTitle}>{selectedFile.name}</span>
-            <button type="button" className={styles.changeButton} onClick={clearFile}>
-              Change
-            </button>
-          </div>
-        </div>
-      );
-    }
-
     if (hasPdfPreview) {
       return (
         <div className={`${styles.previewBox} ${styles.previewBoxActive}`}>
           <AnimatedLoader showLoader={showLoader} animatedLoader={animatedLoader}>
-            <UploadedResumePlusViewer pages={pdfPreviewUrls} title={selectedFile?.name} />
+            <UploadedResumePlusViewer resume={{
+              _id: cachedUploadedResumeId ?? undefined,
+              title: cachedTitle || selectedFile?.name || "Uploaded Resume",
+              pages: pdfPreviewUrls,
+              fileHash: fileHash ?? undefined,
+              ...(cachedResumeContent ? { parsedResume: cachedResumeContent } : {}),
+            }} />
           </AnimatedLoader>
           <div className={styles.selectedInfo}>
             <span className={styles.uploadTitle}>{selectedFile?.name}</span>
@@ -333,11 +553,15 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
       );
     }
 
-    if (isRenderingPdf) {
+    if (isRenderingPdf || isProcessingBackend) {
       return (
         <div className={styles.uploadBox}>
           <span className={styles.uploadTitle}>
-            {pdfRenderProgress === 0 ? "Preparing your PDF…" : `Processing page ${pdfRenderProgress} of ${maxPdfPages}…`}
+            {isProcessingBackend
+              ? "Extracting your resume…"
+              : pdfRenderProgress === 0
+                ? "Preparing your PDF…"
+                : `Processing page ${pdfRenderProgress} of ${maxPdfPages}…`}
           </span>
           <div className={styles.progressBar}>
             <div
@@ -351,25 +575,50 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
     }
 
     return (
-      <label className={styles.uploadBox}>
-        <input
-          ref={fileInputRef}
-          accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp"
-          className={styles.fileInput}
-          onChange={handleFileChange}
-          type="file"
-        />
-        <FileUp className={styles.uploadIcon} />
-        <span className={styles.uploadTitle}>
-          Choose a PDF or image resume
-        </span>
-        <span className={styles.uploadHint}>
-          Upload your resume to get started
-        </span>
-        {pdfFileError && (
-          <span className={styles.pageLimitError}>{pdfFileError}</span>
+      <div className={styles.uploadTab}>
+        {uploadedResumes.length > 0 && (
+          <div className={styles.horizontalScroll}>
+            {uploadedResumes.map((item) => (
+              <div
+                key={item._id ?? item.fileHash}
+                className={`${styles.resumeCard} ${cachedUploadedResumeId && item._id === cachedUploadedResumeId ? styles.selectedCard : ""}`}
+                onClick={() => selectUploadedResume(item)}
+              >
+                <div className={styles.cardPreview}>
+                  {item.pages.length > 0 ? (
+                    <UploadedResumeComponent resume={item} preview={true} />
+                  ) : (
+                    <div className={styles.noPreview}>No preview</div>
+                  )}
+                </div>
+                <div className={styles.cardTitle}>{item.title}</div>
+              </div>
+            ))}
+          </div>
         )}
-      </label>
+        {loadingUploaded && uploadedResumes.length === 0 && (
+          <div className={styles.emptyState}>
+            <Loader2 className={styles.spinner} />
+            <span>Loading your uploads...</span>
+          </div>
+        )}
+        <label className={styles.uploadBox}>
+          <input
+            ref={fileInputRef}
+            accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp"
+            className={styles.fileInput}
+            onChange={handleFileChange}
+            type="file"
+          />
+          <FileUp className={styles.uploadIcon} />
+          <span className={styles.uploadTitle}>
+            Choose a PDF or image resume
+          </span>
+          {pdfFileError && (
+            <span className={styles.pageLimitError}>{pdfFileError}</span>
+          )}
+        </label>
+      </div>
     );
   }
 

@@ -60,9 +60,33 @@ export interface ResumeDocument extends ResumeObj {
   updatedAt: string;
 }
 
+export type UploadedResumeStatus = "pending" | "done" | "failed";
+
 export interface UploadedResume {
-  resumeId: string 
-  pages: string[]
+  resumeId?: string;
+  title?: string;
+  pages: string[];
+  userId?: string;
+  fileHash?: string;
+  extractionVersion?: string;
+  status?: UploadedResumeStatus;
+  rawExtractedText?: string;
+  parsedResume?: ResumeContent;
+  pageCount?: number;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+}
+
+export interface UploadedResumeClient {
+  _id?: string;
+  fileHash?: string;
+  extractionVersion?: string;
+  status?: UploadedResumeStatus;
+  pageCount?: number;
+  title: string;
+  pages: string[];
+  userId?: string;
+  parsedResume?: ResumeContent;
 }
 
 export interface UploadedResumeDocument extends UploadedResume {

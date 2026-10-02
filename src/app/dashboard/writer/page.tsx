@@ -18,6 +18,7 @@ import JobDescriptionInput from "@/components/job-description/JobDescriptionInpu
 import { Button } from "@/components/ui/Button";
 import { AiButton } from "@/components/ui/AiButton";
 import ResumeSelector, { ResumeSelection } from "@/components/resume/ResumeSelector";
+import { buildResumeFormData } from "@/hooks/useResumeFormData";
 import { useResumeStore } from "@/store/useResumeStore";
 import CoverLetterResultCard from "@/components/cover-letter/CoverLetterResultCard";
 import CoverLetterHistory from "@/components/cover-letter/CoverLetterHistory";
@@ -160,29 +161,9 @@ export default function WriterPage() {
     setClError("");
 
     try {
-      const formData = new FormData();
-      formData.append("resumeMode", resumeSelection.mode);
+      const formData = buildResumeFormData(resumeSelection);
       formData.append("targetCompany", clCompany);
       formData.append("targetRole", clRole);
-
-      if (resumeSelection.mode === "saved") {
-        formData.append("resumeId", resumeSelection.selectedResumeId);
-      } else {
-        if (resumeSelection.selectedFile && resumeSelection.selectedFile.type.startsWith("image/")) {
-          formData.append("resumeFile", resumeSelection.selectedFile);
-        } else if (resumeSelection.pdfCanvasRefs.length > 0) {
-          for (const canvas of resumeSelection.pdfCanvasRefs) {
-            const blob = await new Promise<Blob | null>((resolve) =>
-              canvas.toBlob((b) => resolve(b), "image/png")
-            );
-            if (blob) {
-              formData.append("resumeFile", blob, "page.png");
-            }
-          }
-        } else {
-          throw new Error("Invalid uploaded resume.");
-        }
-      }
 
       job.appendToFormData(formData);
 

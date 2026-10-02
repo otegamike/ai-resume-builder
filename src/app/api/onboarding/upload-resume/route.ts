@@ -6,7 +6,7 @@ import {
   InputExtractionError,
   resolveUploadOnlyResumeInput,
 } from "@/lib/inputExtraction";
-import { createResumeFromExtractedText } from "@/lib/resumeService";
+import { createResume, createResumeFromExtractedText } from "@/lib/resumeService";
 import { recordActivity } from "@/lib/activityService";
 
 export const runtime = "nodejs";
@@ -20,13 +20,19 @@ export async function POST(request: Request) {
 
     const formData = await request.formData();
     const ctx = aiContextFromAuthUser(authUser);
-    const extractedText = await resolveUploadOnlyResumeInput(formData, ctx, "file");
+    const { text: extractedText, content } = await resolveUploadOnlyResumeInput(formData, ctx, "file", authUser);
 
-    const savedResume = await createResumeFromExtractedText({
-      authUser,
-      extractedText,
-      ctx,
-    });
+    const savedResume = content
+      ? await createResume({
+          authUser,
+          title: `Imported Resume - ${new Date().toLocaleDateString()}`,
+          content,
+        })
+      : await createResumeFromExtractedText({
+          authUser,
+          extractedText,
+          ctx,
+        });
 
     const name = formData.get("name")?.toString().trim() || "";
     const jobTitle = formData.get("jobTitle")?.toString() || "";

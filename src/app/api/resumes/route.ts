@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { Types } from 'mongoose';
 import dbConnect from '@/lib/db';
 import Resume from '@/models/Resume';
+import UploadedResume from '@/models/UploadedResume';
 import { getAuthenticatedUser, buildResumeOwnerQuery } from '@/lib/authUser';
 import { templateDefinitions } from "@/lib/templateCatalog";
 import { getRandomTemplateId } from "@/utils/templateUtils";
 import { recordActivity } from "@/lib/activityService";
+import { toUploadedResumeListItem } from '@/lib/extractionService';
+
+void UploadedResume;
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,19 +19,58 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const listType = request.nextUrl.searchParams.get('type');
+    const wantSaved = listType !== 'uploaded';
+    const wantUploaded = listType !== 'saved';
+
     await dbConnect();
     const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId, authUser.legacyUserId);
-    const resumes = await Resume.find(ownerQuery).sort({ updatedAt: -1 });
-    await Resume.updateMany({ ...ownerQuery, user: { $exists: false } }, { $set: { user: authUser.userObjectId } });
+    const resumes = wantSaved ? await Resume.find(ownerQuery).sort({ updatedAt: -1 }) : [];
+    if (wantSaved) {
+      await Resume.updateMany({ ...ownerQuery, user: { $exists: false } }, { $set: { user: authUser.userObjectId } });
+    }
 
-    const eTag = crypto.createHash('md5').update(JSON.stringify(resumes)).digest('hex');
+    let uploadedResumes: ReturnType<typeof toUploadedResumeListItem>[] = [];
+    if (wantUploaded) {
+      const docs = (await UploadedResume.find({ userId: authUser.userObjectId })
+        .sort({ updatedAt: -1 })
+        .populate('resumeId', 'title')
+        .lean()) as unknown as {
+        _id: unknown;
+        title?: unknown;
+        pages?: unknown;
+        userId?: unknown;
+        fileHash?: unknown;
+        extractionVersion?: unknown;
+        status?: unknown;
+        pageCount?: unknown;
+        resumeId?: { title?: unknown } | null;
+      }[];
+      uploadedResumes = docs.map((doc) =>
+        toUploadedResumeListItem({
+          _id: doc._id as Types.ObjectId,
+          title: typeof doc.title === 'string' ? doc.title : '',
+          pages: Array.isArray(doc.pages) ? doc.pages as string[] : [],
+          userId: doc.userId as Types.ObjectId | undefined,
+          fileHash: typeof doc.fileHash === 'string' ? doc.fileHash : undefined,
+          extractionVersion: typeof doc.extractionVersion === 'string' ? doc.extractionVersion : undefined,
+          status: typeof doc.status === 'string' ? doc.status : undefined,
+          pageCount: typeof doc.pageCount === 'number' ? doc.pageCount : undefined,
+          resumeTitle: typeof doc.resumeId?.title === 'string' ? doc.resumeId.title : undefined,
+        })
+      );
+    }
+
+    const payload = { resumes, uploadedResumes };
+
+    const eTag = crypto.createHash('md5').update(JSON.stringify(payload)).digest('hex');
     const clientETag = request.headers.get('if-none-match');
 
     if (clientETag === `"${eTag}"`) {
       return new NextResponse(null, { status: 304 });
     }
 
-    return NextResponse.json(resumes, {
+    return NextResponse.json(payload, {
       headers: {
         'ETag': `"${eTag}"`,
         'Cache-Control': 'no-cache',

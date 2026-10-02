@@ -15,6 +15,7 @@ import AiCredits from '@/components/ui/ai-credit/AiCredits'
 import { useAiCreditStore } from '@/store/useAiCreditStore'
 import { formatPlan, MAX_CREDITS_PER_PLAN } from '@/lib/creditCosts'
 import { NotificationPanel } from '@/components/notifications/NotificationBell'
+import { useResumeStore } from '@/store/useResumeStore'
 
 interface NavPanelProps {
   session: Session | null
@@ -73,6 +74,7 @@ function NavPanel({ session, isOpen, isNotificationPanelOpen, toggleNotification
   }
 
   const handleSignOut = () => {
+    useResumeStore.getState().reset();
     signOut({ callbackUrl: "/" })
     toggleMenu(false)
   }

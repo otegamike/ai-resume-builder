@@ -42,8 +42,14 @@
   width: 100%;
 }
 
+.uploadTab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+}
+
 .uploadBox {
-  min-height: 13rem;
   border: 2px dashed var(--gray-300);
   border-radius: var(--radius-xl);
   display: flex;
@@ -55,6 +61,17 @@
   text-align: center;
   transition: border-color 0.2s, background-color 0.2s;
   padding: var(--space-4);
+}
+
+.selectedCard {
+  border-color: var(--primary-1);
+  box-shadow: var(--shadow-sm);
+}
+
+.noPreview {
+  padding: var(--space-3);
+  color: var(--gray-500);
+  font-size: var(--text-sm);
 }
 
 .uploadBox:hover {

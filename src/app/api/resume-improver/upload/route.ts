@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     const ctx = aiContextFromAuthUser(authUser);
 
     const formData = await request.formData();
-    const extractedText = await resolveUploadOnlyResumeInput(formData, ctx, "file");
+    const { text: extractedText } = await resolveUploadOnlyResumeInput(formData, ctx, "file", authUser);
 
     const report = await analyzeResumeForAts(extractedText, ctx);
 

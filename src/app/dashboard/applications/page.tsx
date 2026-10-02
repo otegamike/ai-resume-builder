@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import type { ResumeSelection } from "@/components/resume/ResumeSelector";
+import { buildResumeFormData } from "@/hooks/useResumeFormData";
 import { ApplicationItem, ApplicationStatus } from "@/types/ApplicationData";
 import { TailorReport } from "@/types/TailorReport";
 import { useAiCreditStore } from "@/store/useAiCreditStore";
@@ -120,29 +121,9 @@ export default function ApplicationsPage() {
     setProgress("extracting");
 
     try {
-      const formData = new FormData();
-      formData.append("resumeMode", selection.mode);
+      const formData = buildResumeFormData(selection);
       formData.append("targetCompany", targetCompany);
       formData.append("targetRole", targetRole);
-
-      if (selection.mode === "saved") {
-        formData.append("resumeId", selection.selectedResumeId);
-      } else {
-        if (selection.selectedFile && selection.selectedFile.type.startsWith("image/")) {
-          formData.append("resumeFile", selection.selectedFile);
-        } else if (selection.pdfCanvasRefs.length > 0) {
-          for (const canvas of selection.pdfCanvasRefs) {
-            const blob = await new Promise<Blob | null>((resolve) =>
-              canvas.toBlob((b) => resolve(b), "image/png")
-            );
-            if (blob) {
-              formData.append("resumeFile", blob, "page.png");
-            }
-          }
-        } else {
-          throw new Error("Invalid uploaded resume file selection.");
-        }
-      }
 
       job.appendToFormData(formData);
 

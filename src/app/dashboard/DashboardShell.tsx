@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { FileText, Settings, Plus, LayoutTemplate, PanelRightClose,  PanelRightOpen, LogOut, BarChart3, Sparkles, Home, PenLine, Building2, Search } from "lucide-react";
 import styles from "./layout.module.css";
+import { useResumeStore } from "@/store/useResumeStore";
 
 export default function DashboardShell({
   children,
@@ -50,6 +51,7 @@ export default function DashboardShell({
   }
 
   const handleSignOut = () => {
+    useResumeStore.getState().reset();
     signOut({ callbackUrl: "/" });
   };
 

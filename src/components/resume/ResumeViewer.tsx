@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, ZoomIn, ZoomOut, Download, Loader2 } from "lucide-react";
 import { type TemplateId } from "@/lib/templateCatalog";
-import { ResumeContent } from "@/types/ResumeData";
+import { ResumeContent, UploadedResumeClient } from "@/types/ResumeData";
 import styles from "./ResumeViewer.module.css";
 import ResumeExporter, { type ResumeExporterRef } from "./ResumeExporter";
 import ResumeComponent from "./ResumeComponent";
@@ -60,21 +60,20 @@ export default function ResumeViewer({ resumeContent, templateId, isOpen, onClos
 
 
 interface UploadedResumeViewerProps {
-  pages: string[];
+  resume: UploadedResumeClient;
   isOpen: boolean;
   onClose: () => void;
-  title?: string;
   initialZoom?: number;
 }
 
-export function UploadedResumeViewer({ pages, isOpen, onClose, title, initialZoom}: UploadedResumeViewerProps) {
- 
+export function UploadedResumeViewer({ resume, isOpen, onClose, initialZoom}: UploadedResumeViewerProps) {
+
   if (!isOpen || typeof document === "undefined") return null;
 
   const content = (
     <div className={styles.overlay} onClick={onClose} role="dialog" aria-modal="true">
-      <ResumeViewercard title={title || "Resume Preview"} initialZoom={initialZoom} isOpen={isOpen} onClose={onClose}>
-         <UploadedResumeComponent resumePages={pages} preview={false} />
+      <ResumeViewercard title={resume.title || "Resume Preview"} initialZoom={initialZoom} isOpen={isOpen} onClose={onClose}>
+         <UploadedResumeComponent resume={resume} preview={false} />
       </ResumeViewercard>
     </div>
   );

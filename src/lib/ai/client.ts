@@ -4,6 +4,9 @@ import Groq from "groq-sdk";
 
 export const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
+// Canonical version lives in @/lib/pdfConstants (shared with the browser).
+export { EXTRACTION_VERSION } from "@/lib/pdfConstants";
+
 // Use a capable model for structured JSON output
 export const ATS_MODEL = "openai/gpt-oss-120b"; // good for structured JSON output
 export const VISION_MODEL = "qwen/qwen3.8-27b";

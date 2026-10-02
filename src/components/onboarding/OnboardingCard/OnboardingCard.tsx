@@ -18,6 +18,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import type { ResumeSelection } from "@/components/resume/ResumeSelector";
+import { buildResumeFormData } from "@/hooks/useResumeFormData";
 import { JOB_CATEGORIES } from "@/lib/jobCategories";
 import styles from "./OnboardingCard.module.css";
 
@@ -220,17 +221,9 @@ export default function OnboardingCard({
       formData.append("industry", industry);
       formData.append("targetRole", targetRole);
 
-      if (resumeSelection.selectedFile && resumeSelection.selectedFile.type.startsWith("image/")) {
-        formData.append("file", resumeSelection.selectedFile);
-      } else if (resumeSelection.pdfCanvasRefs.length > 0) {
-        for (const canvas of resumeSelection.pdfCanvasRefs) {
-          const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
-          if (blob) {
-            formData.append("file", blob, "page.png");
-          }
-        }
-      } else {
-        throw new Error("Choose a PDF or image resume first.");
+      const resumeForm = buildResumeFormData(resumeSelection);
+      for (const [key, value] of resumeForm.entries()) {
+        formData.append(key, value);
       }
 
       const res = await fetch("/api/onboarding/upload-resume", {

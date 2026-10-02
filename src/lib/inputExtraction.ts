@@ -11,9 +11,13 @@ import {
   resumeContentToText,
 } from "@/lib/resumeImprover";
 import Resume from "@/models/Resume";
+import UploadedResume from "@/models/UploadedResume";
+import { EXTRACTION_VERSION } from "@/lib/ai/client";
+import { FILE_HASH_PATTERN } from "@/lib/pdfConstants";
 import type { ResumeContent } from "@/types/ResumeData";
 
 void Resume;
+void UploadedResume;
 
 export class InputExtractionError extends Error {
   status: number;
@@ -79,6 +83,35 @@ function assertNonEmptyTrimmed(value: string, errorMessage: string, status: numb
   }
 }
 
+async function findCachedExtraction(
+  formData: FormData,
+  authUser: AuthUserShape
+): Promise<{ resumeText: string; existingResume: ResumeContent } | null> {
+  const hashRaw = formData.get("fileHash");
+  const fileHash = typeof hashRaw === "string" && FILE_HASH_PATTERN.test(hashRaw) ? hashRaw : null;
+  const idRaw = formData.get("uploadedResumeId");
+  const uploadedResumeId = typeof idRaw === "string" && /^[a-f0-9]{24}$/i.test(idRaw) ? idRaw : null;
+  if (!fileHash && !uploadedResumeId) return null;
+
+  await dbConnect();
+  const doc = fileHash
+    ? await UploadedResume.findOne({
+        userId: authUser.userObjectId,
+        fileHash,
+        extractionVersion: EXTRACTION_VERSION,
+        status: "done",
+      })
+    : await UploadedResume.findOne({ _id: uploadedResumeId, userId: authUser.userObjectId, status: "done" });
+  if (!doc || !doc.parsedResume) return null;
+
+  const content = doc.parsedResume as ResumeContent;
+  const resumeText = typeof doc.rawExtractedText === "string" && doc.rawExtractedText.trim()
+    ? doc.rawExtractedText
+    : resumeContentToText(content);
+  if (!resumeText.trim()) return null;
+  return { resumeText, existingResume: content };
+}
+
 export async function resolveResumeInput(
   formData: FormData,
   authUser: AuthUserShape,
@@ -112,6 +145,10 @@ export async function resolveResumeInput(
   }
 
   if (resumeMode === "upload") {
+    const cached = await findCachedExtraction(formData, authUser);
+    if (cached) {
+      return { resumeText: cached.resumeText, existingResume: cached.existingResume, upload: true };
+    }
     const files = getFileArray(formData, RESUME_FILE_FIELD);
     const resumeText = await extractUploadedResumeText(files, ctx);
     assertNonEmptyTrimmed(resumeText, "Could not extract readable text from the resume.", 422);
@@ -121,18 +158,28 @@ export async function resolveResumeInput(
   throw new InputExtractionError("Invalid resume mode", 400);
 }
 
+export interface UploadOnlyResumeInput {
+  text: string;
+  content: ResumeContent | null;
+}
+
 export async function resolveUploadOnlyResumeInput(
   formData: FormData,
   ctx: AiRequestContext,
-  fieldName: string = "file"
-): Promise<string> {
+  fieldName: string = "file",
+  authUser?: AuthUserShape
+): Promise<UploadOnlyResumeInput> {
+  if (authUser) {
+    const cached = await findCachedExtraction(formData, authUser);
+    if (cached) return { text: cached.resumeText, content: cached.existingResume };
+  }
   const files = getFileArray(formData, fieldName);
   if (files.length === 0) {
     throw new InputExtractionError("No resume file provided", 400);
   }
   const extractedText = await extractUploadedResumeText(files, ctx);
   assertNonEmptyTrimmed(extractedText, "Could not extract readable text from this resume.", 422);
-  return extractedText;
+  return { text: extractedText, content: null };
 }
 
 export type JobInputMode = "text" | "image";

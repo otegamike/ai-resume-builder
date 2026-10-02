@@ -12,6 +12,7 @@ import { useAiCreditStore } from "@/store/useAiCreditStore";
 import { useAlertStore } from "@/store/useAlertStore";
 import ScoreCircle from "@/components/ui/score-circle/ScoreCircle";
 import ResumeSelector, { ResumeSelection } from "@/components/resume/ResumeSelector";
+import { buildResumeFormData } from "@/hooks/useResumeFormData";
 import scrollToId from "@/utils/scrollIntoview";
 import styles from "./ImproveTab.module.css";
 
@@ -56,17 +57,7 @@ export default function ImproveTab() {
     try {
       let response: Response;
       if (selection.mode === "upload") {
-        const formData = new FormData();
-        if (selection.selectedFile && selection.selectedFile.type.startsWith("image/")) {
-          formData.append("file", selection.selectedFile);
-        } else if (selection.pdfCanvasRefs.length > 0) {
-          for (const canvas of selection.pdfCanvasRefs) {
-            const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
-            if (blob) formData.append("file", blob, "page.png");
-          }
-        } else {
-          throw new Error("Choose a PDF or image resume first.");
-        }
+        const formData = buildResumeFormData(selection);
         response = await fetch("/api/resume-improver/upload", { method: "POST", body: formData });
       } else {
         if (!selection.selectedResumeId) throw new Error("Choose a saved resume first.");

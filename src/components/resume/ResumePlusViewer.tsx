@@ -1,6 +1,6 @@
 import ResumeComponent from "./ResumeComponent"
 import ResumeViewer from "./ResumeViewer"
-import { ResumeContent } from "@/types/ResumeData"
+import { ResumeContent, UploadedResumeClient } from "@/types/ResumeData"
 import { normalizeTemplateId } from "@/lib/templateRenderer"
 import styles from "@/components/resume/ResumePlusViewer.module.css";
 import { useState } from "react"
@@ -45,29 +45,27 @@ export default ResumePlusViewer
 
 
 interface UploadedResumePlusViewerProps {
-  pages: string[];
-  title?: string;
+  resume: UploadedResumeClient;
   maxHeight?: string;
 }
 
-export function UploadedResumePlusViewer({pages, title, maxHeight}: UploadedResumePlusViewerProps) {
+export function UploadedResumePlusViewer({resume, maxHeight}: UploadedResumePlusViewerProps) {
   const [openView, SetOpenView]= useState<boolean>(false);
 
   return (
     <>
         <div className={styles.resumeShell} style={ maxHeight? { maxHeight: maxHeight } : {}}>
-            <UploadedResumeComponent resumePages={pages} preview={true}/>
-        
+            <UploadedResumeComponent resume={resume} preview={true}/>
+
             <button type="button" className={styles.viewBtn} onClick={() => SetOpenView(true)}>
                 <ZoomIn size={12} /> View
             </button>
         </div>
-        
+
         <UploadedResumeViewer
             isOpen={openView}
             onClose={() => SetOpenView(false)}
-            pages={pages}
-            title={`${title || 'Untitled Resume'}`}
+            resume={resume}
         />
     </>
   )
