@@ -1,11 +1,5 @@
 import { NextResponse } from "next/server";
-import { v2 as cloudinary } from "cloudinary";
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+import { uploadImage } from "@/lib/cloudinary";
 
 export async function POST(request: Request) {
   try {
@@ -22,9 +16,7 @@ export async function POST(request: Request) {
 
     const folder = (formData.get("folder") as string) || "Resume";
 
-    const uploadResponse = await cloudinary.uploader.upload(base64Image, {
-      folder,
-    });
+    const uploadResponse = await uploadImage(base64Image, folder);
 
     return NextResponse.json({
       secure_url: uploadResponse.secure_url,

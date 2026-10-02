@@ -20,11 +20,17 @@ Rules:
 - For experience, extract each job entry with company, role, startDate, endDate (use readable date strings like "Jan 2020"), and description as an array of bullet points.
 - For education, extract each entry with school, degree, startDate, endDate.
 - For projects, extract any projects mentioned with name and description.
-- For skills, extract as a flat array of strings.
 - Do NOT invent or hallucinate information not present in the text.
 - If a section is empty or missing, use an empty array or empty string.
-- Set skillCategorized to false.
-- skillCategories should be an empty array.
+
+Skills rules:
+- ALWAYS populate "skills" with a flat, de-duplicated array of every skill mentioned, regardless of grouping.
+- If the resume groups skills under labeled headings (e.g. "Languages: JavaScript, Python", "Frontend: React, Vue", "Tools: Git, Docker"):
+  - Set "skillCategorized" to true.
+  - Populate "skillCategories" with one entry per heading: { "id": "<1-based index as string>", "category": "<heading text exactly as written>", "skills": ["..."] }.
+  - Every skill in skillCategories must also appear in the flat "skills" array.
+  - Do NOT create categories the resume doesn't have, and do NOT regroup skills yourself.
+- If skills are listed without any grouping, set "skillCategorized" to false and "skillCategories" to [].
 
 Required JSON schema:
 {
@@ -48,7 +54,9 @@ Required JSON schema:
     { "id": "1", "name": "string", "description": ["string"] }
   ],
   "skills": ["string"],
-  "skillCategories": [],
+  "skillCategories": [
+    { "id": "1", "category": "string", "skills": ["string"] }
+  ],
   "skillCategorized": false
 }
 

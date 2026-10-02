@@ -577,23 +577,28 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
     return (
       <div className={styles.uploadTab}>
         {uploadedResumes.length > 0 && (
-          <div className={styles.horizontalScroll}>
-            {uploadedResumes.map((item) => (
-              <div
-                key={item._id ?? item.fileHash}
-                className={`${styles.resumeCard} ${cachedUploadedResumeId && item._id === cachedUploadedResumeId ? styles.selectedCard : ""}`}
-                onClick={() => selectUploadedResume(item)}
-              >
-                <div className={styles.cardPreview}>
-                  {item.pages.length > 0 ? (
-                    <UploadedResumeComponent resume={item} preview={true} />
-                  ) : (
-                    <div className={styles.noPreview}>No preview</div>
-                  )}
+          <div>
+            <span className={styles.uploadTitle}>
+              Recent uploads
+            </span>
+            <div className={styles.horizontalScroll}>
+              {uploadedResumes.map((item) => (
+                <div
+                  key={item._id ?? item.fileHash}
+                  className={`${styles.resumeCard} ${cachedUploadedResumeId && item._id === cachedUploadedResumeId ? styles.selectedCard : ""}`}
+                  onClick={() => selectUploadedResume(item)}
+                >
+                  <div className={styles.cardPreview}>
+                    {item.pages.length > 0 ? (
+                      <UploadedResumeComponent resume={item} preview={true} />
+                    ) : (
+                      <div className={styles.noPreview}>No preview</div>
+                    )}
+                  </div>
+                  <div className={styles.cardTitle}>{item.title}</div>
                 </div>
-                <div className={styles.cardTitle}>{item.title}</div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
         {loadingUploaded && uploadedResumes.length === 0 && (
@@ -611,9 +616,15 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
             type="file"
           />
           <FileUp className={styles.uploadIcon} />
-          <span className={styles.uploadTitle}>
-            Choose a PDF or image resume
-          </span>
+          <div className={styles.uploadText}>
+            <span className={styles.uploadTitle}>
+              Upload from your device
+            </span>
+            <span className={styles.uploadHint}>
+              PDF (up to {maxPdfPages} pages) or image
+            </span>
+          </div>
+          
           {pdfFileError && (
             <span className={styles.pageLimitError}>{pdfFileError}</span>
           )}

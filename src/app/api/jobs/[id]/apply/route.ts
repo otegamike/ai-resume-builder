@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { v2 as cloudinary } from "cloudinary";
 import { Types } from "mongoose";
 import dbConnect from "@/lib/db";
 import JobAd from "@/models/JobAd";
@@ -15,6 +14,7 @@ import { createResume } from "@/lib/resumeService";
 import { fileToDataUrl } from "@/lib/resumeImprover";
 import { recordActivity } from "@/lib/activityService";
 import Notification from "@/models/Notification";
+import { uploadImage } from "@/lib/cloudinary";
 
 void JobAd;
 void JobApplication;
@@ -22,12 +22,6 @@ void Company;
 void Resume;
 void UploadedResume;
 void Notification;
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 function getStringField(formData: FormData, key: string): string | null {
   const raw = formData.get(key);
@@ -201,9 +195,7 @@ export async function POST(
 
         for (const file of uploadedFiles) {
           const dataUrl = await fileToDataUrl(file);
-          const result = await cloudinary.uploader.upload(dataUrl, {
-            folder: `applications/${String(authUser.userObjectId)}/${String(job._id)}`,
-          });
+          const result = await uploadImage(dataUrl, `applications/${String(authUser.userObjectId)}/${String(job._id)}`);
           pages.push(result.secure_url);
         }
 

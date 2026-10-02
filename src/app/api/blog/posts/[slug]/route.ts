@@ -1,17 +1,11 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { v2 as cloudinary } from "cloudinary";
+import { deleteImage } from "@/lib/cloudinary";
 import dbConnect from "@/lib/db";
 import Post from "@/models/Post";
 
 void Post;
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 export async function GET(
   _request: Request,
@@ -106,7 +100,7 @@ export async function DELETE(
 
     if (post.coverImagePublicId) {
       try {
-        await cloudinary.uploader.destroy(post.coverImagePublicId);
+        await deleteImage(post.coverImagePublicId);
       } catch (cloudError) {
         console.error("Failed to delete cover image from Cloudinary:", cloudError);
       }

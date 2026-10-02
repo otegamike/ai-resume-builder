@@ -124,6 +124,7 @@ Replace only the content between the `<!-- DESIGN STARTS HERE -->` comments.
   const isMultipage = MULTIPAGE === "true";
 
   const scaler = document.querySelector('.cv-scaler');
+  let lastPostedPages = -1;
 
   function createPageIndicators(cvElement, cvHeight, pages) {
     document.querySelectorAll('.page-indicator').forEach(el => el.remove());
@@ -140,6 +141,51 @@ Replace only the content between the `<!-- DESIGN STARTS HERE -->` comments.
     }
   }
 
+  // offsetTop is measured against the nearest positioned ancestor, which
+  // is wrong for blocks nested inside grid/flex columns. Walk the chain
+  // so every measurement is relative to the top of the CV.
+  function offsetTopRelativeToCv(el, cvElement) {
+    let top = 0;
+    let node = el;
+    while (node && node !== cvElement) {
+      top += node.offsetTop;
+      node = node.offsetParent;
+      if (!node || node === document.body || node === document.documentElement) break;
+    }
+    return top;
+  }
+
+  // Margins added by an earlier pass must be cleared first. The parent
+  // resizes the iframe on every RESIZE_IFRAME message, which fires a
+  // resize event back in here - without a reset each re-run stacks more
+  // margin on top and the content sinks without end.
+  function resetAvoidShifts(cvElement) {
+    cvElement.querySelectorAll('[data-avoid-shift]').forEach((el) => {
+      el.style.marginTop = el.getAttribute('data-avoid-orig-mt') || '';
+      el.removeAttribute('data-avoid-orig-mt');
+      if (el.hasAttribute('data-avoid-pad')) {
+        el.style.paddingTop = el.getAttribute('data-avoid-orig-pt') || '';
+        el.removeAttribute('data-avoid-orig-pt');
+        el.removeAttribute('data-avoid-pad');
+      }
+      el.removeAttribute('data-avoid-shift');
+    });
+  }
+
+  function markAvoidShift(target, amount, addPad) {
+    if (!target.hasAttribute('data-avoid-shift')) {
+      target.setAttribute('data-avoid-orig-mt', target.style.marginTop || '');
+      if (addPad) target.setAttribute('data-avoid-orig-pt', target.style.paddingTop || '');
+    }
+    const currentMT = parseFloat(target.style.marginTop) || 0;
+    target.style.marginTop = (currentMT + amount) + 'px';
+    target.setAttribute('data-avoid-shift', 'true');
+    if (addPad) {
+      target.style.paddingTop = '0.4rem';
+      target.setAttribute('data-avoid-pad', 'true');
+    }
+  }
+
   function handleBreakAvoidElements(cvElement, cvHeight, avoidSelector) {
     const avoids = Array.from(cvElement.querySelectorAll(avoidSelector));
     let maxIter = 20;
@@ -147,10 +193,11 @@ Replace only the content between the `<!-- DESIGN STARTS HERE -->` comments.
       let shifted = false;
       const height = cvElement.scrollHeight;
       const pages = Math.ceil(height / cvHeight);
+      if (pages <= 1) break;
       for (let p = 1; p < pages; p++) {
         const boundary = p * cvHeight;
         for (const el of avoids) {
-          let groupTop = el.offsetTop;
+          let groupTop = offsetTopRelativeToCv(el, cvElement);
           let groupBottom = groupTop + el.offsetHeight;
           let target = el;
           let isGroupShift = false;
@@ -161,7 +208,8 @@ Replace only the content between the `<!-- DESIGN STARTS HERE -->` comments.
             if (firstBlockChild === el) {
               const firstChild = parent.firstElementChild;
               if (firstChild) {
-                groupTop = firstChild.offsetTop;
+                groupTop = offsetTopRelativeToCv(firstChild, cvElement);
+                groupBottom = offsetTopRelativeToCv(el, cvElement) + el.offsetHeight;
                 target = firstChild;
                 isGroupShift = true;
               }
@@ -170,13 +218,7 @@ Replace only the content between the `<!-- DESIGN STARTS HERE -->` comments.
 
           if (groupTop < boundary && groupBottom > boundary) {
             const pushDown = boundary - groupTop;
-            const currentMT = parseFloat(target.style.marginTop) || 0;
-            target.style.marginTop = (currentMT + pushDown + 15) + 'px';
-
-            if (isGroupShift) {
-              target.style.paddingTop = '0.4rem';
-            }
-
+            markAvoidShift(target, pushDown + 15, isGroupShift);
             shifted = true;
             break;
           }
@@ -190,11 +232,16 @@ Replace only the content between the `<!-- DESIGN STARTS HERE -->` comments.
   function scaleCv() {
     const available = document.documentElement.clientWidth;
     const scale = available / CV_WIDTH;
-    scaler.style.transform = `scale(${scale})`;
 
     const cvElement = document.querySelector('.cv');
+    // The positioning context must exist before measuring, otherwise
+    // offsetParents resolve differently on the first pass than on later
+    // passes and the numbers never settle.
+    cvElement.style.position = 'relative';
     cvElement.style.height = 'auto';
     cvElement.style.minHeight = '0px';
+
+    resetAvoidShifts(cvElement);
 
     const avoidSelector = '.block';
     handleBreakAvoidElements(cvElement, CV_HEIGHT, avoidSelector);
@@ -205,19 +252,24 @@ Replace only the content between the `<!-- DESIGN STARTS HERE -->` comments.
 
     cvElement.style.height = newHeight + 'px';
     cvElement.style.minHeight = newHeight + 'px';
-    cvElement.style.position = 'relative';
 
+    scaler.style.transform = `scale(${scale})`;
     const scaledHeight = newHeight * scale;
     scaler.style.marginBottom = (scaledHeight - newHeight) + 'px';
 
     createPageIndicators(cvElement, CV_HEIGHT, pages);
 
-    
-    requestAnimationFrame(() => {
+    // Only notify the parent when the page count changes. The parent
+    // resizes the iframe on every message, which fires resize back in
+    // here - reposting an unchanged count drives an endless loop.
+    if (pages !== lastPostedPages) {
+      lastPostedPages = pages;
       requestAnimationFrame(() => {
-        window.parent.postMessage({ type: 'RESIZE_IFRAME', pages: pages }, '*');
+        requestAnimationFrame(() => {
+          window.parent.postMessage({ type: 'RESIZE_IFRAME', pages: pages }, '*');
+        });
       });
-    });
+    }
   }
 
   let resizeTimer;
@@ -226,6 +278,7 @@ Replace only the content between the `<!-- DESIGN STARTS HERE -->` comments.
     resizeTimer = setTimeout(scaleCv, 60);
   });
 
+  scaleCv();
   document.fonts.ready.then(scaleCv);
 </script>
 </body>
@@ -1114,7 +1167,10 @@ The following is the smallest valid template skeleton. Expand with your design:
   const CV_HEIGHT = 1123;
   const MULTIPAGE = "{{multipage}}";
   const isMultipage = MULTIPAGE === "true";
+
   const scaler = document.querySelector('.cv-scaler');
+  let lastPostedPages = -1;
+
   function createPageIndicators(cvElement, cvHeight, pages) {
     document.querySelectorAll('.page-indicator').forEach(el => el.remove());
     for (let i = 1; i < pages; i++) {
@@ -1124,25 +1180,92 @@ The following is the smallest valid template skeleton. Expand with your design:
       indicator.style.top = (i * cvHeight) + 'px';
       indicator.style.left = '0';
       indicator.style.width = '100%';
-      indicator.style.borderTop = '2px dashed rgba(255,0,0,0.6)';
+      indicator.style.borderTop = '2px dashed rgba(255, 0, 0, 0.6)';
       indicator.style.zIndex = '9999';
       cvElement.appendChild(indicator);
     }
   }
+
+  // offsetTop is measured against the nearest positioned ancestor, which
+  // is wrong for blocks nested inside grid/flex columns. Walk the chain
+  // so every measurement is relative to the top of the CV.
+  function offsetTopRelativeToCv(el, cvElement) {
+    let top = 0;
+    let node = el;
+    while (node && node !== cvElement) {
+      top += node.offsetTop;
+      node = node.offsetParent;
+      if (!node || node === document.body || node === document.documentElement) break;
+    }
+    return top;
+  }
+
+  // Margins added by an earlier pass must be cleared first. The parent
+  // resizes the iframe on every RESIZE_IFRAME message, which fires a
+  // resize event back in here - without a reset each re-run stacks more
+  // margin on top and the content sinks without end.
+  function resetAvoidShifts(cvElement) {
+    cvElement.querySelectorAll('[data-avoid-shift]').forEach((el) => {
+      el.style.marginTop = el.getAttribute('data-avoid-orig-mt') || '';
+      el.removeAttribute('data-avoid-orig-mt');
+      if (el.hasAttribute('data-avoid-pad')) {
+        el.style.paddingTop = el.getAttribute('data-avoid-orig-pt') || '';
+        el.removeAttribute('data-avoid-orig-pt');
+        el.removeAttribute('data-avoid-pad');
+      }
+      el.removeAttribute('data-avoid-shift');
+    });
+  }
+
+  function markAvoidShift(target, amount, addPad) {
+    if (!target.hasAttribute('data-avoid-shift')) {
+      target.setAttribute('data-avoid-orig-mt', target.style.marginTop || '');
+      if (addPad) target.setAttribute('data-avoid-orig-pt', target.style.paddingTop || '');
+    }
+    const currentMT = parseFloat(target.style.marginTop) || 0;
+    target.style.marginTop = (currentMT + amount) + 'px';
+    target.setAttribute('data-avoid-shift', 'true');
+    if (addPad) {
+      target.style.paddingTop = '0.4rem';
+      target.setAttribute('data-avoid-pad', 'true');
+    }
+  }
+
   function handleBreakAvoidElements(cvElement, cvHeight, avoidSelector) {
     const avoids = Array.from(cvElement.querySelectorAll(avoidSelector));
     let maxIter = 20;
     while (maxIter-- > 0) {
       let shifted = false;
-      const pages = Math.ceil(cvElement.scrollHeight / cvHeight);
+      const height = cvElement.scrollHeight;
+      const pages = Math.ceil(height / cvHeight);
+      if (pages <= 1) break;
       for (let p = 1; p < pages; p++) {
         const boundary = p * cvHeight;
         for (const el of avoids) {
-          const top = el.offsetTop;
-          const bottom = top + el.offsetHeight;
-          if (top < boundary && bottom > boundary) {
-            el.style.marginTop = (parseFloat(el.style.marginTop)||0) + (boundary - top) + 15 + 'px';
-            shifted = true; break;
+          let groupTop = offsetTopRelativeToCv(el, cvElement);
+          let groupBottom = groupTop + el.offsetHeight;
+          let target = el;
+          let isGroupShift = false;
+
+          const parent = el.closest('.block__parent');
+          if (parent) {
+            const firstBlockChild = parent.querySelector(avoidSelector);
+            if (firstBlockChild === el) {
+              const firstChild = parent.firstElementChild;
+              if (firstChild) {
+                groupTop = offsetTopRelativeToCv(firstChild, cvElement);
+                groupBottom = offsetTopRelativeToCv(el, cvElement) + el.offsetHeight;
+                target = firstChild;
+                isGroupShift = true;
+              }
+            }
+          }
+
+          if (groupTop < boundary && groupBottom > boundary) {
+            const pushDown = boundary - groupTop;
+            markAvoidShift(target, pushDown + 15, isGroupShift);
+            shifted = true;
+            break;
           }
         }
         if (shifted) break;
@@ -1150,29 +1273,57 @@ The following is the smallest valid template skeleton. Expand with your design:
       if (!shifted) break;
     }
   }
+
   function scaleCv() {
-    const scale = document.documentElement.clientWidth / CV_WIDTH;
-    scaler.style.transform = `scale(${scale})`;
+    const available = document.documentElement.clientWidth;
+    const scale = available / CV_WIDTH;
+
     const cvElement = document.querySelector('.cv');
+    // The positioning context must exist before measuring, otherwise
+    // offsetParents resolve differently on the first pass than on later
+    // passes and the numbers never settle.
+    cvElement.style.position = 'relative';
     cvElement.style.height = 'auto';
     cvElement.style.minHeight = '0px';
+
+    resetAvoidShifts(cvElement);
+
     const avoidSelector = '.block';
     handleBreakAvoidElements(cvElement, CV_HEIGHT, avoidSelector);
-    const pages = isMultipage ? Math.max(1, Math.ceil(cvElement.scrollHeight / CV_HEIGHT)) : 1;
+
+    const contentHeight = cvElement.scrollHeight;
+    const pages = isMultipage ? Math.max(1, Math.ceil(contentHeight / CV_HEIGHT)) : 1;
     const newHeight = pages * CV_HEIGHT;
+
     cvElement.style.height = newHeight + 'px';
     cvElement.style.minHeight = newHeight + 'px';
-    cvElement.style.position = 'relative';
-    scaler.style.marginBottom = (newHeight * scale - newHeight) + 'px';
+
+    scaler.style.transform = `scale(${scale})`;
+    const scaledHeight = newHeight * scale;
+    scaler.style.marginBottom = (scaledHeight - newHeight) + 'px';
+
     createPageIndicators(cvElement, CV_HEIGHT, pages);
-    requestAnimationFrame(() => {
+
+    // Only notify the parent when the page count changes. The parent
+    // resizes the iframe on every message, which fires resize back in
+    // here - reposting an unchanged count drives an endless loop.
+    if (pages !== lastPostedPages) {
+      lastPostedPages = pages;
       requestAnimationFrame(() => {
-        window.parent.postMessage({ type: 'RESIZE_IFRAME', pages }, '*');
+        requestAnimationFrame(() => {
+          window.parent.postMessage({ type: 'RESIZE_IFRAME', pages: pages }, '*');
+        });
       });
-    });
+    }
   }
+
   let resizeTimer;
-  window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(scaleCv, 60); });
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(scaleCv, 60);
+  });
+
+  scaleCv();
   document.fonts.ready.then(scaleCv);
 </script>
 </body>

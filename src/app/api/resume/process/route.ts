@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { v2 as cloudinary } from "cloudinary";
+import { uploadImage } from "@/lib/cloudinary";
 import dbConnect from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/authUser";
 import UploadedResume from "@/models/UploadedResume";
@@ -13,12 +13,6 @@ import { InputExtractionError } from "@/lib/inputExtraction";
 void UploadedResume;
 
 export const runtime = "nodejs";
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 export async function POST(req: Request) {
   let claimedRecordId: { toString(): string } | null = null;
@@ -77,9 +71,7 @@ export async function POST(req: Request) {
     const pages: string[] = [];
     for (const file of files) {
       const dataUrl = await fileToDataUrl(file);
-      const result = await cloudinary.uploader.upload(dataUrl, {
-        folder: `resume-extractions/${String(authUser.userObjectId)}`,
-      });
+      const result = await uploadImage(dataUrl, `resume-extractions/${String(authUser.userObjectId)}`);
       pages.push(result.secure_url);
     }
 
