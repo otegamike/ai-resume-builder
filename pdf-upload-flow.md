@@ -37,27 +37,19 @@ User selects PDF
 - Handles both image and PDF file selection
 - For PDFs: renders to canvas using `pdfjs-dist` with a locally-hosted worker (`/pdf.worker.min.mjs`)
 - Enforces per-plan page limits via `MAX_PDF_PAGES_PER_PLAN` + `useSession()` (`creditCosts.ts`)
-- Communicates selection via `ResumeSelection` interface:
-  - `selectedFile` — raw File (for image uploads)
-  - `pdfCanvasRefs` — HTMLCanvasElement[] (for PDF uploads, rendered client-side)
-  - `pdfPreviewUrls` — string[] (data URLs for preview display)
+- Owns all upload machinery internally (file input, canvas refs, file hashes, backend processing)
+- Communicates selection via slim `ResumeSelection` interface (finished results only):
+  - saved mode: `selectedResumeId` + `selectedSavedResume`
+  - upload mode: `uploadedResumeId` + `resumeContent` + `pdfPreviewUrls` + `uploadedTitle`
 
 ### Client-side pattern (all dashboard pages)
 ```ts
-if (selection.mode === "upload") {
-  const formData = new FormData();
+// ID-only: the selector processes every file before consumers see it.
+import { buildResumeFormData } from "@/hooks/useResumeFormData";
 
-  if (selection.selectedFile?.type.startsWith("image/")) {
-    formData.append("file", selection.selectedFile);
-  } else if (selection.pdfCanvasRefs.length > 0) {
-    for (const canvas of selection.pdfCanvasRefs) {
-      const blob = await new Promise<Blob | null>((resolve) =>
-        canvas.toBlob((b) => resolve(b), "image/png")
-      );
-      if (blob) formData.append("file", blob, "page.png");
-    }
-  }
-}
+const formData = buildResumeFormData(selection);
+// saved  -> resumeMode + resumeId
+// upload -> resumeMode + uploadedResumeId
 ```
 
 ### Server-side pattern (improve / onboarding — uses `"file"`)

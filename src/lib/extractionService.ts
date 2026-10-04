@@ -68,12 +68,13 @@ export type ClaimResult =
 
 interface ClaimParams {
   userId: Types.ObjectId;
+  title: string;
   fileHash: string;
   pageCount: number;
 }
 
 export async function claimExtractionSlot(params: ClaimParams): Promise<ClaimResult> {
-  const { userId, fileHash, pageCount } = params;
+  const { userId, fileHash, pageCount, title } = params;
   await dbConnect();
 
   const staleDate = new Date(Date.now() - STALE_EXTRACTION_MS);
@@ -85,7 +86,7 @@ export async function claimExtractionSlot(params: ClaimParams): Promise<ClaimRes
       extractionVersion: EXTRACTION_VERSION,
       $or: [{ status: "failed" }, { status: "pending", updatedAt: { $lt: staleDate } }],
     },
-    { $set: { status: "pending", pageCount } },
+    { $set: { status: "pending", title, pageCount } },
     { new: true }
   );
 
@@ -99,6 +100,7 @@ export async function claimExtractionSlot(params: ClaimParams): Promise<ClaimRes
       fileHash,
       extractionVersion: EXTRACTION_VERSION,
       status: "pending",
+      title,
       pageCount,
     });
     return { outcome: "claimed", recordId: created._id as Types.ObjectId };
@@ -122,6 +124,7 @@ export async function claimExtractionSlot(params: ClaimParams): Promise<ClaimRes
 }
 
 interface CompleteParams {
+  resumeId: Types.ObjectId;
   recordId: Types.ObjectId;
   rawExtractedText: string;
   parsedResume: ResumeContent;
@@ -133,6 +136,7 @@ export async function completeExtraction(params: CompleteParams): Promise<void> 
   await UploadedResume.findByIdAndUpdate(params.recordId, {
     $set: {
       status: "done",
+      resumeId: params.resumeId,
       rawExtractedText: params.rawExtractedText,
       parsedResume: params.parsedResume,
       pages: params.pages,

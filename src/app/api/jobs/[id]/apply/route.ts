@@ -7,14 +7,12 @@ import Company from "@/models/Company";
 import Resume from "@/models/Resume";
 import UploadedResume from "@/models/UploadedResume";
 import { getAuthenticatedUser } from "@/lib/authUser";
-import { aiContextFromAuthUser, extractResumeTextFromImages, parseResumeContent, GroqCallError, toAiErrorResponse } from "@/lib/ai";
-import { EXTRACTION_VERSION } from "@/lib/ai/client";
-import { FILE_HASH_PATTERN, MAX_PDF_PAGES } from "@/lib/pdfConstants";
-import { createResume } from "@/lib/resumeService";
-import { fileToDataUrl } from "@/lib/resumeImprover";
+import { InputExtractionError } from "@/lib/inputExtraction";
+import { parseJobApplyBody } from "@/lib/jobApplyInput";
+import type { JobApplyPayload } from "@/types/JobApplyInput";
+import { IUploadedResumeDocument } from "@/models/UploadedResume";
 import { recordActivity } from "@/lib/activityService";
 import Notification from "@/models/Notification";
-import { uploadImage } from "@/lib/cloudinary";
 
 void JobAd;
 void JobApplication;
@@ -23,20 +21,7 @@ void Resume;
 void UploadedResume;
 void Notification;
 
-function getStringField(formData: FormData, key: string): string | null {
-  const raw = formData.get(key);
-  if (typeof raw === "string") return raw;
-  return null;
-}
-
-function parseJsonField<T>(value: string | null, fallback: T): T {
-  if (!value) return fallback;
-  try {
-    return JSON.parse(value) as T;
-  } catch {
-    return fallback;
-  }
-}
+type ScreeningQuestion = { required: boolean; id: string; question: string };
 
 export async function POST(
   req: Request,
@@ -68,89 +53,27 @@ export async function POST(
       );
     }
 
-    const contentType = req.headers.get("content-type") || "";
-    let resumeType: "platform" | "uploaded" = "platform";
-    let resumeId: string | null = null;
-    let jobMatchAnalysisRaw: string | null = null;
-    let screeningAnswersRaw: string | null = null;
-    let coverLetterText = "";
-    let source: "platform" | "off_platform" = "platform";
-    let uploadedFiles: File[] = [];
-    let fileHash: string | null = null;
-
-    if (contentType.includes("application/json")) {
-      const body = await req.json();
-      resumeType = body.resumeType === "uploaded" ? "uploaded" : "platform";
-      resumeId = body.resumeId || body.tailoredResumeId || null;
-      const jsonHash = typeof body.fileHash === "string" ? body.fileHash : null;
-      fileHash = jsonHash && FILE_HASH_PATTERN.test(jsonHash) ? jsonHash : null;
-      jobMatchAnalysisRaw = body.jobMatchAnalysis ? JSON.stringify(body.jobMatchAnalysis) : body.analysisReport ? JSON.stringify(body.analysisReport) : null;
-      screeningAnswersRaw = body.screeningAnswers ? JSON.stringify(body.screeningAnswers) : null;
-      coverLetterText = body.coverLetterText || "";
-      source = body.source === "off_platform" ? "off_platform" : "platform";
-    } else {
-      const formData = await req.formData();
-      resumeType = getStringField(formData, "resumeType") === "uploaded" ? "uploaded" : "platform";
-      resumeId = getStringField(formData, "resumeId");
-      const hashRaw = getStringField(formData, "fileHash");
-      fileHash = hashRaw && FILE_HASH_PATTERN.test(hashRaw) ? hashRaw : null;
-      jobMatchAnalysisRaw = getStringField(formData, "jobMatchAnalysis");
-      if (!jobMatchAnalysisRaw) {
-        const alt = getStringField(formData, "analysisReport");
-        jobMatchAnalysisRaw = alt;
+    let payload: JobApplyPayload;
+    try {
+      const body: unknown = await req.json();
+      payload = parseJobApplyBody(body);
+    } catch (error) {
+      if (error instanceof InputExtractionError) {
+        return NextResponse.json({ error: error.message }, { status: error.status });
       }
-      screeningAnswersRaw = getStringField(formData, "screeningAnswers");
-      coverLetterText = getStringField(formData, "coverLetterText") || "";
-      const sourceRaw = getStringField(formData, "source");
-      source = sourceRaw === "off_platform" ? "off_platform" : "platform";
-      uploadedFiles = formData.getAll("resumeFile").filter((f): f is File => f instanceof File);
-      if (uploadedFiles.length === 0) {
-        const single = formData.get("resumeFile");
-        if (single instanceof File) uploadedFiles = [single];
-      }
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
     }
 
-    const jobMatchAnalysis = parseJsonField<{
-      score: number;
-      missingKeywords: string[];
-      missingSkills: string[];
-      strengths: string[];
-      weaknesses: string[];
-      gaps: string[];
-      suggestions: string[];
-      verdict: string;
-    } | null>(jobMatchAnalysisRaw, null);
-
-    if (!jobMatchAnalysis || typeof jobMatchAnalysis.score !== "number") {
-      return NextResponse.json({ error: "Missing job match analysis" }, { status: 400 });
+    const { resume, jobMatchAnalysis: normalizedJobMatchAnalysis, screeningAnswers: normalizedScreeningAnswers, coverLetterText, source } = payload;
+    const questions = (job.screeningQuestions || []) as ScreeningQuestion[];
+    const knownQuestionIds = new Set(questions.map((question) => String(question.id)));
+    const unknownAnswer = normalizedScreeningAnswers.find((answer) => !knownQuestionIds.has(answer.questionId));
+    if (unknownAnswer) {
+      return NextResponse.json({ error: `Unknown question: ${unknownAnswer.question}` }, { status: 400 });
     }
-
-    const normalizedJobMatchAnalysis = {
-      score: Math.max(0, Math.min(100, Math.round(Number(jobMatchAnalysis.score) || 0))),
-      missingKeywords: Array.isArray(jobMatchAnalysis.missingKeywords) ? jobMatchAnalysis.missingKeywords.map(String) : [],
-      missingSkills: Array.isArray(jobMatchAnalysis.missingSkills) ? jobMatchAnalysis.missingSkills.map(String) : [],
-      strengths: Array.isArray(jobMatchAnalysis.strengths) ? jobMatchAnalysis.strengths.map(String) : [],
-      weaknesses: Array.isArray(jobMatchAnalysis.weaknesses) ? jobMatchAnalysis.weaknesses.map(String) : [],
-      gaps: Array.isArray(jobMatchAnalysis.gaps) ? jobMatchAnalysis.gaps.map(String) : [],
-      suggestions: Array.isArray(jobMatchAnalysis.suggestions) ? jobMatchAnalysis.suggestions.map(String) : [],
-      verdict: typeof jobMatchAnalysis.verdict === "string" ? jobMatchAnalysis.verdict : "",
-    };
-
-    const screeningAnswers = parseJsonField<{ questionId: string; question: string; answer: string }[]>(
-      screeningAnswersRaw,
-      []
-    );
-
-    const normalizedScreeningAnswers = Array.isArray(screeningAnswers)
-      ? screeningAnswers.map((answer) => ({
-          questionId: String(answer.questionId || ""),
-          question: String(answer.question || ""),
-          answer: String(answer.answer || ""),
-        }))
-      : [];
 
     if (source === "platform") {
-      const missingRequiredQuestion = (job.screeningQuestions || []).find((question: { required: boolean; id: string; question: string }) => {
+      const missingRequiredQuestion = questions.find((question) => {
         if (!question.required) return false;
         const matchingAnswer = normalizedScreeningAnswers.find(
           (answer) => answer.questionId === question.id
@@ -169,115 +92,52 @@ export async function POST(
     let resumeDoc: { _id: Types.ObjectId; title: string; template: string; content: unknown; updatedAt: string } | null = null;
     let uploadedResumeDoc: { _id: Types.ObjectId; resumeId: Types.ObjectId; pages: string[] } | null = null;
 
-    if (resumeType === "uploaded") {
-      let cachedResume = fileHash
-        ? await UploadedResume.findOne({
-            userId: authUser.userObjectId,
-            fileHash,
-            extractionVersion: EXTRACTION_VERSION,
-            status: "done",
-          })
-        : null;
-
-      let pages: string[] = [];
-      let parsedContent: unknown;
-
-      if (cachedResume && cachedResume.parsedResume) {
-        pages = (cachedResume.pages as string[]) ?? [];
-        parsedContent = cachedResume.parsedResume;
-      } else {
-        if (uploadedFiles.length === 0) {
-          return NextResponse.json({ error: "No resume file uploaded" }, { status: 400 });
-        }
-        if (uploadedFiles.length > MAX_PDF_PAGES) {
-          return NextResponse.json({ error: `Maximum of ${MAX_PDF_PAGES} pages supported` }, { status: 400 });
-        }
-
-        for (const file of uploadedFiles) {
-          const dataUrl = await fileToDataUrl(file);
-          const result = await uploadImage(dataUrl, `applications/${String(authUser.userObjectId)}/${String(job._id)}`);
-          pages.push(result.secure_url);
-        }
-
-        const dataUrls = await Promise.all(uploadedFiles.map(fileToDataUrl));
-        const ctx = aiContextFromAuthUser(authUser);
-        const extractedText = await extractResumeTextFromImages(dataUrls, ctx);
-        parsedContent = await parseResumeContent(extractedText || "", ctx);
-
-        if (fileHash) {
-          cachedResume = await UploadedResume.findOneAndUpdate(
-            { userId: authUser.userObjectId, fileHash, extractionVersion: EXTRACTION_VERSION },
-            {
-              $set: {
-                status: "done",
-                rawExtractedText: extractedText,
-                parsedResume: parsedContent,
-                pages,
-                pageCount: pages.length,
-                title: `Uploaded Resume - ${job.title} - ${new Date().toLocaleDateString()}`,
-              },
-            },
-            { upsert: true, new: true }
-          );
-        }
-      }
-
-      const newResume = await createResume({
-        authUser,
-        title: `Uploaded Resume - ${job.title} - ${new Date().toLocaleDateString()}`,
-        content: parsedContent as Parameters<typeof createResume>[0]["content"],
+    if (resume.resumeType === "uploaded") {
+      const cachedResume: IUploadedResumeDocument | null = await UploadedResume.findOne({
+        _id: resume.uploadedResumeId,
+        userId: authUser.userObjectId,
+        status: "done",
       });
-
-      let uploadedResume = cachedResume;
-      if (uploadedResume) {
-        uploadedResume.resumeId = newResume._id;
-        if (!uploadedResume.title) {
-          uploadedResume.title = newResume.title;
-        }
-        await uploadedResume.save();
-      } else {
-        uploadedResume = await UploadedResume.create({
-          userId: authUser.userObjectId,
-          resumeId: newResume._id,
-          title: newResume.title,
-          pages,
-        });
+      if (!cachedResume || !cachedResume.parsedResume || !cachedResume.resumeId) {
+        return NextResponse.json({ error: "Selected resume is no longer available. Please select it again." }, { status: 400 });
+      }
+      const pages = (cachedResume.pages as string[]) ?? [];
+      const linkedResume = await Resume.findById(cachedResume.resumeId).select("template");
+      if (!linkedResume) {
+        return NextResponse.json({ error: "Selected resume is no longer available. Please select it again." }, { status: 400 });
       }
 
       resumeDoc = {
-        _id: newResume._id,
-        title: newResume.title,
-        template: newResume.template,
-        content: newResume.content,
+        _id: cachedResume.resumeId,
+        title: cachedResume.title || `uploaded-resume-${cachedResume._id.toString()}`,
+        template: linkedResume.template,
+        content: cachedResume.parsedResume,
         updatedAt: new Date().toISOString(),
       };
 
       uploadedResumeDoc = {
-        _id: uploadedResume._id,
-        resumeId: newResume._id,
+        _id: cachedResume._id,
+        resumeId: cachedResume.resumeId,
         pages,
       };
     } else {
-      if (!resumeId) {
-        return NextResponse.json({ error: "No resume selected" }, { status: 400 });
-      }
-      const resume = await Resume.findOne({
-        _id: resumeId,
+      const savedResume = await Resume.findOne({
+        _id: resume.resumeId,
         $or: [
           { user: authUser.userObjectId },
           { userId: authUser.legacyUserId },
           { userId: String(authUser.userObjectId) },
         ],
       });
-      if (!resume) {
+      if (!savedResume) {
         return NextResponse.json({ error: "Resume not found" }, { status: 404 });
       }
       resumeDoc = {
-        _id: resume._id,
-        title: resume.title,
-        template: resume.template,
-        content: resume.content,
-        updatedAt: resume.updatedAt ? new Date(resume.updatedAt).toISOString() : new Date().toISOString(),
+        _id: savedResume._id,
+        title: savedResume.title,
+        template: savedResume.template,
+        content: savedResume.content,
+        updatedAt: savedResume.updatedAt ? new Date(savedResume.updatedAt).toISOString() : new Date().toISOString(),
       };
     }
 
@@ -288,10 +148,10 @@ export async function POST(
       applicantId: authUser.userObjectId,
       companyId,
       status: "submitted",
-      resumeType,
+      resumeType: resume.resumeType,
       resume: resumeDoc,
       jobMatchAnalysis: normalizedJobMatchAnalysis,
-      coverLetterText: coverLetterText || "",
+      coverLetterText,
       screeningAnswers: normalizedScreeningAnswers,
       source,
     };
@@ -379,9 +239,8 @@ export async function POST(
     if (err?.code === 11000) {
       return NextResponse.json({ error: "You have already submitted an application for this position" }, { status: 400 });
     }
-    if (error instanceof GroqCallError) {
-      const { status, error: message } = toAiErrorResponse(error, "Failed to submit application");
-      return NextResponse.json({ error: message }, { status });
+    if (error instanceof InputExtractionError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
     }
     console.error("Error submitting job application:", error);
     const message = err?.message || "Failed to submit application";

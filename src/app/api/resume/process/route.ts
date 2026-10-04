@@ -3,19 +3,24 @@ import { uploadImage } from "@/lib/cloudinary";
 import dbConnect from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/authUser";
 import UploadedResume from "@/models/UploadedResume";
+import Resume from "@/models/Resume";
 import { aiContextFromAuthUser, extractResumeTextFromImages, parseResumeContent, GroqCallError, toAiErrorResponse } from "@/lib/ai";
 import { EXTRACTION_VERSION } from "@/lib/ai/client";
 import { claimExtractionSlot, completeExtraction, failExtraction } from "@/lib/extractionService";
 import { fileToDataUrl, assertSupportedUpload } from "@/lib/resumeImprover";
 import { FILE_HASH_PATTERN, MAX_PDF_PAGES } from "@/lib/pdfConstants";
 import { InputExtractionError } from "@/lib/inputExtraction";
+import { createResume } from "@/lib/resumeService";
 
+void Resume;
 void UploadedResume;
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   let claimedRecordId: { toString(): string } | null = null;
+  let createdResumeId: { toString(): string } | null = null;
+  let extractionCompleted = false;
   try {
     const authUser = await getAuthenticatedUser();
     if (!authUser) {
@@ -29,7 +34,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid file hash" }, { status: 400 });
     }
     const rawTitle = formData.get("title");
-    const title = typeof rawTitle === "string" ? rawTitle.trim().slice(0, 120) : "";
+    const title = typeof rawTitle === "string" ? rawTitle.trim().slice(0, 120) : `Uploaded Resume - ${new Date().toLocaleDateString()}`;
 
     const files = formData.getAll("resumeFile").filter((f): f is File => f instanceof File);
     if (files.length === 0) {
@@ -45,6 +50,7 @@ export async function POST(req: Request) {
     await dbConnect();
     const claim = await claimExtractionSlot({
       userId: authUser.userObjectId,
+      title,
       fileHash,
       pageCount: files.length,
     });
@@ -64,9 +70,6 @@ export async function POST(req: Request) {
     }
 
     claimedRecordId = claim.recordId;
-    if (title) {
-      await UploadedResume.findByIdAndUpdate(claim.recordId, { $set: { title } }).catch(() => undefined);
-    }
 
     const pages: string[] = [];
     for (const file of files) {
@@ -83,12 +86,21 @@ export async function POST(req: Request) {
     }
     const parsedContent = await parseResumeContent(extractedText, ctx);
 
+    const newResume = await createResume({
+      authUser,
+      title,
+      content: parsedContent,
+    });
+    createdResumeId = newResume._id;
+
     await completeExtraction({
+      resumeId: newResume._id,
       recordId: claim.recordId,
       rawExtractedText: extractedText,
       parsedResume: parsedContent,
       pages,
     });
+    extractionCompleted = true;
 
     await UploadedResume.findByIdAndUpdate(claim.recordId, {
       $setOnInsert: { extractionVersion: EXTRACTION_VERSION },
@@ -107,6 +119,14 @@ export async function POST(req: Request) {
       try {
         const { Types } = await import("mongoose");
         await failExtraction(new Types.ObjectId(claimedRecordId.toString()));
+      } catch {
+        // ignore cleanup failure
+      }
+    }
+    if (createdResumeId && !extractionCompleted) {
+      try {
+        const { Types } = await import("mongoose");
+        await Resume.deleteOne({ _id: new Types.ObjectId(createdResumeId.toString()) });
       } catch {
         // ignore cleanup failure
       }

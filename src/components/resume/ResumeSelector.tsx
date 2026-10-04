@@ -36,12 +36,8 @@ export interface ResumeSelection {
   mode: Mode;
   selectedResumeId: string;
   selectedSavedResume: SavedResume | null;
-  selectedFile: File | null;
-  pdfCanvasRefs: HTMLCanvasElement[];
   pdfPreviewUrls: string[];
-  fileHash?: string;
   resumeContent?: ResumeContent | null;
-  rawExtractedText?: string | null;
   uploadedResumeId?: string | null;
   uploadedTitle?: string | null;
 }
@@ -80,16 +76,13 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
 
   const [selectedResumeId, setSelectedResumeId] = useState("");
   const [selectedSavedResume, setSelectedSavedResume] = useState<SavedResume | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  
+
   const [pdfPreviewUrls, setPdfPreviewUrls] = useState<string[]>([]);
   const [pdfFileError, setPdfFileError] = useState("");
   const [isRenderingPdf, setIsRenderingPdf] = useState(false);
   const [pdfRenderProgress, setPdfRenderProgress] = useState(0);
   const [isProcessingBackend, setIsProcessingBackend] = useState(false);
-  const [fileHash, setFileHash] = useState<string | null>(null);
   const [cachedResumeContent, setCachedResumeContent] = useState<ResumeContent | null>(null);
-  const [cachedRawText, setCachedRawText] = useState<string | null>(null);
   const [cachedUploadedResumeId, setCachedUploadedResumeId] = useState<string | null>(null);
   const [cachedTitle, setCachedTitle] = useState<string | null>(null);
   
@@ -108,42 +101,39 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
     storeFetchUploaded().catch(() => undefined);
   }, [storeFetchUploaded]);
 
-  // Update parent when selection changes
+  // Update parent when selection changes. Only finished results are emitted:
+  // saved resumes pass their ID + content, uploads pass the stored record ID,
+  // parsed content, preview images, and title. File handles, canvas refs,
+  // hashes, and raw text stay internal to the selector.
   useEffect(() => {
     const hasPdfPreview = pdfPreviewUrls.length > 0;
-    const isValid = mode === "saved" ? !!selectedSavedResume : hasPdfPreview;
+    const isValid =
+      mode === "saved" ? !!selectedSavedResume : hasPdfPreview && !!cachedUploadedResumeId;
 
     if (isValid) {
       onSelectionChange({
         mode,
         selectedResumeId,
         selectedSavedResume,
-        selectedFile,
-        pdfCanvasRefs: pdfCanvasRefs.current,
         pdfPreviewUrls,
-        fileHash: fileHash ?? undefined,
         resumeContent: cachedResumeContent,
-        rawExtractedText: cachedRawText,
         uploadedResumeId: cachedUploadedResumeId,
         uploadedTitle: cachedTitle,
       });
     } else {
       onSelectionChange(null);
     }
-  }, [mode, selectedResumeId, selectedSavedResume, selectedFile, pdfPreviewUrls, fileHash, cachedResumeContent, cachedRawText, cachedUploadedResumeId, cachedTitle, onSelectionChange]);
+  }, [mode, selectedResumeId, selectedSavedResume, pdfPreviewUrls, cachedResumeContent, cachedUploadedResumeId, cachedTitle, onSelectionChange]);
 
   function switchMode(newMode: Mode) {
     setMode(newMode);
     setError("");
-    setSelectedFile(null);
     setPdfPreviewUrls([]);
     setPdfFileError("");
     setIsRenderingPdf(false);
     setIsProcessingBackend(false);
     setPdfRenderProgress(0);
-    setFileHash(null);
     setCachedResumeContent(null);
-    setCachedRawText(null);
     setCachedUploadedResumeId(null);
     setCachedTitle(null);
     pdfCanvasRefs.current = [];
@@ -154,15 +144,12 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
   }
 
   function clearFile() {
-    setSelectedFile(null);
     setPdfPreviewUrls([]);
     setPdfFileError("");
     setIsRenderingPdf(false);
     setIsProcessingBackend(false);
     setPdfRenderProgress(0);
-    setFileHash(null);
     setCachedResumeContent(null);
-    setCachedRawText(null);
     setCachedUploadedResumeId(null);
     setCachedTitle(null);
     pdfCanvasRefs.current = [];
@@ -172,19 +159,17 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
   }
 
   function applyExtractionData(
-    data: { pages?: unknown; resumeContent?: unknown; rawExtractedText?: unknown; uploadedResumeId?: unknown; title?: unknown },
+    data: { pages?: unknown; resumeContent?: unknown; uploadedResumeId?: unknown; title?: unknown },
     hash: string | null,
     fallbackTitle: string | null
   ) {
     const pages = Array.isArray(data.pages) ? (data.pages as string[]) : [];
     const content = (data.resumeContent as ResumeContent) ?? null;
-    const text = typeof data.rawExtractedText === "string" ? data.rawExtractedText : null;
     const recordId = typeof data.uploadedResumeId === "string" ? data.uploadedResumeId : null;
     const title = typeof data.title === "string" ? data.title : fallbackTitle;
     pdfCanvasRefs.current = [];
     setPdfPreviewUrls(pages);
     setCachedResumeContent(content);
-    setCachedRawText(text);
     setCachedUploadedResumeId(recordId);
     setCachedTitle(title);
     if (recordId && content) {
@@ -201,7 +186,6 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
   }
 
   function selectUploadedResume(item: UploadedResumeClient) {
-    setSelectedFile(null);
     setError("");
     setPdfPreviewUrls([]);
     setPdfFileError("");
@@ -226,7 +210,6 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
       if (!res.ok) throw new Error("Failed to load uploaded resume");
       const data = await res.json();
       if (data?.status !== "done") throw new Error("Resume is no longer available");
-      setFileHash(item.fileHash ?? null);
       applyExtractionData(data, item.fileHash ?? null, item.title);
     })()
       .catch(() => {
@@ -309,15 +292,12 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] ?? null;
-    setSelectedFile(file);
     setError("");
     setPdfPreviewUrls([]);
     setPdfFileError("");
-    setFileHash(null);
     setCachedResumeContent(null);
-    setCachedRawText(null);
     setCachedUploadedResumeId(null);
-    setCachedTitle(null);
+    setCachedTitle(file?.name ?? null);
     pdfCanvasRefs.current = [];
 
     const isPdf = !!file && file.type === "application/pdf";
@@ -326,7 +306,6 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
 
     if (file.size > MAX_PDF_BYTES) {
       setPdfFileError(`Please upload a PDF under 10 MB and up to ${maxPdfPages} pages.`);
-      setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
@@ -337,7 +316,6 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
     (async () => {
       const hash = await hashFile(file);
       if (controller.signal.aborted) return;
-      setFileHash(hash);
       const cached = useResumeStore.getState().uploadedResumes.find(
         (r) => r.fileHash === hash && r.extractionVersion === EXTRACTION_VERSION && r.status === "done"
       );
@@ -383,7 +361,6 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
       .catch((err) => {
         if (controller.signal.aborted) return;
         setPdfFileError(err instanceof Error ? err.message : "Failed to process PDF");
-        setSelectedFile(null);
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
@@ -537,14 +514,13 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
           <AnimatedLoader showLoader={showLoader} animatedLoader={animatedLoader}>
             <UploadedResumePlusViewer resume={{
               _id: cachedUploadedResumeId ?? undefined,
-              title: cachedTitle || selectedFile?.name || "Uploaded Resume",
+              title: cachedTitle || "Uploaded Resume",
               pages: pdfPreviewUrls,
-              fileHash: fileHash ?? undefined,
               ...(cachedResumeContent ? { parsedResume: cachedResumeContent } : {}),
             }} />
           </AnimatedLoader>
           <div className={styles.selectedInfo}>
-            <span className={styles.uploadTitle}>{selectedFile?.name}</span>
+            <span className={styles.uploadTitle}>{cachedTitle || "Uploaded Resume"}</span>
             <button type="button" className={styles.changeButton} onClick={clearFile}>
               Change
             </button>

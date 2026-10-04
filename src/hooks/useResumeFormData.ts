@@ -3,8 +3,9 @@ import type { ResumeSelection } from "@/components/resume/ResumeSelector";
 /**
  * Builds the resume portion of a FormData payload from a ResumeSelector
  * selection. Upload mode is ID-only: the selector processes every file
- * (PDF or image) before consumers see it, so callers never touch canvas
- * blobs or raw files here. Throws when no usable resume reference exists.
+ * (PDF or image) before consumers see it, so callers never touch file
+ * hashes, canvas blobs, or raw files here. Throws when no usable resume
+ * reference exists.
  */
 export function buildResumeFormData(selection: ResumeSelection): FormData {
   const formData = new FormData();
@@ -18,14 +19,9 @@ export function buildResumeFormData(selection: ResumeSelection): FormData {
     return formData;
   }
 
-  if (selection.uploadedResumeId) {
-    formData.append("uploadedResumeId", selection.uploadedResumeId);
-  }
-  if (selection.fileHash) {
-    formData.append("fileHash", selection.fileHash);
-  }
-  if (!selection.uploadedResumeId && !selection.fileHash) {
+  if (!selection.uploadedResumeId) {
     throw new Error("Choose a PDF or image resume first.");
   }
+  formData.append("uploadedResumeId", selection.uploadedResumeId);
   return formData;
 }

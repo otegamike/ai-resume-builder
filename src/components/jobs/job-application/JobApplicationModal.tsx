@@ -14,6 +14,7 @@ import { useAiCreditStore } from "@/store/useAiCreditStore";
 import { useNotificationStore } from "@/store/useNotificationStore";
 import { useAlertStore } from "@/store/useAlertStore";
 import type { JobMatchAnalysis } from "@/types/JobApplicationData";
+import type { JobApplyPayload } from "@/types/JobApplyInput";
 import type { TailorReport } from "@/types/TailorReport";
 import CoverLetterResultCard from "@/components/cover-letter/CoverLetterResultCard";
 import { useResumeStore } from "@/store/useResumeStore";
@@ -112,6 +113,9 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
       const r = getResumeById(sel.selectedResumeId);
       const pi = r?.content?.personalInfo;
       if (pi) setSenderInfo({ name: pi.name || "", email: pi.email || "", phone: pi.phone || "", location: pi.location || "" });
+    } else if (sel?.mode === "upload" && sel.resumeContent?.personalInfo) {
+      const pi = sel.resumeContent.personalInfo;
+      setSenderInfo({ name: pi.name || "", email: pi.email || "", phone: pi.phone || "", location: pi.location || "" });
     } else if (!sel) {
       setSenderInfo({ name: "", email: "", phone: "", location: "" });
     }
@@ -217,7 +221,9 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
       if (typeof data.newAiCredits === "number") useAiCreditStore.getState().setCredits(data.newAiCredits);
       setCoverLetterText(data.content || "");
       setCoverLetterGenerated(true);
-      const pi = selection.selectedSavedResume?.content?.personalInfo;
+      const pi = selection.mode === "saved"
+        ? selection.selectedSavedResume?.content?.personalInfo
+        : selection.resumeContent?.personalInfo;
       if (pi) setSenderInfo({ name: pi.name || "", email: pi.email || "", phone: pi.phone || "", location: pi.location || "" });
       setTimeout(() => import("@/utils/scrollIntoview").then(({ delayedScrollIntoView }) => delayedScrollIntoView("coverLetterPreview", 200)), 100);
     } catch (err) {
@@ -262,38 +268,34 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
     if (step > 0) setStep((s) => s - 1);
   };
 
+  function buildApplyPayload(source: "platform" | "off_platform"): JobApplyPayload {
+    const screeningAnswersPayload = (job.screeningQuestions || []).map((q) => ({
+      questionId: q.id,
+      question: q.question,
+      answer: screeningAnswers[q.id] || "",
+    }));
+    const jobMatchAnalysis = tailoredReport?.matchAnalysis ?? analysis;
+    if (!jobMatchAnalysis) throw new Error("Missing match analysis");
+    const effectiveResumeId = tailoredResumeId || (selection?.mode === "saved" ? selection.selectedResumeId : undefined);
+    if (effectiveResumeId) {
+      return { resume: { resumeType: "platform", resumeId: effectiveResumeId }, jobMatchAnalysis, screeningAnswers: screeningAnswersPayload, coverLetterText, source };
+    }
+    if (selection?.mode === "upload" && selection.uploadedResumeId) {
+      return { resume: { resumeType: "uploaded", uploadedResumeId: selection.uploadedResumeId }, jobMatchAnalysis, screeningAnswers: screeningAnswersPayload, coverLetterText, source };
+    }
+    throw new Error("Choose a PDF or image resume first.");
+  }
+
   const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateQuestions()) return;
     setSubmitting(true);
     setApplyError("");
     try {
-      const screeningAnswersPayload = (job.screeningQuestions || []).map((q) => ({
-        questionId: q.id,
-        question: q.question,
-        answer: screeningAnswers[q.id] || "",
-      }));
-      const jobMatchAnalysis = tailoredReport?.matchAnalysis ?? analysis;
-      if (!jobMatchAnalysis) throw new Error("Missing match analysis");
-      const effectiveResumeId = tailoredResumeId || (selection?.mode === "saved" ? selection.selectedResumeId : undefined);
-      const resumeType = effectiveResumeId ? "platform" : "uploaded";
-      const formData = new FormData();
-      formData.append("resumeType", resumeType);
-      if (effectiveResumeId) formData.append("resumeId", effectiveResumeId);
-      formData.append("jobMatchAnalysis", JSON.stringify(jobMatchAnalysis));
-      formData.append("screeningAnswers", JSON.stringify(screeningAnswersPayload));
-      if (coverLetterText) formData.append("coverLetterText", coverLetterText);
-      formData.append("source", "platform");
-      if (resumeType === "uploaded" && selection?.mode === "upload") {
-        if (selection.fileHash) formData.append("fileHash", selection.fileHash);
-        if (selection.uploadedResumeId) formData.append("uploadedResumeId", selection.uploadedResumeId);
-        if (!selection.fileHash && !selection.uploadedResumeId) {
-          throw new Error("Choose a PDF or image resume first.");
-        }
-      }
       const res = await fetch(`/api/jobs/${job._id}/apply`, {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildApplyPayload("platform")),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to submit application");
@@ -322,32 +324,10 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
     setSubmitting(true);
     setApplyError("");
     try {
-      const screeningAnswersPayload = (job.screeningQuestions || []).map((q) => ({
-        questionId: q.id,
-        question: q.question,
-        answer: screeningAnswers[q.id] || "",
-      }));
-      const jobMatchAnalysis = tailoredReport?.matchAnalysis ?? analysis;
-      if (!jobMatchAnalysis) throw new Error("Missing match analysis");
-      const effectiveResumeId = tailoredResumeId || (selection?.mode === "saved" ? selection.selectedResumeId : undefined);
-      const resumeType = effectiveResumeId ? "platform" : "uploaded";
-      const formData = new FormData();
-      formData.append("resumeType", resumeType);
-      if (effectiveResumeId) formData.append("resumeId", effectiveResumeId);
-      formData.append("jobMatchAnalysis", JSON.stringify(jobMatchAnalysis));
-      formData.append("screeningAnswers", JSON.stringify(screeningAnswersPayload));
-      if (coverLetterText) formData.append("coverLetterText", coverLetterText);
-      formData.append("source", "off_platform");
-      if (resumeType === "uploaded" && selection?.mode === "upload") {
-        if (selection.fileHash) formData.append("fileHash", selection.fileHash);
-        if (selection.uploadedResumeId) formData.append("uploadedResumeId", selection.uploadedResumeId);
-        if (!selection.fileHash && !selection.uploadedResumeId) {
-          throw new Error("Choose a PDF or image resume first.");
-        }
-      }
       const res = await fetch(`/api/jobs/${job._id}/apply`, {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildApplyPayload("off_platform")),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to confirm");
@@ -593,12 +573,11 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
                         content={tailoredReport?.tailoredResume ?? selection.selectedSavedResume.content}
                       />
   
-                    ) : selection?.mode === "upload" && selection.selectedFile ? (
+                    ) : selection?.mode === "upload" && selection.pdfPreviewUrls.length > 0 ? (
                       <UploadedResumePlusViewer resume={{
                         _id: selection.uploadedResumeId ?? undefined,
-                        title: selection.uploadedTitle || selection.selectedFile.name || "Uploaded Resume",
+                        title: selection.uploadedTitle || "Uploaded Resume",
                         pages: selection.pdfPreviewUrls,
-                        fileHash: selection.fileHash,
                         ...(selection.resumeContent ? { parsedResume: selection.resumeContent } : {}),
                       }} />
                     ) : (
