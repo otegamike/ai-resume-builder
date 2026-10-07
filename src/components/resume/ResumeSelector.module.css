@@ -60,6 +60,12 @@
   text-align: center;
   transition: border-color 0.2s, background-color 0.2s;
   padding: var(--space-4);
+
+  &.processing {
+    pointer-events: none;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
 }
 
 .selectedCard {

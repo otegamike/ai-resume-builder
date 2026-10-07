@@ -531,7 +531,7 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
 
     if (isRenderingPdf || isProcessingBackend) {
       return (
-        <div className={styles.uploadBox}>
+        <div className={`${styles.uploadBox} ${isRenderingPdf || isProcessingBackend ? styles.processing : ''}`}>
           <span className={styles.uploadTitle}>
             {isProcessingBackend
               ? "Extracting your resume…"
