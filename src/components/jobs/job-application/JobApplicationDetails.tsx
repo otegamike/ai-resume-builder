@@ -49,7 +49,7 @@ export default function JobApplicationDetails({ application }: JobApplicationDet
 
       <div className={styles.grid} style={{ alignItems: "center" }}>
         <div className={viewerStyles.previewThumbnail} style={{ maxHeight: "320px" }}>
-          {resumeContent ?
+          {resumeContent ? 
              <ResumePlusViewer templateId={normalizedId} content={resumeContent} />
             : application.uploadedResume?.pages?.length > 0 &&
             <UploadedResumePlusViewer resume={{

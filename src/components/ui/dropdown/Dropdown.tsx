@@ -1,8 +1,9 @@
 import styles from "./dropdown.module.css";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { capitalize } from "@/utils/capitalize";
+import { useOnClickOutside } from "@/hooks/useOnClickOutside";
 
 interface DropDownProps {
     defaultOption: string;
@@ -14,13 +15,19 @@ interface DropDownProps {
 
 function DropDown({ defaultOption, options, updateSelectedOption, selectedOption, fullwidth }: DropDownProps) {
   const [showDropdown, setShowDropdown] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   
+  // Close the dropdown when clicking outside containerRef
+  useOnClickOutside(containerRef as React.RefObject<HTMLElement>, () => setShowDropdown(false));
+
   const handleOptionSelect = (option: string) => {
     updateSelectedOption(option);
   }
 
+
+
   return (
-    <div className={`${styles.relative} ${fullwidth ? styles.fullwidth : ''}`} onClick={() => setShowDropdown(true)} onMouseLeave={() => setShowDropdown(false)}>
+    <div className={`${styles.relative} ${fullwidth ? styles.fullwidth : ''}`} ref={containerRef} onClick={() => setShowDropdown(!showDropdown)}>
         <Button className={styles.dropdownButton} variant="ghost" size="sm" fullWidth={fullwidth}>
             {selectedOption ? capitalize(selectedOption) : capitalize(defaultOption)}
             {showDropdown
