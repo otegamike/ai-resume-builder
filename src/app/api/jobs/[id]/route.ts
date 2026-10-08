@@ -3,11 +3,17 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import JobAd from "@/models/JobAd";
+import JobApplication from "@/models/JobApplication";
+import DraftJobApplication from "@/models/DraftJobApplication";
 import Company from "@/models/Company";
 import User from "@/models/User";
+import { getAuthenticatedUser } from "@/lib/authUser";
+import { toClientDraftApplication } from "@/lib/draftApplicationInput";
 import { recordActivity } from "@/lib/activityService";
 
 void JobAd;
+void JobApplication;
+void DraftJobApplication;
 void Company;
 void User;
 
@@ -31,7 +37,31 @@ export async function GET(
     // Increment views count silently
     await JobAd.updateOne({ _id: job._id }, { $inc: { viewsCount: 1 } });
 
-    return NextResponse.json({ job });
+    let alreadyApplied = false;
+    let applicationStatus: string | null = null;
+    let draft = null;
+    const authUser = await getAuthenticatedUser();
+    if (authUser) {
+      const [submitted, existingDraft] = await Promise.all([
+        JobApplication.findOne({
+          jobId: job._id,
+          applicantId: authUser.userObjectId,
+          status: { $ne: "withdrawn" },
+        }).select("status"),
+        DraftJobApplication.findOne({
+          jobId: job._id,
+          applicantId: authUser.userObjectId,
+        }),
+      ]);
+      if (submitted) {
+        alreadyApplied = true;
+        applicationStatus = submitted.status;
+      } else if (existingDraft) {
+        draft = toClientDraftApplication(existingDraft);
+      }
+    }
+
+    return NextResponse.json({ job, alreadyApplied, applicationStatus, draft });
   } catch (error: any) {
     console.error("Error fetching single job:", error);
     return NextResponse.json({ error: "Failed to fetch job details" }, { status: 500 });

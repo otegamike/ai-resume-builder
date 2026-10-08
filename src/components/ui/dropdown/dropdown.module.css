@@ -16,9 +16,6 @@
   position: relative;
 }
 
-.fullwidth {
-  width: 100%;
-}
 
 .dropdown {
   position: absolute;
@@ -74,4 +71,8 @@
 
 .dropdown_option:hover {
   background-color: var(--gray-100);
+}
+
+.fullwidth {
+  width: 100%;
 }

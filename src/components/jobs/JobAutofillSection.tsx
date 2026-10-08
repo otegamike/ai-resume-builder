@@ -83,7 +83,7 @@ export default function JobAutofillSection({ onExtracted }: JobAutofillSectionPr
       )}
 
       <div className={styles.actions}>
-        <AiButton variant="primary" onClick={handleExtract} disabled={!job.hasJobContext || loading} cost={0}>
+        <AiButton type="button" variant="primary" onClick={handleExtract} disabled={!job.hasJobContext || loading} cost={0}>
           {loading ? (
             <>
               <Loader2 size={16} className={styles.spinner} /> Extracting...

@@ -64,7 +64,7 @@ export default function OverviewPage() {
   const storeLoading = useResumeStore((state) => state.isLoading);
   const storeFetchResumes = useResumeStore((state) => state.fetchResumes);
   const pinnedResumeId = useUserStore((state) => state.pinnedResumeId);
-  const fetchPinnedResume = useUserStore((state) => state.fetchPinnedResume);
+  const ensurePinnedResume = useUserStore((state) => state.ensurePinnedResume);
   const storeCredits = useAiCreditStore((s) => s.credits);
   const fetchCredits = useAiCreditStore((s) => s.fetchCredits);
   const plan = (session?.user?.subscriptionPlan ?? "free") as keyof typeof MAX_CREDITS_PER_PLAN
@@ -121,8 +121,8 @@ export default function OverviewPage() {
   useEffect(() => {
     if (status !== "authenticated") return;
     storeFetchResumes();
-    fetchPinnedResume();
-  }, [status, storeFetchResumes, fetchPinnedResume]);
+    ensurePinnedResume();
+  }, [status, storeFetchResumes, ensurePinnedResume]);
 
   const activeApplications = stats?.counts.applicationsByStatus
     ? Object.entries(stats.counts.applicationsByStatus)

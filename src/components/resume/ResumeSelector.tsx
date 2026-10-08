@@ -48,9 +48,11 @@ interface ResumeSelectorProps {
   uploadOnly?: boolean;
   animatedLoader?: boolean;
   showLoader?: boolean;
+  initialSavedResumeId?: string | null;
+  initialUploadedResumeId?: string | null;
 }
 
-export default function ResumeSelector({ onSelectionChange, className, uploadOnly, showLoader, animatedLoader }: ResumeSelectorProps) {
+export default function ResumeSelector({ onSelectionChange, className, uploadOnly, showLoader, animatedLoader, initialSavedResumeId, initialUploadedResumeId }: ResumeSelectorProps) {
   const { data: session } = useSession();
   const plan = session?.user?.subscriptionPlan || "free";
   const maxPdfPages = Math.min(MAX_PDF_PAGES_PER_PLAN[plan] ?? 2, MAX_PDF_PAGES);
@@ -63,7 +65,7 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
   const loadingUploaded = useResumeStore((state) => state.isLoadingUploaded);
   const storeFetchUploaded = useResumeStore((state) => state.fetchUploadedResumes);
   const pinnedResumeId = useUserStore((state) => state.pinnedResumeId);
-  const fetchPinnedResume = useUserStore((state) => state.fetchPinnedResume);
+  const ensurePinnedResume = useUserStore((state) => state.ensurePinnedResume);
   const [error, setError] = useState("");
 
   const sortedResumes = pinnedResumeId
@@ -94,8 +96,8 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
     storeFetchResumes().catch((err) => {
       setError(err instanceof Error ? err.message : "Failed to load resume options");
     });
-    fetchPinnedResume();
-  }, [storeFetchResumes, fetchPinnedResume, uploadOnly]);
+    ensurePinnedResume();
+  }, [storeFetchResumes, ensurePinnedResume, uploadOnly]);
 
   useEffect(() => {
     storeFetchUploaded().catch(() => undefined);
@@ -124,6 +126,30 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
       onSelectionChange(null);
     }
   }, [mode, selectedResumeId, selectedSavedResume, pdfPreviewUrls, cachedResumeContent, cachedUploadedResumeId, cachedTitle, onSelectionChange]);
+
+  // One-time restore of a previously used resume (e.g. resuming a draft
+  // application). Runs when the store data arrives; never overrides the user.
+  const appliedInitialRef = useRef(false);
+  useEffect(() => {
+    if (appliedInitialRef.current) return;
+    if (initialSavedResumeId) {
+      const found = resumes.find((r) => r._id === initialSavedResumeId);
+      if (found) {
+        appliedInitialRef.current = true;
+        selectSavedResume(found);
+      }
+    } else if (initialUploadedResumeId) {
+      const found = uploadedResumes.find((r) => r._id === initialUploadedResumeId);
+      if (found?.parsedResume) {
+        appliedInitialRef.current = true;
+        setMode("upload");
+        selectUploadedResume(found);
+      }
+    }
+  // Intentionally depends only on data, not on the select helpers below:
+  // the appliedInitialRef guard makes repeat runs harmless.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSavedResumeId, initialUploadedResumeId, resumes, uploadedResumes]);
 
   function switchMode(newMode: Mode) {
     setMode(newMode);

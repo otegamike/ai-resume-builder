@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState, use } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -20,6 +20,8 @@ import detailStyles from "./jobDetail.module.css";
 import { buildJobShareText } from "@/utils/buildJobShareText";
 import JobApplicationModal from "@/components/jobs/job-application/JobApplicationModal";
 import OnboardingOverlay from "@/components/onboarding/OnboardingOverlay/OnboardingOverlay";
+import { useAlertStore } from "@/store/useAlertStore";
+import type { DraftApplicationData } from "@/types/DraftApplicationData";
 
 interface JobCompany {
   _id: string;
@@ -88,6 +90,8 @@ export default function JobDetailClient({ params }: { params: Promise<{ slug: st
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [alreadyApplied, setAlreadyApplied] = useState(false);
   const [alreadyAppliedStatus, setAlreadyAppliedStatus] = useState<string | null>(null);
+  const [draft, setDraft] = useState<DraftApplicationData | null>(null);
+  const draftAlertFiredRef = useRef(false);
 
   const handleOpenApplyModal = () => {
     setShowApplyModal(true);
@@ -105,52 +109,41 @@ export default function JobDetailClient({ params }: { params: Promise<{ slug: st
     }
   };
 
-  useEffect(() => {
-    if (!job || !isSignedIn) return;
-    let cancelled = false;
-    async function checkApplied() {
-      try {
-        const res = await fetch(`/api/job-applications/mine?jobId=${job!._id}`);
-        if (!res.ok) return;
-        const data = await res.json();
-        const apps: any[] = data.applications || [];
-        const match = apps.find((a: any) => String(a.status) !== "withdrawn");
-        if (!cancelled && match) {
-          setAlreadyApplied(true);
-          setAlreadyAppliedStatus(match.status);
-        } else if (!cancelled) {
-          setAlreadyApplied(false);
-          setAlreadyAppliedStatus(null);
-        }
-      } catch {}
+  const fetchJobDetail = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/jobs/${slug}`);
+      const data = await res.json();
+      if (!res.ok || !data.job) {
+        setError(data.error || "Job ad not found");
+        return;
+      }
+      setJob(data.job);
+      setAlreadyApplied(Boolean(data.alreadyApplied));
+      setAlreadyAppliedStatus(typeof data.applicationStatus === "string" ? data.applicationStatus : null);
+      setDraft(data.draft ?? null);
+      if (typeof document !== "undefined" && data.job?.title) {
+        document.title = data.job.title;
+      }
+    } catch {
+      setError("Failed to load job details");
+    } finally {
+      setLoading(false);
     }
-    checkApplied();
-    return () => {
-      cancelled = true;
-    };
-  }, [job, isSignedIn]);
+  }, [slug]);
 
   useEffect(() => {
-    const fetchJobDetail = async () => {
-      try {
-        const res = await fetch(`/api/jobs/${slug}`);
-        const data = await res.json();
-        if (!res.ok || !data.job) {
-          setError(data.error || "Job ad not found");
-          return;
-        }
-        setJob(data.job);
-        if (typeof document !== "undefined" && data.job?.title) {
-          document.title = data.job.title;
-        }
-      } catch {
-        setError("Failed to load job details");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchJobDetail();
-  }, [slug]);
+  }, [fetchJobDetail]);
+
+  useEffect(() => {
+    if (job && draft && isSignedIn && !draftAlertFiredRef.current) {
+      draftAlertFiredRef.current = true;
+      useAlertStore.getState().addAlert(
+        "info",
+        "You have an unfinished application for this job — select Continue Application to pick up where you left off."
+      );
+    }
+  }, [job, draft, isSignedIn]);
 
   // Keep document.title in sync when job loads (social share title in tab)
   useEffect(() => {
@@ -338,6 +331,10 @@ export default function JobDetailClient({ params }: { params: Promise<{ slug: st
                   You already applied to this job{alreadyAppliedStatus ? ` — ${alreadyAppliedStatus.replace("_", " ")}` : ""}.
                 </span>
               </>
+            ) : draft ? (
+              <button onClick={handleOpenApplyModal} className={detailStyles.applyBtn} id="continue-apply-modal-btn">
+                Continue Application <Send size={16} />
+              </button>
             ) : (
               <button onClick={handleOpenApplyModal} className={detailStyles.applyBtn} id="open-apply-modal-btn">
                 Apply Now <Send size={16} />
@@ -394,6 +391,10 @@ export default function JobDetailClient({ params }: { params: Promise<{ slug: st
                   </button>
                   <span style={{ fontSize: "var(--text-xs)", color: "var(--gray-500)" }}>You already applied to this job{alreadyAppliedStatus ? ` — ${alreadyAppliedStatus.replace("_", " ")}` : ""}.</span>
                 </div>
+              ) : draft ? (
+                <button onClick={handleOpenApplyModal} className={detailStyles.applyBtn} style={{ margin: "0 auto" }}>
+                  Continue Application <Send size={16} />
+                </button>
               ) : (
                 <button onClick={handleOpenApplyModal} className={detailStyles.applyBtn} style={{ margin: "0 auto" }}>
                   Apply Now <Send size={16} />
@@ -416,7 +417,17 @@ export default function JobDetailClient({ params }: { params: Promise<{ slug: st
         </div>
       </div>
 
-      {showApplyModal && <JobApplicationModal job={job} open={showApplyModal} onClose={() => setShowApplyModal(false)} />}
+      {showApplyModal && (
+        <JobApplicationModal
+          job={job}
+          open={showApplyModal}
+          onClose={() => {
+            setShowApplyModal(false);
+            void fetchJobDetail();
+          }}
+          draft={draft}
+        />
+      )}
       {!showApplyModal && <OnboardingOverlay />}
     </div>
   );

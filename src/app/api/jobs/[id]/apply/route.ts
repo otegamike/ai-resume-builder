@@ -3,6 +3,7 @@ import { Types } from "mongoose";
 import dbConnect from "@/lib/db";
 import JobAd from "@/models/JobAd";
 import JobApplication from "@/models/JobApplication";
+import DraftJobApplication from "@/models/DraftJobApplication";
 import Company from "@/models/Company";
 import Resume from "@/models/Resume";
 import UploadedResume from "@/models/UploadedResume";
@@ -16,6 +17,7 @@ import Notification from "@/models/Notification";
 
 void JobAd;
 void JobApplication;
+void DraftJobApplication;
 void Company;
 void Resume;
 void UploadedResume;
@@ -163,6 +165,17 @@ export async function POST(
     const newApplication = await JobApplication.create(doc);
 
     await JobAd.updateOne({ _id: job._id }, { $inc: { applicationsCount: 1 } });
+
+    // The application is complete, so any unfinished draft for this job is removed.
+    // A cleanup failure must never fail the application itself.
+    try {
+      await DraftJobApplication.deleteOne({
+        jobId: job._id,
+        applicantId: authUser.userObjectId,
+      });
+    } catch (err) {
+      console.error("Failed to delete draft application:", err);
+    }
 
     const employerId = (job.postedBy as unknown as Types.ObjectId) || null;
     const applicantName = authUser.user.name || authUser.user.email || "Someone";

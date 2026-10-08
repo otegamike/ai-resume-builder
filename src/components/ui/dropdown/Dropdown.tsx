@@ -20,7 +20,7 @@ function DropDown({ defaultOption, options, updateSelectedOption, selectedOption
   }
 
   return (
-    <div className={`${styles.relative} ${fullwidth ? styles.fullwidth : ''}`} onMouseEnter={() => setShowDropdown(true)} onMouseLeave={() => setShowDropdown(false)}>
+    <div className={`${styles.relative} ${fullwidth ? styles.fullwidth : ''}`} onClick={() => setShowDropdown(true)} onMouseLeave={() => setShowDropdown(false)}>
         <Button className={styles.dropdownButton} variant="ghost" size="sm" fullWidth={fullwidth}>
             {selectedOption ? capitalize(selectedOption) : capitalize(defaultOption)}
             {showDropdown
@@ -29,7 +29,7 @@ function DropDown({ defaultOption, options, updateSelectedOption, selectedOption
             }
         </Button>
         {showDropdown && (
-            <div className={styles.dropdown}>
+            <div className={`${styles.dropdown} ${fullwidth ? styles.fullwidth : ''}`}>
                 <button
                         key={defaultOption}
                         onClick={() => handleOptionSelect(defaultOption)}

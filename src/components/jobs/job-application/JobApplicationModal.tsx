@@ -14,6 +14,7 @@ import { useAiCreditStore } from "@/store/useAiCreditStore";
 import { useNotificationStore } from "@/store/useNotificationStore";
 import { useAlertStore } from "@/store/useAlertStore";
 import type { JobMatchAnalysis } from "@/types/JobApplicationData";
+import type { DraftApplicationData } from "@/types/DraftApplicationData";
 import type { JobApplyPayload } from "@/types/JobApplyInput";
 import type { TailorReport } from "@/types/TailorReport";
 import CoverLetterResultCard from "@/components/cover-letter/CoverLetterResultCard";
@@ -39,6 +40,7 @@ interface Props {
   job: JobDetail;
   open: boolean;
   onClose: () => void;
+  draft?: DraftApplicationData | null;
 }
 
 function getTier(score: number): { label: string; hint: string; cls: string } {
@@ -51,7 +53,7 @@ function getTier(score: number): { label: string; hint: string; cls: string } {
   return { label: "Very poor match", hint: "Major gaps — tailoring is strongly recommended.", cls: styles.tierVeryPoor };
 }
 
-export default function JobApplicationModal({ job, open, onClose }: Props) {
+export default function JobApplicationModal({ job, open, onClose, draft }: Props) {
   const hasQuestions = (job.screeningQuestions?.length ?? 0) > 0;
   const totalSteps = 3;
 
@@ -77,6 +79,17 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
   const [viewerOpen, setViewerOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [draftSaving, setDraftSaving] = useState(false);
+  const [prefillLoading, setPrefillLoading] = useState(false);
+  const [initialResume, setInitialResume] = useState<{ mode: "saved" | "upload"; id: string } | null>(null);
+  const [selectorKey, setSelectorKey] = useState(0);
+  const draftCreatePromiseRef = useRef<Promise<string | null> | null>(null);
+  const restoredAnalysisRef = useRef(false);
+  const prefillResumeRef = useRef<{ mode: "saved" | "upload"; id: string } | null>(null);
+  const fetchResumes = useResumeStore((s) => s.fetchResumes);
+  const fetchUploadedResumes = useResumeStore((s) => s.fetchUploadedResumes);
+
   const resetAll = useCallback(() => {
     setStep(0);
     setSelection(null);
@@ -93,6 +106,13 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
     setApplyError("");
     setSuccess(false);
     setViewerOpen(false);
+    setDraftId(null);
+    setDraftSaving(false);
+    setPrefillLoading(false);
+    setInitialResume(null);
+    draftCreatePromiseRef.current = null;
+    restoredAnalysisRef.current = false;
+    prefillResumeRef.current = null;
   }, []);
 
   useEffect(() => {
@@ -100,10 +120,91 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
   }, [open, resetAll]);
 
   useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    setPrefillLoading(true);
+    (async () => {
+      try {
+        await Promise.all([fetchResumes(), fetchUploadedResumes()]).catch(() => undefined);
+        let d: DraftApplicationData | null = null;
+        if (draft === undefined) {
+          const res = await fetch(`/api/jobs/${job._id}/drafts`);
+          const data = await res.json().catch(() => null);
+          if (!res.ok || cancelled) return;
+          d = (data?.draft as DraftApplicationData | null) ?? null;
+          if (!d) return;
+        } else {
+          if (cancelled || !draft) return;
+          d = draft;
+        }
+        setDraftId(d._id);
+        draftCreatePromiseRef.current = Promise.resolve(d._id);
+        if (d.jobMatchAnalysis) {
+          setAnalysis(d.jobMatchAnalysis);
+          restoredAnalysisRef.current = true;
+        }
+        if (Array.isArray(d.screeningAnswers)) {
+          const answers: Record<string, string> = {};
+          for (const a of d.screeningAnswers) {
+            if (a?.questionId) answers[a.questionId] = a.answer || "";
+          }
+          setScreeningAnswers(answers);
+        }
+        if (d.tailoredResumeId) setTailoredResumeId(d.tailoredResumeId);
+        setStep(typeof d.currentStep === "number" ? Math.min(Math.max(d.currentStep, 0), 2) : 0);
+        const store = useResumeStore.getState();
+        if (d.resume?.resumeType === "platform" && d.resume.resumeId) {
+          const r = store.getResumeById(d.resume.resumeId);
+          if (r?.content?.personalInfo) {
+            prefillResumeRef.current = { mode: "saved", id: d.resume.resumeId };
+            setInitialResume({ mode: "saved", id: d.resume.resumeId });
+            setSelectorKey((k) => k + 1);
+            const pi = r.content.personalInfo;
+            setSenderInfo({ name: pi.name || "", email: pi.email || "", phone: pi.phone || "", location: pi.location || "" });
+          }
+        } else if (d.resume?.resumeType === "uploaded" && d.resume.uploadedResumeId) {
+          const u = store.getUploadedResumeById(d.resume.uploadedResumeId);
+          if (u?.parsedResume?.personalInfo) {
+            prefillResumeRef.current = { mode: "upload", id: d.resume.uploadedResumeId };
+            setInitialResume({ mode: "upload", id: d.resume.uploadedResumeId });
+            setSelectorKey((k) => k + 1);
+            const pi = u.parsedResume.personalInfo;
+            setSenderInfo({ name: pi.name || "", email: pi.email || "", phone: pi.phone || "", location: pi.location || "" });
+          }
+        }
+      } catch {
+        // Prefill is best-effort; the user can always start fresh.
+      } finally {
+        if (!cancelled) setPrefillLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, job._id, draft, fetchResumes, fetchUploadedResumes]);
+
+  useEffect(() => {
     cardRef.current?.scrollTo({ top: 0, behavior: "auto" });
   }, [step]);
 
   const handleSelectionChange = useCallback((sel: ResumeSelection | null) => {
+    const expected = prefillResumeRef.current;
+    if (sel && expected) {
+      const matches =
+        (expected.mode === "saved" && sel.mode === "saved" && sel.selectedResumeId === expected.id) ||
+        (expected.mode === "upload" && sel.mode === "upload" && sel.uploadedResumeId === expected.id);
+      if (matches) {
+        // Emission from restoring a draft: keep the restored analysis.
+        prefillResumeRef.current = null;
+        setSelection(sel);
+        const pi = sel.mode === "saved"
+          ? sel.selectedSavedResume?.content?.personalInfo
+          : sel.resumeContent?.personalInfo;
+        if (pi) setSenderInfo({ name: pi.name || "", email: pi.email || "", phone: pi.phone || "", location: pi.location || "" });
+        return;
+      }
+    }
+    restoredAnalysisRef.current = false;
     setSelection(sel);
     setAnalysis(null);
     setAnalysisError("");
@@ -123,6 +224,11 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
 
   useEffect(() => {
     if (!selection) return;
+    if (restoredAnalysisRef.current) {
+      // Selection came from a restored draft that already has an analysis.
+      restoredAnalysisRef.current = false;
+      return;
+    }
     let cancelled = false;
     let cleanupScroll: (() => void) | null = null;
     async function runAnalysis() {
@@ -189,6 +295,13 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
       const createData = await createRes.json();
       if (!createRes.ok) throw new Error(createData.error || "Failed to save tailored resume");
       setTailoredResumeId(String(createData.id));
+      if (draftId) {
+        void fetch(`/api/jobs/drafts/${draftId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tailoredResumeId: String(createData.id) }),
+        }).catch(() => undefined);
+      }
       useAlertStore.getState().addAlert("success", "Tailored resume created and selected for this application.");
     } catch (err) {
       setApplyError(err instanceof Error ? err.message : "Tailoring failed");
@@ -253,13 +366,105 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
     return true;
   };
 
-  const handleNext = () => {
+  const saveStep1Draft = useCallback((): Promise<string | null> => {
+    if (!selection || !analysis) return Promise.resolve(null);
+    const resumeRef =
+      selection.mode === "saved"
+        ? { resumeType: "platform", resumeId: selection.selectedResumeId }
+        : selection.uploadedResumeId
+          ? { resumeType: "uploaded", uploadedResumeId: selection.uploadedResumeId }
+          : null;
+    if (!resumeRef) return Promise.resolve(null);
+    return fetch(`/api/jobs/${job._id}/drafts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        resume: resumeRef,
+        jobMatchAnalysis: analysis,
+        ...(tailoredResumeId ? { tailoredResumeId } : {}),
+        currentStep: 1,
+      }),
+    })
+      .then(async (res) => {
+        const data = await res.json().catch(() => null);
+        if (!res.ok) return null;
+        const id = typeof data?.draft?._id === "string" ? (data.draft._id as string) : null;
+        if (id) setDraftId(id);
+        return id;
+      })
+      .catch(() => null);
+  }, [selection, analysis, tailoredResumeId, job._id]);
+
+  const patchDraftWithAnswers = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        const answersPayload = (job.screeningQuestions || []).map((q) => ({
+          questionId: q.id,
+          question: q.question,
+          answer: screeningAnswers[q.id] || "",
+        }));
+        const res = await fetch(`/api/jobs/drafts/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            screeningAnswers: answersPayload,
+            ...(tailoredResumeId ? { tailoredResumeId } : {}),
+            currentStep: 2,
+          }),
+        });
+        if (res.ok) setDraftId(id);
+        return res.ok;
+      } catch {
+        return false;
+      }
+    },
+    [job.screeningQuestions, screeningAnswers, tailoredResumeId]
+  );
+
+  const handleNext = async () => {
     setApplyError("");
-    if (step === 0 && !canProceedStep1) return;
-    if (step === 0) setStep(1);
-    else if (step === 1) {
+    if (step === 0) {
+      if (!canProceedStep1) return;
+      // Save step 1 in the background and move on without waiting for it.
+      draftCreatePromiseRef.current = saveStep1Draft();
+      setStep(1);
+      return;
+    }
+    if (step === 1) {
       if (hasQuestions && !validateQuestions()) return;
-      setStep(2);
+      if (!hasQuestions) {
+        // Nothing required to save here, so proceed without waiting.
+        setStep(2);
+        if (draftId && tailoredResumeId) {
+          void fetch(`/api/jobs/drafts/${draftId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ tailoredResumeId, currentStep: 2 }),
+          }).catch(() => undefined);
+        }
+        return;
+      }
+      // Wait for the draft id so the answers can be saved onto the draft.
+      setDraftSaving(true);
+      try {
+        let id = await draftCreatePromiseRef.current;
+        if (!id) {
+          // The background create failed; retry once, then move on regardless.
+          // The final apply carries all data, so this never blocks the user.
+          draftCreatePromiseRef.current = saveStep1Draft();
+          id = await draftCreatePromiseRef.current;
+        }
+        if (id) {
+          const ok = await patchDraftWithAnswers(id);
+          if (!ok) {
+            setApplyError("Could not save your answers just now — please try again.");
+            return;
+          }
+        }
+        setStep(2);
+      } finally {
+        setDraftSaving(false);
+      }
     }
   };
 
@@ -409,7 +614,14 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
               <h3 className={styles.stepTitle}>Select your resume</h3>
               <p className={styles.stepSubtitle}>Choose a saved resume or upload a PDF/image. We’ll analyze how well it matches this job.</p>
 
-              <ResumeSelector onSelectionChange={handleSelectionChange} showLoader={true} animatedLoader={analysisLoading} />
+              <ResumeSelector
+                key={`resume-selector-${selectorKey}`}
+                onSelectionChange={handleSelectionChange}
+                showLoader={true}
+                animatedLoader={analysisLoading}
+                initialSavedResumeId={initialResume?.mode === "saved" ? initialResume.id : null}
+                initialUploadedResumeId={initialResume?.mode === "upload" ? initialResume.id : null}
+              />
 
 
               {analysisError && <div className={styles.errorBanner} style={{ marginTop: "1rem" }}>{analysisError}</div>}
@@ -622,12 +834,22 @@ export default function JobApplicationModal({ job, open, onClose }: Props) {
             )}
             <span className={styles.spacer} />
             {step === 0 && (
-              <button type="button" className={styles.primaryBtn} onClick={handleNext} disabled={!canProceedStep1}>
+              <button type="button" className={styles.primaryBtn} onClick={handleNext} disabled={!canProceedStep1 || prefillLoading}>
                 Continue <ArrowRight size={16} />
               </button>
             )}
             {step === 1 && (
-              <button type="button" onClick={handleNext} className={styles.primaryBtn}>Continue <ArrowRight size={16} /></button>
+              <button type="button" onClick={handleNext} className={styles.primaryBtn} disabled={draftSaving}>
+                {draftSaving ? (
+                  <>
+                    <Loader2 size={16} className={styles.spinner} /> Saving...
+                  </>
+                ) : (
+                  <>
+                    Continue <ArrowRight size={16} />
+                  </>
+                )}
+              </button>
             )}
             {step === 2 && (
               offPlatformType ? (

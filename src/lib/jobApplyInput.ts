@@ -57,7 +57,7 @@ function readStringList(value: unknown, what: string): string[] {
   return value;
 }
 
-function parseResumeRef(value: unknown): ApplyResumeRef {
+export function parseResumeRef(value: unknown): ApplyResumeRef {
   if (!isRecord(value)) {
     throw new InputExtractionError("Invalid resume: expected an object", 400);
   }
@@ -79,7 +79,7 @@ function parseResumeRef(value: unknown): ApplyResumeRef {
   throw new InputExtractionError('Invalid resume: resumeType must be "platform" or "uploaded"', 400);
 }
 
-function parseAnalysis(value: unknown): JobMatchAnalysis {
+export function parseAnalysis(value: unknown): JobMatchAnalysis {
   if (!isRecord(value)) {
     throw new InputExtractionError("Invalid jobMatchAnalysis: expected an object", 400);
   }
@@ -105,7 +105,7 @@ function parseAnalysis(value: unknown): JobMatchAnalysis {
   };
 }
 
-function parseAnswers(value: unknown): ScreeningAnswerInput[] {
+export function parseAnswers(value: unknown): ScreeningAnswerInput[] {
   if (!Array.isArray(value)) {
     throw new InputExtractionError("Invalid screeningAnswers: expected a list", 400);
   }

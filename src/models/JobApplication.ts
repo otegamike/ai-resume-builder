@@ -13,7 +13,7 @@ export interface IJobApplication extends Omit<JobApplication, '_id' | 'jobId' | 
   uploadedResume?: IUploadedResumeDocument;
 }
 
-const JobMatchAnalysisSchema: Schema = new Schema<JobMatchAnalysis>(
+export const JobMatchAnalysisSchema: Schema = new Schema<JobMatchAnalysis>(
   {
     score: { type: Number, required: true },
     missingKeywords: { type: [String], default: [] },

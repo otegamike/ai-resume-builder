@@ -192,43 +192,86 @@ export default function DashboardJobEditorPage({ params }: { params: Promise<{ i
     );
   };
 
+  const isHtmlEmpty = (html: unknown) => {
+    if (typeof html !== "string") return true;
+    const text = html
+      .replace(/<[^>]*>/g, " ")
+      .replace(/&nbsp;/g, " ")
+      .trim();
+    return text.length === 0;
+  };
+
+  const isValidUrl = (value: string) => {
+    try {
+      const url = new URL(value);
+      return url.protocol === "http:" || url.protocol === "https:";
+    } catch {
+      return false;
+    }
+  };
+
+  const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (!title.trim()) {
-      setError("Job title is required");
-      return;
-    }
+    try {
+      if (!title.trim()) {
+        setError("Job title is required");
+        return;
+      }
 
-    if (!description.trim() || description === "<p></p>") {
-      setError("Job description is required");
-      return;
-    }
+      if (isHtmlEmpty(description)) {
+        setError("Job description is required");
+        return;
+      }
 
-    if (applicationType === "external_link" && !externalUrl.trim()) {
-      setError("External application URL is required");
-      return;
-    }
+      if (applicationType === "external_link") {
+        if (!externalUrl.trim()) {
+          setError("External application URL is required");
+          return;
+        }
+        if (!isValidUrl(externalUrl.trim())) {
+          setError("External application URL must start with http:// or https://");
+          return;
+        }
+      }
 
-    if (applicationType === "email" && !contactEmail.trim()) {
-      setError("Application email is required");
-      return;
-    }
+      if (applicationType === "email") {
+        if (!contactEmail.trim()) {
+          setError("Application email is required");
+          return;
+        }
+        if (!isValidEmail(contactEmail.trim())) {
+          setError("Enter a valid application email address");
+          return;
+        }
+      }
 
-    const invalidQuestion = screeningQuestions.find((question) => {
-      if (!question.question.trim()) return true;
-      return question.type === "dropdown" && question.options.filter(Boolean).length === 0;
-    });
+      if (isAdmin && companyWebsite.trim() && !isValidUrl(companyWebsite.trim())) {
+        setError("Company website must start with http:// or https:// (e.g. https://company.com)");
+        return;
+      }
 
-    if (invalidQuestion) {
-      setError("Each screening question needs question text, and dropdown questions need at least one option.");
-      return;
-    }
+      if (isAdmin && companyLogo.trim() && !isValidUrl(companyLogo.trim())) {
+        setError("Company logo must be a valid image URL starting with http:// or https://");
+        return;
+      }
 
-    setLoading(true);
+      const invalidQuestion = screeningQuestions.find((question) => {
+        if (!question.question || !question.question.trim()) return true;
+        return question.type === "dropdown" && (question.options || []).filter(Boolean).length === 0;
+      });
 
-    const splitLines = (value: string) => value.split("\n").map((line) => line.trim()).filter(Boolean);
+      if (invalidQuestion) {
+        setError("Each screening question needs question text, and dropdown questions need at least one option.");
+        return;
+      }
+
+      setLoading(true);
+
+      const splitLines = (value: string) => value.split("\n").map((line) => line.trim()).filter(Boolean);
 
     const effectiveCurrency = salaryCurrency === "OTHER" ? salaryCurrencyCustom.trim().toUpperCase() : salaryCurrency;
     const payload = {
@@ -268,7 +311,6 @@ export default function DashboardJobEditorPage({ params }: { params: Promise<{ i
             : {}),
         };
 
-    try {
       const res = await fetch(isEdit ? `/api/jobs/${id}` : "/api/jobs", {
         method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -282,8 +324,9 @@ export default function DashboardJobEditorPage({ params }: { params: Promise<{ i
       }
 
       router.push("/dashboard/jobs");
-    } catch (err: any) {
-      setError(err.message || "Failed to post job ad");
+    } catch (err: unknown) {
+      console.error("Job submit failed:", err);
+      setError(err instanceof Error ? err.message : "Failed to post job ad");
     } finally {
       setLoading(false);
     }
@@ -313,7 +356,7 @@ export default function DashboardJobEditorPage({ params }: { params: Promise<{ i
         </p>
       </header>
 
-      <form onSubmit={handleSubmit} className={styles.postJobForm}>
+      <form onSubmit={handleSubmit} noValidate className={styles.postJobForm}>
         {error && <div className={styles.errorBanner}>{error}</div>}
 
         {isAdmin && <JobAutofillSection onExtracted={handleAutofill} />}
@@ -371,7 +414,7 @@ export default function DashboardJobEditorPage({ params }: { params: Promise<{ i
           </div>
           <div className={styles.field}>
             <label className={styles.label}>Job Title *</label>
-            <input className={styles.input} value={title} onChange={(e) => setTitle(e.target.value)} required />
+            <input className={styles.input} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Senior React Engineer" />
           </div>
           <div className={styles.formGrid}>
             <div className={styles.field}>

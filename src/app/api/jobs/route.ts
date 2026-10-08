@@ -8,6 +8,7 @@ import User from "@/models/User";
 import JobApplication from "@/models/JobApplication";
 import { DEFAULT_JOB_CATEGORY } from "@/lib/jobCategories";
 import { recordActivity } from "@/lib/activityService";
+import { getUniqueLocations } from "@/utils/getUniqueLocations";
 
 void JobAd;
 void Company;
@@ -130,7 +131,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       jobs: jobsWithLiveCount,
-      locations:  locations.sort((a, b) => a.localeCompare(b)), // Sort locations alphabetically
+      locations: getUniqueLocations(locations),
       pagination: {
         page,
         limit,

@@ -20,7 +20,7 @@ export default function ResumesPage() {
   const fetchResumes = useResumeStore((state) => state.fetchResumes);
   const deleteResumeFromStore = useResumeStore((state) => state.deleteResume);
   const pinnedResumeId = useUserStore((state) => state.pinnedResumeId);
-  const fetchPinnedResume = useUserStore((state) => state.fetchPinnedResume);
+  const ensurePinnedResume = useUserStore((state) => state.ensurePinnedResume);
   const setPinnedResume = useUserStore((state) => state.setPinnedResume);
 
   useEffect(() => {
@@ -32,8 +32,8 @@ export default function ResumesPage() {
     }
 
     fetchResumes();
-    fetchPinnedResume();
-  }, [status, fetchResumes, fetchPinnedResume]);
+    ensurePinnedResume();
+  }, [status, fetchResumes, ensurePinnedResume]);
 
   const deleteResume = async (id: string) => {
     const confirmed = await useAlertStore.getState().showConfirmDialog("Are you sure you want to delete this resume?");
