@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import crypto from "crypto";
 import dbConnect from "@/lib/db";
 import User from "@/models/User";
+import { enqueue, dedupeKeys } from "@/lib/email/dispatcher";
+import { drainOutbox } from "@/lib/email/drain";
+import { appUrl } from "@/lib/email/site";
 
 function createPasswordHash(password: string) {
   const salt = crypto.randomBytes(16).toString("hex");
@@ -30,7 +34,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Account already exists for this email" }, { status: 409 });
     }
 
-    await User.create({
+    const created = await User.create({
       name,
       email,
       passwordHash: createPasswordHash(password),
@@ -38,6 +42,23 @@ export async function POST(request: NextRequest) {
       oauthAccounts: [],
       hasCompletedOnboarding: false,
     });
+
+    // Transactional welcome email. Runs after the response; a failure here
+    // must never fail the signup itself.
+    try {
+      await enqueue({
+        type: "welcome",
+        to: created.email,
+        userId: created._id,
+        payload: { name: created.name, dashboardUrl: `${appUrl()}/dashboard` },
+        dedupeKey: dedupeKeys.welcome(String(created._id)),
+      });
+      after(() => {
+        drainOutbox({ limit: 5 }).catch((err) => console.error("Welcome email drain failed:", err));
+      });
+    } catch (err) {
+      console.error("Welcome email enqueue failed:", err);
+    }
 
     return NextResponse.json({ ok: true });
   } catch (error) {

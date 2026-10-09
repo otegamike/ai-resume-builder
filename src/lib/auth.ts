@@ -1,4 +1,5 @@
 import type { NextAuthOptions } from "next-auth";
+import { after } from "next/server";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import crypto from "crypto";
@@ -6,6 +7,9 @@ import dbConnect from "@/lib/db";
 import User from "@/models/User";
 import { resetCreditsIfNeeded, getCurrentCycleString } from "@/lib/creditUtils";
 import { MAX_CREDITS_PER_PLAN } from "@/lib/creditCosts";
+import { enqueue, dedupeKeys } from "@/lib/email/dispatcher";
+import { drainOutbox } from "@/lib/email/drain";
+import { appUrl } from "@/lib/email/site";
 
 function hashPassword(password: string, salt: string) {
   return crypto.scryptSync(password, salt, 64).toString("hex");
@@ -79,6 +83,24 @@ export const authOptions: NextAuthOptions = {
 
       if (isNewUser) {
         await User.updateOne({ email: user.email }, { $set: { hasCompletedOnboarding: false } });
+        // Transactional welcome email for OAuth signups. Same dedupe key
+        // scheme as the credentials route, so only one welcome ever sends.
+        try {
+          await enqueue({
+            type: "welcome",
+            to: String(dbUser!.email),
+            userId: dbUser!._id,
+            payload: { name: dbUser!.name ?? "", dashboardUrl: `${appUrl()}/dashboard` },
+            dedupeKey: dedupeKeys.welcome(String(dbUser!._id)),
+          });
+          after(() => {
+            drainOutbox({ limit: 5 }).catch((err) =>
+              console.error("Welcome email drain failed:", err)
+            );
+          });
+        } catch (err) {
+          console.error("Welcome email enqueue failed:", err);
+        }
       }
 
       await resetCreditsIfNeeded(String(dbUser!._id), dbUser!.subscriptionPlan);
@@ -113,14 +135,19 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user) {
+        const extendedUser = session.user as typeof session.user & {
+          hasGmailConnected?: boolean;
+          accountType?: string;
+          organizationId?: string;
+        };
         session.user.id = (token.userId as string | undefined) ?? "";
         session.user.isAdmin = (token.isAdmin as boolean | undefined) ?? false;
         session.user.subscriptionPlan = (token.subscriptionPlan as string | undefined) ?? "free";
         session.user.AiCredits = (token.AiCredits as number | undefined) ?? 0;
-        (session.user as any).hasGmailConnected = (token.hasGmailConnected as boolean | undefined) ?? false;
+        extendedUser.hasGmailConnected = (token.hasGmailConnected as boolean | undefined) ?? false;
         session.user.hasCompletedOnboarding = (token.hasCompletedOnboarding as boolean | undefined) ?? true;
-        (session.user as any).accountType = (token.accountType as string | undefined) ?? "candidate";
-        (session.user as any).organizationId = (token.organizationId as string | undefined) ?? undefined;
+        extendedUser.accountType = (token.accountType as string | undefined) ?? "candidate";
+        extendedUser.organizationId = (token.organizationId as string | undefined) ?? undefined;
       }
       return session;
     },

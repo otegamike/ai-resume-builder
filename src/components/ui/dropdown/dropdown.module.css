@@ -19,7 +19,6 @@
 
 .dropdown {
   position: absolute;
-  top: 100%;
   right: 0;
   margin-top: var(--space-1);
   width: 12rem;
@@ -46,6 +45,14 @@
     background-color: transparent;
     border: none;
     z-index: -1;
+  }
+
+  &.bottom {
+    top: 100%;
+  }
+
+  &.top {
+    bottom: 100%;
   }
 }
 

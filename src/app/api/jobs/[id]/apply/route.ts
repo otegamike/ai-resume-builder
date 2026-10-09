@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { after } from "next/server";
 import { Types } from "mongoose";
 import dbConnect from "@/lib/db";
 import JobAd from "@/models/JobAd";
@@ -7,6 +8,7 @@ import DraftJobApplication from "@/models/DraftJobApplication";
 import Company from "@/models/Company";
 import Resume from "@/models/Resume";
 import UploadedResume from "@/models/UploadedResume";
+import User from "@/models/User";
 import { getAuthenticatedUser } from "@/lib/authUser";
 import { InputExtractionError } from "@/lib/inputExtraction";
 import { parseJobApplyBody } from "@/lib/jobApplyInput";
@@ -14,6 +16,9 @@ import type { JobApplyPayload } from "@/types/JobApplyInput";
 import { IUploadedResumeDocument } from "@/models/UploadedResume";
 import { recordActivity } from "@/lib/activityService";
 import Notification from "@/models/Notification";
+import { enqueue, dedupeKeys } from "@/lib/email/dispatcher";
+import { drainOutbox } from "@/lib/email/drain";
+import { appUrl } from "@/lib/email/site";
 
 void JobAd;
 void JobApplication;
@@ -22,6 +27,7 @@ void Company;
 void Resume;
 void UploadedResume;
 void Notification;
+void User;
 
 type ScreeningQuestion = { required: boolean; id: string; question: string };
 
@@ -209,26 +215,87 @@ export async function POST(
       link: `/dashboard/jobs?tab=history`,
     });
 
-    await recordActivity({
-      actorId: authUser.userObjectId,
-      actorEmail: authUser.user.email || "",
-      actorName: authUser.user.name || "",
-      type: "application_submitted",
-      title: `${applicantName} applied to ${jobTitle}`,
-      detail: `${applicantName} applied to ${jobTitle} at ${companyName}`,
-      entityType: "jobApplication",
-      entityId: newApplication._id as Types.ObjectId,
-      metadata: {
-        jobId: String(job._id),
-        jobTitle,
-        companyId: String(companyId),
-        companyName,
-        applicationId: String(newApplication._id),
-        slug: (job as any).slug,
-      },
-      notificationType: "application_submitted",
-      perRecipientNotifications,
-    }).catch((err) => console.error("Failed to record application_submitted:", err));
+    let activityId: Types.ObjectId | undefined;
+    try {
+      const activity = await recordActivity({
+        actorId: authUser.userObjectId,
+        actorEmail: authUser.user.email || "",
+        actorName: authUser.user.name || "",
+        type: "application_submitted",
+        title: `${applicantName} applied to ${jobTitle}`,
+        detail: `${applicantName} applied to ${jobTitle} at ${companyName}`,
+        entityType: "jobApplication",
+        entityId: newApplication._id as Types.ObjectId,
+        metadata: {
+          jobId: String(job._id),
+          jobTitle,
+          companyId: String(companyId),
+          companyName,
+          applicationId: String(newApplication._id),
+          slug: job.slug,
+        },
+        notificationType: "application_submitted",
+        perRecipientNotifications,
+      });
+      activityId = activity?._id as Types.ObjectId | undefined;
+    } catch (err) {
+      console.error("Failed to record application_submitted:", err);
+    }
+
+    // Transactional application emails. Runs after the response; a failure
+    // here must never fail the application itself.
+    try {
+      const applicationId = String(newApplication._id);
+      const base = appUrl();
+
+      await enqueue({
+        type: "application-submitted",
+        to: authUser.user.email || "",
+        userId: authUser.userObjectId,
+        payload: {
+          applicantName,
+          jobTitle,
+          companyName,
+          historyUrl: `${base}/dashboard/jobs?tab=history`,
+        },
+        dedupeKey: dedupeKeys.applicationSubmitted(applicationId),
+        relatedActivityId: activityId,
+      });
+
+      // Employer alerts go out for on-platform applications only.
+      // External-link and email-type jobs are completed off the platform.
+      if (job.applicationType === "on_platform" && employerId) {
+        const contactEmail = String(job.contactEmail || "").trim();
+        let employerEmail = contactEmail;
+        let employerUserId: Types.ObjectId | undefined;
+        if (!employerEmail) {
+          const employer = await User.findById(employerId).select("email").lean();
+          employerEmail = String(employer?.email || "").trim();
+          if (employerEmail) employerUserId = employerId as Types.ObjectId;
+        }
+        if (employerEmail) {
+          await enqueue({
+            type: "application-received",
+            to: employerEmail,
+            userId: employerUserId,
+            payload: {
+              applicantName,
+              jobTitle,
+              companyName,
+              reviewUrl: `${base}/dashboard/employers/job/${String(job._id)}`,
+            },
+            dedupeKey: dedupeKeys.applicationReceived(applicationId),
+            relatedActivityId: activityId,
+          });
+        }
+      }
+
+      after(() => {
+        drainOutbox({ limit: 5 }).catch((err) => console.error("Apply email drain failed:", err));
+      });
+    } catch (err) {
+      console.error("Apply email enqueue failed:", err);
+    }
 
     let unreadCount: number | undefined;
     try {

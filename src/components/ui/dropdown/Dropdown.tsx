@@ -11,9 +11,10 @@ interface DropDownProps {
     updateSelectedOption: (option: string) => void;
     selectedOption: string | null;
     fullwidth?: boolean;
+    position?: "top" | "bottom";
 }
 
-function DropDown({ defaultOption, options, updateSelectedOption, selectedOption, fullwidth }: DropDownProps) {
+function DropDown({ defaultOption, options, updateSelectedOption, selectedOption, fullwidth, position = "bottom" }: DropDownProps) {
   const [showDropdown, setShowDropdown] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -36,9 +37,9 @@ function DropDown({ defaultOption, options, updateSelectedOption, selectedOption
             }
         </Button>
         {showDropdown && (
-            <div className={`${styles.dropdown} ${fullwidth ? styles.fullwidth : ''}`}>
+            <div className={`${styles.dropdown} ${fullwidth ? styles.fullwidth : ''} ${position==='bottom'? styles.bottom : styles.top}`}>
                 <button
-                        key={defaultOption}
+                        key={defaultOption} 
                         onClick={() => handleOptionSelect(defaultOption)}
                         className={styles.dropdown_option}
                     >

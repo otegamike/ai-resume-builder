@@ -49,14 +49,14 @@ export default function JobApplicationDetails({ application }: JobApplicationDet
 
       <div className={styles.grid} style={{ alignItems: "center" }}>
         <div className={viewerStyles.previewThumbnail} style={{ maxHeight: "320px" }}>
-          {resumeContent ? 
-             <ResumePlusViewer templateId={normalizedId} content={resumeContent} />
-            : application.uploadedResume?.pages?.length > 0 &&
+          {application.uploadedResume?.pages?.length > 0 ?
             <UploadedResumePlusViewer resume={{
               _id: application.uploadedResume._id ? String(application.uploadedResume._id) : undefined,
               title: application.uploadedResume.title || "Uploaded Resume",
               pages: application.uploadedResume.pages,
-            }} />
+            }} /> 
+          : 
+            <ResumePlusViewer templateId={normalizedId} content={resumeContent} />
           }
         </div>
         <div className={styles.scoreCol} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", minWidth: "120px" }}>

@@ -8,11 +8,13 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "test:email-live": "vitest run --config vitest.live.config.ts",
     "postinstall": "node -e \"require('fs').cpSync('node_modules/pdfjs-dist/build/pdf.worker.min.mjs', 'public/pdf.worker.min.mjs')\""
   },
   "dependencies": {
     "@google/genai": "^1.51.0",
     "@napi-rs/canvas": "^1.0.0",
+    "@react-email/components": "^1.0.12",
     "@react-pdf/renderer": "^4.5.1",
     "@tiptap/extension-image": "^3.29.2",
     "@tiptap/extension-link": "^3.29.2",
@@ -33,7 +35,10 @@
     "pdfjs-dist": "^5.7.284",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "react-email": "^6.11.1",
     "recharts": "^3.8.1",
+    "resend": "^6.32.1",
+    "server-only": "^0.0.1",
     "zustand": "^5.0.14"
   },
   "devDependencies": {

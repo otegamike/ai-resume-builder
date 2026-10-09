@@ -52,7 +52,7 @@ export default function EmployerApplicantModal({ application, open, onClose, onS
           <JobApplicationDetails application={application} />
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "1rem", borderTop: "1px solid var(--gray-200)", paddingTop: "1rem" }}>
             <label style={{ fontSize: "var(--text-xs)", fontWeight: 600, color: "var(--gray-700)" }}>Update status</label>
-            <DropDown defaultOption={currentStatus} options={STATUS_OPTIONS} selectedOption={pendingStatus} updateSelectedOption={(v) => setSelectedStatus(v as JobApplicationStatus)} fullwidth />
+            <DropDown defaultOption={currentStatus} options={STATUS_OPTIONS} selectedOption={pendingStatus} updateSelectedOption={(v) => setSelectedStatus(v as JobApplicationStatus)} position="top" fullwidth />
           </div>
         </div>
         <div className={styles.footer}>

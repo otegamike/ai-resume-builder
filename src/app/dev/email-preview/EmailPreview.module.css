@@ -1,0 +1,54 @@
+.page {
+  margin: 0 auto;
+  max-width: 760px;
+  padding: var(--space-8) var(--space-4);
+}
+
+.title {
+  font-size: var(--text-2xl);
+  margin: 0 0 var(--space-2);
+}
+
+.note {
+  color: var(--gray-500);
+  font-size: var(--text-sm);
+  margin: 0 0 var(--space-6);
+}
+
+.card {
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  margin: 0 0 var(--space-6);
+  padding: var(--space-4);
+}
+
+.templateName {
+  font-size: var(--text-lg);
+  margin: 0 0 var(--space-2);
+}
+
+.subject {
+  color: var(--gray-600);
+  font-size: var(--text-sm);
+  margin: 0 0 var(--space-4);
+}
+
+.frame {
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  height: 480px;
+  width: 100%;
+}
+
+.text {
+  background: var(--gray-50);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  margin: var(--space-4) 0 0;
+  padding: var(--space-4);
+  white-space: pre-wrap;
+}
+
+.error {
+  color: var(--red-600);
+}

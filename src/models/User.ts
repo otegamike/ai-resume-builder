@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Types } from "mongoose";
+import mongoose, { Schema, Types } from "mongoose";
 
 export interface IUser {
   _id: Types.ObjectId;
@@ -36,6 +36,11 @@ export interface IUser {
   accountType?: "candidate" | "employer" | "both";
   organizationId?: Types.ObjectId;
   pinnedResume?: string;
+  emailPreferences: {
+    jobAlerts: boolean;
+    marketing: boolean;
+  };
+  unsubscribeTokenVersion: number;
 }
 
 const UserSchema: Schema = new Schema<IUser>(
@@ -76,6 +81,11 @@ const UserSchema: Schema = new Schema<IUser>(
     accountType: { type: String, enum: ["candidate", "employer", "both"], default: "candidate" },
     organizationId: { type: Schema.Types.ObjectId, ref: "Company" },
     pinnedResume: { type: String, default: "" },
+    emailPreferences: {
+      jobAlerts: { type: Boolean, default: false },
+      marketing: { type: Boolean, default: false },
+    },
+    unsubscribeTokenVersion: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

@@ -129,6 +129,57 @@ Notes:
 - AI routes fail when `GROQ_API_KEY` is missing or left as the placeholder value.
 - Google credentials power both normal Google sign-in and Gmail-send authorization.
 
+## Transactional Email (Resend)
+
+Phase 1 sends transactional mail only (welcome, application confirmation to the
+applicant, new-application alert to the employer for on-platform jobs). There is
+no marketing or digest mail: job alerts and reminders ship behind flags that
+default to OFF, and nobody is opted in.
+
+How it works: triggering routes write an idempotent row to the `email_outbox`
+collection (`enqueue()`), then schedule a post-response drain via Next.js
+`after()` so mail leaves within seconds without slowing the request. A daily
+Vercel Cron route (`/api/cron/email-drain`) is the safety net for retries and
+scheduled sends. A Resend webhook (`/api/webhooks/resend`) tracks delivery and
+maintains the suppression list (bounced/complained addresses are never mailed
+again). The free-plan budget (100/day, 3,000/month, UTC day) is guarded in
+MongoDB before every send; when it runs out, P0 mail waits for the next UTC day
+instead of failing.
+
+Setup:
+1. Verify `agenticapp.cv` in Resend and create a sending-access API key.
+2. Set env vars (Vercel production + `.env.local` locally):
+   `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, `EMAIL_FROM`
+   (e.g. `Agentic CV <notifications@agenticapp.cv>`), `EMAIL_REPLY_TO`,
+   `CRON_SECRET`, `EMAIL_DAILY_LIMIT=90`, `EMAIL_MONTHLY_LIMIT=2700`,
+   `EMAIL_ENABLED=true`, `EMAIL_DRY_RUN=false`,
+   `EMAIL_FLAG_APPLICATION_REMINDER=false`, `EMAIL_FLAG_JOB_ALERTS=false`.
+   Locally also set `EMAIL_DEV_ALLOWLIST` or `EMAIL_DRY_RUN=true` so branches
+   never mail real users, plus `EMAIL_TEST_RECIPIENT` for the live test.
+   For the test suite, set `TEST_MONGODB_URI` (test-cluster address) and
+   `TEST_MONGODB_DB_NAME` (a dedicated name that does not exist yet, e.g.
+   `resumy_email_tests`) in `.env.test.local`. Unit tests run serially
+   against that database only and clear it between tests; production
+   (`MONGODB_URI`, database `Resumy`) is never touched.
+3. Deploy, then point the Resend webhook at
+   `https://agenticapp.cv/api/webhooks/resend`.
+4. Preview templates (dev only) at `/dev/email-preview` — 404 in production.
+5. Run `npm run test:email-live` with `EMAIL_DRY_RUN=true` first (same path,
+   no mail sent), then once with `EMAIL_DRY_RUN=false` and check the inbox.
+   Each live run uses 1 of the 100 daily free-plan emails.
+   `npm test` never sends real mail.
+
+Adding a template: create `src/lib/email/templates/my-template.tsx` exporting
+the component plus `subject()`/`text()` helpers, register it in
+`src/lib/email/render.tsx` (subject, HTML via React Email, plain text), add a
+sample to `templateSamples()`, and enqueue with a namespaced dedupe key.
+
+Replaying failed mail: find the row in `email_outbox` (`status: failed`,
+`lastError` tells why), fix the cause, then reset it with
+`db.email_outbox.updateOne({_id}, {$set: {status: "pending", sendAfter: new Date(), lastError: ""}})`.
+The next drain or cron run picks it up. Rows that hit the quota pause resume
+automatically after UTC midnight.
+
 ## Scripts
 
 ```bash
@@ -136,7 +187,8 @@ npm run dev      # start local development server
 npm run build    # build production app
 npm run start    # start production server
 npm run lint     # run ESLint
-npm run test     # run Vitest
+npm run test     # run Vitest (test DB only, never sends real email)
+npm run test:email-live  # live path to EMAIL_TEST_RECIPIENT (1 real email unless EMAIL_DRY_RUN=true)
 ```
 
 ## Repository Layout

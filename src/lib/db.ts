@@ -15,6 +15,7 @@ if (!MONGODB_URI) {
 type MongooseCache = {
   conn: Mongoose | null;
   promise: Promise<Mongoose> | null;
+  dbName: string | null;
 };
 
 const globalWithMongoose = globalThis as typeof globalThis & {
@@ -24,19 +25,41 @@ const globalWithMongoose = globalThis as typeof globalThis & {
 let cached = globalWithMongoose.mongoose;
 
 if (!cached) {
-  cached = globalWithMongoose.mongoose = { conn: null, promise: null };
+  cached = globalWithMongoose.mongoose = { conn: null, promise: null, dbName: null };
 }
 
-async function connectToDatabase(): Promise<Mongoose> {
+function resolveDbName(explicit?: string): string {
+  if (explicit) return explicit;
+  // Test-only override. Ignored in production so a stray variable on the
+  // hosting platform can never redirect production traffic.
+  if (process.env.NODE_ENV !== "production") {
+    const testName = (process.env.TEST_MONGODB_DB_NAME ?? "").trim();
+    if (testName) return testName;
+  }
+  return "Resumy";
+}
+
+async function connectToDatabase(dbName?: string): Promise<Mongoose> {
   // Check if cached exists (satisfies TS narrowing)
   if (!cached) {
-    cached = globalWithMongoose.mongoose = { conn: null, promise: null };
+    cached = globalWithMongoose.mongoose = { conn: null, promise: null, dbName: null };
   }
 
   const currentCache = cached;
+  const wanted = resolveDbName(dbName);
 
-  // 1. If we have an existing connection, return it immediately
-  if (currentCache.conn) {
+  // A cached connection to a different database must not be reused.
+  // Production uses a single database per process, so this path only
+  // triggers in tests that switch databases.
+  if (currentCache.conn && currentCache.dbName !== wanted) {
+    await mongoose.disconnect();
+    currentCache.conn = null;
+    currentCache.promise = null;
+    currentCache.dbName = null;
+  }
+
+  // 1. If we have an existing connection to the wanted database, return it.
+  if (currentCache.conn && currentCache.dbName === wanted) {
     return currentCache.conn;
   }
 
@@ -44,9 +67,10 @@ async function connectToDatabase(): Promise<Mongoose> {
   if (!currentCache.promise) {
     const opts = {
       bufferCommands: false,
-      dbName: "Resumy"
+      dbName: wanted
     };
 
+    currentCache.dbName = wanted;
     currentCache.promise = mongoose
       .connect(MONGODB_URI, opts)
       .then((m) => {
@@ -56,6 +80,7 @@ async function connectToDatabase(): Promise<Mongoose> {
       .catch((error) => {
         // If connection fails, clear the promise so the next attempt can try again
         currentCache.promise = null;
+        currentCache.dbName = null;
         console.error("MongoDB Connection Error:", error);
         throw error;
       });
@@ -66,6 +91,7 @@ async function connectToDatabase(): Promise<Mongoose> {
     currentCache.conn = await currentCache.promise;
   } catch (e) {
     currentCache.promise = null;
+    currentCache.dbName = null;
     throw e;
   }
 
