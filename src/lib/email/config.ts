@@ -61,7 +61,7 @@ function parseAllowlist(value: string | undefined): string[] {
 }
 
 function parseFromAddress(value: string | undefined): string {
-  const fallback = "Agentic CV <notifications@agenticapp.cv>";
+  const fallback = "AgenticApp.cv <notifications@agenticapp.cv>";
   const candidate = (value ?? "").trim() || fallback;
   const emailPart = candidate.includes("<")
     ? (candidate.split("<")[1]?.split(">")[0] ?? "")

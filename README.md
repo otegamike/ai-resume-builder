@@ -150,7 +150,7 @@ Setup:
 1. Verify `agenticapp.cv` in Resend and create a sending-access API key.
 2. Set env vars (Vercel production + `.env.local` locally):
    `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, `EMAIL_FROM`
-   (e.g. `Agentic CV <notifications@agenticapp.cv>`), `EMAIL_REPLY_TO`,
+   (e.g. `AgenticApp.cv <notifications@agenticapp.cv>`), `EMAIL_REPLY_TO`,
    `CRON_SECRET`, `EMAIL_DAILY_LIMIT=90`, `EMAIL_MONTHLY_LIMIT=2700`,
    `EMAIL_ENABLED=true`, `EMAIL_DRY_RUN=false`,
    `EMAIL_FLAG_APPLICATION_REMINDER=false`, `EMAIL_FLAG_JOB_ALERTS=false`.

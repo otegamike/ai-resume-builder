@@ -8,7 +8,7 @@ export interface WelcomeProps {
 }
 
 export function welcomeSubject(props: WelcomeProps): string {
-  return props.name ? `Welcome to Agentic CV, ${props.name}` : "Welcome to Agentic CV";
+  return props.name ? `Welcome to AgenticApp.cv, ${props.name}` : "Welcome to AgenticApp.cv";
 }
 
 export function welcomeText(props: WelcomeProps): string {
@@ -17,7 +17,7 @@ export function welcomeText(props: WelcomeProps): string {
   return [
     greeting,
     "",
-    "Welcome to Agentic CV. Your account is ready.",
+    "Welcome to AgenticApp.cv. Your account is ready.",
     "Build your resume, tailor it to any job, and track applications in one place.",
     "",
     `Get started: ${dashboard}`,
@@ -29,8 +29,8 @@ export function welcomeText(props: WelcomeProps): string {
 export default function WelcomeEmail(props: WelcomeProps) {
   const dashboard = props.dashboardUrl ?? `${appUrl()}/dashboard`;
   return (
-    <Layout preview="Your Agentic CV account is ready">
-      <Text style={headingStyle}>{props.name ? `Welcome, ${props.name}` : "Welcome to Agentic CV"}</Text>
+    <Layout preview="Your AgenticApp.cv account is ready">
+      <Text style={headingStyle}>{props.name ? `Welcome, ${props.name}` : "Welcome to AgenticApp.cv"}</Text>
       <Text style={paragraphStyle}>
         Your account is ready. Build your resume, tailor it to any job posting, and track every
         application in one place.

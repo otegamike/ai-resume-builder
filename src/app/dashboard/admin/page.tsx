@@ -19,8 +19,9 @@ import styles from "./page.module.css";
 import type { Stats, Timeline, AiUsageStats, PrimaryGoalStats } from "@/types/Stats";
 import AdminActivitiesTab from "@/components/admin/activities-tab/AdminActivitiesTab";
 import AiLogsTab from "@/components/admin/ai-logs/AiLogsTab";
+import EmailsTab from "@/components/admin/emails/EmailsTab";
 
-type AdminTab = "overview" | "activities" | "ai-logs";
+type AdminTab = "overview" | "activities" | "ai-logs" | "emails";
 
 export default function AdminDashboardPage() {
   const { data: session, status } = useSession();
@@ -186,10 +187,17 @@ export default function AdminDashboardPage() {
         >
           AI Logs
         </button>
+        <button
+          className={`${styles.tabBtn} ${activeTab === "emails" ? styles.activeTab : ""}`}
+          onClick={() => setActiveTab("emails")}
+        >
+          Emails
+        </button>
       </div>
 
       {activeTab === "activities" && <AdminActivitiesTab />}
       {activeTab === "ai-logs" && <AiLogsTab />}
+      {activeTab === "emails" && <EmailsTab />}
 
       {activeTab === "overview" && (
         <>

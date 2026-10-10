@@ -47,11 +47,11 @@ export default function Layout({ preview, children, supportEmail }: LayoutProps)
       <Preview>{preview}</Preview>
       <Body style={bodyStyle}>
         <Container style={cardStyle}>
-          <Text style={brandStyle}>Agentic CV</Text>
+          <Text style={brandStyle}>AgenticApp.cv</Text>
           <Section>{children}</Section>
           <Hr style={{ borderColor: brand.border, margin: "24px 0 0" }} />
           <Text style={footerStyle}>
-            Agentic CV · agenticapp.cv
+            AgenticApp.cv
             <br />
             Need help? Reply to this email or write to{" "}
             <Link href={`mailto:${support}`} style={{ color: brand.primaryDark }}>
