@@ -42,6 +42,9 @@ export { generateBlogMeta } from "./blog";
 
 export { generateCoverLetter } from "./coverLetter";
 
+export { generateCandidateMessage } from "./employerMessage";
+export type { CandidateMessageDraft } from "./employerMessage";
+
 export { parseResumeContent } from "./resumeParse";
 
 export {

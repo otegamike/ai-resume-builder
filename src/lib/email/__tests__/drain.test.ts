@@ -25,7 +25,7 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  clearEmailEnv(["EMAIL_DRY_RUN", "EMAIL_DEV_ALLOWLIST", "EMAIL_DAILY_LIMIT", "EMAIL_MONTHLY_LIMIT"]);
+  clearEmailEnv(["EMAIL_DRY_RUN", "EMAIL_DEV_ALLOWLIST", "EMAIL_DAILY_LIMIT", "EMAIL_MONTHLY_LIMIT", "EMAIL_FLAG_APPLICATION_SUBMITTED"]);
   await stopTestDb();
 });
 
@@ -123,5 +123,27 @@ describe("outbox drain", () => {
     tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
     tomorrow.setUTCHours(0, 0, 0, 0);
     expect(waiting?.sendAfter.getTime()).toBeGreaterThanOrEqual(tomorrow.getTime());
+  });
+
+  it("skips submitted confirmations flipped off after enqueue", async () => {
+    await enqueue({
+      type: "application-submitted",
+      to: "flip@example.com",
+      payload: { applicantName: "Flip", jobTitle: "Backend Engineer", companyName: "Acme" },
+      dedupeKey: "app-submitted:flip-1",
+    });
+    setEmailEnv({
+      EMAIL_DRY_RUN: "false",
+      EMAIL_DEV_ALLOWLIST: "",
+      EMAIL_DAILY_LIMIT: "1000",
+      EMAIL_MONTHLY_LIMIT: "10000",
+      EMAIL_FLAG_APPLICATION_SUBMITTED: "false",
+    });
+    const summary = await drainOutbox({ limit: 10 }, fakeSender);
+    expect(summary.skipped).toBe(1);
+    expect(sentTo).toHaveLength(0);
+    const row = await EmailOutbox.findOne({ dedupeKey: "app-submitted:flip-1" }).lean();
+    expect(row?.status).toBe("skipped");
+    expect(row?.lastError).toBe("flag_disabled");
   });
 });

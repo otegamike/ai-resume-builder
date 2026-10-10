@@ -34,6 +34,9 @@ export const dedupeKeys = {
   applicationSubmitted: (applicationId: string) => `app-submitted:${applicationId}`,
   applicationReceived: (applicationId: string) => `app-received:${applicationId}`,
   applicationReminder: (draftId: string, n = 1) => `app-reminder:${draftId}:${n}`,
+  applicationStatusChanged: (applicationId: string, status: string) =>
+    `app-status:${applicationId}:${status}`,
+  candidateMessage: (applicationId: string) => `candidate-message:${applicationId}:${Date.now()}`,
 };
 
 export function defaultPriorityFor(type: EmailOutboxType): EmailPriority {
@@ -89,6 +92,9 @@ export async function enqueue(params: EnqueueParams): Promise<EnqueueResult> {
   if (!isValidEmail(to)) return { status: "skipped", reason: "invalid_recipient" };
 
   if (params.type === "application-reminder" && !config.flagApplicationReminder) {
+    return { status: "skipped", reason: "flag_disabled" };
+  }
+  if (params.type === "application-submitted" && !config.flagApplicationSubmitted) {
     return { status: "skipped", reason: "flag_disabled" };
   }
   if (params.type === "job-alert" && !config.flagJobAlerts) {

@@ -19,7 +19,7 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  clearEmailEnv(["EMAIL_DRY_RUN", "EMAIL_DEV_ALLOWLIST", "EMAIL_FLAG_APPLICATION_REMINDER", "EMAIL_FLAG_JOB_ALERTS"]);
+  clearEmailEnv(["EMAIL_DRY_RUN", "EMAIL_DEV_ALLOWLIST", "EMAIL_FLAG_APPLICATION_REMINDER", "EMAIL_FLAG_APPLICATION_SUBMITTED", "EMAIL_FLAG_JOB_ALERTS"]);
   await stopTestDb();
 });
 
@@ -72,6 +72,61 @@ describe("email dispatcher", () => {
       dedupeKey: "welcome:x",
     });
     expect(result).toEqual({ status: "skipped", reason: "invalid_recipient" });
+  });
+
+  it("keeps applicant confirmations on by default but flaggable off", async () => {
+    const on = await enqueue({
+      type: "application-submitted",
+      to: "ada@example.com",
+      payload: { applicantName: "Ada", jobTitle: "Frontend Engineer", companyName: "Acme" },
+      dedupeKey: "app-submitted:flag-1",
+    });
+    expect(on.status).toBe("queued");
+
+    setEmailEnv({ EMAIL_DRY_RUN: "true", EMAIL_DEV_ALLOWLIST: "", EMAIL_FLAG_APPLICATION_SUBMITTED: "false" });
+    const off = await enqueue({
+      type: "application-submitted",
+      to: "ada@example.com",
+      payload: { applicantName: "Ada", jobTitle: "Frontend Engineer", companyName: "Acme" },
+      dedupeKey: "app-submitted:flag-2",
+    });
+    expect(off).toEqual({ status: "skipped", reason: "flag_disabled" });
+    expect(await EmailOutbox.countDocuments({ type: "application-submitted" })).toBe(1);
+  });
+
+  it("dedupes status mail per application and status", async () => {
+    const payload = {
+      applicantName: "Ada",
+      jobTitle: "Frontend Engineer",
+      companyName: "Acme",
+      status: "shortlisted",
+    };
+    const first = await enqueue({
+      type: "application-status-changed",
+      to: "ada@example.com",
+      payload,
+      dedupeKey: dedupeKeys.applicationStatusChanged("app-1", "shortlisted"),
+    });
+    expect(first.status).toBe("queued");
+
+    const repeat = await enqueue({
+      type: "application-status-changed",
+      to: "ada@example.com",
+      payload,
+      dedupeKey: dedupeKeys.applicationStatusChanged("app-1", "shortlisted"),
+    });
+    expect(repeat.status).toBe("duplicate");
+
+    const nextStage = await enqueue({
+      type: "application-status-changed",
+      to: "ada@example.com",
+      payload: { ...payload, status: "interviewing" },
+      dedupeKey: dedupeKeys.applicationStatusChanged("app-1", "interviewing"),
+    });
+    expect(nextStage.status).toBe("queued");
+    expect(dedupeKeys.applicationStatusChanged("app-1", "shortlisted")).toBe(
+      "app-status:app-1:shortlisted"
+    );
   });
 
   it("keeps the flagged reminder off by default", async () => {

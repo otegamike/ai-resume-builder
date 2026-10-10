@@ -3,6 +3,7 @@ export type NotificationType =
   | "application_status_changed"
   | "application_viewed_by_employer"
   | "application_withdrawn"
+  | "candidate_messaged"
   | "job_status_changed";
 
 export interface Notification {

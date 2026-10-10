@@ -18,12 +18,28 @@ import ApplicationReminderEmail, {
   applicationReminderText,
   type ApplicationReminderProps,
 } from "./templates/application-reminder";
+import ApplicationStatusChangedEmail, {
+  applicationStatusChangedSubject,
+  applicationStatusChangedText,
+  STATUS_CHANGE_STATUSES,
+  type ApplicationStatusChangedProps,
+  type StatusChangeStatus,
+} from "./templates/application-status-changed";
+import CandidateMessageEmail, {
+  candidateMessageText,
+  type CandidateMessageProps,
+  type CandidateMessageReplyMode,
+} from "./templates/candidate-message";
+import { getEmailConfig } from "./config";
+import { isValidEmail } from "./dispatcher";
 import { appUrl } from "./site";
 
 export interface RenderedEmail {
   subject: string;
   html: string;
   text: string;
+  from?: string;
+  replyTo?: string;
 }
 
 function required(value: unknown, name: string): string {
@@ -86,6 +102,67 @@ async function renderApplicationReminder(payload: Record<string, unknown>): Prom
   };
 }
 
+async function renderApplicationStatusChanged(payload: Record<string, unknown>): Promise<RenderedEmail> {
+  const status = String(payload.status ?? "");
+  if (!(STATUS_CHANGE_STATUSES as string[]).includes(status)) {
+    throw new Error(`missing_email_prop:status`);
+  }
+  const props: ApplicationStatusChangedProps = {
+    applicantName: required(payload.applicantName, "applicantName"),
+    jobTitle: required(payload.jobTitle, "jobTitle"),
+    companyName: String(payload.companyName ?? "a company"),
+    status: status as StatusChangeStatus,
+    historyUrl: String(payload.historyUrl ?? `${appUrl()}/dashboard/jobs?tab=history`),
+    jobsUrl: String(payload.jobsUrl ?? `${appUrl()}/jobs`),
+  };
+  return {
+    subject: applicationStatusChangedSubject(props),
+    html: await render(<ApplicationStatusChangedEmail {...props} />),
+    text: applicationStatusChangedText(props),
+  };
+}
+
+async function renderCandidateMessage(payload: Record<string, unknown>): Promise<RenderedEmail> {
+  const { hiringFrom } = getEmailConfig();
+  const rawMode = String(payload.replyMode ?? "hiring");
+  const replyMode: CandidateMessageReplyMode =
+    rawMode === "custom" || rawMode === "dontreply" ? rawMode : "hiring";
+
+  let replyTo = hiringFrom;
+  const addressForMode =
+    replyMode === "custom"
+      ? String(payload.replyTo ?? "").trim()
+      : replyMode === "dontreply"
+        ? String(payload.contactEmail ?? "").trim()
+        : "";
+  if (addressForMode && isValidEmail(addressForMode)) replyTo = addressForMode;
+
+  const subject = required(payload.subject, "subject");
+  if (subject.length > 120) throw new Error("email_prop_too_long:subject");
+  const messageBody = required(payload.messageBody, "messageBody");
+  if (messageBody.length > 5000) throw new Error("email_prop_too_long:messageBody");
+
+  const props: CandidateMessageProps = {
+    applicantName: required(payload.applicantName, "applicantName"),
+    jobTitle: required(payload.jobTitle, "jobTitle"),
+    companyName: String(payload.companyName ?? "a company"),
+    messageBody,
+    replyMode,
+    contactEmail:
+      replyMode === "dontreply" && isValidEmail(String(payload.contactEmail ?? ""))
+        ? String(payload.contactEmail)
+        : undefined,
+    historyUrl: String(payload.historyUrl ?? `${appUrl()}/dashboard/jobs?tab=history`),
+  };
+  return {
+    subject,
+    html: await render(<CandidateMessageEmail {...props} />),
+    text: candidateMessageText({ ...props, subject }),
+    from: hiringFrom,
+    replyTo,
+  };
+}
+
 export async function renderEmail(
   type: EmailOutboxType,
   payload: Record<string, unknown>
@@ -99,6 +176,10 @@ export async function renderEmail(
       return renderApplicationReceived(payload);
     case "application-reminder":
       return renderApplicationReminder(payload);
+    case "application-status-changed":
+      return renderApplicationStatusChanged(payload);
+    case "candidate-message":
+      return renderCandidateMessage(payload);
     case "job-alert":
       throw new Error("job-alert templates are not enabled");
     default:
@@ -121,6 +202,26 @@ export function templateSamples(): Array<{ type: EmailOutboxType; payload: Recor
     {
       type: "application-reminder",
       payload: { applicantName: "Ada", jobTitle: "Frontend Engineer", companyName: "Acme" },
+    },
+    {
+      type: "application-status-changed",
+      payload: {
+        applicantName: "Ada",
+        jobTitle: "Frontend Engineer",
+        companyName: "Acme",
+        status: "shortlisted",
+      },
+    },
+    {
+      type: "candidate-message",
+      payload: {
+        applicantName: "Ada",
+        jobTitle: "Frontend Engineer",
+        companyName: "Acme",
+        subject: "Next steps for your application",
+        messageBody: "Thanks for applying. We would like to schedule a call next week.",
+        replyMode: "hiring",
+      },
     },
   ];
 }

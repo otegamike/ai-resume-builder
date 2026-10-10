@@ -24,6 +24,8 @@ const VALID_TYPES: EmailOutboxType[] = [
   "application-submitted",
   "application-received",
   "application-reminder",
+  "application-status-changed",
+  "candidate-message",
   "job-alert",
 ];
 

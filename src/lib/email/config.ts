@@ -6,6 +6,7 @@ const rawEnvSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   RESEND_WEBHOOK_SECRET: z.string().optional(),
   EMAIL_FROM: z.string().optional(),
+  EMAIL_HIRING_FROM: z.string().optional(),
   EMAIL_REPLY_TO: z.string().optional(),
   CRON_SECRET: z.string().optional(),
   EMAIL_DAILY_LIMIT: z.string().optional(),
@@ -14,6 +15,7 @@ const rawEnvSchema = z.object({
   EMAIL_DRY_RUN: z.string().optional(),
   EMAIL_DEV_ALLOWLIST: z.string().optional(),
   EMAIL_FLAG_APPLICATION_REMINDER: z.string().optional(),
+  EMAIL_FLAG_APPLICATION_SUBMITTED: z.string().optional(),
   EMAIL_FLAG_JOB_ALERTS: z.string().optional(),
   EMAIL_TEST_RECIPIENT: z.string().optional(),
 });
@@ -22,6 +24,7 @@ export interface EmailConfig {
   resendApiKey: string;
   resendWebhookSecret: string;
   from: string;
+  hiringFrom: string;
   replyTo: string;
   cronSecret: string;
   dailyLimit: number;
@@ -30,6 +33,7 @@ export interface EmailConfig {
   dryRun: boolean;
   devAllowlist: string[];
   flagApplicationReminder: boolean;
+  flagApplicationSubmitted: boolean;
   flagJobAlerts: boolean;
   testRecipient: string;
   isProduction: boolean;
@@ -60,8 +64,7 @@ function parseAllowlist(value: string | undefined): string[] {
     .filter((entry) => entry.length > 0);
 }
 
-function parseFromAddress(value: string | undefined): string {
-  const fallback = "AgenticApp.cv <notifications@agenticapp.cv>";
+function parseFromAddress(value: string | undefined, fallback: string): string {
   const candidate = (value ?? "").trim() || fallback;
   const emailPart = candidate.includes("<")
     ? (candidate.split("<")[1]?.split(">")[0] ?? "")
@@ -80,7 +83,11 @@ export function getEmailConfig(): EmailConfig {
   cached = {
     resendApiKey: (raw.RESEND_API_KEY ?? "").trim(),
     resendWebhookSecret: (raw.RESEND_WEBHOOK_SECRET ?? "").trim(),
-    from: parseFromAddress(raw.EMAIL_FROM),
+    from: parseFromAddress(raw.EMAIL_FROM, "AgenticApp.cv <notifications@agenticapp.cv>"),
+    hiringFrom: parseFromAddress(
+      raw.EMAIL_HIRING_FROM,
+      "AgenticApp.cv Hiring <hiring@agenticapp.cv>"
+    ),
     replyTo: (raw.EMAIL_REPLY_TO ?? "").trim(),
     cronSecret: (raw.CRON_SECRET ?? "").trim(),
     dailyLimit: parsePositiveInt(raw.EMAIL_DAILY_LIMIT, 90, "EMAIL_DAILY_LIMIT"),
@@ -92,6 +99,11 @@ export function getEmailConfig(): EmailConfig {
       raw.EMAIL_FLAG_APPLICATION_REMINDER,
       false,
       "EMAIL_FLAG_APPLICATION_REMINDER"
+    ),
+    flagApplicationSubmitted: parseBool(
+      raw.EMAIL_FLAG_APPLICATION_SUBMITTED,
+      true,
+      "EMAIL_FLAG_APPLICATION_SUBMITTED"
     ),
     flagJobAlerts: parseBool(raw.EMAIL_FLAG_JOB_ALERTS, false, "EMAIL_FLAG_JOB_ALERTS"),
     testRecipient: (raw.EMAIL_TEST_RECIPIENT ?? "").trim().toLowerCase(),

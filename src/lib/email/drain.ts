@@ -7,7 +7,7 @@ import { getResend, getFromAddress, getReplyToAddress } from "./client";
 import { claimNext, markSent, markSkipped, markFailed } from "./outbox";
 import { tryConsumeQuota } from "./quota";
 import { isSuppressed, passesPreferences } from "./dispatcher";
-import { renderEmail } from "./render";
+import { renderEmail, type RenderedEmail } from "./render";
 
 void EmailOutbox;
 
@@ -31,6 +31,8 @@ export interface SendFn {
     html: string;
     text: string;
     dedupeKey: string;
+    from?: string;
+    replyTo?: string;
   }): Promise<{ id: string }>;
 }
 
@@ -73,18 +75,18 @@ function nextUtcMidnight(now: Date): Date {
 }
 
 export function defaultSender(): SendFn {
-  return async ({ to, subject, html, text, dedupeKey }) => {
+  return async ({ to, subject, html, text, dedupeKey, from, replyTo }) => {
     const resend = getResend();
     let result: { data: { id: string } | null; error: unknown };
     try {
       result = (await resend.emails.send(
         {
-          from: getFromAddress(),
+          from: from || getFromAddress(),
           to,
           subject,
           html,
           text,
-          replyTo: getReplyToAddress(),
+          replyTo: replyTo || getReplyToAddress(),
         },
         { idempotencyKey: dedupeKey }
       )) as { data: { id: string } | null; error: unknown };
@@ -113,7 +115,7 @@ export async function drainOutbox(options?: DrainOptions, sender?: SendFn): Prom
     if (!row) break;
     result.claimed += 1;
 
-    let rendered: { subject: string; html: string; text: string };
+    let rendered: RenderedEmail;
     try {
       rendered = await renderEmail(row.type, (row.payload ?? {}) as Record<string, unknown>);
     } catch (error) {
@@ -135,6 +137,11 @@ export async function drainOutbox(options?: DrainOptions, sender?: SendFn): Prom
       continue;
     }
     if (row.type === "application-reminder" && !getEmailConfig().flagApplicationReminder) {
+      await markSkipped(row._id, "flag_disabled");
+      result.skipped += 1;
+      continue;
+    }
+    if (row.type === "application-submitted" && !getEmailConfig().flagApplicationSubmitted) {
       await markSkipped(row._id, "flag_disabled");
       result.skipped += 1;
       continue;
@@ -186,6 +193,8 @@ export async function drainOutbox(options?: DrainOptions, sender?: SendFn): Prom
         html: rendered.html,
         text: rendered.text,
         dedupeKey: row.dedupeKey,
+        from: rendered.from,
+        replyTo: rendered.replyTo,
       });
       await markSent(row._id, id);
       result.sent += 1;

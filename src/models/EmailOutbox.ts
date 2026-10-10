@@ -5,6 +5,8 @@ export type EmailOutboxType =
   | "application-submitted"
   | "application-received"
   | "application-reminder"
+  | "application-status-changed"
+  | "candidate-message"
   | "job-alert";
 
 export type EmailPriority = 0 | 1 | 2;
@@ -42,7 +44,7 @@ const EmailOutboxSchema: Schema = new Schema<IEmailOutbox>(
   {
     type: {
       type: String,
-      enum: ["welcome", "application-submitted", "application-received", "application-reminder", "job-alert"],
+      enum: ["welcome", "application-submitted", "application-received", "application-reminder", "application-status-changed", "candidate-message", "job-alert"],
       required: true,
     },
     userId: { type: Schema.Types.ObjectId, ref: "User", required: false },

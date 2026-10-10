@@ -132,9 +132,13 @@ Notes:
 ## Transactional Email (Resend)
 
 Phase 1 sends transactional mail only (welcome, application confirmation to the
-applicant, new-application alert to the employer for on-platform jobs). There is
-no marketing or digest mail: job alerts and reminders ship behind flags that
-default to OFF, and nobody is opted in.
+applicant, new-application alert to the employer for on-platform jobs, and
+status-change updates to the applicant when an employer moves their
+application). There is no marketing or digest mail: job alerts and reminders
+ship behind flags that default to OFF, and nobody is opted in. The applicant
+confirmation can be switched off with `EMAIL_FLAG_APPLICATION_SUBMITTED=false`
+(the in-app notification already covers it); status-change mail is the priority
+channel and has no flag beyond the kill switch.
 
 How it works: triggering routes write an idempotent row to the `email_outbox`
 collection (`enqueue()`), then schedule a post-response drain via Next.js
@@ -153,7 +157,9 @@ Setup:
    (e.g. `AgenticApp.cv <notifications@agenticapp.cv>`), `EMAIL_REPLY_TO`,
    `CRON_SECRET`, `EMAIL_DAILY_LIMIT=90`, `EMAIL_MONTHLY_LIMIT=2700`,
    `EMAIL_ENABLED=true`, `EMAIL_DRY_RUN=false`,
-   `EMAIL_FLAG_APPLICATION_REMINDER=false`, `EMAIL_FLAG_JOB_ALERTS=false`.
+   `EMAIL_FLAG_APPLICATION_REMINDER=false`,
+   `EMAIL_FLAG_APPLICATION_SUBMITTED=true`,
+   `EMAIL_FLAG_JOB_ALERTS=false`.
    Locally also set `EMAIL_DEV_ALLOWLIST` or `EMAIL_DRY_RUN=true` so branches
    never mail real users, plus `EMAIL_TEST_RECIPIENT` for the live test.
    For the test suite, set `TEST_MONGODB_URI` (test-cluster address) and
@@ -173,6 +179,15 @@ Adding a template: create `src/lib/email/templates/my-template.tsx` exporting
 the component plus `subject()`/`text()` helpers, register it in
 `src/lib/email/render.tsx` (subject, HTML via React Email, plain text), add a
 sample to `templateSamples()`, and enqueue with a namespaced dedupe key.
+
+Admin candidate messaging: from an applicant modal (admin-only section),
+`POST /api/employer/messages/generate` drafts a message with AI (free, no
+credit deduction) and `POST /api/employer/messages/send` delivers it from
+`EMAIL_HIRING_FROM` with a P1 priority. The recipient always resolves
+server-side from the application; the request may carry an optional
+validated Reply-To (custom address or do-not-reply contact mode) but never a
+`to`. Sending also writes a `candidate_messaged` activity + in-app
+notification. The `hiring@` mailbox must exist to receive replies.
 
 Replaying failed mail: find the row in `email_outbox` (`status: failed`,
 `lastError` tells why), fix the cause, then reset it with

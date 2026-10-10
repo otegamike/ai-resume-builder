@@ -39,6 +39,7 @@ const ActivitySchema: Schema = new Schema<IActivity>(
         "application_viewed_by_employer",
         "application_status_changed",
         "application_withdrawn",
+        "candidate_messaged",
         "organization_registered",
         "onboarding_completed",
         "user_signup",
