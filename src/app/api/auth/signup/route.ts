@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { after } from "next/server";
 import crypto from "crypto";
 import dbConnect from "@/lib/db";
 import User from "@/models/User";
-import { enqueue, dedupeKeys } from "@/lib/email/dispatcher";
-import { drainOutbox } from "@/lib/email/drain";
+import { dedupeKeys } from "@/lib/email/dispatcher";
+import { enqueueAndSendNow } from "@/lib/email/drain";
 import { appUrl } from "@/lib/email/site";
 
 function createPasswordHash(password: string) {
@@ -43,21 +42,20 @@ export async function POST(request: NextRequest) {
       hasCompletedOnboarding: false,
     });
 
-    // Transactional welcome email. Runs after the response; a failure here
+    // Transactional welcome email, sent synchronously with a timeout. The
+    // outbox keeps the audit trail and retries on failure; a failure here
     // must never fail the signup itself.
     try {
-      await enqueue({
+      const mailed = await enqueueAndSendNow({
         type: "welcome",
         to: created.email,
         userId: created._id,
         payload: { name: created.name, dashboardUrl: `${appUrl()}/dashboard` },
         dedupeKey: dedupeKeys.welcome(String(created._id)),
       });
-      after(() => {
-        drainOutbox({ limit: 5 }).catch((err) => console.error("Welcome email drain failed:", err));
-      });
+      console.log(`[email] welcome status=${mailed.status}${mailed.reason ? ` reason=${mailed.reason}` : ""}`);
     } catch (err) {
-      console.error("Welcome email enqueue failed:", err);
+      console.error("Welcome email send failed:", err);
     }
 
     return NextResponse.json({ ok: true });

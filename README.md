@@ -140,15 +140,19 @@ confirmation can be switched off with `EMAIL_FLAG_APPLICATION_SUBMITTED=false`
 (the in-app notification already covers it); status-change mail is the priority
 channel and has no flag beyond the kill switch.
 
-How it works: triggering routes write an idempotent row to the `email_outbox`
-collection (`enqueue()`), then schedule a post-response drain via Next.js
-`after()` so mail leaves within seconds without slowing the request. A daily
-Vercel Cron route (`/api/cron/email-drain`) is the safety net for retries and
-scheduled sends. A Resend webhook (`/api/webhooks/resend`) tracks delivery and
-maintains the suppression list (bounced/complained addresses are never mailed
-again). The free-plan budget (100/day, 3,000/month, UTC day) is guarded in
-MongoDB before every send; when it runs out, P0 mail waits for the next UTC day
-instead of failing.
+How it works: every trigger sends synchronously first (`enqueueAndSendNow()`:
+idempotent insert by dedupeKey, then one Resend attempt bounded by an 8s
+timeout), and only failures fall back to the `email_outbox` queue. A daily
+Vercel Cron route (`/api/cron/email-drain`) sweeps whatever is left pending,
+deferred, or scheduled — it is the retry net, not the delivery path. User
+facing triggers (signup, apply, status change) always return their normal
+responses; mail outcome is logged. The two admin flows (candidate composer,
+outbox retry) return the outcome (`sent` / `queued` / `failed` + reason) in
+the API response. A Resend webhook (`/api/webhooks/resend`) tracks delivery
+and maintains the suppression list (bounced/complained addresses are never
+mailed again). The free-plan budget (100/day, 3,000/month, UTC day) is
+guarded in MongoDB before every send, including priority sends; when it runs
+out, P0 mail waits for the next UTC day instead of failing.
 
 Setup:
 1. Verify `agenticapp.cv` in Resend and create a sending-access API key.

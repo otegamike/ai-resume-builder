@@ -86,11 +86,11 @@ function MessageCandidate({ applicationId, candidateName }: { applicationId: str
   const [posterEmail, setPosterEmail] = useState("");
   const [generating, setGenerating] = useState(false);
   const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [statusNote, setStatusNote] = useState("");
 
   if (!isAdmin) return null;
 
-  const notify = (kind: "success" | "error", message: string) =>
+  const notify = (kind: "success" | "error" | "info", message: string) =>
     useAlertStore.getState().addAlert(kind, message);
 
   const handleGenerate = async () => {
@@ -106,7 +106,7 @@ function MessageCandidate({ applicationId, candidateName }: { applicationId: str
       setSubject(String(data.subject || ""));
       setBodyText(String(data.body || ""));
       setPosterEmail(String(data.posterEmail || ""));
-      setSent(false);
+      setStatusNote("");
     } catch (e: unknown) {
       notify("error", e instanceof Error ? e.message : "Failed to draft message");
     } finally {
@@ -124,8 +124,16 @@ function MessageCandidate({ applicationId, candidateName }: { applicationId: str
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to send message");
-      setSent(true);
-      notify("success", "Message sent to candidate");
+      if (data.emailStatus === "sent" || data.emailStatus === "already-sent") {
+        setStatusNote("Sent");
+        notify("success", "Message sent to candidate");
+      } else if (data.emailStatus === "queued") {
+        setStatusNote("Queued — sends automatically");
+        notify("info", `Message queued (${data.reason || "will retry"}). It will send automatically.`);
+      } else {
+        setStatusNote("");
+        throw new Error(data.reason || "Message was not sent");
+      }
     } catch (e: unknown) {
       notify("error", e instanceof Error ? e.message : "Failed to send message");
     } finally {
@@ -202,7 +210,7 @@ function MessageCandidate({ applicationId, candidateName }: { applicationId: str
         <Button onClick={handleSend} disabled={sending || generating || !subject.trim() || !bodyText.trim()}>
           {sending ? "Sending..." : "Send message"}
         </Button>
-        {sent ? <span className={styles.messageSent}>Sent</span> : null}
+        {statusNote ? <span className={styles.messageSent}>{statusNote}</span> : null}
       </div>
     </div>
   );

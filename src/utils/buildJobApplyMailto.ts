@@ -19,7 +19,7 @@ export function buildJobApplyMailto(args: {
   const href = `mailto:${email}?subject=${encodeURIComponent(subject)}`;
   if (!coverLetter) return href;
 
-  const maxHrefLength = 1800;
+  const maxHrefLength = 3800;
   let body = coverLetter;
   let fullHref = `${href}&body=${encodeURIComponent(body)}`;
   if (fullHref.length > maxHrefLength) {

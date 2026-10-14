@@ -1,5 +1,4 @@
 import type { NextAuthOptions } from "next-auth";
-import { after } from "next/server";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import crypto from "crypto";
@@ -7,8 +6,8 @@ import dbConnect from "@/lib/db";
 import User from "@/models/User";
 import { resetCreditsIfNeeded, getCurrentCycleString } from "@/lib/creditUtils";
 import { MAX_CREDITS_PER_PLAN } from "@/lib/creditCosts";
-import { enqueue, dedupeKeys } from "@/lib/email/dispatcher";
-import { drainOutbox } from "@/lib/email/drain";
+import { dedupeKeys } from "@/lib/email/dispatcher";
+import { enqueueAndSendNow } from "@/lib/email/drain";
 import { appUrl } from "@/lib/email/site";
 
 function hashPassword(password: string, salt: string) {
@@ -83,23 +82,20 @@ export const authOptions: NextAuthOptions = {
 
       if (isNewUser) {
         await User.updateOne({ email: user.email }, { $set: { hasCompletedOnboarding: false } });
-        // Transactional welcome email for OAuth signups. Same dedupe key
-        // scheme as the credentials route, so only one welcome ever sends.
+        // Transactional welcome email for OAuth signups, sent synchronously
+        // with a timeout. Same dedupe key scheme as the credentials route,
+        // so only one welcome ever sends.
         try {
-          await enqueue({
+          const mailed = await enqueueAndSendNow({
             type: "welcome",
             to: String(dbUser!.email),
             userId: dbUser!._id,
             payload: { name: dbUser!.name ?? "", dashboardUrl: `${appUrl()}/dashboard` },
             dedupeKey: dedupeKeys.welcome(String(dbUser!._id)),
           });
-          after(() => {
-            drainOutbox({ limit: 5 }).catch((err) =>
-              console.error("Welcome email drain failed:", err)
-            );
-          });
+          console.log(`[email] welcome status=${mailed.status}${mailed.reason ? ` reason=${mailed.reason}` : ""}`);
         } catch (err) {
-          console.error("Welcome email enqueue failed:", err);
+          console.error("Welcome email send failed:", err);
         }
       }
 

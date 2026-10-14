@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { after } from "next/server";
 import { Types } from "mongoose";
 import dbConnect from "@/lib/db";
 import JobApplication from "@/models/JobApplication";
@@ -8,8 +7,8 @@ import User from "@/models/User";
 import Company from "@/models/Company";
 import { getAuthenticatedUser } from "@/lib/authUser";
 import { recordActivity } from "@/lib/activityService";
-import { enqueue, dedupeKeys, isValidEmail } from "@/lib/email/dispatcher";
-import { drainOutbox } from "@/lib/email/drain";
+import { dedupeKeys, isValidEmail } from "@/lib/email/dispatcher";
+import { enqueueAndSendNow } from "@/lib/email/drain";
 import { appUrl } from "@/lib/email/site";
 import { canComposeMessages } from "@/lib/email/permissions";
 
@@ -137,8 +136,11 @@ export async function POST(req: Request) {
       console.error("Failed to record candidate_messaged:", err);
     }
 
+    let emailStatus: string = "skipped";
+    let resendId: string | undefined;
+    let emailReason: string | undefined;
     try {
-      await enqueue({
+      const mailed = await enqueueAndSendNow({
         type: "candidate-message",
         to: candidateEmail,
         userId: application.applicantId,
@@ -157,16 +159,17 @@ export async function POST(req: Request) {
         priority: 1,
         relatedActivityId: activityId,
       });
-      after(() => {
-        drainOutbox({ limit: 5 }).catch((err) =>
-          console.error("Candidate message drain failed:", err)
-        );
-      });
+      emailStatus = mailed.status;
+      resendId = mailed.resendId;
+      emailReason = mailed.reason;
+      console.log(`[email] candidate-message status=${mailed.status}${mailed.reason ? ` reason=${mailed.reason}` : ""}`);
     } catch (err) {
-      console.error("Candidate message enqueue failed:", err);
+      console.error("Candidate message send failed:", err);
+      emailStatus = "failed";
+      emailReason = "send_error";
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, emailStatus, resendId, reason: emailReason });
   } catch (error: unknown) {
     console.error("Error sending candidate message:", error);
     return NextResponse.json({ error: "Failed to send message" }, { status: 500 });

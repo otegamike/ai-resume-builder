@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import EmailOutbox from "@/models/EmailOutbox";
+import { sendRowNow } from "@/lib/email/drain";
 
 void EmailOutbox;
 
@@ -38,7 +39,21 @@ export async function POST(request: Request) {
     row.lockedAt = null;
     await row.save();
 
-    return NextResponse.json({ success: true, _id: String(row._id), status: row.status });
+    // Synchronous priority attempt: return whether it actually sent instead
+    // of leaving the row for the next cron run.
+    const fresh = await EmailOutbox.findById(outboxId);
+    if (!fresh) {
+      return NextResponse.json({ error: "Email not found" }, { status: 404 });
+    }
+    const outcome = await sendRowNow(fresh);
+    console.log(`[email] admin-retry status=${outcome.status}${outcome.reason ? ` reason=${outcome.reason}` : ""}`);
+    return NextResponse.json({
+      success: outcome.status === "sent" || outcome.status === "queued",
+      _id: String(row._id),
+      emailStatus: outcome.status,
+      resendId: outcome.resendId,
+      reason: outcome.reason,
+    });
   } catch (error) {
     console.error("Error retrying admin email:", error);
     return NextResponse.json({ error: "Failed to retry email" }, { status: 500 });

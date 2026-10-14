@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { after } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
@@ -7,8 +6,8 @@ import JobApplication from "@/models/JobApplication";
 import User from "@/models/User";
 import JobAd from "@/models/JobAd";
 import { recordActivity } from "@/lib/activityService";
-import { enqueue, dedupeKeys } from "@/lib/email/dispatcher";
-import { drainOutbox } from "@/lib/email/drain";
+import { dedupeKeys } from "@/lib/email/dispatcher";
+import { enqueueAndSendNow } from "@/lib/email/drain";
 import { appUrl } from "@/lib/email/site";
 
 void JobAd;
@@ -97,7 +96,7 @@ export async function PUT(
         notificationLink: `/dashboard/jobs?tab=history`,
       }).catch((err) => console.error("Failed to record application_status_changed:", err));
 
-      // Status-change email: the priority mail for applicants. Skipped for
+      // Status-change email, sent synchronously with a timeout. Skipped for
       // withdrawals (the candidate's own action). Never fails the update.
       if (status !== "withdrawn") {
         try {
@@ -105,7 +104,7 @@ export async function PUT(
           const candidateEmail = String(candidate?.email || "").trim();
           if (candidateEmail) {
             const applicantName = candidate?.name || candidateEmail;
-            await enqueue({
+            const mailed = await enqueueAndSendNow({
               type: "application-status-changed",
               to: candidateEmail,
               userId: application.applicantId,
@@ -119,14 +118,10 @@ export async function PUT(
               },
               dedupeKey: dedupeKeys.applicationStatusChanged(String(application._id), String(status)),
             });
-            after(() => {
-              drainOutbox({ limit: 5 }).catch((err) =>
-                console.error("Status email drain failed:", err)
-              );
-            });
+            console.log(`[email] application-status-changed status=${mailed.status}${mailed.reason ? ` reason=${mailed.reason}` : ""}`);
           }
         } catch (err) {
-          console.error("Status email enqueue failed:", err);
+          console.error("Status email send failed:", err);
         }
       }
     }

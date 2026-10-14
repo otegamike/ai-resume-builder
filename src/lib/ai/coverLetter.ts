@@ -30,7 +30,7 @@ You are generating a cover letter and inferring job details. Return ONLY a valid
 ## COVER LETTER INSTRUCTIONS
 Write exactly 4-5 paragraphs with these distinct roles:
 
-1. **Opening**: Do NOT start with generic filler like "I'm excited to apply," "I saw your job posting," or "Your opportunity caught my eye." Do NOT paraphrase the company's stated mission, tagline, or "what we do" description back to them — restating their own pitch in different words is not an observation, it's a mirror. Instead, name a specific challenge or tension the role realistically involves day-to-day (something implied by the responsibilities, not just the company's marketing language), and briefly note why that's the kind of problem the candidate finds engaging. Never use the phrase "aligns with my passion" or similar stock enthusiasm phrasing.
+1. **Opening**: Express genuine interest in the specific role and company. Connect the role's core purpose to the candidate's motivation in one or two sentences. Do not summarize the whole job description here.
 
 2. **Experience narrative**: Synthesize the candidate's overall professional experience into a flowing narrative, IN YOUR OWN WORDS. Do NOT copy or closely paraphrase resume bullet points line by line. Describe the shape and scope of their work (what kinds of problems they solve, how they operate, what they're known for) rather than listing what they did. Do not include metrics or numbers.
 
@@ -41,7 +41,7 @@ Write exactly 4-5 paragraphs with these distinct roles:
    - Frame the stack as how the candidate operates, not what they've touched: e.g. "core stack centers on X and Y for Z" or "I architect end-to-end apps, building A with X, enforcing B with Y."
    - Absolutely no comma-separated tool inventories and no "I routinely build / use / leverage" constructions.
 
-5. **Closing**: Reaffirm enthusiasm for contributing to this specific company/team. End with a concrete next step (e.g. offering to walk through relevant work), never a stock line like "I look forward to hearing from you." Keep to one or two sentences.
+5. **Closing**: Reaffirm enthusiasm for contributing to this specific company/team and invite next steps. Keep to one or two sentences.
 
 ## STYLE RULES
 - Never copy resume phrasing or bullet structure verbatim — always rewrite in new sentence structures

@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { after } from "next/server";
 import { Types } from "mongoose";
 import dbConnect from "@/lib/db";
 import JobAd from "@/models/JobAd";
@@ -16,8 +15,8 @@ import type { JobApplyPayload } from "@/types/JobApplyInput";
 import { IUploadedResumeDocument } from "@/models/UploadedResume";
 import { recordActivity } from "@/lib/activityService";
 import Notification from "@/models/Notification";
-import { enqueue, dedupeKeys } from "@/lib/email/dispatcher";
-import { drainOutbox } from "@/lib/email/drain";
+import { dedupeKeys } from "@/lib/email/dispatcher";
+import { enqueueAndSendNow } from "@/lib/email/drain";
 import { appUrl } from "@/lib/email/site";
 
 void JobAd;
@@ -242,13 +241,14 @@ export async function POST(
       console.error("Failed to record application_submitted:", err);
     }
 
-    // Transactional application emails. Runs after the response; a failure
-    // here must never fail the application itself.
+    // Transactional application emails, sent synchronously with a timeout.
+    // Failures fall back to the outbox queue; a failure here must never
+    // fail the application itself.
     try {
       const applicationId = String(newApplication._id);
       const base = appUrl();
 
-      await enqueue({
+      const submitted = await enqueueAndSendNow({
         type: "application-submitted",
         to: authUser.user.email || "",
         userId: authUser.userObjectId,
@@ -261,6 +261,7 @@ export async function POST(
         dedupeKey: dedupeKeys.applicationSubmitted(applicationId),
         relatedActivityId: activityId,
       });
+      console.log(`[email] application-submitted status=${submitted.status}${submitted.reason ? ` reason=${submitted.reason}` : ""}`);
 
       // Employer alerts go out for on-platform applications only.
       // External-link and email-type jobs are completed off the platform.
@@ -274,7 +275,7 @@ export async function POST(
           if (employerEmail) employerUserId = employerId as Types.ObjectId;
         }
         if (employerEmail) {
-          await enqueue({
+          const received = await enqueueAndSendNow({
             type: "application-received",
             to: employerEmail,
             userId: employerUserId,
@@ -287,14 +288,11 @@ export async function POST(
             dedupeKey: dedupeKeys.applicationReceived(applicationId),
             relatedActivityId: activityId,
           });
+          console.log(`[email] application-received status=${received.status}${received.reason ? ` reason=${received.reason}` : ""}`);
         }
       }
-
-      after(() => {
-        drainOutbox({ limit: 5 }).catch((err) => console.error("Apply email drain failed:", err));
-      });
     } catch (err) {
-      console.error("Apply email enqueue failed:", err);
+      console.error("Apply email send failed:", err);
     }
 
     let unreadCount: number | undefined;
