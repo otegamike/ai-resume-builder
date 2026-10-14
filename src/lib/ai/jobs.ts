@@ -26,13 +26,15 @@ CRITICAL RULES — preserve wording:
 - For enums, map to the closest allowed value but still base it on source text: category must be one of ${JSON.stringify(JOB_CATEGORIES)} (default "Other"), jobType one of ["full-time","part-time","contract","freelance","internship"] (default "full-time"), workplaceType one of ["remote","hybrid","on-site"] (default "remote"), experienceLevel one of ["entry","mid","senior","lead","executive"] (default "mid"), applicationType one of ["on_platform","external_link","email"] (default "on_platform").
 - For applicationType: set to "external_link" ONLY if source contains a verbatim apply URL (e.g. "Apply at https://..." ), "email" ONLY if it contains a verbatim apply email (e.g. "send CV to jobs@..."), otherwise "on_platform". Copy URL/email verbatim when present; never invent. If neither URL nor email is present, return "" for both externalUrl and contactEmail.
 - For salary: recognize patterns like "$90K - $120K", "$90,000", "₦2,000,000", "£35k per annum", "€45/hr", "NGN 500k–800k", "2,000 USD per month". Extract salaryMin as first number, salaryMax as second number or null if single value, salaryCurrency from symbol ($→USD, £→GBP, €→EUR, ₦→NGN, ₹→INR) or code (USD, NGN, GBP, EUR) normalized to uppercase 3-letter code, salaryPeriod from keywords "per year|annum|yearly→yearly, per month|monthly→monthly, per hour|hourly|/hr→hourly". If text says "Competitive" or "Negotiable" return nulls and leave currency as "USD".
-- For summary: generate a concise SOCIAL SHARE summary (max 280 chars, plain text, no HTML) in this rich style when source has enough detail, but ALWAYS cap at 280. Example of the shape (condense to fit 280):
-  Hiring: Growth Trainees (Sales & Marketing Track)
-  📍 Location: Fully Remote (Open to candidates across Nigeria)
-  Brielle Consulting Services (BCS) is accepting applications for its 90-day performance-based trainee cohort! Perfect for ambitious graduates, NYSC corps members, and entry-level talent looking...
-  Compensation & Perks: Uncapped earnings NGN 180,000-500,000+…
-  Roles Open: 1️⃣ Commercial Sales Trainee… 2️⃣ Growth Marketing Trainee…
-  Keep compensation/location verbatim when present, adapt to source, preserve the "Hiring:" + "📍 Location:" header style, and truncate intelligently to stay ≤280 chars. Do NOT use HTML. If source is short, a one-sentence role+location+perk line is fine.
+- For summary: Plain text only, no HTML, no markdown code fences. Max 280 characters total — hard cap.
+    Use this header style when possible (adapt to source):
+      Hiring: {Job Title}
+      📍 Location: {location + workplaceType}
+      Then 1-2 sentences of pitch + 1 line each of top perk/compensation and requirement if present.
+    Preserve title, company, location, and compensation verbatim when present. Do not invent.
+    Keep it catchy and skimmable. Truncate intelligently to stay ≤280.
+    Do not add "apply now" or other generic calls to action.
+    Do not expose the email or link to apply in the summary.
 
 Return ONLY a JSON object with this exact schema — no markdown, no explanation:
 {
@@ -95,9 +97,10 @@ Rules:
 - Use this header style when possible (adapt to source):
   Hiring: {Job Title}
   📍 Location: {location + workplaceType}
-  Then 1-2 sentences of pitch + 1 line of top perk/compensation if present.
+  Then 1-2 sentences of pitch + 1 line each of top perk/compensation and requirement if present.
 - Preserve title, company, location, and compensation verbatim when present. Do not invent.
 - Keep it catchy and skimmable. Truncate intelligently to stay ≤280.
+- Do not add "apply now" or other generic calls to action.
 
 Job to summarize:
 ${jobText}

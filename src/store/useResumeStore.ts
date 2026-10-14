@@ -67,6 +67,7 @@ interface ResumeState {
   fetchUploadedResumes: () => Promise<void>;
   getResumeById: (id: string) => ResumeDocument | undefined;
   getUploadedResumeById: (id: string) => UploadedResumeClient | undefined;
+  upsertResume: (item: ResumeDocument) => void;
   upsertUploadedResume: (item: UploadedResumeClient) => void;
   removeUploadedResume: (id: string) => void;
   deleteUploadedResume: (id: string) => Promise<void>;
@@ -151,6 +152,17 @@ export const useResumeStore = create<ResumeState>((set, get) => ({
     })();
 
     return fetchUploadedResumesPromise;
+  },
+
+  upsertResume: (item: ResumeDocument) => {
+    set((state) => {
+      const exists = state.resumes.some((r) => r._id === item._id);
+      return {
+        resumes: exists
+          ? state.resumes.map((r) => (r._id === item._id ? item : r))
+          : [...state.resumes, item],
+      };
+    });
   },
 
   upsertUploadedResume: (item: UploadedResumeClient) => {

@@ -97,7 +97,7 @@ export async function POST(
     }
 
     let resumeDoc: { _id: Types.ObjectId; title: string; template: string; content: unknown; updatedAt: string } | null = null;
-    let uploadedResumeDoc: { _id: Types.ObjectId; resumeId: Types.ObjectId; pages: string[] } | null = null;
+    let uploadedResumeDoc: { _id: Types.ObjectId; resumeId: Types.ObjectId; title: string; pages: string[]; parsedResume: unknown } | null = null;
 
     if (resume.resumeType === "uploaded") {
       const cachedResume: IUploadedResumeDocument | null = await UploadedResume.findOne({
@@ -125,7 +125,9 @@ export async function POST(
       uploadedResumeDoc = {
         _id: cachedResume._id,
         resumeId: cachedResume.resumeId,
+        title: cachedResume.title || `uploaded-resume-${cachedResume._id.toString()}`,
         pages,
+        parsedResume: cachedResume.parsedResume,
       };
     } else {
       const savedResume = await Resume.findOne({

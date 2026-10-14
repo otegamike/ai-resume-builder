@@ -229,6 +229,7 @@
   width: 100%;
   overflow: hidden;
   border-radius: 0.7rem;
+  aspect-ratio: 1 / 1.414;
 
   .loadingComponent {
     position: absolute;

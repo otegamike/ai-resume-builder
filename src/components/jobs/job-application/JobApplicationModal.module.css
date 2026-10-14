@@ -107,7 +107,7 @@
   margin-bottom: var(--space-2);
 }
 
-.stepTitle { font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--primary-900); margin-bottom: var(--space-1); }
+.stepTitle { font-size: var(--text-md); font-weight: var(--font-bold); color: var(--primary-900); margin-bottom: var(--space-1); }
 .stepSubtitle { font-size: var(--text-sm); color: var(--gray-500); line-height: 1.5; margin-bottom: var(--space-4); }
 
 .tierPill {
@@ -191,11 +191,16 @@
   margin-top: var(--space-2);
 }
 
-.continueHint {
+.continueHint, .continueHintEmail {
   font-size: var(--text-xs);
   color: var(--gray-500);
   word-break: break-all;
   max-width: 100%;
+}
+
+.continueHintEmail {
+  font-size: var(--text-sm);
+  color: var(--primary-700);
 }
 
 .emailApplyBtn {

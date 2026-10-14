@@ -41,6 +41,7 @@ export interface UsePanZoomOptions {
   isOpen: boolean;
   initialZoom?: number;
   onClose?: () => void;
+  suspended?: boolean;
 }
 
 export interface UsePanZoomReturn {
@@ -66,7 +67,7 @@ export function usePanZoom(
   contentRef: React.RefObject<HTMLDivElement | null>,
   options: UsePanZoomOptions
 ): UsePanZoomReturn {
-  const { isOpen, initialZoom, onClose } = options;
+  const { isOpen, initialZoom, onClose, suspended } = options;
 
   const state = useRef<PanZoomTransform>({ x: 0, y: 0, z: 1 });
   const minZ = useRef(0.5);
@@ -551,6 +552,8 @@ export function usePanZoom(
   }, [isOpen]);
 
   // Keyboard: Escape closes, +/- zoom, arrows pan, 0 fits.
+  // While suspended (simplified text mode) only Escape stays active so
+  // arrow keys scroll the document normally instead of panning hidden state.
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (e: KeyboardEvent) => {
@@ -559,6 +562,7 @@ export function usePanZoom(
         onCloseRef.current?.();
         return;
       }
+      if (suspended) return;
       if (e.key === "+" || e.key === "=") {
         hasInteracted.current = true;
         zoomAboutCenter(1.2);
@@ -583,7 +587,7 @@ export function usePanZoom(
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [isOpen, clampPan, endInteracting, fit, markInteracting, schedule, zoomAboutCenter]);
+  }, [isOpen, suspended, clampPan, endInteracting, fit, markInteracting, schedule, zoomAboutCenter]);
 
   return { zoomIn, zoomOut, fit, zoomPercent, minZoomPercent, maxZoomPercent };
 }

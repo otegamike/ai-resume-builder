@@ -13,7 +13,9 @@ export const uploadedResumeDocumentSchema: Schema = new Schema<IUploadedResumeDo
   {
     _id: { type: Schema.Types.ObjectId, required: true, ref: "UploadedResume" },
     resumeId: { type: Schema.Types.ObjectId, ref: "Resume", required: false },
+    title: { type: String, required: false },
     pages: { type: [String], required: true },
+    parsedResume: { type: Schema.Types.Mixed, required: false, default: null },
   },
   { _id: false }
 );

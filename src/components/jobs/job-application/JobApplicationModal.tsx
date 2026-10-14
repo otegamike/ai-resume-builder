@@ -25,6 +25,7 @@ import { maskEmail } from "@/utils/maskEmail";
 import { buildJobApplyMailto } from "@/utils/buildJobApplyMailto";
 import ResumePlusViewer, { UploadedResumePlusViewer } from "@/components/resume/ResumePlusViewer";
 import Modal from "@/components/ui/modal/Modal";
+import StepIndicator from "@/components/ui/StepIndicator";
 
 interface JobDetail {
   _id: string;
@@ -73,6 +74,7 @@ export default function JobApplicationModal({ job, open, onClose, draft }: Props
   const [copied, setCopied] = useState(false);
   const [senderInfo, setSenderInfo] = useState({ name: "", email: "", phone: "", location: "" });
   const getResumeById = useResumeStore((s) => s.getResumeById);
+  const resumes = useResumeStore((s) => s.resumes);
   const [submitting, setSubmitting] = useState(false);
   const [applyError, setApplyError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -152,24 +154,66 @@ export default function JobApplicationModal({ job, open, onClose, draft }: Props
         }
         if (d.tailoredResumeId) setTailoredResumeId(d.tailoredResumeId);
         setStep(typeof d.currentStep === "number" ? Math.min(Math.max(d.currentStep, 0), 2) : 0);
-        const store = useResumeStore.getState();
-        if (d.resume?.resumeType === "platform" && d.resume.resumeId) {
-          const r = store.getResumeById(d.resume.resumeId);
-          if (r?.content?.personalInfo) {
-            prefillResumeRef.current = { mode: "saved", id: d.resume.resumeId };
-            setInitialResume({ mode: "saved", id: d.resume.resumeId });
-            setSelectorKey((k) => k + 1);
-            const pi = r.content.personalInfo;
-            setSenderInfo({ name: pi.name || "", email: pi.email || "", phone: pi.phone || "", location: pi.location || "" });
+        const applyChoice = (
+          mode: "saved" | "upload",
+          id: string,
+          personalInfo?: { name?: string; email?: string; phone?: string; location?: string } | null
+        ) => {
+          prefillResumeRef.current = { mode, id };
+          setInitialResume({ mode, id });
+          setSelectorKey((k) => k + 1);
+          if (personalInfo) {
+            setSenderInfo({
+              name: personalInfo.name || "",
+              email: personalInfo.email || "",
+              phone: personalInfo.phone || "",
+              location: personalInfo.location || "",
+            });
           }
-        } else if (d.resume?.resumeType === "uploaded" && d.resume.uploadedResumeId) {
-          const u = store.getUploadedResumeById(d.resume.uploadedResumeId);
-          if (u?.parsedResume?.personalInfo) {
-            prefillResumeRef.current = { mode: "upload", id: d.resume.uploadedResumeId };
-            setInitialResume({ mode: "upload", id: d.resume.uploadedResumeId });
-            setSelectorKey((k) => k + 1);
-            const pi = u.parsedResume.personalInfo;
-            setSenderInfo({ name: pi.name || "", email: pi.email || "", phone: pi.phone || "", location: pi.location || "" });
+        };
+        const fetchSavedResumeById = async (id: string) => {
+          try {
+            const res = await fetch(`/api/resumes/${id}`);
+            if (!res.ok || cancelled) return null;
+            const data = await res.json().catch(() => null);
+            if (!data || typeof data._id !== "string" || !data.content) return null;
+            useResumeStore.getState().upsertResume(data);
+            return data as { _id: string; content: { personalInfo?: { name?: string; email?: string; phone?: string; location?: string } | null } };
+          } catch {
+            return null;
+          }
+        };
+        // The tailored copy is what gets sent, so reselect it first when it
+        // still exists. Otherwise fall back to the original draft resume.
+        if (d.tailoredResumeId) {
+          let t = useResumeStore.getState().getResumeById(d.tailoredResumeId);
+          if (!t) {
+            const fetched = await fetchSavedResumeById(d.tailoredResumeId);
+            if (fetched) t = useResumeStore.getState().getResumeById(d.tailoredResumeId);
+          }
+          if (!cancelled && t?.content) {
+            applyChoice("saved", t._id, t.content.personalInfo);
+          }
+        }
+        if (!prefillResumeRef.current) {
+          if (d.resume?.resumeType === "platform" && d.resume.resumeId) {
+            let r = useResumeStore.getState().getResumeById(d.resume.resumeId);
+            if (!r) {
+              await fetchSavedResumeById(d.resume.resumeId);
+              if (!cancelled) r = useResumeStore.getState().getResumeById(d.resume.resumeId);
+            }
+            if (!cancelled && r?.content) {
+              applyChoice("saved", r._id, r.content.personalInfo);
+            } else if (!cancelled) {
+              setAnalysisError("The resume on this draft is no longer available — pick another to continue.");
+            }
+          } else if (d.resume?.resumeType === "uploaded" && d.resume.uploadedResumeId) {
+            const u = useResumeStore.getState().getUploadedResumeById(d.resume.uploadedResumeId);
+            if (!cancelled && u && (u.parsedResume || u.pages?.length)) {
+              applyChoice("upload", d.resume.uploadedResumeId, u.parsedResume?.personalInfo);
+            } else if (!cancelled) {
+              setAnalysisError("The uploaded resume on this draft is no longer available — upload it again to continue.");
+            }
           }
         }
       } catch {
@@ -189,6 +233,12 @@ export default function JobApplicationModal({ job, open, onClose, draft }: Props
 
   const handleSelectionChange = useCallback((sel: ResumeSelection | null) => {
     const expected = prefillResumeRef.current;
+    if (!sel && expected) {
+      // Empty report from remounting the selector for a draft restore, not
+      // the user clearing their pick. Ignore it so the restored analysis and
+      // tailored id survive until the restored resume reports in.
+      return;
+    }
     if (sel && expected) {
       const matches =
         (expected.mode === "saved" && sel.mode === "saved" && sel.selectedResumeId === expected.id) ||
@@ -203,6 +253,10 @@ export default function JobApplicationModal({ job, open, onClose, draft }: Props
         if (pi) setSenderInfo({ name: pi.name || "", email: pi.email || "", phone: pi.phone || "", location: pi.location || "" });
         return;
       }
+      // The user picked a different resume while a restore was pending: drop
+      // the pending restore so later emissions (including clearing) behave
+      // like fresh choices and trigger a new analysis.
+      prefillResumeRef.current = null;
     }
     restoredAnalysisRef.current = false;
     setSelection(sel);
@@ -523,6 +577,13 @@ export default function JobApplicationModal({ job, open, onClose, draft }: Props
   const tailoredTier = tailoredReport ? getTier(tailoredReport.matchAnalysis.score) : null;
   const tailoredDiff = tailoredReport && analysis ? tailoredReport.matchAnalysis.score - analysis.score : 0;
   const offPlatformType = job.applicationType === "external_link" || job.applicationType === "email";
+  // When resuming a draft the full tailor report is not stored, only the id
+  // of the tailored copy. Fall back to that saved copy so the review step
+  // shows what will actually be sent.
+  const tailoredSavedResume =
+    tailoredResumeId && !tailoredReport
+      ? resumes.find((r) => r._id === tailoredResumeId)
+      : undefined;
 
   const handleConfirmOffPlatform = async () => {
     if (!validateQuestions()) return;
@@ -552,22 +613,19 @@ export default function JobApplicationModal({ job, open, onClose, draft }: Props
   return (
     <Modal open={open} onClose={onClose} title={`Apply to ${job.title}`} size="md">
 
-        <div className={styles.stepIndicator}>
-          {Array.from({ length: totalSteps }).map((_, i) => (
-            <div key={i} className={`${styles.stepDot} ${i === step ? styles.stepDotActive : ""} ${i < step ? styles.stepDotDone : ""}`}>
-              {i < step ? <Check className={styles.stepDotIcon} /> : <span>{i + 1}</span>}
-            </div>
-          ))}
-        </div>
+        {!success && <StepIndicator step={step} totalSteps={totalSteps} />}
 
         {success ? (
           offPlatformType ? (
             <div className={styles.successState}>
               <CheckCircle2 size={48} />
-              <h3>Application saved — continue off-platform</h3>
-              <p>
-                Your application was saved here. You&apos;re now heading off-platform to finish applying directly with the employer.
-              </p>
+              <h3>Continue off-platform</h3>
+              {job.applicationType === "email" && job.contactEmail ? 
+                <p>Your application was saved here. You&apos;re about to send an email directly to the employer. <br/> <span className={styles.continueHintEmail}>{job.contactEmail}</span></p>
+              : 
+                <p>Your application was saved here. You&apos;re now heading off-platform to finish applying directly with the employer.</p>
+              }
+              
               <div className={styles.continueActions}>
                 {job.applicationType === "external_link" && job.externalUrl ? (
                   <a href={job.externalUrl} target="_blank" rel="noopener noreferrer" className={styles.primaryBtn}>
@@ -592,9 +650,7 @@ export default function JobApplicationModal({ job, open, onClose, draft }: Props
               </div>
               {job.applicationType === "external_link" && job.externalUrl ? (
                 <span className={styles.continueHint}>{job.externalUrl}</span>
-              ) : job.applicationType === "email" && job.contactEmail ? (
-                <span className={styles.continueHint}>{job.contactEmail}</span>
-              ) : null}
+              ) :  null}
             </div>
           ) : (
             <div className={styles.successState}>
@@ -606,12 +662,13 @@ export default function JobApplicationModal({ job, open, onClose, draft }: Props
           )
         ) : (
           <>
+          {/* STEP 1 */}
 
           <div ref={cardRef} data-steps-wrapper data-scroll-container className={styles.stepsWrapper}>
             <div className={`${styles.stepContent} ${step === 0 ? styles.stepActive : ""}`}>
               <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: step === 0 ? 1 : 0, x: step === 0 ? 0 : 16 }} transition={{ duration: 0.25 }} style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-              <div className={styles.stepBadge}>Step 1 of {totalSteps}</div>
-              <h3 className={styles.stepTitle}>Select your resume</h3>
+              
+              <h4 className={styles.stepTitle}>Select your resume</h4>
               <p className={styles.stepSubtitle}>Choose a saved resume or upload a PDF/image. We’ll analyze how well it matches this job.</p>
 
               <ResumeSelector
@@ -629,8 +686,10 @@ export default function JobApplicationModal({ job, open, onClose, draft }: Props
               {analysis && tier && !tailoredReport && (
                 <div id='analysisReport' style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "1rem", border: "1px solid var(--gray-200)", borderRadius: "var(--radius-lg)", padding: "1rem", background: "var(--gray-50)" }}>
                   <div className={styles.analysisGrid}>
-                    <ScoreCircle score={analysis.score} />
-                    <span className={`${styles.tierPill} ${tier.cls}`}>{tier.label}</span>
+                    <div>
+                      <ScoreCircle score={analysis.score} /> 
+                      <span className={`${styles.tierPill} ${tier.cls}`}>{tier.label}</span>
+                    </div>
                     <div className={styles.analysisText}>
                       <span className={styles.tierHint}>{tier.hint}</span>
                       {analysis.verdict && <p style={{ fontSize: "var(--text-sm)", color: "var(--gray-700)", lineHeight: 1.5 }}>{analysis.verdict}</p>}
@@ -669,6 +728,7 @@ export default function JobApplicationModal({ job, open, onClose, draft }: Props
                   </AiButton>
                 </div>
               )}
+
 
               {analysis && tier && tailoredReport && tailoredTier && (
                 <div id="tailoredReport" style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "1rem", border: "1px solid var(--gray-200)", borderRadius: "var(--radius-lg)", padding: "1rem", background: "var(--gray-50)" }}>
@@ -716,9 +776,8 @@ export default function JobApplicationModal({ job, open, onClose, draft }: Props
 
               
 
-              <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: step === 1 ? 1 : 0, x: step === 1 ? 0 : 16 }} transition={{ duration: 0.25 }} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              <div className={styles.stepBadge}>Step 2 of {totalSteps}</div>
-              <h3 className={styles.stepTitle}>Additional information</h3>
+              <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: step === 1 ? 1 : 0, x: step === 1 ? 0 : 16 }} transition={{ duration: 0.25 }} style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              <h4 className={styles.stepTitle}>Additional information</h4>
               <p className={styles.stepSubtitle}>{hasQuestions ? "Answer employer questions and add an optional cover letter." : "Add an optional cover letter."}</p>
 
               {applyError && <div className={styles.errorBanner}>{applyError}</div>}
@@ -767,9 +826,9 @@ export default function JobApplicationModal({ job, open, onClose, draft }: Props
             {/* STEP 3 */}
 
             <div className={`${styles.stepContent} ${step === 2 ? styles.stepActive : ""}`}>
-              <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: step === 2 ? 1 : 0, x: step === 2 ? 0 : 16 }} transition={{ duration: 0.25 }} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              <div className={styles.stepBadge}>Step 3 of {totalSteps}</div>
-              <h3 className={styles.stepTitle}>Review and apply</h3>
+              <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: step === 2 ? 1 : 0, x: step === 2 ? 0 : 16 }} transition={{ duration: 0.25 }} style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+
+              <h4 className={styles.stepTitle}>Review and apply</h4>
               <p className={styles.stepSubtitle}>Review your resume, answers, and cover letter before sending.</p>
 
               {applyError && <div className={styles.errorBanner}>{applyError}</div>}
@@ -779,10 +838,10 @@ export default function JobApplicationModal({ job, open, onClose, draft }: Props
                   <div className={viewerStyles.previewThumbnail} style={{ maxHeight: "320px" }}>
                     {selection?.mode === "saved" && selection.selectedSavedResume ? (
 
-                      <ResumePlusViewer 
-                        title = {`${selection.selectedSavedResume.title || "Resume"}${tailoredReport ? " — Tailored" : ""}`}
-                        templateId={selection.selectedSavedResume.template}
-                        content={tailoredReport?.tailoredResume ?? selection.selectedSavedResume.content}
+                      <ResumePlusViewer
+                        title={`${(tailoredSavedResume?.title || selection.selectedSavedResume.title) || "Resume"}${tailoredReport || tailoredSavedResume ? " — Tailored" : ""}`}
+                        templateId={tailoredSavedResume?.template || selection.selectedSavedResume.template}
+                        content={tailoredReport?.tailoredResume ?? tailoredSavedResume?.content ?? selection.selectedSavedResume.content}
                       />
   
                     ) : selection?.mode === "upload" && selection.pdfPreviewUrls.length > 0 ? (
@@ -823,7 +882,6 @@ export default function JobApplicationModal({ job, open, onClose, draft }: Props
                 </div>
 
                 {tailoredResumeId && <div className={styles.successBanner}><CheckCircle2 size={14} /> Tailored resume will be sent.</div>}
-                {!tailoredResumeId && selection?.mode === "upload" && <div className={styles.successBanner}><AlertTriangle size={14} /> Uploaded resume will be sent as images.</div>}
               </div>
               </motion.div>
             </div>

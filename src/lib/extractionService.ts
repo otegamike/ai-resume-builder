@@ -29,6 +29,7 @@ export interface UploadedResumeListLike {
   status?: string;
   pageCount?: number;
   resumeTitle?: string;
+  parsedResume?: ResumeContent;
 }
 
 export function toUploadedResumeListItem(doc: UploadedResumeListLike): UploadedResumeClient {
@@ -45,6 +46,9 @@ export function toUploadedResumeListItem(doc: UploadedResumeListLike): UploadedR
     ...(doc.extractionVersion ? { extractionVersion: doc.extractionVersion } : {}),
     ...(status ? { status } : {}),
     ...(typeof doc.pageCount === "number" ? { pageCount: doc.pageCount } : {}),
+    // Parsed content is small next to the page images and lets clients
+    // reselect a previous upload (e.g. resuming a draft) without refetching.
+    ...(doc.parsedResume ? { parsedResume: doc.parsedResume } : {}),
   };
 }
 

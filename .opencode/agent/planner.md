@@ -1,7 +1,6 @@
 ---
 description: Explores a codebase and produces a detailed implementation plan. Strictly read-only — never edits, writes, or runs destructive/mutating commands.
 mode: primary
-model: anthropic/claude-sonnet-4-20250514
 temperature: 0.1
 permission:
   edit: deny

@@ -1,4 +1,4 @@
-import styles from './StepIndicator.module.css'
+import styles from './stepIndicator.module.css'
 import { Check } from 'lucide-react'
 
 function StepIndicator({ totalSteps, step }: { totalSteps: number, step: number }) {

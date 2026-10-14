@@ -9,6 +9,7 @@ import { templateDefinitions } from "@/lib/templateCatalog";
 import { getRandomTemplateId } from "@/utils/templateUtils";
 import { recordActivity } from "@/lib/activityService";
 import { toUploadedResumeListItem } from '@/lib/extractionService';
+import type { ResumeContent } from '@/types/ResumeData';
 
 void UploadedResume;
 
@@ -45,6 +46,7 @@ export async function GET(request: NextRequest) {
         status?: unknown;
         pageCount?: unknown;
         resumeId?: { title?: unknown } | null;
+        parsedResume?: unknown;
       }[];
       uploadedResumes = docs.map((doc) =>
         toUploadedResumeListItem({
@@ -57,6 +59,7 @@ export async function GET(request: NextRequest) {
           status: typeof doc.status === 'string' ? doc.status : undefined,
           pageCount: typeof doc.pageCount === 'number' ? doc.pageCount : undefined,
           resumeTitle: typeof doc.resumeId?.title === 'string' ? doc.resumeId.title : undefined,
+          parsedResume: (doc.parsedResume as ResumeContent) ?? undefined,
         })
       );
     }

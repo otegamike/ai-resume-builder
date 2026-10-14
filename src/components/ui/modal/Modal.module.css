@@ -45,7 +45,7 @@
 .title {
   font-size: var(--text-lg);
   font-weight: var(--font-bold);
-  color: var(--primary-900);
+  color: var(--neutral-700);
 }
 
 .closeBtn {

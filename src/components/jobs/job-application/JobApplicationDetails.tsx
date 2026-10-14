@@ -54,6 +54,7 @@ export default function JobApplicationDetails({ application }: JobApplicationDet
               _id: application.uploadedResume._id ? String(application.uploadedResume._id) : undefined,
               title: application.uploadedResume.title || "Uploaded Resume",
               pages: application.uploadedResume.pages,
+              ...((application.uploadedResume.parsedResume || resumeContent) ? { parsedResume: application.uploadedResume.parsedResume || resumeContent } : {}),
             }} /> 
           : 
             <ResumePlusViewer templateId={normalizedId} content={resumeContent} />
