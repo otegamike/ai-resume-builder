@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/Input";
 import { Plus, Trash2, X } from "lucide-react";
 import { CREDIT_COST } from "@/lib/creditCosts";
 import styles from "../page.module.css";
+import BulletInput from "./BulletInput";
 import type { Experience } from "@/types/ResumeData";
 import { useState } from "react";
 
@@ -47,12 +48,7 @@ export default function ExperienceTab({
     onChange(exp.id, "description", newDescription);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent, exp: Experience) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAddBullet(exp);
-    }
-  };
+
 
   return (
     <div className={styles.formSection}>
@@ -132,12 +128,11 @@ export default function ExperienceTab({
                     </ul>
                   ) }
 
-                  <textarea
-                    placeholder={`List your roles and responsiblities${exp.company ? ` at ${exp.company}` : ""}... (press enter to add)`}
-                    className={`${styles.experienceInput} ${styles.textarea}`}
+                  <BulletInput
+                    placeholder={`List your roles and responsiblities${exp.company ? ` at ${exp.company}` : ""}... (press enter or tap to add)`}
                     value={getBulletInput(exp.id)}
-                    onChange={(e) => setBulletInput(exp.id, e.target.value)}
-                    onKeyDown={(e) => handleKeyDown(e, exp)}
+                    onChange={(value) => setBulletInput(exp.id, value)}
+                    onSubmit={() => handleAddBullet(exp)}
                   />
                 </div>
               </div>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Copy, Check, Edit, Save } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import CoverLetterSubjectLine from "./CoverLetterSubjectLine";
 import styles from "./CoverLetterResultCard.module.css";
 
 interface SenderInfo {
@@ -78,9 +79,7 @@ export default function CoverLetterResultCard({
         </>
       )}
 
-      <div className={styles.subjectBlock}>
-        Re: <strong>{roleDisplay}</strong> &mdash; {name}
-      </div>
+      <CoverLetterSubjectLine role={roleDisplay} name={name} />
 
       {editMode ? (
         <textarea

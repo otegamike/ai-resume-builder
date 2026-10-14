@@ -23,6 +23,8 @@ import styles from "./JobApplicationModal.module.css";
 import { delayedScrollIntoView } from "@/utils/scrollIntoview";
 import { maskEmail } from "@/utils/maskEmail";
 import { buildJobApplyMailto } from "@/utils/buildJobApplyMailto";
+import { composeCoverLetterBody } from "@/utils/composeCoverLetterBody";
+import { useUserStore } from "@/store/useUserStore";
 import ResumePlusViewer, { UploadedResumePlusViewer } from "@/components/resume/ResumePlusViewer";
 import Modal from "@/components/ui/modal/Modal";
 import StepIndicator from "@/components/ui/StepIndicator";
@@ -120,6 +122,11 @@ export default function JobApplicationModal({ job, open, onClose, draft }: Props
   useEffect(() => {
     if (!open) resetAll();
   }, [open, resetAll]);
+
+  useEffect(() => {
+    if (!open) return;
+    useUserStore.getState().ensureCoverLetterPrefs().catch(() => undefined);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -402,7 +409,10 @@ export default function JobApplicationModal({ job, open, onClose, draft }: Props
 
   const handleCopyCoverLetter = async () => {
     try {
-      await navigator.clipboard.writeText(coverLetterText);
+      const { coverLetterIntro, coverLetterOutro } = useUserStore.getState();
+      await navigator.clipboard.writeText(
+        composeCoverLetterBody({ body: coverLetterText, intro: coverLetterIntro, outro: coverLetterOutro })
+      );
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {

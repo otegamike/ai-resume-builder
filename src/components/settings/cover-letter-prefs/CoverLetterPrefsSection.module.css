@@ -1,0 +1,93 @@
+.card {
+  background-color: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.cardHeader {
+  padding: var(--space-6);
+  color: var(--neutral-500);
+}
+
+.cardHeaderTop {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.cardHeaderIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--primary-1);
+}
+
+.cardHeaderTitle {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+}
+
+.cardHeaderDescription {
+  font-size: var(--text-sm);
+  color: var(--gray-500);
+  margin-top: var(--space-1);
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  padding-top: 0;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--gray-700);
+}
+
+.textarea {
+  width: 100%;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  background-color: white;
+  padding: var(--space-3);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--neutral-500);
+  resize: vertical;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--primary-1);
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.textarea:disabled {
+  background-color: #f5f5f5;
+  color: #71717a;
+  cursor: not-allowed;
+}
+
+.inputHelper {
+  font-size: var(--text-xs);
+  color: var(--gray-400);
+}
+
+.error {
+  font-size: var(--text-sm);
+  color: var(--red-500);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}

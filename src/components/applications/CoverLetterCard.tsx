@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Copy, Check, Edit, Save } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import CoverLetterSubjectLine from "@/components/cover-letter/CoverLetterSubjectLine";
 import type { TailorReport } from "@/types/TailorReport";
 import styles from "./CoverLetterCard.module.css";
 
@@ -66,9 +67,7 @@ export default function CoverLetterCard({
 
       <hr className={styles.hairline} />
 
-      <div className={styles.subjectBlock}>
-        Re: <strong>{roleDisplay}</strong> &mdash; {name}
-      </div>
+      <CoverLetterSubjectLine role={roleDisplay} name={name} />
 
       {editMode ? (
         <textarea

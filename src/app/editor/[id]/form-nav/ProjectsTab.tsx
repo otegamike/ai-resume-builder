@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Plus, Trash2, X } from "lucide-react";
 import styles from "../page.module.css";
+import BulletInput from "./BulletInput";
 import type { Project } from "@/types/ResumeData";
 import { useState } from "react";
 
@@ -41,12 +42,7 @@ export default function ProjectsTab({
     onChange(proj.id, "description", newDescription);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent, proj: Project) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAddBullet(proj);
-    }
-  };
+
 
   return (
     <div className={styles.formSection}>
@@ -97,12 +93,11 @@ export default function ProjectsTab({
                     </ul>
                   ) }
 
-                  <textarea
-                    placeholder={`Describe your project${proj.name ? ` ${proj.name}` : ""}... (press enter to add)`}
-                    className={`${styles.experienceInput} ${styles.textarea}`}
+                  <BulletInput
+                    placeholder={`Describe your project${proj.name ? ` ${proj.name}` : ""}... (press enter or tap to add)`}
                     value={getBulletInput(proj.id)}
-                    onChange={(e) => setBulletInput(proj.id, e.target.value)}
-                    onKeyDown={(e) => handleKeyDown(e, proj)}
+                    onChange={(value) => setBulletInput(proj.id, value)}
+                    onSubmit={() => handleAddBullet(proj)}
                   />
                 </div>
               </div>

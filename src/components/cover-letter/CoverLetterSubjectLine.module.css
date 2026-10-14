@@ -1,0 +1,46 @@
+.subjectButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  background: var(--primary-50);
+  border: 1px solid var(--primary-200);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--primary-800);
+  line-height: 1.5;
+  cursor: pointer;
+  text-align: left;
+}
+
+.subjectButton:hover {
+  border-color: var(--primary-300);
+}
+
+.subjectButton:focus-visible {
+  outline: 2px solid var(--primary-1);
+  outline-offset: 2px;
+}
+
+.subjectText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copiedHint {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+  font-size: var(--text-xs);
+  color: var(--primary-600);
+}
+
+.copiedIcon {
+  width: 0.875rem;
+  height: 0.875rem;
+}

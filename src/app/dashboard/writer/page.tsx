@@ -22,6 +22,9 @@ import { buildResumeFormData } from "@/hooks/useResumeFormData";
 import { useResumeStore } from "@/store/useResumeStore";
 import CoverLetterResultCard from "@/components/cover-letter/CoverLetterResultCard";
 import CoverLetterHistory from "@/components/cover-letter/CoverLetterHistory";
+import CoverLetterPrefsSection from "@/components/settings/cover-letter-prefs/CoverLetterPrefsSection";
+import { composeCoverLetterBody } from "@/utils/composeCoverLetterBody";
+import { useUserStore } from "@/store/useUserStore";
 import { CoverLetterItem } from "@/types/CoverLetterData";
 import { CREDIT_COST } from "@/lib/creditCosts";
 import { useAiCreditStore } from "@/store/useAiCreditStore";
@@ -205,10 +208,13 @@ export default function WriterPage() {
     }
   }
 
-  // ── Copy handler ──
+  // ── Copy handler (wraps body with saved intro/outro) ──
   async function handleCopy() {
     try {
-      await navigator.clipboard.writeText(clContent);
+      const { coverLetterIntro, coverLetterOutro } = useUserStore.getState();
+      await navigator.clipboard.writeText(
+        composeCoverLetterBody({ body: clContent, intro: coverLetterIntro, outro: coverLetterOutro })
+      );
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -390,6 +396,8 @@ export default function WriterPage() {
               </div>
             </div>
           </section>
+
+          <CoverLetterPrefsSection />
 
           <section className={styles.panel}>
             <div className={styles.sectionHeader}>

@@ -36,6 +36,8 @@ export interface IUser {
   accountType?: "candidate" | "employer" | "both";
   organizationId?: Types.ObjectId;
   pinnedResume?: string;
+  coverLetterIntro: string;
+  coverLetterOutro: string;
   emailPreferences: {
     jobAlerts: boolean;
     marketing: boolean;
@@ -81,6 +83,8 @@ const UserSchema: Schema = new Schema<IUser>(
     accountType: { type: String, enum: ["candidate", "employer", "both"], default: "candidate" },
     organizationId: { type: Schema.Types.ObjectId, ref: "Company" },
     pinnedResume: { type: String, default: "" },
+    coverLetterIntro: { type: String, default: "Dear Hiring Manager," },
+    coverLetterOutro: { type: String, default: "" },
     emailPreferences: {
       jobAlerts: { type: Boolean, default: false },
       marketing: { type: Boolean, default: false },

@@ -1475,8 +1475,7 @@ input.titleInput:focus {
 
   .sectionCardsContainer {
     height: 100%;
-    margin-bottom: 9rem;
-   }
+  }
 
   .formSectionTitle {
     font-size: var(--text-md);

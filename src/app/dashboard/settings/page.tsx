@@ -6,6 +6,7 @@ import { getAuthenticatedUser } from "@/lib/authUser";
 import dbConnect from "@/lib/db";
 import Subscription from "@/models/Subscription";
 import CancelButton from "@/components/subscription/CancelButton";
+import CoverLetterPrefsSection from "@/components/settings/cover-letter-prefs/CoverLetterPrefsSection";
 import { hasActiveAccess } from "@/lib/subscription";
 import { formatPlan } from "@/lib/creditCosts";
 import styles from "./page.module.css";
@@ -128,6 +129,8 @@ export default async function DashboardSettingsPage() {
           </div>
         </div>
       </div>
+
+      <CoverLetterPrefsSection />
 
       <div className={styles.card}>
         <div className={styles.cardHeader}>
