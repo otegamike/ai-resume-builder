@@ -915,7 +915,7 @@ export default function JobApplicationModal({ job, open, onClose, draft }: Props
                   <button type="button" onClick={handleConfirmOffPlatform} className={styles.primaryBtn} disabled={submitting}>
                     {submitting ? (
                       <>
-                        <Loader2 size={16} className={styles.spinner} /> Sending...
+                        <Loader2 size={16} className={styles.spinner} />
                       </>
                     ) : (
                       <>
@@ -927,7 +927,7 @@ export default function JobApplicationModal({ job, open, onClose, draft }: Props
                   <button type="button" onClick={handleConfirmOffPlatform} className={`${styles.primaryBtn} ${styles.emailApplyBtn}`} disabled={submitting}>
                     {submitting ? (
                       <>
-                        <Loader2 size={16} className={styles.spinner} /> Sending...
+                        <Loader2 size={16} className={styles.spinner} />
                       </>
                     ) : (
                         <span className={styles.emailBtnLabel}>
@@ -939,7 +939,7 @@ export default function JobApplicationModal({ job, open, onClose, draft }: Props
                   <button type="button" onClick={handleConfirmOffPlatform} className={styles.primaryBtn} disabled={submitting}>
                     {submitting ? (
                       <>
-                        <Loader2 size={16} className={styles.spinner} /> Sending...
+                        <Loader2 size={16} className={styles.spinner} />
                       </>
                     ) : (
                       <>
@@ -949,7 +949,7 @@ export default function JobApplicationModal({ job, open, onClose, draft }: Props
                   </button>
                 )
               ) : (
-                <button type="button" onClick={(e) => handleApply(e as any)} className={styles.primaryBtn} disabled={submitting}>{submitting ? <><Loader2 size={16} className={styles.spinner} /> Sending...</> : <><Send size={16} /> Send application</>}</button>
+                <button type="button" onClick={(e) => handleApply(e as any)} className={styles.primaryBtn} disabled={submitting}>{submitting ? <><Loader2 size={16} className={styles.spinner} /> Submitting...</> : <><Send size={16} /> Send application</>}</button>
               )
             )}
           </div>
