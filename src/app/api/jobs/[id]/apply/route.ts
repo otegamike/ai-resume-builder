@@ -97,34 +97,36 @@ export async function POST(
     }
 
     let resumeDoc: { _id: Types.ObjectId; title: string; template: string; content: unknown; updatedAt: string } | null = null;
-    let uploadedResumeDoc: { _id: Types.ObjectId; resumeId: Types.ObjectId; title: string; pages: string[]; parsedResume: unknown } | null = null;
+    let uploadedResumeDoc: { _id: Types.ObjectId; resumeId?: Types.ObjectId; title: string; pages: string[]; parsedResume: unknown } | null = null;
 
     if (resume.resumeType === "uploaded") {
+      // The snapshot is built purely from the upload itself. No link to a
+      // platform resume is needed: older uploads predate the link feature and
+      // the linked copy may have been deleted since.
       const cachedResume: IUploadedResumeDocument | null = await UploadedResume.findOne({
         _id: resume.uploadedResumeId,
         userId: authUser.userObjectId,
         status: "done",
       });
-      if (!cachedResume || !cachedResume.parsedResume || !cachedResume.resumeId) {
+      if (!cachedResume || !cachedResume.parsedResume) {
         return NextResponse.json({ error: "Selected resume is no longer available. Please select it again." }, { status: 400 });
       }
       const pages = (cachedResume.pages as string[]) ?? [];
-      const linkedResume = await Resume.findById(cachedResume.resumeId).select("template");
-      if (!linkedResume) {
+      if (pages.length === 0) {
         return NextResponse.json({ error: "Selected resume is no longer available. Please select it again." }, { status: 400 });
       }
 
       resumeDoc = {
-        _id: cachedResume.resumeId,
+        _id: cachedResume._id,
         title: cachedResume.title || `uploaded-resume-${cachedResume._id.toString()}`,
-        template: linkedResume.template,
+        template: "template1",
         content: cachedResume.parsedResume,
         updatedAt: new Date().toISOString(),
       };
 
       uploadedResumeDoc = {
         _id: cachedResume._id,
-        resumeId: cachedResume.resumeId,
+        ...(cachedResume.resumeId ? { resumeId: cachedResume.resumeId } : {}),
         title: cachedResume.title || `uploaded-resume-${cachedResume._id.toString()}`,
         pages,
         parsedResume: cachedResume.parsedResume,
