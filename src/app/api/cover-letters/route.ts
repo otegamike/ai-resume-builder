@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Types } from "mongoose";
 import dbConnect from "@/lib/db";
 import CoverLetter from "@/models/CoverLetter";
 import { getAuthenticatedUser } from "@/lib/authUser";
@@ -39,7 +40,6 @@ export async function POST(request: NextRequest) {
 
     await dbConnect();
     const coverLetter = new CoverLetter({
-      userId: authUser.legacyUserId || String(authUser.userObjectId),
       user: authUser.userObjectId,
       title,
       targetCompany: targetCompany || "",
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       title: `Created cover letter "${title}"`,
       detail: `Created cover letter "${title}"`,
       entityType: "coverLetter",
-      entityId: saved._id as any,
+      entityId: saved._id as Types.ObjectId,
       metadata: { title, targetCompany, targetRole },
     }).catch((err) => console.error("Failed to record cover_letter_created:", err));
 

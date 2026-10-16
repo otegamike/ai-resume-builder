@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     const wantUploaded = listType !== 'saved';
 
     await dbConnect();
-    const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId, authUser.legacyUserId);
+    const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId);
     const resumes = wantSaved ? await Resume.find(ownerQuery).sort({ updatedAt: -1 }) : [];
     if (wantSaved) {
       await Resume.updateMany({ ...ownerQuery, user: { $exists: false } }, { $set: { user: authUser.userObjectId } });
@@ -101,7 +101,6 @@ export async function POST(request: NextRequest) {
 
     await dbConnect();
     const resume = new Resume({
-      userId: authUser.legacyUserId || String(authUser.userObjectId),
       user: authUser.userObjectId,
       title,
       template: template || getRandomTemplateId(templateDefinitions),
@@ -118,7 +117,7 @@ export async function POST(request: NextRequest) {
       title: `Created resume "${title}"`,
       detail: `Created resume "${title}"`,
       entityType: "resume",
-      entityId: savedResume._id as any,
+      entityId: savedResume._id as Types.ObjectId,
       metadata: { title },
     }).catch((err) => console.error("Failed to record resume_created:", err));
 

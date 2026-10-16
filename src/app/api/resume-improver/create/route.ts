@@ -31,7 +31,6 @@ export async function POST(request: NextRequest) {
 
     await dbConnect();
     const resume = new Resume({
-      userId: authUser.legacyUserId || String(authUser.userObjectId),
       user: authUser.userObjectId,
       title: body.title || "Improved Resume",
       template: body.template || getRandomTemplateId(templateDefinitions),

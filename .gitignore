@@ -40,3 +40,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+
+#backup files
+quarantine-backup-2026-10-16.json
+quarantine-backup-2026-10-16.json
+ownership-report.json
+migration-report.json

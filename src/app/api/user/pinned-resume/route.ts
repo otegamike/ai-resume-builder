@@ -37,7 +37,7 @@ export async function PATCH(request: NextRequest) {
     await dbConnect();
 
     if (resumeId) {
-      const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId, authUser.legacyUserId);
+      const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId);
       const resume = await Resume.findOne({ _id: resumeId, ...ownerQuery });
       if (!resume) {
         return NextResponse.json({ error: "Resume not found" }, { status: 404 });

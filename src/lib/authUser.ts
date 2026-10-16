@@ -4,6 +4,12 @@ import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import User from "@/models/User";
 
+// Minimal identity passed into server-only services. Ownership is always the
+// ObjectId `user` field; legacy string ids are gone.
+export interface AuthUserShape {
+  userObjectId: Types.ObjectId;
+}
+
 export async function getAuthenticatedUser() {
   const session = await getServerSession(authOptions);
   const email = session?.user?.email;
@@ -24,13 +30,13 @@ export async function getAuthenticatedUser() {
     session,
     user,
     userObjectId: user._id as Types.ObjectId,
-    legacyUserId: session.user.id || "",
   };
 }
 
-export function buildResumeOwnerQuery(userObjectId: Types.ObjectId, legacyUserId: string) {
-  const fallback = legacyUserId ? [{ userId: legacyUserId }] : [];
+// Single ownership rule for user-owned documents: the ObjectId `user` field.
+// Legacy string ids are no longer consulted anywhere.
+export function buildResumeOwnerQuery(userObjectId: Types.ObjectId) {
   return {
-    $or: [{ user: userObjectId }, ...fallback],
+    user: userObjectId,
   };
 }

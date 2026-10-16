@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Types } from 'mongoose';
 import dbConnect from '@/lib/db';
 import Resume from '@/models/Resume';
 import { getAuthenticatedUser, buildResumeOwnerQuery } from '@/lib/authUser';
@@ -23,7 +24,7 @@ export async function GET(
       return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
     }
 
-    const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId, authUser.legacyUserId);
+    const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId);
     const resume = await Resume.findOne({ _id: id, ...ownerQuery });
 
     if (!resume) {
@@ -61,7 +62,7 @@ export async function PUT(
     }
 
     await dbConnect();
-    const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId, authUser.legacyUserId);
+    const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId);
     const resume = await Resume.findOneAndUpdate(
       { _id: id, ...ownerQuery },
       {
@@ -69,7 +70,6 @@ export async function PUT(
         content,
         template: template || getRandomTemplateId(templateDefinitions),
         user: authUser.userObjectId,
-        userId: authUser.legacyUserId || String(authUser.userObjectId),
         updatedAt: new Date()
       },
       { returnDocument: "after" }
@@ -87,7 +87,7 @@ export async function PUT(
       title: `Updated resume "${title}"`,
       detail: `Updated resume "${title}"`,
       entityType: "resume",
-      entityId: resume._id as any,
+      entityId: resume._id as Types.ObjectId,
       metadata: { title },
     }).catch((err) => console.error("Failed to record resume_updated:", err));
 
@@ -110,7 +110,7 @@ export async function DELETE(
     }
 
     await dbConnect();
-    const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId, authUser.legacyUserId);
+    const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId);
     const resume = await Resume.findOneAndDelete({ _id: id, ...ownerQuery });
 
     if (!resume) {
@@ -125,7 +125,7 @@ export async function DELETE(
       title: `Deleted resume "${resume.title}"`,
       detail: `Deleted resume "${resume.title}"`,
       entityType: "resume",
-      entityId: resume._id as any,
+      entityId: resume._id as Types.ObjectId,
       metadata: { title: resume.title },
     }).catch((err) => console.error("Failed to record resume_deleted:", err));
 

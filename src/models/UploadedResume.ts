@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Types } from "mongoose";
+import mongoose, { Schema, Types } from "mongoose";
 import { UploadedResume } from "@/types/ResumeData";
 
 interface IUploadedResume extends Omit<UploadedResume, 'resumeId'> {
@@ -25,7 +25,7 @@ const uploadedResumeSchema: Schema = new Schema<IUploadedResume>(
   {
     resumeId: { type: Schema.Types.ObjectId, ref: "Resume", required: false },
     title: { type: String, default: "" },
-    userId: { type: Schema.Types.ObjectId, ref: "User", index: true },
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     fileHash: { type: String, match: /^[a-f0-9]{64}$/ },
     extractionVersion: { type: String, default: "v1" },
     status: { type: String, enum: ["pending", "done", "failed"], default: "pending" },

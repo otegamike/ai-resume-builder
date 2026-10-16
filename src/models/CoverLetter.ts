@@ -1,8 +1,7 @@
-import mongoose, { Schema, Document, Types } from "mongoose";
+import mongoose, { Schema, Types } from "mongoose";
 
 export interface ICoverLetter {
   _id: Types.ObjectId;
-  userId: string;
   user: Types.ObjectId;
   title: string;
   targetCompany: string;
@@ -15,8 +14,7 @@ export interface ICoverLetter {
 
 const CoverLetterSchema: Schema = new Schema<ICoverLetter>(
   {
-    userId: { type: String, index: true },
-    user: { type: Schema.Types.ObjectId, ref: "User", index: true },
+    user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     title: { type: String, required: true },
     targetCompany: { type: String, default: "" },
     targetRole: { type: String, default: "" },

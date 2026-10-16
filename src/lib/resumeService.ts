@@ -13,10 +13,7 @@ import { recordActivity } from "@/lib/activityService";
 
 void Resume;
 
-export type AuthUserShape = {
-  userObjectId: Types.ObjectId;
-  legacyUserId: string;
-};
+import type { AuthUserShape } from "@/lib/authUser";
 
 export interface CreateResumeParams {
   authUser: AuthUserShape;
@@ -33,7 +30,6 @@ export async function createResume(params: CreateResumeParams): Promise<IResume 
   const resolvedTemplate = template ?? getRandomTemplateId(templateDefinitions);
 
   const resume = new Resume({
-    userId: authUser.legacyUserId || String(authUser.userObjectId),
     user: authUser.userObjectId,
     title,
     template: resolvedTemplate,

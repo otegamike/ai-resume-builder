@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Types } from "mongoose";
 import dbConnect from "@/lib/db";
 import Application from "@/models/Application";
 import CoverLetter from "@/models/CoverLetter";
@@ -26,8 +27,15 @@ export async function GET() {
 
     const enriched = applications.map((app) => {
       const doc = app.toObject();
-      const resumeDoc = doc.resumeId as any;
-      const coverLetter = doc.coverLetterId as any;
+      const resumeDoc = doc.resumeId as unknown as {
+        _id?: Types.ObjectId;
+        content?: unknown;
+        template?: string;
+      } | null;
+      const coverLetter = doc.coverLetterId as unknown as {
+        _id?: Types.ObjectId;
+        content?: string;
+      } | null;
 
 
       return {
@@ -62,7 +70,6 @@ export async function POST(request: NextRequest) {
 
     await dbConnect();
     const application = new Application({
-      userId: authUser.legacyUserId || String(authUser.userObjectId),
       user: authUser.userObjectId,
       company,
       role,

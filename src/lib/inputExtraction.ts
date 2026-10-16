@@ -1,7 +1,7 @@
 import "server-only";
 
-import { Types } from "mongoose";
 import { buildResumeOwnerQuery } from "@/lib/authUser";
+import type { AuthUserShape } from "@/lib/authUser";
 import { extractResumeTextFromImages, extractTextFromJobImage } from "@/lib/ai";
 import type { AiRequestContext } from "@/lib/ai";
 import dbConnect from "@/lib/db";
@@ -29,10 +29,7 @@ export class InputExtractionError extends Error {
   }
 }
 
-export type AuthUserShape = {
-  userObjectId: Types.ObjectId;
-  legacyUserId: string;
-};
+export type { AuthUserShape };
 
 export type ResumeMode = "saved" | "upload";
 
@@ -126,7 +123,7 @@ export async function resolveResumeInput(
     }
 
     await dbConnect();
-    const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId, authUser.legacyUserId);
+    const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId);
     const resume = await Resume.findOne({ _id: resumeId, ...ownerQuery });
 
     if (!resume) {

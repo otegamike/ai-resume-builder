@@ -14,7 +14,6 @@ export type ApplicationSource = "platform" | "off_platform";
 
 export interface IApplication extends Document {
   _id: Types.ObjectId;
-  userId: string;
   user: Types.ObjectId;
   company: string;
   role: string;
@@ -42,8 +41,7 @@ export interface IApplication extends Document {
 
 const ApplicationSchema: Schema = new Schema<IApplication>(
   {
-    userId: { type: String, index: true },
-    user: { type: Schema.Types.ObjectId, ref: "User", index: true },
+    user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     company: { type: String, required: true },
     role: { type: String, required: true },
     status: {

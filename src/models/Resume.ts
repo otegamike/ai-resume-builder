@@ -2,8 +2,7 @@ import mongoose, { Schema, Types } from "mongoose";
 import { ResumeObj } from "@/types/ResumeData";
 
 export interface IResume extends ResumeObj {
-  userId?: string;
-  user?: Types.ObjectId;
+  user: Types.ObjectId;
 }
 
 
@@ -78,8 +77,7 @@ export const ResumeDocumentSchema: Schema = new Schema<IResumeDocument>(
 
 const ResumeSchema: Schema = new Schema<IResume>(
   {
-    userId: { type: String, index: true },
-    user: { type: Schema.Types.ObjectId, ref: "User", index: true },
+    user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     title: { type: String, required: true },
     template: { type: String, default: 'modern' },
     content: { type: ResumeContentSchema, default: () => ({}) },

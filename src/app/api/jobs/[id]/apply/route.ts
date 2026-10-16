@@ -134,11 +134,7 @@ export async function POST(
     } else {
       const savedResume = await Resume.findOne({
         _id: resume.resumeId,
-        $or: [
-          { user: authUser.userObjectId },
-          { userId: authUser.legacyUserId },
-          { userId: String(authUser.userObjectId) },
-        ],
+        user: authUser.userObjectId,
       });
       if (!savedResume) {
         return NextResponse.json({ error: "Resume not found" }, { status: 404 });

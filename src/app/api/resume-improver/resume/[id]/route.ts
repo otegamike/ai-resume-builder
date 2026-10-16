@@ -24,7 +24,7 @@ export async function POST(
     const ctx = aiContextFromAuthUser(authUser);
 
     await dbConnect();
-    const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId, authUser.legacyUserId);
+    const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId);
     const resume = await Resume.findOne({ _id: id, ...ownerQuery });
 
     if (!resume) {

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Types } from "mongoose";
 import { getAuthenticatedUser } from "@/lib/authUser";
 import { aiContextFromAuthUser, generateCoverLetter, GroqCallError, toAiErrorResponse } from "@/lib/ai";
 import dbConnect from "@/lib/db";
@@ -52,7 +53,6 @@ export async function POST(request: Request) {
         : "Cover Letter";
 
     const coverLetter = new CoverLetter({
-      userId: authUser.legacyUserId || String(authUser.userObjectId),
       user: authUser.userObjectId,
       title,
       targetCompany,
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
       title: `Generated cover letter for ${targetRole || "role"}${targetCompany ? ` at ${targetCompany}` : ""}`,
       detail: title,
       entityType: "coverLetter",
-      entityId: saved._id as any,
+      entityId: saved._id as Types.ObjectId,
       metadata: { title, targetCompany, targetRole },
     }).catch((err) => console.error("Failed to record cover_letter_generated:", err));
 

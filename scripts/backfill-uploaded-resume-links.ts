@@ -3,9 +3,9 @@
  *
  * Since resume processing started creating the Resume at upload time,
  * every finished upload is expected to carry resumeId. Records finished
- * before that change have parsed content but no link, which the apply
- * route now requires. This script creates the missing Resume docs and
- * links them. Idempotent: only touches done docs missing resumeId.
+ * before that change have parsed content but no link. This script creates
+ * the missing Resume docs and links them so those uploads are also editable
+ * as platform resumes. Idempotent: only touches done docs missing resumeId.
  *
  * Usage:
  *   npx tsx scripts/backfill-uploaded-resume-links.ts            # write mode
@@ -55,7 +55,7 @@ async function main() {
     }
 
     const resume = await createResume({
-      authUser: { userObjectId: doc.userId as Types.ObjectId, legacyUserId: "" },
+      authUser: { userObjectId: doc.userId as Types.ObjectId },
       title,
       content: doc.parsedResume as ResumeContent,
     });

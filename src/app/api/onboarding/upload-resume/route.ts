@@ -77,7 +77,7 @@ export async function POST(request: Request) {
       title: "Completed onboarding",
       detail: `Imported resume and completed onboarding`,
       entityType: "user",
-      entityId: authUser.userObjectId as any,
+      entityId: authUser.userObjectId,
       metadata: { resumeId: String(savedResume._id), targetRole, industry },
     }).catch((err) => console.error("Failed to record onboarding_completed:", err));
 

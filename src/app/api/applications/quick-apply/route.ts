@@ -57,7 +57,6 @@ export async function POST(request: Request) {
         : "Cover Letter";
 
     const coverLetter = new CoverLetter({
-      userId: authUser.legacyUserId || String(authUser.userObjectId),
       user: authUser.userObjectId,
       title,
       targetCompany: effectiveCompany,
@@ -78,7 +77,6 @@ export async function POST(request: Request) {
     const selectedTemplateId = getRandomTemplateId(templateDefinitions);
 
     const tailoredResumeDoc = new Resume({
-      userId: authUser.legacyUserId || String(authUser.userObjectId),
       user: authUser.userObjectId,
       title: `${
         existingResume?.personalInfo?.name || report.tailoredResume.personalInfo.name || "Resume"
@@ -90,7 +88,6 @@ export async function POST(request: Request) {
     const savedResume = await tailoredResumeDoc.save();
 
     const application = new Application({
-      userId: authUser.legacyUserId || String(authUser.userObjectId),
       user: authUser.userObjectId,
       company: effectiveCompany,
       role: effectiveRole,
