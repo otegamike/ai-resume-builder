@@ -386,7 +386,16 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
     })()
       .catch((err) => {
         if (controller.signal.aborted) return;
-        setPdfFileError(err instanceof Error ? err.message : "Failed to process PDF");
+        const raw = err instanceof Error ? err.message : String(err);
+        console.error("[resume-upload] failed to process file", {
+          message: raw,
+          stack: err instanceof Error ? err.stack : undefined,
+          userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "unknown",
+        });
+        const isKnownMessage = /^(Please upload|Resume processing requires|Extraction is still running|That resume is no longer)/.test(raw);
+        setPdfFileError(
+          isKnownMessage ? raw : "We couldn't process this file. Please try again or use a different browser."
+        );
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
@@ -397,7 +406,7 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
   }
 
   async function renderPdfPreview(file: File) {
-    const pdfjsLib = await import("pdfjs-dist");
+    const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
     if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
       pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
     }

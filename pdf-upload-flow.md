@@ -11,8 +11,8 @@ User selects PDF
        │
        ▼
 [Client] ResumeSelector.renderPdfPreview()
-  ├─ Dynamically imports pdfjs-dist
-  ├─ Sets worker to /pdf.worker.min.mjs (copied to public/ by postinstall)
+  ├─ Dynamically imports pdfjs-dist/legacy/build/pdf.mjs (legacy build)
+  ├─ Sets worker to /pdf.worker.min.mjs (legacy worker, copied to public/ by postinstall)
   ├─ Renders each page to <canvas> @ 2x scale
   └─ Stores canvas refs + preview data URLs
        │
@@ -35,7 +35,7 @@ User selects PDF
 ### `src/components/resume/ResumeSelector.tsx`
 - Shared component used by onboarding and all dashboard pages (improve, writer, tailor, applications)
 - Handles both image and PDF file selection
-- For PDFs: renders to canvas using `pdfjs-dist` with a locally-hosted worker (`/pdf.worker.min.mjs`)
+- For PDFs: renders to canvas using `pdfjs-dist/legacy/build/pdf.mjs` with a locally-hosted worker (`/pdf.worker.min.mjs`)
 - Enforces per-plan page limits via `MAX_PDF_PAGES_PER_PLAN` + `useSession()` (`creditCosts.ts`)
 - Owns all upload machinery internally (file input, canvas refs, file hashes, backend processing)
 - Communicates selection via slim `ResumeSelection` interface (finished results only):
@@ -70,16 +70,15 @@ const extractedText = await extractResumeTextFromImages(dataUrls);
 
 ## Why Not Server-Side PDF Parsing?
 
-- `pdfjs-dist/legacy/build/pdf.mjs` tries to dynamically import `pdf.worker.mjs` for its fake worker
-- The relative `import("./pdf.worker.mjs")` with `/*webpackIgnore:true*/` fails in serverless bundles
-- Error: `Setting up fake worker failed: "Cannot find module '...pdf.worker.mjs'"`
-- Client-side rendering avoids this entirely — the real worker is bundled in `node_modules/pdfjs-dist/build/pdf.worker.min.mjs` and copied to `public/` via a `postinstall` script, keeping it off a CDN
+- Server-side use of `pdfjs-dist` fails in serverless bundles (Lambda/Vercel) because its fake worker dynamically imports `pdf.worker.mjs`, which the bundler cannot resolve.
+- The client uses the **legacy build** (`pdfjs-dist/legacy/build/pdf.mjs` + the legacy worker). The legacy build bundles its own polyfills for the new `Uint8Array` helpers (`toHex`, `toBase64`, `fromBase64`), so PDF fingerprinting works on browsers that lack those methods (older Safari/iOS, older Chrome/Firefox).
+- Client-side rendering avoids the serverless problem entirely — the real worker is bundled in `node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs` and copied to `public/` via a `postinstall` script, keeping it off a CDN.
 
 ## Worker Deployment
 
 The `postinstall` script in `package.json` copies the worker file:
 ```
-"postinstall": "node -e \"require('fs').cpSync('node_modules/pdfjs-dist/build/pdf.worker.min.mjs', 'public/pdf.worker.min.mjs')\""
+"postinstall": "node -e \"require('fs').cpSync('node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs', 'public/pdf.worker.min.mjs')\""
 ```
 
 This ensures:
