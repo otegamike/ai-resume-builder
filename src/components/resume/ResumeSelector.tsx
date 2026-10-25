@@ -13,12 +13,12 @@ import {
 import ResumeComponent from "./ResumeComponent";
 import ResumePlusViewer, { UploadedResumePlusViewer } from "./ResumePlusViewer";
 import { ResumeContent, UploadedResumeClient } from "@/types/ResumeData";
-import { MAX_PDF_PAGES_PER_PLAN } from "@/lib/creditCosts";
-import { EXTRACTION_VERSION, MAX_PDF_BYTES, MAX_PDF_PAGES } from "@/lib/pdfConstants";
+import { EXTRACTION_VERSION, MAX_PDF_BYTES, MAX_PDF_MB, maxPdfPagesForPlan } from "@/lib/pdfConstants";
 import { hashFile } from "@/lib/hashFile";
 import { useTemplateStore } from "@/store/useTemplateStore";
 import { useResumeStore } from "@/store/useResumeStore";
 import { useUserStore } from "@/store/useUserStore";
+import { useAlertStore } from "@/store/useAlertStore";
 import AiAnalysisLoader from "@/components/ui/ai-analysis-loader/AiAnalysisLoader";
 import UploadedResumeComponent from "./UploadedResume";
 import styles from "./ResumeSelector.module.css";
@@ -55,7 +55,7 @@ interface ResumeSelectorProps {
 export default function ResumeSelector({ onSelectionChange, className, uploadOnly, showLoader, animatedLoader, initialSavedResumeId, initialUploadedResumeId }: ResumeSelectorProps) {
   const { data: session } = useSession();
   const plan = session?.user?.subscriptionPlan || "free";
-  const maxPdfPages = Math.min(MAX_PDF_PAGES_PER_PLAN[plan] ?? 2, MAX_PDF_PAGES);
+  const maxPdfPages = maxPdfPagesForPlan(plan);
   const [mode, setMode] = useState<Mode>(uploadOnly ? "upload" : "saved");
   const templates = useTemplateStore((state) => state.templates);
   const resumes = useResumeStore((state) => state.resumes);
@@ -331,7 +331,7 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
     if (!file || (!isPdf && !isImage)) return;
 
     if (file.size > MAX_PDF_BYTES) {
-      setPdfFileError(`Please upload a PDF under 10 MB and up to ${maxPdfPages} pages.`);
+      setPdfFileError(`Please upload a PDF under ${MAX_PDF_MB} MB and up to ${maxPdfPages} pages.`);
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
@@ -393,9 +393,13 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
           userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "unknown",
         });
         const isKnownMessage = /^(Please upload|Resume processing requires|Extraction is still running|That resume is no longer)/.test(raw);
-        setPdfFileError(
-          isKnownMessage ? raw : "We couldn't process this file. Please try again or use a different browser."
-        );
+        const message = isKnownMessage
+          ? raw
+          : "We couldn't read this file. Please try again, try a different browser, or upload an image instead.";
+        setPdfFileError(message);
+        if (!isKnownMessage) {
+          useAlertStore.getState().addAlert("error", message);
+        }
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
@@ -416,7 +420,7 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
 
     if (pdf.numPages > maxPdfPages) {
       throw new Error(
-        `Please upload a PDF under 10 MB and up to ${maxPdfPages} pages.`
+        `Please upload a PDF under ${MAX_PDF_MB} MB and up to ${maxPdfPages} pages.`
       );
     }
 
@@ -635,11 +639,10 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
               PDF (up to {maxPdfPages} pages) or image
             </span>
           </div>
-          
-          {pdfFileError && (
-            <span className={styles.pageLimitError}>{pdfFileError}</span>
-          )}
         </label>
+        {pdfFileError && (
+          <p className={styles.pageLimitError} role="alert">{pdfFileError}</p>
+        )}
       </div>
     );
   }

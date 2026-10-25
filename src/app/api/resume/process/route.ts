@@ -8,7 +8,7 @@ import { aiContextFromAuthUser, extractResumeTextFromImages, parseResumeContent,
 import { EXTRACTION_VERSION } from "@/lib/ai/client";
 import { claimExtractionSlot, completeExtraction, failExtraction } from "@/lib/extractionService";
 import { fileToDataUrl, assertSupportedUpload } from "@/lib/resumeImprover";
-import { FILE_HASH_PATTERN, MAX_PDF_PAGES } from "@/lib/pdfConstants";
+import { FILE_HASH_PATTERN, MAX_PDF_MB, maxPdfPagesForPlan } from "@/lib/pdfConstants";
 import { InputExtractionError } from "@/lib/inputExtraction";
 import { createResume } from "@/lib/resumeService";
 
@@ -40,8 +40,9 @@ export async function POST(req: Request) {
     if (files.length === 0) {
       return NextResponse.json({ error: "No resume file uploaded" }, { status: 400 });
     }
-    if (files.length > MAX_PDF_PAGES) {
-      return NextResponse.json({ error: `Maximum of ${MAX_PDF_PAGES} pages supported` }, { status: 400 });
+    const maxPdfPages = maxPdfPagesForPlan(authUser.user.subscriptionPlan);
+    if (files.length > maxPdfPages) {
+      return NextResponse.json({ error: `Maximum of ${maxPdfPages} pages supported` }, { status: 400 });
     }
     for (const file of files) {
       assertSupportedUpload(file);
@@ -139,7 +140,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: message }, { status });
     }
     const message = error instanceof Error ? error.message : "Failed to process resume";
-    if (message.includes("not supported") || message.includes("Upload") || message.includes("10MB")) {
+    if (message.includes("not supported") || message.includes("Upload") || message.includes(`${MAX_PDF_MB}MB`)) {
       return NextResponse.json({ error: message }, { status: 400 });
     }
     console.error("Resume process error:", error);

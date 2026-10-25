@@ -1,6 +1,5 @@
 import { ResumeContent } from "@/types/ResumeData";
-
-const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+import { MAX_PDF_BYTES, MAX_PDF_MB } from "@/lib/pdfConstants";
 
 export const allowedResumeUploadTypes = [
   "image/png",
@@ -13,8 +12,8 @@ export function assertSupportedUpload(file: File) {
     throw new Error("Upload a PNG, JPG, JPEG, or WEBP resume.");
   }
 
-  if (file.size > MAX_UPLOAD_BYTES) {
-    throw new Error("Resume uploads must be 10MB or smaller.");
+  if (file.size > MAX_PDF_BYTES) {
+    throw new Error(`Resume uploads must be ${MAX_PDF_MB}MB or smaller.`);
   }
 }
 

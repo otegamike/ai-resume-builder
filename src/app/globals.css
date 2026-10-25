@@ -52,7 +52,7 @@ select:focus {
 }
 
 main {
-  width: min(1440px, 95%);
+  width: min(var(--page-max-width), 95%);
   margin: 0 auto;
 }
 

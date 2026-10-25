@@ -8,6 +8,7 @@ import {
 } from "@/lib/inputExtraction";
 import { createResume, createResumeFromExtractedText } from "@/lib/resumeService";
 import { recordActivity } from "@/lib/activityService";
+import { MAX_PDF_MB } from "@/lib/pdfConstants";
 
 export const runtime = "nodejs";
 
@@ -91,7 +92,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: message }, { status });
     }
     const message = error instanceof Error ? error.message : "Failed to process uploaded resume";
-    if (message.includes("not supported") || message.includes("Upload") || message.includes("10MB")) {
+    if (message.includes("not supported") || message.includes("Upload") || message.includes(`${MAX_PDF_MB}MB`)) {
       return NextResponse.json({ error: message }, { status: 400 });
     }
     console.error("Onboarding upload error:", error);

@@ -21,12 +21,6 @@ export const MAX_CREDITS_PER_PLAN = {
   proPlus: UNLIMITED_CREDITS,
 };
 
-export const MAX_PDF_PAGES_PER_PLAN: Record<string, number> = {
-  free: 2,
-  pro: 3,
-  proPlus: 3,
-};
-
 export type AiFeature = keyof typeof CREDIT_COST;
 
 export function formatPlan(plan: string | null | undefined): string {

@@ -174,9 +174,12 @@
   --z-50: 50;
 
   /* Container */
-  --container-max-width: 72rem;
+  --page-max-width: 1920px;
+  --container-max-width: 1440px;
   --container-padding: 1.5rem;
   --background-color: var(--neutral-200);
+
+
 
   --palette-rainbow: linear-gradient(
     135deg,

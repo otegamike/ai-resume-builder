@@ -49,6 +49,9 @@ Write instead:
 
 Your code now updates two messages instead of one every time a draft is sent — including one that doesn't need updating in this case.
 
+# Important for changes (especially major)
+if there's going to be a change in the code outline clearly the current state of the code, what exactly is going to change and what effect those changes would have. 
+
 # Page & Component Architecture — split by responsibility, not size
 
 A page that does several different things or hosts distinct tabs/sections must not hold all of that UI and state in one file. This is how `dashboard/jobs` grew to a 1100-line file before the refactor (Find + Employer Hub + Admin in one component).

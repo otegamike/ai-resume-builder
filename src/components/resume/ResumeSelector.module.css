@@ -334,10 +334,14 @@
 }
 
 .pageLimitError {
+  width: 100%;
+  margin: 0;
   color: var(--red-700);
   font-size: var(--text-sm);
+  line-height: 1.4;
   text-align: center;
-  padding: var(--space-2);
+  overflow-wrap: anywhere;
+  padding: var(--space-2) var(--space-1);
 }
 
 /* ---------- Empty state ---------- */
