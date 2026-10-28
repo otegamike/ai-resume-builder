@@ -2,11 +2,10 @@ import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/authUser";
 import dbConnect from "@/lib/db";
 import JobAd from "@/models/JobAd";
-import { aiContextFromAuthUser, analyzeResumeJobMatch, GroqCallError, toAiErrorResponse } from "@/lib/ai";
-import {
-  InputExtractionError,
-  resolveResumeInput,
-} from "@/lib/inputExtraction";
+import { aiContextFromAuthUser, analyzeResumeJobMatch } from "@/lib/ai";
+import { resolveResumeInput } from "@/lib/inputExtraction";
+import { handleApiError } from "@/lib/api/handleApiError";
+import { withApiHandler } from "@/lib/api/withApiHandler";
 void JobAd;
 
 export const runtime = "nodejs";
@@ -38,37 +37,31 @@ function jobToText(job: JobForText): string {
   return parts.filter(Boolean).join("\n\n");
 }
 
-export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    const authUser = await getAuthenticatedUser();
-    if (!authUser) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export const POST = withApiHandler(
+  async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
+    try {
+      const authUser = await getAuthenticatedUser();
+      if (!authUser) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { id } = await params;
-    await dbConnect();
+      const { id } = await params;
+      await dbConnect();
 
-    const job = await JobAd.findById(id);
-    if (!job) return NextResponse.json({ error: "Job not found" }, { status: 404 });
+      const job = await JobAd.findById(id);
+      if (!job) return NextResponse.json({ error: "Job not found" }, { status: 404 });
 
-    const jobText = jobToText(job);
-    if (!jobText.trim()) return NextResponse.json({ error: "Job has no readable content" }, { status: 422 });
+      const jobText = jobToText(job);
+      if (!jobText.trim()) return NextResponse.json({ error: "Job has no readable content" }, { status: 422 });
 
-    const formData = await req.formData();
-    const ctx = aiContextFromAuthUser(authUser);
-    const { resumeText } = await resolveResumeInput(formData, authUser, ctx);
+      const formData = await req.formData();
+      const ctx = aiContextFromAuthUser(authUser);
+      const { resumeText } = await resolveResumeInput(formData, authUser, ctx);
 
-    const analysis = await analyzeResumeJobMatch(resumeText, jobText, ctx);
+      const analysis = await analyzeResumeJobMatch(resumeText, jobText, ctx);
 
-    return NextResponse.json(analysis);
-  } catch (error) {
-    if (error instanceof InputExtractionError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
+      return NextResponse.json(analysis);
+    } catch (error) {
+      return handleApiError(error, { route: "/api/jobs/[id]/match-analysis", flow: "jobs" });
     }
-    if (error instanceof GroqCallError) {
-      const { status, error: message } = toAiErrorResponse(error, "Failed to analyze match");
-      return NextResponse.json({ error: message }, { status });
-    }
-    console.error("Match analysis error:", error);
-    const message = error instanceof Error ? error.message : "Failed to analyze match";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
-}
+  },
+  { route: "/api/jobs/[id]/match-analysis", flow: "jobs" }
+);

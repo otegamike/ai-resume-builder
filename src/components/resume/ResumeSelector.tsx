@@ -19,6 +19,12 @@ import { useTemplateStore } from "@/store/useTemplateStore";
 import { useResumeStore } from "@/store/useResumeStore";
 import { useUserStore } from "@/store/useUserStore";
 import { useAlertStore } from "@/store/useAlertStore";
+import { handleClientError } from "@/lib/errors/client";
+import {
+  getMissingBrowserFeatures,
+  OLD_BROWSER_MESSAGE,
+  OLD_BROWSER_TITLE,
+} from "@/lib/errors/unsupportedBrowser";
 import AiAnalysisLoader from "@/components/ui/ai-analysis-loader/AiAnalysisLoader";
 import UploadedResumeComponent from "./UploadedResume";
 import styles from "./ResumeSelector.module.css";
@@ -336,6 +342,13 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
       return;
     }
 
+    const missingFeatures = getMissingBrowserFeatures({ requireCanvas: isPdf });
+    if (missingFeatures.length > 0) {
+      setPdfFileError(`${OLD_BROWSER_TITLE}. ${OLD_BROWSER_MESSAGE}`);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
     const controller = new AbortController();
     setIsRenderingPdf(true);
     setPdfRenderProgress(0);
@@ -387,17 +400,22 @@ export default function ResumeSelector({ onSelectionChange, className, uploadOnl
       .catch((err) => {
         if (controller.signal.aborted) return;
         const raw = err instanceof Error ? err.message : String(err);
-        console.error("[resume-upload] failed to process file", {
-          message: raw,
-          stack: err instanceof Error ? err.stack : undefined,
-          userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "unknown",
-        });
         const isKnownMessage = /^(Please upload|Resume processing requires|Extraction is still running|That resume is no longer)/.test(raw);
-        const message = isKnownMessage
-          ? raw
-          : "We couldn't read this file. Please try again, try a different browser, or upload an image instead.";
-        setPdfFileError(message);
-        if (!isKnownMessage) {
+
+        if (isKnownMessage) {
+          setPdfFileError(raw);
+        } else {
+          const userMessage = handleClientError(err, {
+            flow: "resume-upload",
+            stage: "process",
+            requireCanvas: isPdf,
+            notify: false,
+          });
+          const message =
+            userMessage.title === OLD_BROWSER_TITLE
+              ? `${userMessage.title}. ${userMessage.message}`
+              : userMessage.message;
+          setPdfFileError(message);
           useAlertStore.getState().addAlert("error", message);
         }
         if (fileInputRef.current) {

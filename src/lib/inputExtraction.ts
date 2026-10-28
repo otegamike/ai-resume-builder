@@ -14,20 +14,13 @@ import Resume from "@/models/Resume";
 import UploadedResume from "@/models/UploadedResume";
 import { EXTRACTION_VERSION } from "@/lib/ai/client";
 import { FILE_HASH_PATTERN } from "@/lib/pdfConstants";
+import { InputExtractionError } from "@/lib/errors/InputExtractionError";
 import type { ResumeContent } from "@/types/ResumeData";
 
 void Resume;
 void UploadedResume;
 
-export class InputExtractionError extends Error {
-  status: number;
-
-  constructor(message: string, status: number) {
-    super(message);
-    this.name = "InputExtractionError";
-    this.status = status;
-  }
-}
+export { InputExtractionError };
 
 export type { AuthUserShape };
 

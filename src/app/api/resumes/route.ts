@@ -10,121 +10,127 @@ import { getRandomTemplateId } from "@/utils/templateUtils";
 import { recordActivity } from "@/lib/activityService";
 import { toUploadedResumeListItem } from '@/lib/extractionService';
 import type { ResumeContent } from '@/types/ResumeData';
+import { handleApiError } from "@/lib/api/handleApiError";
+import { withApiHandler } from "@/lib/api/withApiHandler";
 
 void UploadedResume;
 
-export async function GET(request: NextRequest) {
-  try {
-    const authUser = await getAuthenticatedUser();
-    if (!authUser) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+export const GET = withApiHandler(
+  async (request: NextRequest) => {
+    try {
+      const authUser = await getAuthenticatedUser();
+      if (!authUser) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      const listType = request.nextUrl.searchParams.get('type');
+      const wantSaved = listType !== 'uploaded';
+      const wantUploaded = listType !== 'saved';
+
+      await dbConnect();
+      const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId);
+      const resumes = wantSaved ? await Resume.find(ownerQuery).sort({ updatedAt: -1 }) : [];
+      if (wantSaved) {
+        await Resume.updateMany({ ...ownerQuery, user: { $exists: false } }, { $set: { user: authUser.userObjectId } });
+      }
+
+      let uploadedResumes: ReturnType<typeof toUploadedResumeListItem>[] = [];
+      if (wantUploaded) {
+        const docs = (await UploadedResume.find({ userId: authUser.userObjectId })
+          .sort({ updatedAt: -1 })
+          .populate('resumeId', 'title')
+          .lean()) as unknown as {
+          _id: unknown;
+          title?: unknown;
+          pages?: unknown;
+          userId?: unknown;
+          fileHash?: unknown;
+          extractionVersion?: unknown;
+          status?: unknown;
+          pageCount?: unknown;
+          resumeId?: { title?: unknown } | null;
+          parsedResume?: unknown;
+        }[];
+        uploadedResumes = docs.map((doc) =>
+          toUploadedResumeListItem({
+            _id: doc._id as Types.ObjectId,
+            title: typeof doc.title === 'string' ? doc.title : '',
+            pages: Array.isArray(doc.pages) ? doc.pages as string[] : [],
+            userId: doc.userId as Types.ObjectId | undefined,
+            fileHash: typeof doc.fileHash === 'string' ? doc.fileHash : undefined,
+            extractionVersion: typeof doc.extractionVersion === 'string' ? doc.extractionVersion : undefined,
+            status: typeof doc.status === 'string' ? doc.status : undefined,
+            pageCount: typeof doc.pageCount === 'number' ? doc.pageCount : undefined,
+            resumeTitle: typeof doc.resumeId?.title === 'string' ? doc.resumeId.title : undefined,
+            parsedResume: (doc.parsedResume as ResumeContent) ?? undefined,
+          })
+        );
+      }
+
+      const payload = { resumes, uploadedResumes };
+
+      const eTag = crypto.createHash('md5').update(JSON.stringify(payload)).digest('hex');
+      const clientETag = request.headers.get('if-none-match');
+
+      if (clientETag === `"${eTag}"`) {
+        return new NextResponse(null, { status: 304 });
+      }
+
+      return NextResponse.json(payload, {
+        headers: {
+          'ETag': `"${eTag}"`,
+          'Cache-Control': 'no-cache',
+        },
+      });
+    } catch (error) {
+      return handleApiError(error, { route: "/api/resumes", flow: "resumes" });
     }
+  },
+  { route: "/api/resumes", flow: "resumes" }
+);
 
-    const listType = request.nextUrl.searchParams.get('type');
-    const wantSaved = listType !== 'uploaded';
-    const wantUploaded = listType !== 'saved';
+export const POST = withApiHandler(
+  async (request: NextRequest) => {
+    try {
+      const authUser = await getAuthenticatedUser();
+      if (!authUser) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
 
-    await dbConnect();
-    const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId);
-    const resumes = wantSaved ? await Resume.find(ownerQuery).sort({ updatedAt: -1 }) : [];
-    if (wantSaved) {
-      await Resume.updateMany({ ...ownerQuery, user: { $exists: false } }, { $set: { user: authUser.userObjectId } });
+      const body = await request.json();
+      const { title, content, template } = body;
+
+      if (!title || !content) {
+        return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
+      }
+
+      await dbConnect();
+      const resume = new Resume({
+        user: authUser.userObjectId,
+        title,
+        template: template || getRandomTemplateId(templateDefinitions),
+        content,
+      });
+
+      const savedResume = await resume.save();
+
+      recordActivity({
+        actorId: authUser.userObjectId,
+        actorEmail: authUser.user.email || "",
+        actorName: authUser.user.name || "",
+        type: "resume_created",
+        title: `Created resume "${title}"`,
+        detail: `Created resume "${title}"`,
+        entityType: "resume",
+        entityId: savedResume._id as Types.ObjectId,
+        metadata: { title },
+      }).catch((err) => console.error("Failed to record resume_created:", err));
+
+      const savedResumeObj = savedResume.toObject();
+      return NextResponse.json(savedResumeObj, { status: 201 });
+    } catch (error) {
+      return handleApiError(error, { route: "/api/resumes", flow: "resumes" });
     }
-
-    let uploadedResumes: ReturnType<typeof toUploadedResumeListItem>[] = [];
-    if (wantUploaded) {
-      const docs = (await UploadedResume.find({ userId: authUser.userObjectId })
-        .sort({ updatedAt: -1 })
-        .populate('resumeId', 'title')
-        .lean()) as unknown as {
-        _id: unknown;
-        title?: unknown;
-        pages?: unknown;
-        userId?: unknown;
-        fileHash?: unknown;
-        extractionVersion?: unknown;
-        status?: unknown;
-        pageCount?: unknown;
-        resumeId?: { title?: unknown } | null;
-        parsedResume?: unknown;
-      }[];
-      uploadedResumes = docs.map((doc) =>
-        toUploadedResumeListItem({
-          _id: doc._id as Types.ObjectId,
-          title: typeof doc.title === 'string' ? doc.title : '',
-          pages: Array.isArray(doc.pages) ? doc.pages as string[] : [],
-          userId: doc.userId as Types.ObjectId | undefined,
-          fileHash: typeof doc.fileHash === 'string' ? doc.fileHash : undefined,
-          extractionVersion: typeof doc.extractionVersion === 'string' ? doc.extractionVersion : undefined,
-          status: typeof doc.status === 'string' ? doc.status : undefined,
-          pageCount: typeof doc.pageCount === 'number' ? doc.pageCount : undefined,
-          resumeTitle: typeof doc.resumeId?.title === 'string' ? doc.resumeId.title : undefined,
-          parsedResume: (doc.parsedResume as ResumeContent) ?? undefined,
-        })
-      );
-    }
-
-    const payload = { resumes, uploadedResumes };
-
-    const eTag = crypto.createHash('md5').update(JSON.stringify(payload)).digest('hex');
-    const clientETag = request.headers.get('if-none-match');
-
-    if (clientETag === `"${eTag}"`) {
-      return new NextResponse(null, { status: 304 });
-    }
-
-    return NextResponse.json(payload, {
-      headers: {
-        'ETag': `"${eTag}"`,
-        'Cache-Control': 'no-cache',
-      },
-    });
-  } catch (error) {
-    console.error('Error fetching resumes:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    const authUser = await getAuthenticatedUser();
-    if (!authUser) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const body = await request.json();
-    const { title, content, template } = body;
-
-    if (!title || !content) {
-      return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
-    }
-
-    await dbConnect();
-    const resume = new Resume({
-      user: authUser.userObjectId,
-      title,
-      template: template || getRandomTemplateId(templateDefinitions),
-      content,
-    });
-
-    const savedResume = await resume.save();
-
-    recordActivity({
-      actorId: authUser.userObjectId,
-      actorEmail: authUser.user.email || "",
-      actorName: authUser.user.name || "",
-      type: "resume_created",
-      title: `Created resume "${title}"`,
-      detail: `Created resume "${title}"`,
-      entityType: "resume",
-      entityId: savedResume._id as Types.ObjectId,
-      metadata: { title },
-    }).catch((err) => console.error("Failed to record resume_created:", err));
-
-    const savedResumeObj = savedResume.toObject();
-    return NextResponse.json(savedResumeObj, { status: 201 });
-  } catch (error) {
-    console.error('Error creating resume:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
+  },
+  { route: "/api/resumes", flow: "resumes" }
+);

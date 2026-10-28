@@ -1,4 +1,5 @@
 import { ResumeContent } from "@/types/ResumeData";
+import { AppError } from "@/lib/errors/AppError";
 import { MAX_PDF_BYTES, MAX_PDF_MB } from "@/lib/pdfConstants";
 
 export const allowedResumeUploadTypes = [
@@ -9,11 +10,19 @@ export const allowedResumeUploadTypes = [
 
 export function assertSupportedUpload(file: File) {
   if (!allowedResumeUploadTypes.includes(file.type)) {
-    throw new Error("Upload a PNG, JPG, JPEG, or WEBP resume.");
+    throw new AppError("Upload a PNG, JPG, JPEG, or WEBP resume.", {
+      status: 400,
+      code: "UNSUPPORTED_UPLOAD_TYPE",
+      userMessage: "Upload a PNG, JPG, JPEG, or WEBP resume.",
+    });
   }
 
   if (file.size > MAX_PDF_BYTES) {
-    throw new Error(`Resume uploads must be ${MAX_PDF_MB}MB or smaller.`);
+    throw new AppError(`Resume uploads must be ${MAX_PDF_MB}MB or smaller.`, {
+      status: 400,
+      code: "UPLOAD_TOO_LARGE",
+      userMessage: `Resume uploads must be ${MAX_PDF_MB}MB or smaller.`,
+    });
   }
 }
 

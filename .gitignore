@@ -41,6 +41,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# playwright
+test-results/
+playwright-report/
+
 
 #backup files
 quarantine-backup-2026-10-16.json

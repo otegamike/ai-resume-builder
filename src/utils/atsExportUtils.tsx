@@ -1,4 +1,5 @@
 import { pdf } from "@react-pdf/renderer";
+import { AppError } from "@/lib/errors/AppError";
 import { mapResumeToAtsView } from "@/lib/atsResumeMapper";
 import { getAtsTemplateComponent } from "@/templates_pdf";
 import type { TemplateId } from "@/lib/templateCatalog";
@@ -11,8 +12,11 @@ export async function exportResumeAsAtsPdf(
 ): Promise<void> {
   const Component = getAtsTemplateComponent(templateId);
   if (!Component) {
-    console.error(`No React-PDF component registered for template: ${templateId}`);
-    return;
+    throw new AppError("This template can't be exported as a PDF right now.", {
+      status: 400,
+      code: "ATS_TEMPLATE_MISSING",
+      userMessage: "This template can't be exported as a PDF right now. Please choose another template.",
+    });
   }
 
   const viewData = mapResumeToAtsView(resume);

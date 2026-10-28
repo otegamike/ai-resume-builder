@@ -9,126 +9,127 @@ import { recordActivity } from "@/lib/activityService";
 import { dedupeKeys } from "@/lib/email/dispatcher";
 import { enqueueAndSendNow } from "@/lib/email/drain";
 import { appUrl } from "@/lib/email/site";
+import { handleApiError } from "@/lib/api/handleApiError";
+import { withApiHandler } from "@/lib/api/withApiHandler";
 
 void JobAd;
 void JobApplication;
 void User;
 
-export async function PUT(
-  req: Request,
-  { params }: { params: Promise<{ appId: string }> }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+export const PUT = withApiHandler(
+  async (req: Request, { params }: { params: Promise<{ appId: string }> }) => {
+    try {
+      const session = await getServerSession(authOptions);
+      if (!session?.user?.id) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
 
-    const { appId } = await params;
-    await dbConnect();
+      const { appId } = await params;
+      await dbConnect();
 
-    const currentUser = await User.findById(session.user.id);
-    const application = await JobApplication.findById(appId);
+      const currentUser = await User.findById(session.user.id);
+      const application = await JobApplication.findById(appId);
 
-    if (!currentUser) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+      if (!currentUser) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
 
-    if (!application) {
-      return NextResponse.json({ error: "Application not found" }, { status: 404 });
-    }
+      if (!application) {
+        return NextResponse.json({ error: "Application not found" }, { status: 404 });
+      }
 
-    const isOwner =
-      currentUser?.organizationId &&
-      application.companyId &&
-      String(application.companyId) === String(currentUser.organizationId);
+      const isOwner =
+        currentUser?.organizationId &&
+        application.companyId &&
+        String(application.companyId) === String(currentUser.organizationId);
 
-    if (!currentUser?.isAdmin && !isOwner) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+      if (!currentUser?.isAdmin && !isOwner) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
 
-    const { status, notes } = await req.json();
+      const { status, notes } = await req.json();
 
-    const allowed = ["submitted", "under_review", "shortlisted", "interviewing", "offered", "rejected", "withdrawn"];
-    if (status && !allowed.includes(status)) {
-      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
-    }
+      const allowed = ["submitted", "under_review", "shortlisted", "interviewing", "offered", "rejected", "withdrawn"];
+      if (status && !allowed.includes(status)) {
+        return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+      }
 
-    if (status) {
-      application.status = status;
-      application.viewedByEmployer = true;
-      application.viewedAt = new Date();
-    }
+      if (status) {
+        application.status = status;
+        application.viewedByEmployer = true;
+        application.viewedAt = new Date();
+      }
 
-    if (notes !== undefined) {
-      application.notes = notes;
-    }
+      if (notes !== undefined) {
+        application.notes = notes;
+      }
 
-    await application.save();
+      await application.save();
 
-    if (status && application.applicantId) {
-      const jobForStatus = await JobAd.findById(application.jobId)
-        .select("title slug companyId")
-        .populate("companyId", "name")
-        .catch(() => null);
-      const jobTitleForStatus = (jobForStatus as unknown as { title?: string } | null)?.title || "your application";
-      const companyNameForStatus =
-        (jobForStatus as unknown as { companyId?: { name?: string } | null } | null)?.companyId?.name ||
-        "a company";
-      recordActivity({
-        actorId: currentUser._id,
-        actorEmail: currentUser.email || "",
-        actorName: currentUser.name || "",
-        type: "application_status_changed",
-        title: `Application moved to ${status} for ${jobTitleForStatus}`,
-        detail: `Application for ${jobTitleForStatus} moved to ${status}`,
-        entityType: "jobApplication",
-        entityId: application._id,
-        metadata: {
-          jobId: String(application.jobId),
-          applicationId: String(application._id),
-          newStatus: status,
-          jobTitle: jobTitleForStatus,
-        },
-        notifyRecipientIds: [application.applicantId],
-        notificationType: "application_status_changed",
-        notificationBody: `Your application for ${jobTitleForStatus} is now ${String(status).replace(/_/g, " ")}`,
-        notificationLink: `/dashboard/jobs?tab=history`,
-      }).catch((err) => console.error("Failed to record application_status_changed:", err));
+      if (status && application.applicantId) {
+        const jobForStatus = await JobAd.findById(application.jobId)
+          .select("title slug companyId")
+          .populate("companyId", "name")
+          .catch(() => null);
+        const jobTitleForStatus = (jobForStatus as unknown as { title?: string } | null)?.title || "your application";
+        const companyNameForStatus =
+          (jobForStatus as unknown as { companyId?: { name?: string } | null } | null)?.companyId?.name ||
+          "a company";
+        recordActivity({
+          actorId: currentUser._id,
+          actorEmail: currentUser.email || "",
+          actorName: currentUser.name || "",
+          type: "application_status_changed",
+          title: `Application moved to ${status} for ${jobTitleForStatus}`,
+          detail: `Application for ${jobTitleForStatus} moved to ${status}`,
+          entityType: "jobApplication",
+          entityId: application._id,
+          metadata: {
+            jobId: String(application.jobId),
+            applicationId: String(application._id),
+            newStatus: status,
+            jobTitle: jobTitleForStatus,
+          },
+          notifyRecipientIds: [application.applicantId],
+          notificationType: "application_status_changed",
+          notificationBody: `Your application for ${jobTitleForStatus} is now ${String(status).replace(/_/g, " ")}`,
+          notificationLink: `/dashboard/jobs?tab=history`,
+        }).catch((err) => console.error("Failed to record application_status_changed:", err));
 
-      // Status-change email, sent synchronously with a timeout. Skipped for
-      // withdrawals (the candidate's own action). Never fails the update.
-      if (status !== "withdrawn") {
-        try {
-          const candidate = await User.findById(application.applicantId).select("email name").lean();
-          const candidateEmail = String(candidate?.email || "").trim();
-          if (candidateEmail) {
-            const applicantName = candidate?.name || candidateEmail;
-            const mailed = await enqueueAndSendNow({
-              type: "application-status-changed",
-              to: candidateEmail,
-              userId: application.applicantId,
-              payload: {
-                applicantName,
-                jobTitle: jobTitleForStatus === "your application" ? "a job" : jobTitleForStatus,
-                companyName: companyNameForStatus,
-                status,
-                historyUrl: `${appUrl()}/dashboard/jobs?tab=history`,
-                jobsUrl: `${appUrl()}/jobs`,
-              },
-              dedupeKey: dedupeKeys.applicationStatusChanged(String(application._id), String(status)),
-            });
-            console.log(`[email] application-status-changed status=${mailed.status}${mailed.reason ? ` reason=${mailed.reason}` : ""}`);
+        // Status-change email, sent synchronously with a timeout. Skipped for
+        // withdrawals (the candidate's own action). Never fails the update.
+        if (status !== "withdrawn") {
+          try {
+            const candidate = await User.findById(application.applicantId).select("email name").lean();
+            const candidateEmail = String(candidate?.email || "").trim();
+            if (candidateEmail) {
+              const applicantName = candidate?.name || candidateEmail;
+              const mailed = await enqueueAndSendNow({
+                type: "application-status-changed",
+                to: candidateEmail,
+                userId: application.applicantId,
+                payload: {
+                  applicantName,
+                  jobTitle: jobTitleForStatus === "your application" ? "a job" : jobTitleForStatus,
+                  companyName: companyNameForStatus,
+                  status,
+                  historyUrl: `${appUrl()}/dashboard/jobs?tab=history`,
+                  jobsUrl: `${appUrl()}/jobs`,
+                },
+                dedupeKey: dedupeKeys.applicationStatusChanged(String(application._id), String(status)),
+              });
+              console.log(`[email] application-status-changed status=${mailed.status}${mailed.reason ? ` reason=${mailed.reason}` : ""}`);
+            }
+          } catch (err) {
+            console.error("Status email send failed:", err);
           }
-        } catch (err) {
-          console.error("Status email send failed:", err);
         }
       }
-    }
 
-    return NextResponse.json({ success: true, application });
-  } catch (error: unknown) {
-    console.error("Error updating application status:", error);
-    return NextResponse.json({ error: "Failed to update application status" }, { status: 500 });
-  }
-}
+      return NextResponse.json({ success: true, application });
+    } catch (error: unknown) {
+      return handleApiError(error, { route: "/api/jobs/applications/[appId]", flow: "jobs" });
+    }
+  },
+  { route: "/api/jobs/applications/[appId]", flow: "jobs" }
+);

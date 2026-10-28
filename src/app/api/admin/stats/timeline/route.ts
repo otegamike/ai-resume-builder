@@ -7,6 +7,7 @@ import Resume from "@/models/Resume";
 import SiteVisit from "@/models/SiteVisit";
 import { daysAgo, formatDate } from "@/utils/date";
 import type { TimelineEntry } from "@/types/Stats";
+import { withApiHandler } from "@/lib/api/withApiHandler";
 
 function buildDateRange(days: number): string[] {
   const dates: string[] = [];
@@ -27,50 +28,53 @@ function mergeWithRange(
   }));
 }
 
-export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.isAdmin) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+export const GET = withApiHandler(
+  async () => {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.isAdmin) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
-  await dbConnect();
+    await dbConnect();
 
-  const range = buildDateRange(30);
-  const cutoff = daysAgo(30);
+    const range = buildDateRange(30);
+    const cutoff = daysAgo(30);
 
-  const [visitsRaw, signupsRaw, resumesRaw] = await Promise.all([
-    SiteVisit.aggregate([
-      { $match: { timestamp: { $gte: cutoff } } },
-      {
-        $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$timestamp" } },
-          count: { $sum: 1 },
+    const [visitsRaw, signupsRaw, resumesRaw] = await Promise.all([
+      SiteVisit.aggregate([
+        { $match: { timestamp: { $gte: cutoff } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$timestamp" } },
+            count: { $sum: 1 },
+          },
         },
-      },
-    ]),
-    User.aggregate([
-      { $match: { createdAt: { $gte: cutoff } } },
-      {
-        $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-          count: { $sum: 1 },
+      ]),
+      User.aggregate([
+        { $match: { createdAt: { $gte: cutoff } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            count: { $sum: 1 },
+          },
         },
-      },
-    ]),
-    Resume.aggregate([
-      { $match: { createdAt: { $gte: cutoff } } },
-      {
-        $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-          count: { $sum: 1 },
+      ]),
+      Resume.aggregate([
+        { $match: { createdAt: { $gte: cutoff } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            count: { $sum: 1 },
+          },
         },
-      },
-    ]),
-  ]);
+      ]),
+    ]);
 
-  return NextResponse.json({
-    visits: mergeWithRange(range, visitsRaw),
-    signups: mergeWithRange(range, signupsRaw),
-    resumes: mergeWithRange(range, resumesRaw),
-  });
-}
+    return NextResponse.json({
+      visits: mergeWithRange(range, visitsRaw),
+      signups: mergeWithRange(range, signupsRaw),
+      resumes: mergeWithRange(range, resumesRaw),
+    });
+  },
+  { route: "/api/admin/stats/timeline", flow: "admin" }
+);

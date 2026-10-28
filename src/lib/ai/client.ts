@@ -2,6 +2,9 @@ import "server-only";
 
 import Groq from "groq-sdk";
 
+export { GroqCallError } from "./groqError";
+export type { GroqFailureKind } from "./groqError";
+
 export const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 // Canonical version lives in @/lib/pdfConstants (shared with the browser).
@@ -31,32 +34,6 @@ export const PARSER_SYSTEM_INSTRUCTION =
 export function assertApiKey() {
   if (!process.env.GROQ_API_KEY || process.env.GROQ_API_KEY === "your-groq-api-key-here") {
     throw new Error("Groq API key not configured");
-  }
-}
-
-export type GroqFailureKind =
-  | "rate_limited"
-  | "truncated"
-  | "unparseable"
-  | "provider"
-  | "config";
-
-export class GroqCallError extends Error {
-  status?: number;
-  feature: string;
-  kind: GroqFailureKind;
-  cause?: unknown;
-
-  constructor(
-    message: string,
-    opts: { status?: number; feature?: string; kind?: GroqFailureKind; cause?: unknown } = {}
-  ) {
-    super(message);
-    this.name = "GroqCallError";
-    this.status = opts.status;
-    this.feature = opts.feature ?? "unspecified";
-    this.kind = opts.kind ?? "provider";
-    this.cause = opts.cause;
   }
 }
 

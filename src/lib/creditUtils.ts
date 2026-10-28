@@ -2,6 +2,9 @@ import User from "@/models/User";
 import dbConnect from "@/lib/db";
 import { CREDIT_COST, type AiFeature } from "./creditCosts";
 import { MAX_CREDITS_PER_PLAN } from "./creditCosts";
+import { InsufficientCreditsError } from "@/lib/errors/InsufficientCreditsError";
+
+export { InsufficientCreditsError };
 
 export function getCurrentCycleString(): string {
   const now = new Date();
@@ -41,18 +44,6 @@ export async function resetCreditsIfNeeded(
   return { reset: result !== null };
 }
 
-
-export class InsufficientCreditsError extends Error {
-  public creditsRemaining: number;
-  public cost: number;
-
-  constructor(creditsRemaining: number, cost: number) {
-    super(`Insufficient AI credits. You have ${creditsRemaining} but need ${cost}.`);
-    this.name = "InsufficientCreditsError";
-    this.creditsRemaining = creditsRemaining;
-    this.cost = cost;
-  }
-}
 
 export async function deductCredits(userId: string, feature: AiFeature): Promise<number> {
   await dbConnect();

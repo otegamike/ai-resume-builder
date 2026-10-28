@@ -10,6 +10,7 @@ import ResumeExporter, { type ResumeExporterRef } from "./ResumeExporter";
 import ResumeComponent from "./ResumeComponent";
 import UploadedResumeComponent from "./UploadedResume";
 import { usePanZoom } from "@/hooks/usePanZoom";
+import { handleClientError } from "@/lib/errors/client";
 
 interface ResumeViewerProps {
   resumeContent: ResumeContent;
@@ -37,7 +38,11 @@ export default function ResumeViewer({ resumeContent, templateId, isOpen, onClos
 
       await exporterRef.current?.download(name);
     } catch (e) {
-      console.error("Download failed", e);
+      handleClientError(e, {
+        flow: "resume-export",
+        stage: "viewer-download",
+        templateId,
+      });
     } finally {
       setIsExporting(false);
     }

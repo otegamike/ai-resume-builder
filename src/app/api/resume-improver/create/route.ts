@@ -5,6 +5,8 @@ import Resume from "@/models/Resume";
 import { ResumeContent } from "@/types/ResumeData";
 import { templateDefinitions } from "@/lib/templateCatalog";
 import { getRandomTemplateId } from "@/utils/templateUtils";
+import { handleApiError } from "@/lib/api/handleApiError";
+import { withApiHandler } from "@/lib/api/withApiHandler";
 
 export const runtime = "nodejs";
 
@@ -14,39 +16,38 @@ interface CreateImprovedResumeBody {
   improvedResume?: ResumeContent;
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const authUser = await getAuthenticatedUser();
-    if (!authUser) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+export const POST = withApiHandler(
+  async (request: NextRequest) => {
+    try {
+      const authUser = await getAuthenticatedUser();
+      if (!authUser) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
 
-    const body = (await request.json()) as CreateImprovedResumeBody;
-    if (!body.improvedResume) {
+      const body = (await request.json()) as CreateImprovedResumeBody;
+      if (!body.improvedResume) {
+        return NextResponse.json(
+          { error: "Improved resume content is required" },
+          { status: 400 }
+        );
+      }
+
+      await dbConnect();
+      const resume = new Resume({
+        user: authUser.userObjectId,
+        title: body.title || "Improved Resume",
+        template: body.template || getRandomTemplateId(templateDefinitions),
+        content: body.improvedResume,
+      });
+
+      const savedResume = await resume.save();
       return NextResponse.json(
-        { error: "Improved resume content is required" },
-        { status: 400 }
+        { id: savedResume._id, content: savedResume.content },
+        { status: 201 }
       );
+    } catch (error) {
+      return handleApiError(error, { route: "/api/resume-improver/create", flow: "resume-improver" });
     }
-
-    await dbConnect();
-    const resume = new Resume({
-      user: authUser.userObjectId,
-      title: body.title || "Improved Resume",
-      template: body.template || getRandomTemplateId(templateDefinitions),
-      content: body.improvedResume,
-    });
-
-    const savedResume = await resume.save();
-    return NextResponse.json(
-      { id: savedResume._id, content: savedResume.content },
-      { status: 201 }
-    );
-  } catch (error) {
-    console.error("Create improved resume error:", error);
-    return NextResponse.json(
-      { error: "Failed to create improved resume" },
-      { status: 500 }
-    );
-  }
-}
+  },
+  { route: "/api/resume-improver/create", flow: "resume-improver" }
+);

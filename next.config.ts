@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: [],
@@ -17,4 +18,38 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const sentryRelease = process.env.VERCEL_GIT_COMMIT_SHA || process.env.SENTRY_RELEASE;
+
+const sentryConfig = withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG || "mikenzie",
+  project: process.env.SENTRY_PROJECT || "resumy-ai",
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !process.env.SENTRY_AUTH_TOKEN,
+  telemetry: false,
+  widenClientFileUpload: true,
+  sourcemaps: {
+    disable: false,
+  },
+  ...(sentryRelease ? { release: { name: sentryRelease } } : {}),
+  bundleSizeOptimizations: {
+    excludeDebugStatements: true,
+    excludeReplayIframe: true,
+    excludeReplayShadowDom: true,
+    excludeReplayWorker: true,
+  },
+  errorHandler: (error) => {
+    console.warn("[sentry] build plugin warning:", error.message);
+  },
+});
+
+const defines = sentryConfig.compiler?.define;
+if (defines) {
+  sentryConfig.compiler = {
+    ...sentryConfig.compiler,
+    define: Object.fromEntries(
+      Object.entries(defines).map(([key, value]) => [key, String(value)])
+    ),
+  };
+}
+
+export default sentryConfig;

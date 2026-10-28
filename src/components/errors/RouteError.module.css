@@ -1,0 +1,92 @@
+.page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: var(--space-8) var(--space-4);
+}
+
+.fullPage {
+  min-height: 100vh;
+  background: var(--gray-50);
+}
+
+.card {
+  width: 100%;
+  max-width: 30rem;
+  padding: var(--space-8);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  background: #ffffff;
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+
+.iconWrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  margin-bottom: var(--space-5);
+  border-radius: var(--radius-full);
+  background: var(--primary-50);
+  color: var(--primary-700);
+}
+
+.title {
+  margin: 0 0 var(--space-3);
+  color: var(--gray-900);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+}
+
+.message {
+  margin: 0 0 var(--space-6);
+  color: var(--gray-600);
+  font-size: var(--text-base);
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.primaryBtn,
+.secondaryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 2.5rem;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.primaryBtn {
+  border: 1px solid var(--primary-700);
+  background: var(--primary-700);
+  color: #ffffff;
+}
+
+.primaryBtn:hover {
+  background: var(--primary-800);
+}
+
+.secondaryBtn {
+  border: 1px solid var(--gray-300);
+  background: #ffffff;
+  color: var(--gray-700);
+}
+
+.secondaryBtn:hover {
+  background: var(--gray-50);
+}

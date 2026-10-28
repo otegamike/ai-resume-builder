@@ -6,132 +6,131 @@ import { getAuthenticatedUser, buildResumeOwnerQuery } from '@/lib/authUser';
 import { templateDefinitions } from "@/lib/templateCatalog";
 import { getRandomTemplateId } from "@/utils/templateUtils";
 import { recordActivity } from "@/lib/activityService";
+import { handleApiError } from "@/lib/api/handleApiError";
+import { withApiHandler } from "@/lib/api/withApiHandler";
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
-  try {
-    const authUser = await getAuthenticatedUser();
-    if (!authUser) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+export const GET = withApiHandler(
+  async (_request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+    const { id } = await params;
+    try {
+      const authUser = await getAuthenticatedUser();
+      if (!authUser) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      await dbConnect();
+
+      if (id === 'new') {
+        return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
+      }
+
+      const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId);
+      const resume = await Resume.findOne({ _id: id, ...ownerQuery });
+
+      if (!resume) {
+        return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
+      }
+
+      if (resume && !resume.user) {
+        resume.user = authUser.userObjectId;
+        await resume.save();
+      }
+
+      return NextResponse.json(resume);
+    } catch (error) {
+      return handleApiError(error, { route: "/api/resumes/[id]", flow: "resumes" });
     }
+  },
+  { route: "/api/resumes/[id]", flow: "resumes" }
+);
 
-    await dbConnect();
+export const PUT = withApiHandler(
+  async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+    const { id } = await params;
+    try {
+      const authUser = await getAuthenticatedUser();
+      if (!authUser) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
 
-    if (id === 'new') {
-      return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
+      const body = await request.json();
+      const { title, content, template } = body;
+
+      if (!title || !content) {
+        return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
+      }
+
+      await dbConnect();
+      const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId);
+      const resume = await Resume.findOneAndUpdate(
+        { _id: id, ...ownerQuery },
+        {
+          title,
+          content,
+          template: template || getRandomTemplateId(templateDefinitions),
+          user: authUser.userObjectId,
+          updatedAt: new Date()
+        },
+        { returnDocument: "after" }
+      );
+
+      if (!resume) {
+        return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
+      }
+
+      recordActivity({
+        actorId: authUser.userObjectId,
+        actorEmail: authUser.user.email || "",
+        actorName: authUser.user.name || "",
+        type: "resume_updated",
+        title: `Updated resume "${title}"`,
+        detail: `Updated resume "${title}"`,
+        entityType: "resume",
+        entityId: resume._id as Types.ObjectId,
+        metadata: { title },
+      }).catch((err) => console.error("Failed to record resume_updated:", err));
+
+      return NextResponse.json(resume);
+    } catch (error) {
+      return handleApiError(error, { route: "/api/resumes/[id]", flow: "resumes" });
     }
+  },
+  { route: "/api/resumes/[id]", flow: "resumes" }
+);
 
-    const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId);
-    const resume = await Resume.findOne({ _id: id, ...ownerQuery });
+export const DELETE = withApiHandler(
+  async (_request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+    const { id } = await params;
+    try {
+      const authUser = await getAuthenticatedUser();
+      if (!authUser) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
 
-    if (!resume) {
-      return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
+      await dbConnect();
+      const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId);
+      const resume = await Resume.findOneAndDelete({ _id: id, ...ownerQuery });
+
+      if (!resume) {
+        return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
+      }
+
+      recordActivity({
+        actorId: authUser.userObjectId,
+        actorEmail: authUser.user.email || "",
+        actorName: authUser.user.name || "",
+        type: "resume_deleted",
+        title: `Deleted resume "${resume.title}"`,
+        detail: `Deleted resume "${resume.title}"`,
+        entityType: "resume",
+        entityId: resume._id as Types.ObjectId,
+        metadata: { title: resume.title },
+      }).catch((err) => console.error("Failed to record resume_deleted:", err));
+
+      return NextResponse.json({ message: 'Resume deleted successfully' });
+    } catch (error) {
+      return handleApiError(error, { route: "/api/resumes/[id]", flow: "resumes" });
     }
-
-    if (resume && !resume.user) {
-      resume.user = authUser.userObjectId;
-      await resume.save();
-    }
-
-    return NextResponse.json(resume);
-  } catch (error) {
-    console.error('Error fetching resume:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
-
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
-  try {
-    const authUser = await getAuthenticatedUser();
-    if (!authUser) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const body = await request.json();
-    const { title, content, template } = body;
-
-    if (!title || !content) {
-      return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
-    }
-
-    await dbConnect();
-    const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId);
-    const resume = await Resume.findOneAndUpdate(
-      { _id: id, ...ownerQuery },
-      {
-        title,
-        content,
-        template: template || getRandomTemplateId(templateDefinitions),
-        user: authUser.userObjectId,
-        updatedAt: new Date()
-      },
-      { returnDocument: "after" }
-    );
-
-    if (!resume) {
-      return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
-    }
-
-    recordActivity({
-      actorId: authUser.userObjectId,
-      actorEmail: authUser.user.email || "",
-      actorName: authUser.user.name || "",
-      type: "resume_updated",
-      title: `Updated resume "${title}"`,
-      detail: `Updated resume "${title}"`,
-      entityType: "resume",
-      entityId: resume._id as Types.ObjectId,
-      metadata: { title },
-    }).catch((err) => console.error("Failed to record resume_updated:", err));
-
-    return NextResponse.json(resume);
-  } catch (error) {
-    console.error('Error updating resume:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
-
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
-  try {
-    const authUser = await getAuthenticatedUser();
-    if (!authUser) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    await dbConnect();
-    const ownerQuery = buildResumeOwnerQuery(authUser.userObjectId);
-    const resume = await Resume.findOneAndDelete({ _id: id, ...ownerQuery });
-
-    if (!resume) {
-      return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
-    }
-
-    recordActivity({
-      actorId: authUser.userObjectId,
-      actorEmail: authUser.user.email || "",
-      actorName: authUser.user.name || "",
-      type: "resume_deleted",
-      title: `Deleted resume "${resume.title}"`,
-      detail: `Deleted resume "${resume.title}"`,
-      entityType: "resume",
-      entityId: resume._id as Types.ObjectId,
-      metadata: { title: resume.title },
-    }).catch((err) => console.error("Failed to record resume_deleted:", err));
-
-    return NextResponse.json({ message: 'Resume deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting resume:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
+  },
+  { route: "/api/resumes/[id]", flow: "resumes" }
+);

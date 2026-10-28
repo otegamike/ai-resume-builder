@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { aiContextFromAuthUser, generateSummary, generateExperienceBulletPoints, improveSummary, generateSkillsSuggestions, generateCategorizedSkills, categorizeExistingSkills, generateBlogMeta, GroqCallError, toAiErrorResponse } from '@/lib/ai';
+import { aiContextFromAuthUser, generateSummary, generateExperienceBulletPoints, improveSummary, generateSkillsSuggestions, generateCategorizedSkills, categorizeExistingSkills, generateBlogMeta } from '@/lib/ai';
 import { getAuthenticatedUser } from '@/lib/authUser';
-import { deductCredits, InsufficientCreditsError } from '@/lib/creditUtils';
+import { deductCredits } from '@/lib/creditUtils';
 import type { AiFeature } from '@/lib/creditCosts';
+import { handleApiError } from "@/lib/api/handleApiError";
+import { withApiHandler } from "@/lib/api/withApiHandler";
 
 interface GenerateBody {
   type: string;
@@ -29,70 +31,62 @@ const FEATURE_MAP: Record<string, AiFeature> = {
   generateBlogMeta: 'generateBlogMeta',
 };
 
-export async function POST(request: NextRequest) {
-  try {
-    const authUser = await getAuthenticatedUser();
-    if (!authUser) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+export const POST = withApiHandler(
+  async (request: NextRequest) => {
+    try {
+      const authUser = await getAuthenticatedUser();
+      if (!authUser) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
 
-    const body: GenerateBody = await request.json();
-    const { type, data } = body;
+      const body: GenerateBody = await request.json();
+      const { type, data } = body;
 
-    const feature = FEATURE_MAP[type];
-    if (!feature) {
-      return NextResponse.json({ error: 'Invalid generation type' }, { status: 400 });
-    }
+      const feature = FEATURE_MAP[type];
+      if (!feature) {
+        return NextResponse.json({ error: 'Invalid generation type' }, { status: 400 });
+      }
 
-    const newAiCredits = await deductCredits(String(authUser.userObjectId), feature);
-    const ctx = aiContextFromAuthUser(authUser);
+      const newAiCredits = await deductCredits(String(authUser.userObjectId), feature);
+      const ctx = aiContextFromAuthUser(authUser);
 
-    let result: any;
+      let result: any;
 
-    switch (type) {
-      case 'generateSummary':
-        result = await generateSummary(data.jobTitle || '', data.experience || '3', data.skills || [], data.achivements || [], ctx);
-        break;
-      case 'generateBulletPoints':
-        result = await generateExperienceBulletPoints(data.company || '', data.role || '', data.description || '', ctx);
-        break;
-      case 'improveSummary':
-        result = await improveSummary(data.summary || '', ctx);
-        break;
-      case 'generateSkills':
-        result = await generateSkillsSuggestions(data.jobTitle || '', ctx);
-        break;
-      case 'generateCategorizedSkills':
-        result = await generateCategorizedSkills(data.jobTitle || '', ctx);
-        break;
-      case 'categorizeExistingSkills':
-        result = await categorizeExistingSkills(data.skills || [], ctx);
-        break;
-      case 'generateBlogMeta':
-        if (!authUser.session?.user?.isAdmin) {
-          return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-        }
-        result = await generateBlogMeta(data.content || '', ctx);
-        break;
-    }
+      switch (type) {
+        case 'generateSummary':
+          result = await generateSummary(data.jobTitle || '', data.experience || '3', data.skills || [], data.achivements || [], ctx);
+          break;
+        case 'generateBulletPoints':
+          result = await generateExperienceBulletPoints(data.company || '', data.role || '', data.description || '', ctx);
+          break;
+        case 'improveSummary':
+          result = await improveSummary(data.summary || '', ctx);
+          break;
+        case 'generateSkills':
+          result = await generateSkillsSuggestions(data.jobTitle || '', ctx);
+          break;
+        case 'generateCategorizedSkills':
+          result = await generateCategorizedSkills(data.jobTitle || '', ctx);
+          break;
+        case 'categorizeExistingSkills':
+          result = await categorizeExistingSkills(data.skills || [], ctx);
+          break;
+        case 'generateBlogMeta':
+          if (!authUser.session?.user?.isAdmin) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+          }
+          result = await generateBlogMeta(data.content || '', ctx);
+          break;
+      }
 
-    if (result==="error") {
-      return NextResponse.json({ error: 'AI generation failed' }, { status: 500 });
-    }
+      if (result==="error") {
+        return NextResponse.json({ error: 'AI generation failed' }, { status: 500 });
+      }
     
-    return NextResponse.json({ result, newAiCredits });
-  } catch (error) {
-    if (error instanceof InsufficientCreditsError) {
-      return NextResponse.json(
-        { error: error.message, creditsRemaining: error.creditsRemaining, cost: error.cost },
-        { status: 402 }
-      );
+      return NextResponse.json({ result, newAiCredits });
+    } catch (error) {
+      return handleApiError(error, { route: "/api/ai/generate", flow: "ai" });
     }
-    if (error instanceof GroqCallError) {
-      const { status, error: message } = toAiErrorResponse(error, 'AI generation failed');
-      return NextResponse.json({ error: message }, { status });
-    }
-    console.error('AI Generation error:', error);
-    return NextResponse.json({ error: 'AI generation failed' }, { status: 500 });
-  }
-}
+  },
+  { route: "/api/ai/generate", flow: "ai" }
+);

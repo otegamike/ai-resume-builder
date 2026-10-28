@@ -9,6 +9,7 @@ import PageBody from "@/components/page-body/PageBody";
 import PageViewTracker from "@/components/PageViewTracker";
 import TemplateInitializer from "@/components/TemplateInitializer";
 import AlertToast from "@/components/ui/AlertToast";
+import SentryUserSync from "@/components/sentry/SentryUserSync";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -92,6 +93,7 @@ export default function RootLayout({
           
             <PageBody>
               <AppSessionProvider>
+                <SentryUserSync />
                 <PageViewTracker />
                 <TemplateInitializer />
                 <Header />

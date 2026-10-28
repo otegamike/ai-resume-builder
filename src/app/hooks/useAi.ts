@@ -2,6 +2,8 @@ import { useState } from "react";
 import { ResumeContent, Experience } from "@/types/ResumeData";
 import { useAiCreditStore } from "@/store/useAiCreditStore";
 import { useAlertStore } from "@/store/useAlertStore";
+import { ApiClientError } from "@/lib/errors/api";
+import { handleClientError } from "@/lib/errors/client";
 
 interface AiResult {
     text: string;
@@ -19,34 +21,41 @@ export function useAi() {
     const [aiGeneratingFor, setAiGeneratingFor] = useState<string | null>(null);
     const [aiError, setAiError] = useState<string|null>(null);
 
-    const callAI = async (type: string, data: Record<string, unknown>): Promise<any> => {
+    const callAI = async (type: string, data: Record<string, unknown>): Promise<string | string[]> => {
         const response = await fetch('/api/ai/generate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ type, data }),
         });
         
-        const json = await response.json();
-        
-        if (response.status === 402) {
-            useAlertStore.getState().addAlert('error', json.error);
-            throw new Error(json.error);
+        const json = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            const message = typeof json.error === "string" ? json.error : undefined;
+            throw new ApiClientError(
+                message || "AI generation failed",
+                response.status,
+                typeof json.code === "string" ? json.code : undefined
+            );
         }
-        
-        if (!response.ok) throw new Error('AI generation failed');
-        
+
         if (typeof json.newAiCredits === 'number') {
             useAiCreditStore.getState().setCredits(json.newAiCredits);
         }
         
-        return json.result;
+        const result: unknown = json.result;
+        if (typeof result === "string") return result;
+        if (Array.isArray(result)) {
+            return result.filter((item): item is string => typeof item === "string");
+        }
+        return "";
     };
 
-    const AiWrapper = async (logic: () => Promise<any>, type: string): Promise<AiResult | AiErrorResponse> =>{
+    const AiWrapper = async (logic: () => Promise<string | string[]>, type: string): Promise<AiResult | AiErrorResponse> =>{
         setAiError(null);
         setAiGenerating(true);
         setAiGeneratingFor(type);
-        let result: {string: string , array:  string[]} = {
+        const result: {string: string , array:  string[]} = {
             string: '',
             array: []
         };
@@ -58,17 +67,23 @@ export function useAi() {
             const response = await logic();
             if (typeof response === 'string') {
                 result.string = response;
-            } else if (Array.isArray(response)) {
-                result.array = response;
             } else {
-                result.array = response; // For any other type, just pass it through
+                result.array = response;
             }
 
             success = true;
-        }catch(error: any){
+        }catch(error: unknown){
             success = false;
-            errorMsg = error.message;
+            const userMessage = handleClientError(error, {
+                flow: "ai",
+                stage: type,
+                notify: false,
+            });
+            errorMsg = userMessage.message;
             setAiError(errorMsg);
+            if (error instanceof ApiClientError && error.status === 402) {
+                useAlertStore.getState().addAlert("error", errorMsg);
+            }
         }finally{
             setAiGenerating(false);
             setAiGeneratingFor(null);

@@ -11,6 +11,8 @@ import { dedupeKeys, isValidEmail } from "@/lib/email/dispatcher";
 import { enqueueAndSendNow } from "@/lib/email/drain";
 import { appUrl } from "@/lib/email/site";
 import { canComposeMessages } from "@/lib/email/permissions";
+import { handleApiError } from "@/lib/api/handleApiError";
+import { withApiHandler } from "@/lib/api/withApiHandler";
 
 void JobApplication;
 void JobAd;
@@ -61,117 +63,119 @@ export function parseComposeBody(input: unknown): ComposeBody | { error: string 
  * server-side from the application — the request never carries a `to`
  * address, so this endpoint cannot be used as a spam relay.
  */
-export async function POST(req: Request) {
-  try {
-    const authUser = await getAuthenticatedUser();
-    if (!authUser) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    if (!canComposeMessages(authUser.session?.user)) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    const parsed = parseComposeBody(await req.json().catch(() => null));
-    if ("error" in parsed) {
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
-    }
-
-    await dbConnect();
-    const application = await JobApplication.findById(parsed.applicationId);
-    if (!application) {
-      return NextResponse.json({ error: "Application not found" }, { status: 404 });
-    }
-
-    const [candidate, job] = await Promise.all([
-      User.findById(application.applicantId).select("email name").lean(),
-      JobAd.findById(application.jobId)
-        .select("title companyId")
-        .populate("companyId", "name")
-        .lean(),
-    ]);
-    const candidateEmail = String(candidate?.email || "").trim();
-    if (!candidateEmail) {
-      return NextResponse.json({ error: "Candidate has no email address" }, { status: 400 });
-    }
-    const jobDoc = job as unknown as {
-      title?: string;
-      companyId?: { name?: string } | null;
-    } | null;
-    const jobTitle = jobDoc?.title || "a job";
-    const companyName =
-      jobDoc?.companyId && typeof jobDoc.companyId === "object"
-        ? jobDoc.companyId.name || "a company"
-        : "a company";
-    const applicantName = candidate?.name || candidateEmail;
-
-    let activityId: Types.ObjectId | undefined;
+export const POST = withApiHandler(
+  async (req: Request) => {
     try {
-      const activity = await recordActivity({
-        actorId: authUser.userObjectId,
-        actorEmail: authUser.user.email || "",
-        actorName: authUser.user.name || "",
-        type: "candidate_messaged",
-        title: `New message about ${jobTitle}`,
-        detail: `Hiring team messaged ${applicantName} about ${jobTitle}`,
-        entityType: "jobApplication",
-        entityId: application._id as Types.ObjectId,
-        metadata: {
-          jobId: String(application.jobId),
-          applicationId: String(application._id),
-          jobTitle,
-        },
-        notificationType: "candidate_messaged",
-        perRecipientNotifications: [
-          {
-            recipientId: application.applicantId as Types.ObjectId,
-            type: "candidate_messaged",
-            title: `New message about ${jobTitle}`,
-            body: `The hiring team sent you a message about your ${jobTitle} application.`,
-            link: "/dashboard/jobs?tab=history",
+      const authUser = await getAuthenticatedUser();
+      if (!authUser) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      if (!canComposeMessages(authUser.session?.user)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+
+      const parsed = parseComposeBody(await req.json().catch(() => null));
+      if ("error" in parsed) {
+        return NextResponse.json({ error: parsed.error }, { status: 400 });
+      }
+
+      await dbConnect();
+      const application = await JobApplication.findById(parsed.applicationId);
+      if (!application) {
+        return NextResponse.json({ error: "Application not found" }, { status: 404 });
+      }
+
+      const [candidate, job] = await Promise.all([
+        User.findById(application.applicantId).select("email name").lean(),
+        JobAd.findById(application.jobId)
+          .select("title companyId")
+          .populate("companyId", "name")
+          .lean(),
+      ]);
+      const candidateEmail = String(candidate?.email || "").trim();
+      if (!candidateEmail) {
+        return NextResponse.json({ error: "Candidate has no email address" }, { status: 400 });
+      }
+      const jobDoc = job as unknown as {
+        title?: string;
+        companyId?: { name?: string } | null;
+      } | null;
+      const jobTitle = jobDoc?.title || "a job";
+      const companyName =
+        jobDoc?.companyId && typeof jobDoc.companyId === "object"
+          ? jobDoc.companyId.name || "a company"
+          : "a company";
+      const applicantName = candidate?.name || candidateEmail;
+
+      let activityId: Types.ObjectId | undefined;
+      try {
+        const activity = await recordActivity({
+          actorId: authUser.userObjectId,
+          actorEmail: authUser.user.email || "",
+          actorName: authUser.user.name || "",
+          type: "candidate_messaged",
+          title: `New message about ${jobTitle}`,
+          detail: `Hiring team messaged ${applicantName} about ${jobTitle}`,
+          entityType: "jobApplication",
+          entityId: application._id as Types.ObjectId,
+          metadata: {
+            jobId: String(application.jobId),
+            applicationId: String(application._id),
+            jobTitle,
           },
-        ],
-      });
-      activityId = activity?._id as Types.ObjectId | undefined;
-    } catch (err) {
-      console.error("Failed to record candidate_messaged:", err);
-    }
+          notificationType: "candidate_messaged",
+          perRecipientNotifications: [
+            {
+              recipientId: application.applicantId as Types.ObjectId,
+              type: "candidate_messaged",
+              title: `New message about ${jobTitle}`,
+              body: `The hiring team sent you a message about your ${jobTitle} application.`,
+              link: "/dashboard/jobs?tab=history",
+            },
+          ],
+        });
+        activityId = activity?._id as Types.ObjectId | undefined;
+      } catch (err) {
+        console.error("Failed to record candidate_messaged:", err);
+      }
 
-    let emailStatus: string = "skipped";
-    let resendId: string | undefined;
-    let emailReason: string | undefined;
-    try {
-      const mailed = await enqueueAndSendNow({
-        type: "candidate-message",
-        to: candidateEmail,
-        userId: application.applicantId,
-        payload: {
-          applicantName,
-          jobTitle,
-          companyName,
-          subject: parsed.subject,
-          messageBody: parsed.body,
-          replyMode: parsed.replyMode,
-          replyTo: parsed.replyTo,
-          contactEmail: parsed.contactEmail,
-          historyUrl: `${appUrl()}/dashboard/jobs?tab=history`,
-        },
-        dedupeKey: dedupeKeys.candidateMessage(String(application._id)),
-        priority: 1,
-        relatedActivityId: activityId,
-      });
-      emailStatus = mailed.status;
-      resendId = mailed.resendId;
-      emailReason = mailed.reason;
-      console.log(`[email] candidate-message status=${mailed.status}${mailed.reason ? ` reason=${mailed.reason}` : ""}`);
-    } catch (err) {
-      console.error("Candidate message send failed:", err);
-      emailStatus = "failed";
-      emailReason = "send_error";
-    }
+      let emailStatus: string = "skipped";
+      let resendId: string | undefined;
+      let emailReason: string | undefined;
+      try {
+        const mailed = await enqueueAndSendNow({
+          type: "candidate-message",
+          to: candidateEmail,
+          userId: application.applicantId,
+          payload: {
+            applicantName,
+            jobTitle,
+            companyName,
+            subject: parsed.subject,
+            messageBody: parsed.body,
+            replyMode: parsed.replyMode,
+            replyTo: parsed.replyTo,
+            contactEmail: parsed.contactEmail,
+            historyUrl: `${appUrl()}/dashboard/jobs?tab=history`,
+          },
+          dedupeKey: dedupeKeys.candidateMessage(String(application._id)),
+          priority: 1,
+          relatedActivityId: activityId,
+        });
+        emailStatus = mailed.status;
+        resendId = mailed.resendId;
+        emailReason = mailed.reason;
+        console.log(`[email] candidate-message status=${mailed.status}${mailed.reason ? ` reason=${mailed.reason}` : ""}`);
+      } catch (err) {
+        console.error("Candidate message send failed:", err);
+        emailStatus = "failed";
+        emailReason = "send_error";
+      }
 
-    return NextResponse.json({ success: true, emailStatus, resendId, reason: emailReason });
-  } catch (error: unknown) {
-    console.error("Error sending candidate message:", error);
-    return NextResponse.json({ error: "Failed to send message" }, { status: 500 });
-  }
-}
+      return NextResponse.json({ success: true, emailStatus, resendId, reason: emailReason });
+    } catch (error: unknown) {
+      return handleApiError(error, { route: "/api/employer/messages/send", flow: "employer" });
+    }
+  },
+  { route: "/api/employer/messages/send", flow: "employer" }
+);

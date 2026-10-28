@@ -12,10 +12,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { buildTemplateSrcDoc, normalizeTemplateId } from "@/lib/templateRenderer";
-import { TEMPLATE_PAGE, templateDefinitions, type TemplateDefinition, type TemplateId } from "@/lib/templateCatalog";
+import { TEMPLATE_PAGE, type TemplateDefinition, type TemplateId } from "@/lib/templateCatalog";
 import { getRandomTemplateId } from "@/utils/templateUtils";
 import styles from "./page.module.css";
 import { calculateEditorHeight, editorSectionHeight, getHeightById, editorSectionHeightnNumber } from "@/utils/headerSize";
+import { handleClientError } from "@/lib/errors/client";
 
 function FormTabSkeleton() {
   return (
@@ -332,7 +333,11 @@ export default function ResumeEditor() {
         await exportResumeAsPdf(exportIframeRef, title, TEMPLATE_PAGE.widthPx, TEMPLATE_PAGE.heightPx);
       }
     } catch (error) {
-      console.error("Failed to export PDF:", error);
+      handleClientError(error, {
+        flow: "resume-export",
+        stage: "editor-pdf",
+        templateId,
+      });
     } finally {
       setIsExporting(false);
     }
@@ -343,7 +348,11 @@ export default function ResumeEditor() {
     try {
       await exportResumeAsImage(exportIframeRef, title);
     } catch (error) {
-      console.error("Failed to export image:", error);
+      handleClientError(error, {
+        flow: "resume-export",
+        stage: "editor-image",
+        templateId,
+      });
     } finally {
       setIsExporting(false);
     }

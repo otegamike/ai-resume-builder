@@ -1,6 +1,6 @@
 import "server-only";
 
-import { GroqCallError } from "./client";
+import { GroqCallError } from "./groqError";
 
 const RATE_LIMIT_MESSAGE =
   "AI is in high demand right now. Upgrade to Pro or Pro Plus for higher AI limits and faster results.";
